@@ -177,7 +177,7 @@ public class JavaEightConfig {
 
 Conditionインタフェースを実装することで、カスタムConditionを作ることもできます。例えば以下のコードのように、アプリケーションが実行されるOSがLinuxの場合のConditionを自作することができます。
 
-使い方は簡単で、戻り値がbooleanであるmatches
+使い方は簡単で、戻り値がbooleanであるmatchesを実装するだけです。
 
 ```java
 class OnUnixCondition implements Condition {
