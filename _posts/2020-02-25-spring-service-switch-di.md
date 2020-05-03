@@ -13,7 +13,7 @@ tags:
 
 Springではビジネスロジックを書く場合、一般的にServiceというクラスを作成することになります。Serviceは重要な処理が入るため開発やテストでは重要なクラスですが、開発をしていると、状況によっては実装しても動かせない場合もあります。例えばまだ環境が整っていない、他のクラスに依存する設計となっているがそのクラスがまだ存在していないなどの場合ですね。こういう時は実際の処理が行われず、常に同じ結果を返すクラスを書いておく場合もあります。
 
-こういう場合に、予め複数のServiceクラスを書いておいて、外部の設定ファイル(application.yml)に開発モード、テストモードなど状況に合わせてどちらのServiceクラスを使うかを選択できたら便利でしょう。実際、ServiceクラスはInterfaceと実装クラス(Implという名の)を分けて書く場合が多いので、複数のImplクラスを作って置いて、場合によって違うものがBeanとして登録されるようにすることも不可能ではありません。
+こういう場合に、予め複数のServiceクラスを書いておいて、外部の設定ファイル(`application.yml`)に開発モード、テストモードなど状況に合わせてどちらのServiceクラスを使うかを選択できたら便利でしょう。実際、ServiceクラスはInterfaceと実装クラス(Implという名の)を分けて書く場合が多いので、複数のImplクラスを作って置いて、場合によって違うものがBeanとして登録されるようにすることも不可能ではありません。
 
 なので今回は、YAMLの設定を読み、場合によってどのServieImplをBeanとして登録するかを決める方法を紹介します。
 
@@ -68,7 +68,7 @@ public class SomeTestServiceImpl implements SomeService {
 
 ## アノテーションを削除
 
-Serviceクラスには一般的に@Serviceをつけることになります。このアノテーションをつけると、Springではこのクラスを自動的にBeanとして登録することになります。なので一つのInterfaceに対して複数の@Serviceのついたクラスを作成すると、どれを使いたいかSpringとしてはわからなくなります。なので、ここでは＠Serviceアノテーションは使わないことにします。
+Serviceクラスには一般的に`@Service`をつけることになります。このアノテーションをつけると、Springではこのクラスを自動的にBeanとして登録することになります。なので一つのInterfaceに対して複数の`@Service`のついたクラスを作成すると、どれを使いたいかSpringとしてはわからなくなります。なので、ここでは`@Service`アノテーションは使わないことにします。
 
 ## YAMLの作成
 
@@ -89,7 +89,7 @@ spring:
 
 ## Configuration設定
 
-アノテーションを外したら、ServiceImplはBeanとして登録できなくなります。しかし、使いたいServiceImplクラスを選ぶということは、状況によって使いたいクラスをBeanとして登録したい、ということです。なのでどこかでクラスを選び、Beanとして登録するようにする必要がありますね。また、YAMLに書いた設定を読み込む必要もあります。これらをまとめて@Configurationのついたクラスとして実装しましょう。
+アノテーションを外したら、ServiceImplはBeanとして登録できなくなります。しかし、使いたいServiceImplクラスを選ぶということは、状況によって使いたいクラスをBeanとして登録したい、ということです。なのでどこかでクラスを選び、Beanとして登録するようにする必要がありますね。また、YAMLに書いた設定を読み込む必要もあります。これらをまとめて`@Configuration`のついたクラスとして実装しましょう。
 
 ```java
 @Configuration
@@ -100,16 +100,16 @@ public class SomeServiceConfig {
     private boolean testMode;
 
     // YAMLの設定からどのImplクラスを使うかを決定してBean登録
-    ＠Bean
+    @Bean
     public SomeService someService(SomeRepository repository, SomeTestRepository testRepository) {
         return this.testMode ? new SomeTestSerivce(testRepository) : new SomeServiceImple(repository);
     }
 }
 ```
 
-Springでは@Valueや@ConfigurationPropertiesを使うことでYAMLに指定した値を読み込むことができます。@ConfigurationPropertiesだとクラス全体のフィールドに対してYAMLの値をマッチすることができますが、ここでは一つの値を読み込みたいだけなので、個別フィールドに対して使える@Valueを使います。YAMLファイルがない場合は例外となるため、デフォルト値としてfalseを指定しておきました。
+Springでは`@Value`や`@ConfigurationProperties`を使うことでYAMLに指定した値を読み込むことができます。`@ConfigurationProperties`だとクラス全体のフィールドに対してYAMLの値をマッチすることができますが、ここでは一つの値を読み込みたいだけなので、個別フィールドに対して使える`@Value`を使います。YAMLファイルがない場合は例外となるため、デフォルト値としてfalseを指定しておきました。
 
-Bean登録は普通に@Beanアノテーションをつけ、新しいインスタンスを作成して返すだけです。今回の例ではSerivceImplで依存しているRepositoryクラスをコンストラクターにAutowiredを使って注入しているため、そのインスタンスも必要となりますね。メソッドの引数にRepositoryを書いておけば、それがBeanとして登録されているクラスだと自動的に引数として入ってきます。なのであとはこれがテストモードであるか、通常モードであるかによってそれぞれのコンストラクターに合わせた引数を渡し、インスタンスをリターンすればBean登録も完了となります。簡単ですね！
+Bean登録は普通に`@Bean`アノテーションをつけ、新しいインスタンスを作成して返すだけです。今回の例ではSerivceImplで依存しているRepositoryクラスをコンストラクターにAutowiredを使って注入しているため、そのインスタンスも必要となりますね。メソッドの引数にRepositoryを書いておけば、それがBeanとして登録されているクラスだと自動的に引数として入ってきます。なのであとはこれがテストモードであるか、通常モードであるかによってそれぞれのコンストラクターに合わせた引数を渡し、インスタンスをリターンすればBean登録も完了となります。簡単ですね！
 
 ## アノテーションを使う場合
 
@@ -128,14 +128,14 @@ YAMLの定義ができたら、あとはどのプロファイルを使うかを�
 public class SomeServiceConfig {
 
     // devやdebugの場合はこちらをBean登録する
-    ＠Bean
+    @Bean
     @Profile({"dev", "debug"})
     public SomeService someService(SomeTestRepository testRepository) {
         return new SomeTestSerivce(testRepository);
     }
 
     // prodの場合はこちらをBean登録する
-    ＠Bean
+    @Bean
     @Profile("prod")
     public SomeService someService(SomeRepository repository) {
         return new SomeServiceImple(repository);

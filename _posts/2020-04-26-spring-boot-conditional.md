@@ -33,7 +33,7 @@ public class SomeServiceConfig {
     private boolean testMode;
 
     // YAMLの設定からどのImplクラスを使うかを決定してBean登録
-    ＠Bean
+    @Bean
     public SomeService someService(SomeRepository repository, SomeTestRepository testRepository) {
         return this.testMode ? new SomeTestSerivce(testRepository) : new SomeServiceImple(repository);
     }
