@@ -29,7 +29,7 @@ Javaでの型指定
 int a = 1000;
 ```
 
-    TypeScriptの型指定
+TypeScriptの型指定
 
 ```typescript
 var a: number = 1000;
