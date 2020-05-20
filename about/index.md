@@ -23,16 +23,21 @@ type: about
   * Spring Framework
     * Spring Boot
     * Spring Data JPA
+    * Spring Data JDBC
     * Spring Security
   * Tomcat
   * Maven
   * Gradle
   * JavaFX
-* Oracle DB
-* PostgreSQL
+* Python
 * JavaScript
   * jQuery
+* TypeScript
 * HTML / CSS
+* Markdown
+* H2
+* Oracle DB
+* PostgreSQL
 * Git
   * GitHub
   * GitLab
@@ -46,7 +51,7 @@ type: about
 * Windows
   * PowerShell
 * MS-DOS
-* macOS
+* macOS X
 * Azure
   * DevOps
   * Functions
@@ -57,16 +62,21 @@ type: about
 
 ## 触れたいもの
 
-* Python
-  * Django
+* Rust
+* C#
+* Django
 * Kotlin
 * Swift
   * SwiftUI
 * Dart
   * Flutter
+* Angular
 * React
   * React Native
 * Node.js
+* Deno
+* Electron
 * Docker
-* Google Cloud
+* Kubernetes
+* Google Cloud Platform
 * Google Firebase
