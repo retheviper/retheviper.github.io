@@ -125,7 +125,7 @@ Spring Securityを使った場合はかなりコードが変わってきます�
 
 Spring BootでレスポンスのHeaderにデータを載せるためには二つの方法があります。先に述べたSpring MVCのリクエスト同様、レスポンスを扱うためのクラスである`HttpServletResponse`を使う方法と、`ResponseEntity`でレスポンスデータをラッピングすることです。どれも使える方法ですが、
 
-#### HttpServletResponse
+## HttpServletResponseでHeaderを追加する
 
 まずはHttpServletResponseです。シンプルに、「レスポンスにデータを載せたい」という時に使える方法ですね。MVCパターンでのログインと同じく、ログインするメソッドの引数に指定すると、レスポンスのHeaderにデータを載せることができます。
 
@@ -141,7 +141,7 @@ public User login(User user, HttpServletResponse response) {
 }
 ```
 
-#### ResponseEntity
+## ResponseEntityでHeaderを追加する
 
 もう一つの方法であるResponseEntityの場合は、引数はユーザ情報(IDとパスワード)のみで良くなります。名前からもわかると思いますが、ResponseEntityはBodyとHeaderを含め、HTTP Status(200 OKなど)を含めレスポンスに必要な情報は全て扱えるクラスです。使い方は簡単で、ログインメソッドの戻り値となるBodyをResponseEntityで包み、Headerなどの情報も一緒に詰めて返します。
 
@@ -154,7 +154,7 @@ public ResponseEntity<Member> login(User user) {
 }
 ```
 
-#### そのあとは？
+## そのあとは？
 
 レスポンスのHeaderに載せた情報は、フロントエンド側でリクエスト毎にHeaderに載せて送ることになります。しかし、リクエスト毎に送るためにはどこかにこの情報を保存する必要がありますね。Cookieを使う方法もありますが、セキュリティ情のリスクがあるため多くの場合ではブラウザのローカルストレージに保存するようになっているようです。これはフロントエンドの領域なので、ここでは深掘りしません。
 
