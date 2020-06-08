@@ -451,8 +451,9 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
             }
         }
         String username = obtainUsername(request) != null ? obtainUsername(request) : "";
-        String password = obtainPassword(request) != null ? obtainPassword(request) : "";\
-        setDetails(request, new UsernamePasswordAuthenticationToken(username, password));
+        String password = obtainPassword(request) != null ? obtainPassword(request) : "";
+        UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(username, password);
+        setDetails(request, authRequest);
         return this.getAuthenticationManager().authenticate(authRequest);
     }
 
