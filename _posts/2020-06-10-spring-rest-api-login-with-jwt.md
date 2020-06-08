@@ -314,7 +314,7 @@ Spring SecurityのFormLoginを利用してログインのためのURLと、ロ�
 
 ここではログインを処理するためのURLとクレデンシャルのためのパラメータなどを設定して、ログインに成功したらトークンを作成して返すための`AuthenticationSuccessHandler`を設定することになります。
 
-###### AuthenticationSuccessHandlerの作成
+##### AuthenticationSuccessHandlerの作成
 
 まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。
 
