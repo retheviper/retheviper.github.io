@@ -201,7 +201,7 @@ SignatureではHeaderとPayloadをエンコードしたあと、更に任意の�
 
 Header、Payload、Signature順で正しく作成したJWTは、[JWTの公式サイト](https://jwt.io)から検証できます。以下のようにJWTの構造と格納しているデータを確認してデバッグができるので、興味のある方はぜひ試してみてください。
 
-![](/assets/images/jenkins_screenshot/jwt_structure.png)
+![](/assets/images/postimage/jwt_structure.png)
 
 ### Token Providerクラスの実装
 
@@ -635,7 +635,7 @@ curl -i -X POST "http://localhost:8080/api/v1/web/login" -d "id=user" -d "pass=1
 
 Postmanを使ったJSONでのログインテストはこちらになります。(X-AUTH-TOKENでJWTが帰ってきたのを確認できます!)
 
-![](/assets/images/jenkins_screenshot/jwt_postman_login.png)
+![](/assets/images/postimage/jwt_postman_login.png)
 
 JWTをCache化することは、サーバがStateを持つこととなるのでNG.
 
