@@ -363,9 +363,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JWTAuthenticationFilter filter;
 
     @Autowired
-    public SecurityConfig(JWTAuthenticationSuccessHandler successHandler, JWTAuthenticationFilter filterJwtTokenProvider provider) {
+    public SecurityConfig(JWTAuthenticationSuccessHandler successHandler, JWTAuthenticationFilter filter) {
         this.successHandler = successHandler;
-        this.provider = provider;
+        this.filter = filter;
     }
 
     @Bean
@@ -491,9 +491,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JWTAuthenticationFilter filter;
 
     @Autowired
-    public SecurityConfig(JWTAuthenticationSuccessHandler successHandler, JWTAuthenticationFilter filterJwtTokenProvider provider) {
+    public SecurityConfig(JWTAuthenticationSuccessHandler successHandler, JWTAuthenticationFilter filter) {
         this.successHandler = successHandler;
-        this.provider = provider;
+        this.filter = filter;
     }
 
     @Bean
@@ -562,7 +562,7 @@ public class SignApiController {
     private final JWTProvider provider;
 
     @Autowired
-    public SignApiController(MemberService service, JwtTokenProvider provider) {
+    public SignApiController(MemberService service, JWTProvider provider) {
         this.service = service;
         this.provider = provider;
     }
@@ -594,8 +594,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JWTAuthenticationFilter filter;
 
     @Autowired
-    public SecurityConfig(JWTAuthenticationSuccessHandler successHandler, JWTAuthenticationFilter filterJwtTokenProvider provider) {
-        this.successHandler = successHandler;
+    public SecurityConfig(JWTAuthenticationFilter filter) {
         this.provider = provider;
     }
 
@@ -625,7 +624,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ### テスト
 
-今まで実装したログインのテストは、CURL[Postman](https://www.postman.com)などのツールで簡単にできます。
+今まで実装したログインのテストは、CURLもしくは[Postman](https://www.postman.com)などのツールで簡単にできます。
 
 例えば、FormLoginを使った場合のログインはこちらになります。
 
