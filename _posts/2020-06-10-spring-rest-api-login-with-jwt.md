@@ -37,7 +37,7 @@ JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジ
 
 まずはREST APIでの認証認可を簡単にSpring Securityで実装します。Spring Securityそのものだけでもかなり膨大な量を勉強しなければならないのですが、ここではまず、DBに登録されているユーザの情報を取得し、そのユーザのロールによってアクセスできるURLを制限するという機能だけを実現します。(他にも、ログインとはあまり関係のないクラスのコードは省略しています)
 
-### Entityクラス
+#### Entityクラス
 
 まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。
 
@@ -81,7 +81,7 @@ public class User implements UserDetails {
 }
 ```
 
-### Serviceクラス
+#### Serviceクラス
 
 UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための`loadUserByUsername`しかないので、これを適切にRepositoryから取得できるように実装します。
 
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserDetailsService {
 }
 ```
 
-### Configurationクラス
+#### Configurationクラス
 
 認可のためのConfigurationクラスです。ここでは`USER`というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを`ROLE_USER`として保存するようにしておくと良いです。
 
@@ -140,7 +140,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 これでSpring Securityを使うための必要最低限の準備は終わりました。他にユーザのCRUDのためのServiceやRepositoryは適宜作成してあるという前提として、次に進めましょう。
 
-### 依存関係の追加
+### JWTの依存関係の追加
 
 次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。
 
