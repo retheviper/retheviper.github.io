@@ -7,6 +7,7 @@ photos:
 - /assets/images/sideimage/spring_logo.jpg
 tags:
   - spring
+  - spring security
   - rest api
   - jwt
 ---
@@ -131,9 +132,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // セッションはStatelessなので使わない
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                // ROLE_USERではないとどのURLでもアクセスできない
+                // USERではないとどのURLでもアクセスできない
                 .authorizeRequests()
-                .anyRequest().hasRole("ROLE_USER");
+                .anyRequest().hasRole("USER");
     }
 }
 ```
@@ -418,9 +419,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
 
     // Headerからコンテントタイプを取得するための定数
     private static final String CONTENT_TYPE = "Content-Type";
-
-    // コンテントタイプがJSONなのかを確認するための定数
-    private static final String APPLICATION_JSON = "application/json";]
     
     // JSONデータを保存するためのMap
     private Map<String, String> jsonRequest;
@@ -468,7 +466,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
 
     // HeaderからコンテントタイプがJSONかどうかを判定する
     private boolean headerContentTypeIsJson(HttpServletRequest request) {
-        return request.getHeader(CONTENT_TYPE).equals(APPLICATION_JSON);
+        return request.getHeader(CONTENT_TYPE).equals(MediaType.APPLICATION_JSON_VALUE);
     }
 }
 ```

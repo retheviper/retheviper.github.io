@@ -7,6 +7,7 @@ photos:
 - /assets/images/sideimage/spring_logo.jpg
 tags:
   - spring
+  - rest api
 ---
 
 新しい案件が始まって、AngularとSpring bootによるSPA(Single Page Application)を作ることとなりましたが、まだ要件定義の段階で実装まではしばらく時間が残っています。いわゆる上流工程にはあまり経験がないので日々奮闘中ではありますが、仕事が終わった後の時間には少しづつ、練習をかねて自作アプリケーションを作っています。
@@ -150,7 +151,7 @@ public User login(User user, HttpServletResponse response) {
 public ResponseEntity<Member> login(User user) {
     User loginedUser = service.getUser(user.getId(), user.getPassword());
     // レスポンスとしてHeaderとBodyを一緒にセットして返す
-    return ResponseEntity.headers("userId", loginedUser.getId()).body(loginedUser);
+    return ResponseEntity.ok().header("userId", loginedUser.getId()).body(loginedUser);
 }
 ```
 
