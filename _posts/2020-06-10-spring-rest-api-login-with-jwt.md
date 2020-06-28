@@ -635,8 +635,6 @@ Postmanを使ったJSONでのログインテストはこちらになります。
 
 ![](/assets/images/postimage/jwt_postman_login.png)
 
-JWTをCache化することは、サーバがStateを持つこととなるのでNG.
-
 ## 最後に
 
 思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…
