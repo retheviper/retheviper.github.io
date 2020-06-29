@@ -26,7 +26,7 @@ iOSやiPadOS、macOSの変化ももちろん興味深かったのですが、や
 
 ただ気になるのは、自分のIntel製CPUを搭載しているmacに対してのOSのサポートがいつまで続くか、くらいですかね。最近はWindowsの発展もすごいのですが、自分の環境だとあまりWindowsにこだわる必要はないので問題なく転換できそうな気もします。そしてプロセッサのみではなく、SoCなのですでにiPadやiPhoneに適用されているさまざまなセンサーやニューラルエンジンなどを使えるのも大きいメリットと思います。
 
-ただ、こういう感想はあくまで開発者としての自分の立場から考えた個人レベルの問題で、エンタプライズレベルだといくら[Rosetta2](https://www.apple.com/newsroom/2020/06/apple-announces-mac-transition-to-apple-silicon)や[Universal Binary2](https://developer.apple.com/documentation/xcode/building_a_universal_macos_binar)が優秀だとしてもどこかで互換性や性能の問題は起こり得ると思うので要注意とは思います。Officeのデモンストレーションは、今よりもパフォーマンスが優れているように見えたのでよかったのですが、事務職の人があえてmacを使う理由はそもそもないので…
+ただ、こういう感想はあくまで開発者としての自分の立場から考えた個人レベルの問題で、エンタプライズレベルだといくら[Rosetta2](https://www.apple.com/newsroom/2020/06/apple-announces-mac-transition-to-apple-silicon)や[Universal Binary2](https://developer.apple.com/documentation/xcode/building_a_universal_macos_binary)が優秀だとしてもどこかで互換性や性能の問題は起こり得ると思うので要注意とは思います。Officeのデモンストレーションは、今よりもパフォーマンスが優れているように見えたのでよかったのですが、事務職の人があえてmacを使う理由はそもそもないので…
 
 他、すでに$500でA12Zを搭載したmacを借りることができるようなので、意外とすぐに新プロセッサmacの性能や互換性問題は明らかになるかも知れませんね。まずはそこに注目かな、と思っています。性能のみならず、作業時の温度や電力消費量もどれだけ改善されたか、知りたいところですね。来週あたりでベンチマークを見れるのではないかと思っています。
 
