@@ -15,7 +15,7 @@ type: about
 
 ## 触れたもの
 
-* JAVA
+* Java 8 & 11
   * JSP
   * Servlet
   * JDBC
@@ -29,10 +29,12 @@ type: about
   * Maven
   * Gradle
   * JavaFX
-* Python
+* Python 3
 * JavaScript
   * jQuery
-* TypeScript
+  * TypeScript
+  * Node.js
+  * Angular
 * HTML / CSS
 * Markdown
 * H2
@@ -59,6 +61,7 @@ type: about
   * EC2
   * S3
   * Aurora
+* Docker
 
 ## 触れたいもの
 
@@ -70,13 +73,12 @@ type: about
   * SwiftUI
 * Dart
   * Flutter
-* Angular
 * React
   * React Native
-* Node.js
+* Spring Webflux
+* Blazor
 * Deno
 * Electron
-* Docker
 * Kubernetes
 * Google Cloud Platform
 * Google Firebase

@@ -6,7 +6,7 @@ categories:
 photos:
   - /assets/images/sideimage/tools.jpg
 tags:
-  - Blog
+  - blog
 ---
 
 この度は、ブログのテーマを新しく変えてみました。新しいテーマは[NexT](https://github.com/Simpleyyt/jekyll-theme-next)です。一年がたってもあまりJekyllに慣れてないので思ったより苦労していますが(特に消えたページなどが気になります…)、それでも前のテーマと比べてかなりすっきりした感じが良いと思います。検索機能もついていたのでとりあえずアクティベートしてみましたが、ローカルでは機能してなかったのでGithub Pagesにあげてからテストですね。なるべく使いたい。(追記：残念ながら何かのバグのようで使えませんでした…)
