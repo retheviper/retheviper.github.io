@@ -135,9 +135,9 @@ for (Map<String, String> map : convertedList1) {
 for (Map<String, String> map : list1) {
     for (Map.Entry<String, String> entry : map.entrySet()) {
         // List2と同じインデックスを比較する
-        Map<String, String> mapOfList2 = list2.get(list1.indexOf(map));
-        if (list2.get(list1.indexOf(map)).entrySet().contains(entry)) {
-            map.putAll(mapOfList2);
+        Map<String, String> map2 = list2.get(list1.indexOf(map));
+        if (map2.entrySet().contains(entry)) {
+            map.putAll(map2);
             continue;
         }
     }
