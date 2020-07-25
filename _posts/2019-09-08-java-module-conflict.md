@@ -4,7 +4,7 @@ date: 2019-09-08
 categories: 
   - java
 photos:
-- /assets/images/sideimage/java_logo.jpg
+  - /assets/images/sideimage/java_logo.jpg
 tags:
   - jigsaw
   - module

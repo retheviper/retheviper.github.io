@@ -4,7 +4,7 @@ date: 2020-06-29
 categories: 
   - recent news
 photos:
-- /assets/images/sideimage/tools.jpg
+  - /assets/images/sideimage/tools.jpg
 tags:
   - apple
   - mac

@@ -4,7 +4,7 @@ date: 2019-08-12
 categories: 
   - java
 photos:
-- /assets/images/sideimage/java_logo.jpg
+  - /assets/images/sideimage/java_logo.jpg
 tags:
   - lombok
   - java

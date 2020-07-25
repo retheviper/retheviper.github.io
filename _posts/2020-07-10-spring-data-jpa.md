@@ -4,7 +4,7 @@ date: 2020-07-10
 categories: 
   - spring
 photos:
-- /assets/images/sideimage/spring_logo.jpg
+  - /assets/images/sideimage/spring_logo.jpg
 tags:
   - database
   - jdbc

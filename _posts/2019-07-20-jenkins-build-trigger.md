@@ -4,7 +4,7 @@ date: 2019-07-20
 categories: 
   - jenkins
 photos:
-- /assets/images/sideimage/jenkins_logo.jpg
+  - /assets/images/sideimage/jenkins_logo.jpg
 tags:
   - git
   - jenkins

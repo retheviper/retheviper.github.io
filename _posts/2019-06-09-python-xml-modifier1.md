@@ -4,7 +4,7 @@ date: 2019-06-09
 categories: 
   - python
 photos:
-- /assets/images/sideimage/python_logo.jpg
+  - /assets/images/sideimage/python_logo.jpg
 tags:
   - xml
   - python

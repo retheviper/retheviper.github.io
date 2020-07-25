@@ -4,7 +4,7 @@ date: 2019-12-01
 categories: 
   - linux
 photos:
-- /assets/images/sideimage/linux_terminal.jpg
+  - /assets/images/sideimage/linux_terminal.jpg
 tags:
   - ssl
   - linux

@@ -4,7 +4,7 @@ date: 2020-04-06
 categories: 
   - java
 photos:
-- /assets/images/sideimage/java_logo.jpg
+  - /assets/images/sideimage/java_logo.jpg
 tags:
   - stream
   - java

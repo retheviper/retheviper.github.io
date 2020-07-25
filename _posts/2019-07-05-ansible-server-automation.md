@@ -4,7 +4,7 @@ date: 2019-07-05
 categories: 
   - ansible
 photos:
-- /assets/images/sideimage/ansible_logo.jpg
+  - /assets/images/sideimage/ansible_logo.jpg
 tags:
   - ansible
   - yaml

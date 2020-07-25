@@ -4,7 +4,7 @@ date: 2019-06-24
 categories: 
   - linux
 photos:
-- /assets/images/sideimage/linux_terminal.jpg
+  - /assets/images/sideimage/linux_terminal.jpg
 tags:
   - terminal
   - linux

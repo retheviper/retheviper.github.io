@@ -4,7 +4,7 @@ date: 2019-07-30
 categories: 
   - java
 photos:
-- /assets/images/sideimage/java_logo.jpg
+  - /assets/images/sideimage/java_logo.jpg
 tags:
   - reflection
   - generic

@@ -4,7 +4,7 @@ date: 2019-12-22
 categories: 
   - spring
 photos:
-- /assets/images/sideimage/spring_logo.jpg
+  - /assets/images/sideimage/spring_logo.jpg
 tags:
   - dependency injection
   - java

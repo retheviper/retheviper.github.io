@@ -4,7 +4,7 @@ date: 2019-11-04
 categories: 
   - gradle
 photos:
-- /assets/images/sideimage/gradle_logo.jpg
+  - /assets/images/sideimage/gradle_logo.jpg
 tags:
   - groovy
   - java

@@ -4,7 +4,7 @@ date: 2020-05-16
 categories: 
   - typescript
 photos:
-- /assets/images/sideimage/typescript_logo.jpg
+  - /assets/images/sideimage/typescript_logo.jpg
 tags:
   - node
   - javascript

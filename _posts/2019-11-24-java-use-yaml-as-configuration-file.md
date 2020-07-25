@@ -4,7 +4,7 @@ date: 2019-11-24
 categories: 
   - java
 photos:
-- /assets/images/sideimage/java_logo.jpg
+  - /assets/images/sideimage/java_logo.jpg
 tags:
   - yaml
   - java

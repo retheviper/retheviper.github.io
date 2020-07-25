@@ -4,7 +4,7 @@ date: 2020-01-26
 categories: 
   - jenkins
 photos:
-- /assets/images/sideimage/jenkins_logo.jpg
+  - /assets/images/sideimage/jenkins_logo.jpg
 tags:
   - groovy
   - ci/cd
