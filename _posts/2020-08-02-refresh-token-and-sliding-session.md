@@ -7,6 +7,7 @@ photos:
   - /assets/images/sideimage/spring_logo.jpg
 tags:
   - spring security
+  - rest api
   - jwt
 ---
 

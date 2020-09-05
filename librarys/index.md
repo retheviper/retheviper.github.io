@@ -30,4 +30,5 @@ type: librarys
 | [cx_Oracle](https://oracle.github.io/python-cx_Oracle){:target="_blank"} | Python | Oracleデータベース操作 |
 | [psycopg](http://initd.org/psycopg/docs){:target="_blank"} | Python | PostgreSQL操作 |
 | [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html?id=docs_gateway){:target="_blank"} | Python | AWS S3操作 |
-| [Requests](https://requests.kennethreitz.org/en/master) | Python | HTTPリクエストを送信 |
+| [Requests](https://requests.kennethreitz.org/en/master){:target="_blank"} | Python | HTTPリクエストを送信 |
+| [python-magic](https://github.com/ahupp/python-magic){:target="_blank"} | Python | ファイルタイプ確認 |
