@@ -7,6 +7,7 @@ photos:
   - /assets/images/sideimage/java_logo.jpg
 tags:
   - ocjp
+  - certification
   - java
 ---
 
