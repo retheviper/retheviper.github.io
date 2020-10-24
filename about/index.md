@@ -13,7 +13,7 @@ type: about
 
 このブログで扱っているOS・言語・フレームワーク・ツールなどに関しては、主に以下のテーマと関係があります。
 
-## 触れたもの
+## 仕事で使ったもの
 
 * Java 8 & 11
   * JSP
@@ -22,20 +22,11 @@ type: about
   * MyBatis
   * Spring Framework
     * Spring Boot
-    * Spring Data JPA
-    * Spring Data JDBC
     * Spring Security
   * Tomcat
   * Maven
   * Gradle
-  * JavaFX
 * Python 3
-* JavaScript
-  * jQuery
-  * TypeScript
-  * Node.js
-  * Angular
-* HTML / CSS
 * Markdown
 * H2
 * Oracle DB
@@ -48,37 +39,61 @@ type: about
 * Jenkins
 * Linux
   * CentOS
-  * Ubuntu
   * Amazon Linux
 * Windows
   * PowerShell
-* MS-DOS
-* macOS X
 * Azure
   * DevOps
   * Functions
+  * Queue storage
 * Amazon Web Service
   * EC2
   * S3
   * Aurora
 * Docker
+* JMeter
+* JP1
+* Asteria
+
+## 個人的に触れてみたもの
+
+* Java
+  * JavaFX
+  * JSP
+  * Spring Framework
+    * Spring WebFlux
+    * Spring Data JPA
+    * Spring Data JDBC
+    * Spring Data R2DBC
+* JavaScript
+  * jQuery
+  * TypeScript
+  * Node.js
+  * Angular
+* Kotlin
+* Dart
+  * Flutter
+* HTML & CSS
+* MS-DOS
+* macOS X
+* Linux
+  * Ubuntu
+* Oracle Cloud
+* Google Cloud Platform
 
 ## 触れたいもの
 
 * Rust
+  * Rocket
 * C#
-* Django
-* Kotlin
+  * .NET Core
+* Python
+  * Django
 * Swift
   * SwiftUI
-* Dart
-  * Flutter
-* React
-  * React Native
-* Spring Webflux
-* Blazor
-* Deno
-* Electron
+* JavaScript
+  * Deno
+  * Electron
+  * Svelte
 * Kubernetes
-* Google Cloud Platform
 * Google Firebase
