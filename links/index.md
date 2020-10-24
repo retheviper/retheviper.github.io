@@ -84,3 +84,4 @@ type: links
 - [Baeldung](https://www.baeldung.com){:target="_blank"}
 - [Wtools](https://wtools.io){:target="_blank"}
 - [Wappalyzer](https://www.wappalyzer.com){:target="_blank"}
+- [Roy Tutorials](https://www.roytuts.com)
