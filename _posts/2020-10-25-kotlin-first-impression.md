@@ -20,7 +20,7 @@ KotlinがAndroidの公式言語になってからもだいぶ長い時間が経�
 
 ### やはりモダンな感じ
 
-Kotlinで書いたコードを見ると、モダンな言語だとやはりこんなものかなという感覚ではあります。モダンな言語が何か、という定義から必要になるのではという気もしますが、例えばSwift、Kotlin、Goみたいなものですね。あまり他の言語に詳しいわけではないのですが、これらの言語はなんとなくPythonに似ているような気がします。例えば`var`、`fun`のように基本文法で略語をよく使っていたり、型の指定はコロンの後につけたり、セミコロンがなかったり、`in`や`Range`、`is`があるなどの共通点があったりしますので。
+Kotlinで書いたコードを見ると、モダンな言語だとやはりこんなものかなという感覚ではあります。モダンな言語が何か、という定義から必要になるのではという気もしますが、例えばSwift、Kotlin、Goみたいなものですね。あまり他の言語に詳しいわけではないのですが、これらの言語はなんとなくPythonに似ているような気がします。例えば`var`、`fun`のように基本文法で略語をよく使っていたり、型の指定はコロンの後につけたり、セミコロンがなかったり、`in`や`Range`、`is`があるなどの共通点があったりしますので。他には、言語の使用ではないけど、一般的にはGetter/Setterを使わずフィールドに直接アクセスするところですかね。(おかげでLombokを使う必要がないのも便利ではあります)
 
 ただ、そんなモダンな感覚でありながらも、やはりKotlinはJavaよりな感覚ではあります。厳格なJavaをよりゆるくしただけの感覚といえばいいでしょうか。例えばPythonだと`elif`なのですが、Kotlinでは`else if`だったりしますので。JVM言語という理由だけでなく、基本文法からしてもJavaプログラマーならすぐに適応できる言語でもあります。例えばforループにラベルをつけることができたりします。
 
@@ -46,7 +46,7 @@ Javaのデメリットとしてよく挙げられているのが、冗長すぎ�
 
 ### スタンダードライブラリがとにかく便利
 
-拡張関数が便利な理由ともつながるようなことですが、Kotlinのスタンダードライブラリに存在する関数たちもまた同じ観点から便利といえます。例えば、すでに有名なのがいわゆる`Scopping Functions`の[let](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/let.html)、[with](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/with.html)、[apply](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html)、[run](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/run.html)、[also](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/also.html)のような関数です。
+拡張関数が便利な理由ともつながるようなことですが、Kotlinのスタンダードライブラリに存在する関数たちもまた同じ観点から便利といえます。例えば、すでに有名なのがいわゆる`Scope Functions`の[let](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/let.html)、[with](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/with.html)、[apply](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html)、[run](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/run.html)、[also](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/also.html)のような関数です。
 
 これらはJavaだと別途ユーティリティクラスを作るか、プライペートなメソッドを定義するか、特定のクラスを継承してからオーバライドで関数を新しく定義するなどの方法で対応はできるものの、やはり手間がかかるのでやりたくはないものです。これをKotlinでは、より関数型的な方法で解決してくれます。例えばletの例を見ていきましょう。以下のようなdata classがあるとします。
 
