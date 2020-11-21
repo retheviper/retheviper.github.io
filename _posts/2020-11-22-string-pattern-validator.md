@@ -214,13 +214,13 @@ public class StorageValidator {
 
 今回のポストの内容とはあまり関係のないものですが、ちょっとした興味本位から、Javaで作成したValidatorをKotlinのコードに変えてみました。幸い、intellijには、Javaで書かれたコードをKotlinに変えてくれる便利な機能がありますので簡単にできます。そもそもKotlinを作ったのがJetbrain社なので、Kotlinを普及するための機能であるとは思いますが、おかげでJavaプログラマがKotlinに入門するのも簡単になりますね。
 
-`static final`なフィールドをKotlinでは`companion object`として扱うことになるらしく、コード自体はそう変わらない感覚です。ただ、Kotlinでは`stream()`を呼び出さなくてもCollectionから直接呼び出すことのできるメソッド(`any`)があるのですが、自動変換ではそこまでしてくれなかったので、そういうところ自分で変えるしかないです。それで完成したコードは、以下の通りです。
+`static final`なフィールドをKotlinでは`companion object`として扱うことになるらしく、コード自体はそう変わらない感覚です。ただ、Kotlinでは`stream()`を呼び出さなくてもCollectionから直接呼び出すことのできるメソッド(`any`)があったり、`List.of()`も`listOf()`で代替できるのですが、自動変換ではそこまでしてくれなかったので、そういうところ自分で変えるしかないです。それで完成したコードは、以下の通りです。
 
 ```kotlin
 class StorageValidator {
 
     companion object {
-        private val PATH_PATTERN_UPLOAD = List.of( // 画像の保存先パスのパターン(正規)
+        private val PATH_PATTERN_UPLOAD = listOf( // 画像の保存先パスのパターン(正規)
             Pattern.compile(
                 "\\/contents\\/images\\/\\d{0,4}\\/(19[0-9]{2}|20[0-9]{2})(0[0-9]|1[0-2])\\/thumbnail\\.(?:bmp|jpg|jpeg|gif|png|BMP|JPG|JPEG|GIF|PNG)$"
             )
@@ -233,7 +233,7 @@ class StorageValidator {
     }
 
     fun isValidUploadPath(path: String): Boolean {
-        return PATH_PATTERN_UPLOAD.any { predicate: Predicate<String> -> predicate.test(path) }
+        return PATH_PATTERN_UPLOAD.any { predicate -> predicate.test(path) }
     }
 }
 ```
