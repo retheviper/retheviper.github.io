@@ -1,5 +1,5 @@
 ---
-title: "指定したパターンと一致する文字列かを判定するValidatorを作る"
+title: "パターンと一致する文字列かを判定する"
 date: 2020-11-22
 categories: 
   - java
