@@ -362,7 +362,7 @@ public List<String> filterFor(List<String> list) {
     List<String> result = new ArrayList<>();
     for (int i = 0; i < list.size(); i++) {
         String element = list.get(i);
-        if (element.length() > 10) {
+        if (element.length() <= 10) {
             result.add(element);
         }
     }
