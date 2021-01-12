@@ -80,7 +80,7 @@ private void copy(File source, File dest) throws IOException {
 
 ここでまず、`FileInputStream`は`Files.newInputStream`、`FileOutputStream`は`Files.newOutputStream`に代替できます。まず目立つ違いとしては、`FileInputStream`・`FileOutputStream`は引数として`File`を取り、`Files.newInputStream`・`Files.newOutputStream`は引数として`Path`を取るという点がありますね。ただ、この違いは、`File`と`Path`の変換が自由なので、あまり決定的な違いとは言えません。つまり、どちらの方法にも簡単に切り替えができるということですね。
 
-一見、`Files`クラスからInputStreamとOutputStreamのインスタンスを生成した方が、より最新のAPIを使っているので性能の面で良さそうな気はします。しかし、JavaのNIOは、必ず性能面で既存のIOと比べ優位にあるわけではないですね。実際、ファイルのI/Oに関しては、NIOを使ってもBlockingモードとしてしか動かないので、あまり性能は変わらないという話もあります。
+一見、`Files`クラスからInputStreamとOutputStreamのインスタンスを生成した方が、より最新のAPIを使っているので性能の面で良さそうな気はします。しかし、JavaのNIOは、必ず性能面で既存のIOと比べ優位にあるわけではないですね。実際、ファイルのI/Oに関しては、NIOを使ってもBlockingモードとしてしか動かないので、あまり性能は変わらないという話もあります。
 
 そういう場合は、特に問題を起こしてないのに、あえて既存のコードをNIOに切り替える必要は無くなりそうな気もします。しかし、本当にそれで大丈夫でしょうか。
 
