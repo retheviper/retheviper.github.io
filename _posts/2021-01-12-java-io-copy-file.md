@@ -16,13 +16,13 @@ tags:
 なので今回は、今までなんとなく使ってきたコードたちを振り返り、なるべくどのような方法をとった方が良いかを考えてみようと思います。ただ、考えられる全てのケースを網羅するのは難しいと思うので、この度はあくまで`Javaのコードでファイルをコピーする`場合に限ります。なので、考えてみたいこと(検証対象)は以下の通りになります。
 
 1. InputStreamとOutputStreamはどう作った方がいいか
-  1. FileInputStreamとFileOutputStreamを使うか
-  1. Filesのメソッドを使うか
+    1. FileInputStreamとFileOutputStreamを使うか
+    1. Filesのメソッドを使うか
 1. ファイルコピーはどのような方法を使った方がいいか
-  1. InputSteamからOutpuStreamへ書くか
-      1. readAllBytes()
-      1. transferTo()
-  1. Filesのメソッドを使うか
+    1. InputSteamからOutpuStreamへ書くか
+        1. readAllBytes()
+        1. transferTo()
+    1. Filesのメソッドを使うか
 
 今回はこれらの疑問について、よく使われているファイルコピーのコードを一つ一つ見ていきながら、考えてみたいと思います。
 
