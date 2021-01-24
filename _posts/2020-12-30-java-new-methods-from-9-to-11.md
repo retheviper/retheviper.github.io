@@ -204,17 +204,17 @@ List<String> list = List.of("A", "B", "C");
 Set<Integer> set = Set.of(1, 2, 3);
 ```
 
-Mapの場合は、KeyとValueを順番に並ぶことでインスタンスを作成できますが、エントリーセットを定義することもできます。
+Mapの場合は、KeyとValueを順番に並ぶことでインスタンスを作成できますが、エントリーを定義することもできます。
 
 ```java
 // KeyとValueのセットで定義する
 Map<String, String> map = Map.of("foo", "a", "bar", "b", "baz", "c");
 
-// エントリーセットを定義する
+// エントリーを定義する
 Map<String, String> map = Map.ofEntries(
-  new AbstractMap.SimpleEntry<>("foo", "a"),
-  new AbstractMap.SimpleEntry<>("bar", "b"),
-  new AbstractMap.SimpleEntry<>("baz", "c"));
+  Map.entry("foo", "a"),
+  Map.entry("bar", "b"),
+  Map.entry("baz", "c"));
 ```
 
 これらのファクトリーメソッドで作成したCollectionの特徴は、最初からUnmodifiableなオブジェクトになるということです。なので、例えばアプリケーションの起動時にフィールドに定数をCollectionとして定義する、という場合に使えます。つまり、以下のような既存のコードを代替できるようなものです。
@@ -228,9 +228,13 @@ set.add("baz");
 set = Collections.unmodifiableSet(set);
 
 // Double-brace initialization 
-Set<String> set = Collections.unmodifiableSet(new HashSet<String>() {{
-    add("foo"); add("bar"); add("baz");
-}});
+Set<String> set = Collections.unmodifiableSet(new HashSet<String>() {
+    {
+        add("foo");
+        add("bar");
+        add("baz");
+    }
+});
 ```
 
 また、このファクトリーメソッドで作ったCollectionは以下のような特徴を持ちますので、必要に応じて使うのが大事ですね。
