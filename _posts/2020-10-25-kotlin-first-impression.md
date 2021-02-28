@@ -105,7 +105,7 @@ var a = "this is string"
 そして`var`に型を指定すると以下のようになります。
 
 ```kotlin
-var b: string = "this is string"
+var b: String = "this is string"
 ```
 
 Javaの伝統的な書き方だと以下です。こちらの方が、むしろコードは短くなるし、変数であることも明確ではないでしょうか。
@@ -162,7 +162,7 @@ class MemberEntity(username: String, name: String)
 
 ### 依存関係
 
-プロジェクトにKotlinを使う場合はスタンダードライブラリを追加して使う必要があります。ただ、ここで`kotlin-stdlib`だけを追加すると、Java 1.7以降に追加された一部の機能(AutoCloseableなど)を使えなくなります。なので、Java 1.7以降の機能を使いたい場合は`kotlin-stdlib-jdk7`か`kotlin-stdlib-jdk8`を依存関係に追加する必要があります。
+プロジェクトにKotlinを使う場合はスタンダードライブラリを追加して使う必要があります。ただ、ここで`kotlin-stdlib`だけを追加すると、Java 1.7以降に追加された一部の機能(AutoCloseableなど)を使えなくなります。なので、Java 1.7以降の機能を使いたい場合は`kotlin-stdlib-jdk7`か`kotlin-stdlib-jdk8`を依存関係に追加する必要があります。
 
 個人的にはOracleとGoogleの訴訟沙汰のようなことがあって、わざと著作権を避けるための独自のパッケージを作ったりしらからではないかなと思いましたが、実際はJava 9から導入されたModuleシステムに対応するための理由だそうです。なので`kotlin-stdlib-jre7`が`kotlin-stdlib-jdk7`に、`kotlin-stdlib-jre8`が`kotlin-stdlib-jdk8`に代替されたらしいですね。
 
