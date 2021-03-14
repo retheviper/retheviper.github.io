@@ -7,7 +7,7 @@ type: about
 
 ## 基本情報
 
-文系出身の韓国人。今は東京所在某IT企業にてSEとして働いています。
+文系出身の韓国人。今は東京所在某IT企業にてエンジニアとして働いています。
 
 自分の勉強したことを記録したくブログを作りましたので、自分のような初心者にとって有効活用できるような情報を載せたいと思っています。
 
@@ -15,7 +15,7 @@ type: about
 
 ## 仕事で使ったもの
 
-* Java 8 & 11
+* Java
   * JSP
   * Servlet
   * JDBC
@@ -23,10 +23,13 @@ type: about
   * Spring Framework
     * Spring Boot
     * Spring Security
-  * Tomcat
-  * Maven
-  * Gradle
-* Python 3
+* Tomcat
+* Maven
+* Gradle
+* Kotlin
+* Go
+  * Gin
+* Python
 * Markdown
 * H2
 * Oracle DB
@@ -37,6 +40,7 @@ type: about
 * Subverion
 * Ansible
 * Jenkins
+* CircleCI
 * Linux
   * CentOS
   * Amazon Linux
@@ -50,10 +54,14 @@ type: about
   * EC2
   * S3
   * Aurora
+  * lambda
+* Google Cloud Platform
+  * GAE
 * Docker
 * JMeter
 * JP1
 * Asteria
+* Sendgrid
 
 ## 個人的に触れてみたもの
 
@@ -70,7 +78,6 @@ type: about
   * TypeScript
   * Node.js
   * Angular
-* Kotlin
 * Dart
   * Flutter
 * HTML & CSS
@@ -79,9 +86,8 @@ type: about
 * Linux
   * Ubuntu
 * Oracle Cloud
-* Google Cloud Platform
 
-## 触れたいもの
+## 触れてみたいもの
 
 * Rust
   * Rocket

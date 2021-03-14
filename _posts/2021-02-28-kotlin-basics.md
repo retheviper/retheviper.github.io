@@ -123,7 +123,7 @@ private Color mix(Color c1, Color c2) {
 
 ここでわかるのは、KotlinではJavaと同じことをするとしても、短いだけでなく、より簡単にコードをかけるということですね。もちろん、別のメソッドを作ったり、`Comparable`なオブジェクトを作ったり、`Comparator`クラスを実装することでJavaでも似たようなことはできるかも知れません。しかし、そこまでしたいかというと微妙ですね。
 
-もちろん、Java 12からはKotlinの`when`に近い感覚でコードを書くこともできるようになっています。表現式としても使えて、複数の条件を指定することができ、`Lambda`の感覚でかけるということも良いですね。
+もちろん、Java 12からはKotlinの`when`に近い感覚でコードを書くこともできるようになっています。表現式としても使えて、複数の条件を指定することができ、`Lambda`の感覚で書けるということも良いですね。
 
 ```java
 var result = switch (month) {
@@ -143,7 +143,7 @@ var result = switch (month) {
 
 言語自体の拡張性と言いましたが、簡単にいうと、以前にも紹介したことのある拡張関数、つまり`extension`のことです。Kotlinの仕様としてもこれは大きい部分として紹介されているものですね。これをよく使うと、ただ「継承しなくてもそのクラスにメソッドを追加できる」だけでなく、`infix`と組み合わせることでまるで予約後であるように使うことができます。
 
-実際、[Kotlin for Java Developers](https://www.coursera.org/learn/kotlin-for-java-developers)]のコーディング問題では、`infix`で書かれた以下の拡張関数を持って結果の確認を行っていると言われています。
+実際、[Kotlin for Java Developers](https://www.coursera.org/learn/kotlin-for-java-developers)のコーディング問題では、`infix`で書かれた以下の拡張関数を持って結果の確認を行っていると言われています。
 
 ```kotlin
 infix fun <T> T.eq(other: T) {
@@ -192,9 +192,7 @@ for (index in list.indices) {
 list.forEach(::println)
 
 // インデックスを含むforEach文
-list.forEachIndexed { index, element ->
-    println("$index: $element")
-}
+list.forEachIndexed { index, element -> println("$index: $element") }
 ```
 
 インデックスを簡単に取得できるということは、ループ対象のオブジェクトが持つ全インデックスを取得したい場合に、あえて`0`のような、マジックナンバーにありえる数値を指定する必要がないというところでも良いですね。Javaだと毎回、static finalなフィールドとして宣言したり、別の定数として管理したりするケースが多いので…
