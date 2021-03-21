@@ -97,12 +97,12 @@ import "github.com/gin-gonic/gin"
 package main
 
 import (
-	"fmt"
-	"math"
+    "fmt"
+    "math"
 )
 
 func main() {
-	fmt.Println(math.pi)
+    fmt.Println(math.pi)
 }
 ```
 
@@ -116,7 +116,7 @@ func main() {
 
 ```go
 func main() {
-	fmt.Println(math.Pi)
+    fmt.Println(math.Pi)
 }
 ```
 
@@ -159,20 +159,20 @@ private static int divide(int numerator, int denominator) {
 
 ```go
 func main() {
-	result, err := divide(1, 0)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(result)
+    result, err := divide(1, 0)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Println(result)
 }
 
 func divide(numerator int32, denominator int32) (int32, error) {
-	if (denominator != 0) {
-		return numerator / denominator, nil
-	} else {
-		return 0, errors.New("0で分けません")
-	}
+    if (denominator != 0) {
+        return numerator / denominator, nil
+    } else {
+        return 0, errors.New("0で分けません")
+    }
 }
 ```
 
@@ -221,7 +221,7 @@ func doSomething() (string, error) {
 package main
 
 import (
-	"fmt"
+    "fmt"
 )
 
 func main() {
@@ -240,7 +240,7 @@ func main() {
 package main
 
 import (
-	"fmt"
+    "fmt"
 )
 
 func main() {
