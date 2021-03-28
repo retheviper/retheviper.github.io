@@ -9,8 +9,12 @@ type: librarys
 
 | ライブラリー名 | 言語 | 特徴 |
 | --- | --- | --- |
+| [KotlinTest](https://github.com/jmfayard/kotlintest){:target="_blank"} | Kotlin | Unit Testフレームワーク |
+| [Gin](https://github.com/gin-gonic/gin){:target="_blank"} | Go | Webフレームワーク |
+| [jOOQ](https://www.jooq.org){:target="_blank"} | Java | コードでクエリが書けるDBマッピングライブラリ |
+| [Swagger](https://swagger.io){:target="_blank"} | Java | REST APIを構築 |
 | [POI](https://poi.apache.org){:target="_blank"} | Java | Excelファイルの操作 |
-| [Lombok](https://projectlombok.org){:target="_blank"} | Java | Builder/Beanなどの定形文をアノテーションで作成 |
+| [Lombok](https://projectlombok.org){:target="_blank"} | Java | 定形文をアノテーションで作成 |
 | [im4java](http://im4java.sourceforge.net){:target="_blank"} | Java | ImageMagick/GraphicsMagickでの画像の変換・編集 |
 | [SnakeYaml](https://bitbucket.org/asomov/snakeyaml/src/default){:target="_blank"} | Java | Yamlとオブジェクトの変換 |
 | [Jackson](https://github.com/FasterXML/jackson){:target="_blank"} | Java | Jsonとオブジェクトの変換 |
@@ -32,3 +36,4 @@ type: librarys
 | [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html?id=docs_gateway){:target="_blank"} | Python | AWS S3操作 |
 | [Requests](https://requests.kennethreitz.org/en/master){:target="_blank"} | Python | HTTPリクエストを送信 |
 | [python-magic](https://github.com/ahupp/python-magic){:target="_blank"} | Python | ファイルタイプ確認 |
+| [openpyxl](https://openpyxl.readthedocs.io){:target="_blank"} | Python | Excelファイルの操作 |
