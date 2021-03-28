@@ -108,14 +108,16 @@ val map = list.groupBy({ it.name }, { it.id to it.amount })
 // {A=[(1, 3000), (2, 4000)], B=[(3, 5000)]}
 ```
 
-`List`を`Map`にまとめるもう一つの方法は、`groupingBy()`があります。この関数を使うと、Collectionが[Grouping](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-grouping)というオブジェクトに変わって、`aggregate()`・`reduce()`・`fold()`・`eachCount()`のような関数を使うことで皇族の処理ができます。上記のコードを`Grouping`を使ったものに変えるとしたら、以下のようになります。
+`List`を`Map`にまとめるもう一つの方法は、`groupingBy()`があります。この関数を使うと、Collectionが[Grouping](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-grouping)というオブジェクトに変わって、`aggregate()`・`reduce()`・`fold()`・`eachCount()`のような関数を使うことで後続の処理ができます。上記のコードを`Grouping`を使ったものに変えるとしたら、以下のようになります。
 
 ```kotlin
 // Groupingのaggregateを利用してMapに変えた後から、valueの処理を行う
 val map = list.groupingBy { it.name }
     .aggregate { _, accumulator: MutableList<Pair<Int, Int>>?, element, first ->
+        // 新しいキーなら、MutableListを作る
         if (first)
             mutableListOf(element.id to element.amount)
+        // そうではない場合は、存在するListに要素を追加する
         else
             accumulator?.apply { add(element.id to element.amount) }
     }.mapValues {
