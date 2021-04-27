@@ -184,7 +184,7 @@ fun toYearMonth(year: Int, month: Int): Int = "${year}${month.toString().padStar
 
 これらの方法は、引数が二つなので、`infix`として定義することもできます(好みの問題かと思いますが)。
 
-```kotlin\
+```kotlin
 >>> infix fun Int.toYearMonthWith(month: Int): Int = "${this}${month.toString().padStart(2, '0')}".toInt()
 >>> 2021 toYearMonthWith 5
 res10: kotlin.Int = 202105
