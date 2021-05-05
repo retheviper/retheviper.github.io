@@ -46,6 +46,7 @@ type: links
 - [React Native](https://facebook.github.io/react-native/docs/getting-started){:target="_blank"}
 - [Flutter](https://flutter.dev){:target="_blank"}
 - [Android Developers](https://developer.android.com){:target="_blank"}
+- [Kotlin Multiplatform Mobile](https://kotlinlang.org/lp/mobile){:target="_blank"}
 
 ### ツール
 
@@ -84,4 +85,5 @@ type: links
 - [Baeldung](https://www.baeldung.com){:target="_blank"}
 - [Wtools](https://wtools.io){:target="_blank"}
 - [Wappalyzer](https://www.wappalyzer.com){:target="_blank"}
-- [Roy Tutorials](https://www.roytuts.com)
+- [Roy Tutorials](https://www.roytuts.com){:target="_blank"}
+- [TechEmpower Web Framework Benchmarks](https://www.techempower.com/benchmarks){:target="_blank"}

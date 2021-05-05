@@ -323,7 +323,7 @@ String stripped = "\n  hello world  \u2005".strip(); // "hello world"
 また、`strip()`では前後の空白が全部削除されるのですが、文字列の前後を基準にして片方だけ削除したい場合は、前からだけを削除する`stripLeading()`や後ろからだけを削除する`stripTrailing()`も使えます。
 
 ```java
-String stripLeading = "\n  hello world  \u2005".strip(); // "hello world   "
+String stripLeading = "\n  hello world  \u2005".stripLeading(); // "hello world   "
 String stripTrailing = "\n  hello world  \u2005".stripTrailing(); // "\n  hello world"
 ```
 
