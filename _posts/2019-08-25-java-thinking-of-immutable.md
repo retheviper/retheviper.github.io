@@ -161,7 +161,7 @@ public class Car {
 }
 ```
 
-ただ、finalとなっているのはあくまでもこのクラスのフィールドのみということに気をつけなければならないです。Carオブジェクトを生成時に使われたデータが、以後
+ただ、finalとなっているのはあくまでもこのクラスのフィールドのみということに気をつけなければならないです。Carオブジェクトを生成時に使われたデータが、以後も固定されて更新ができなくなります。
 
 ## 浅いコピーと深いコピー
 
@@ -227,8 +227,7 @@ try {
     car2 = car1.clone();
     car2.setName("Your car");
 } catch (CloneNotSupportedException e) {
-        e.printStackTrace();
-    }
+    e.printStackTrace();
 }
 ```
 
