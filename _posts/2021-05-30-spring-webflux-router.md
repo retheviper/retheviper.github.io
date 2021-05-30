@@ -321,7 +321,7 @@ Percentage of the requests served within a certain time (ms)
  100%    516 (longest request)
 ```
 
-#### Router/Handlerの性能
+#### Router/Handlerの結果
 
 ```bash
 Server Software:        
@@ -391,7 +391,8 @@ suspend fun createMember(request: ServerRequest): ServerResponse {
 
 ```kotlin
 @Bean
-@RouterOperations(value =
+@RouterOperations(
+    value =
         [
             RouterOperation(
                 path = "/api/v1/members",
@@ -430,13 +431,13 @@ suspend fun createMember(request: ServerRequest): ServerResponse {
             ),
         ]
     )
-    fun routeMember() = coRouter {
-        GET("/api/v1/members") { handler.listMember() }
-        GET("/api/v1/members/{id}", handler::getMember)
-        POST("/api/v1/members", handler::createMember)
-        PUT("/api/v1/members/{id}", handler::updateMember)
-        DELETE("/api/v1/members/{id}", handler::deleteMember)
-    }
+fun routeMember() = coRouter {
+    GET("/api/v1/members") { handler.listMember() }
+    GET("/api/v1/members/{id}", handler::getMember)
+    POST("/api/v1/members", handler::createMember)
+    PUT("/api/v1/members/{id}", handler::updateMember)
+    DELETE("/api/v1/members/{id}", handler::deleteMember)
+}
 ```
 
 ご覧の通り、ドキュメンテーションのためのアノテーションが実際のコードよりも長くなっています。Functional EndpointでもSwaggerを利用できる手段ができたのは良いことですが、MVCパターンと比べやはり不便ではありますね。なので、ドキュメンテーションが大事であるなら、まだFunctional Pointを使うべきではないかも知れません。
