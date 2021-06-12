@@ -20,11 +20,11 @@ tags:
 
 でもファイルのパスやJarファイルの名称などが変わったりするとコマンドの修正が必要となりますし、あまりスマートな方法だとは思えません。なので今回はプラグインによる方法を使いたいと思います。Jenkinsのメイン画面から順番に`Manage Jenkins`、`Manage Plugins`をクリックしてプラグインのインストール画面に移動します。そして`Availale`をクリックした後、右上の`Filter`に`Copy`を入力します。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactInstall.png)
+![Jenkins Artifact Install](/assets/images/jenkins_screenshot/jenkins_artifactInstall.png)
 
 `Copy Artifact`というプラグインがリストに出ることを確認できます。これをチェックし、インストールします。なるべくプラグインのインストールやアップデートをした後にはJenkinsを再起動するようにしましょう。再起動中には以下のような画面が現れます。
 
-![](/assets/images/jenkins_screenshot/jenkins_restart.png)
+![Jenkins Restart](/assets/images/jenkins_screenshot/jenkins_restart.png)
 
 ターミナルから直接`service jenkins restart`というコマンドを入力することでも再起動はできますが、プラグインのインストールとアップデートの後のオプションでもできます。再起動の後には自動的に元の画面に戻ります。
 
@@ -32,15 +32,15 @@ tags:
 
 前回作成した`JavaBuild`のJobの設定に入り、`Post-build actions`タブから`Archive the artifacts`を選択します。そして保存したい成果物の経路を入力します。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactpost.png)
+![Jenkins Artifact Post](/assets/images/jenkins_screenshot/jenkins_artifactpost.png)
 
 Jobに変更が発生すると保存してチェックです。ビルドしてみないと思い通りに動くかどうかわからないのがJenkinsの数少ない短所の一つではないかと思いますが、それでもチェックは大事ですので。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactpostcheck.png)
+![Jenkins Artifact Post Check](/assets/images/jenkins_screenshot/jenkins_artifactpostcheck.png)
 
 ちゃんとビルドできました。保存された成果物に関してはJobのメイン画面から確認できます。どんなファイルが保存できたか確認しましょう。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactpostcheck2.png)
+![Jenkins Artifact Post Check 2](/assets/images/jenkins_screenshot/jenkins_artifactpostcheck2.png)
 
 狙い通り、ビルドしたファイルだけ保存できました。[^1]`*.jar`と指定していますが、それでもビルドされるファイルは一つしかなったので当たり前な結果ですね。ともかくこれでこちらのJobでの設定は終了です。次の作業に移行しましょう。
 
@@ -50,17 +50,17 @@ Jobに変更が発生すると保存してチェックです。ビルドして�
 
 Jobの設定画面から`Build`のタブに移動し、`Add Build Step`をクリックしてみると`Copy artifacts from another project`という項目がドロップダウンメニューに現れたことを確認できます。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactconfig.png)
+![Jenkins Artifact Config](/assets/images/jenkins_screenshot/jenkins_artifactconfig.png)
 
 `Project name`で、他のJob名を選びます。私は前回生成したJob名にしました。`Which build`では、指定したJobのどんなビルドから成果物を持ってくるかを指定します。様々なオプションがありますが、`Lastest successful build`が良さげではないかと思います。`Stable build only`オプションは念のためチェックします。あとはコピー元のファイルパスと、コピー先のパスを指定すればオッケーです。
 
 コピーしたくないファイルがあれば`Artifacts not to copy`に書くといいです。私はビルドしたJarファイルだけをこのJobのワークスペースにコピーするので、以下のように設定しました。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifactconfig2.png)
+![Jenkins Artifact Config 2](/assets/images/jenkins_screenshot/jenkins_artifactconfig2.png)
 
 ではまたJobをビルドして思い通りになるか試してみましう。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifatccopied.png)
+![Jenkins Artifact Copied](/assets/images/jenkins_screenshot/jenkins_artifatccopied.png)
 
 無事ビルドが終わり、成果物をコピーされました。
 
@@ -70,17 +70,17 @@ Jobの設定画面から`Build`のタブに移動し、`Add Build Step`をクリ
 
 sshによるファイル転送をするには、`Publish over SSH`というプラグインが必要です。このプラグインを通じでSSH接続を行い、ファイル転送やリモートでのシェルコマンドが実行できます。プラグインのインストールメニューに移動し、sshでフィルターを指定すると目録からこのプラグインを見ることができます。
 
-![](/assets/images/jenkins_screenshot/jenkins_artifatccopied.png)
+![Jenkins Arfact Copied](/assets/images/jenkins_screenshot/jenkins_artifatccopied.png)
 
 プラグインをインストールして、Jenkinsの再起動まで終わったあとは接続先の設定が必要です。Jenkinsの設定から`Configure System`に入ると、Publish over SSHの設定項目ができたことを確認できます。
 
-![](/assets/images/jenkins_screenshot/jenkins_publishoversshserversetting1.png)
+![Jenkins Publish Over SSH Server Setting](/assets/images/jenkins_screenshot/jenkins_publishoversshserversetting1.png)
 
 `Key`に公開鍵を入力することでも接続できますが、まだその設定はしてないため普通にIDとパスワードで接続設定を進めます。`SSH Servers`の`Add`ボタンを押すと、接続先の情報を入力できるフィールドができます。`Name`には接続先の自由な名称を書き、`Hostname`には実際のIPアドレスやホスト名を書きます。今回、私は自分のmacに接続してみるので(SSH接続できるようなサーバーを持ってないからですが)ルーターでの内部IPとmacのアカウントをそのまま使います。[^2]
 
 `Username`にはIDを入力します。また、パスワード入力で接続するためパスワードを書くフィールドも必要ですね。`Advanced`ボタンをクリックし、`Use password authentication, or use a different key`をチェックしたあと`Passphrase / Password`にパスワードを入力します。またSSH用の基本設定のポートは22となっていますが、こちらもちゃんとポートが開放されているか確認しましょう。必要な情報を全部入力したら`Test configuration`ボタンを押すことで接続できるかかチェックできます。
 
-![](/assets/images/jenkins_screenshot/jenkins_publishoversshserversetting2.png)
+![Jenkins Publish Over SSH Server Setting 2](/assets/images/jenkins_screenshot/jenkins_publishoversshserversetting2.png)
 
 入力した情報に間違いがないと、`Test configuration`を押した後に`Success`が出力されます。設定を保存してJobに戻ります。
 
@@ -90,19 +90,19 @@ Jobdの設定に入って`Build Environment`のタブにいくと、`Send files 
 
 `Name`ではJenkinsの設定から入力したSSH接続先のサーバーを選択します。そして`Source files`では転送したいファイルのパスを入力します。あとはオプションですが、`Remove prefix`でファイルパスを入力すると入力したところまでのパスが消えます。また、`Remote directory`ではどのフォルダにファイルを転送するかを指定できます。[^3]
 
-![](/assets/images/jenkins_screenshot/jenkins_transfer1.png)
+![Jenkins Transfer](/assets/images/jenkins_screenshot/jenkins_transfer1.png)
 
- 私の設定はこうです。フォルダを同じく作成したくはないのでファイルのみの設定としました。思い通りになったら、ユーザーのホームフォルダ配下のfromJenkinsというフォルダに転送されるはずです。念の為、転送先のフォルダの権限や所有者もチェックしておきましょう。そしてJobのビルドです。
+私の設定はこうです。フォルダを同じく作成したくはないのでファイルのみの設定としました。思い通りになったら、ユーザーのホームフォルダ配下のfromJenkinsというフォルダに転送されるはずです。念の為、転送先のフォルダの権限や所有者もチェックしておきましょう。そしてJobのビルドです。
 
-![](/assets/images/jenkins_screenshot/jenkins_transfer2.png)
+![Jenkins Transfer 2](/assets/images/jenkins_screenshot/jenkins_transfer2.png)
 
 ビルドは無事成功しました。コンソールを見ると転送に成功したファイルの個数が表示されます。では本当に転送に成功したか、macの方から確認してみます。
 
-![](/assets/images/jenkins_screenshot/jenkins_transfered.png)
+![Jenkins Transferred](/assets/images/jenkins_screenshot/jenkins_transfered.png)
 
 こちらでも確認できました。これでファイル転送というタスクは成功です。せっかくですのでmacの方からJarファイルを実行してみます。
 
-![](/assets/images/jenkins_screenshot/jenkins_jar.png)
+![Jenkins JAR](/assets/images/jenkins_screenshot/jenkins_jar.png)
 
 テスト用のデモなので`test`という字を出力するだけにしていますが、とにかく見事実行は成功です。今回のポストでのタスクもこれで終わりました。
 

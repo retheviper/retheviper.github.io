@@ -12,7 +12,7 @@ tags:
   - foreach
 ---
 
-Javaはもともと手続き型な言語ですが、賢い方法で関数型な言語の特徴を受け止めていて、言語の中に共存させていますね。個人的には関数型プログラミングというものに憧れているので、Javaの中でも好んでStreamやLambdaを使っていて、個人的にもKotlinとSpring WebFluxで色々試しているところです。
+Javaはもともと手続き型な言語ですが、賢い方法で関数型な言語の特徴を受け止めていて、言語の中に共存させていますね。個人的には関数型プログラミングというものに憧れているので、Javaの中でも好んでStreamやLambdaを使っていて、個人的にもKotlinとSpring WebFluxで色々試しているところです。
 
 ただ、Java 1.8から続いている話ですが、`Streamは果たして全てのForループを代替できるのか？`というものがありますね。そしてここでForループを代替ない理由としてよく挙げられているものが、性能・可読性・デバッグの難しさです。つまり内部的により複雑な処理を行っているため性能もよくないし、例外が発生した時も理由を特定するのが難しい上に、多くの人は[Method Chaining](https://en.wikipedia.org/wiki/Method_chaining)とLambdaに慣れてない、ということですね。
 
@@ -55,7 +55,7 @@ for (int i = 0; i < list.size(); i++) {
 }
 ```
 
-マイクロな最適化として、ループ対象のCollectionや配列の長さをあらかじめ宣言しておく場合もありますね。こうすると、ループ毎にループの対象となるCollectionや配列のサイズを毎回計算する必要がないため、少しは性能が有利になるという話があります。(コンパイラがこれぐらいの最適化は勝手にしてくれるという話もありますが)
+マイクロな最適化として、ループ対象のCollectionや配列の長さをあらかじめ宣言しておく場合もありますね。こうすると、ループ毎にループの対象となるCollectionや配列のサイズを毎回計算する必要がないため、少しは性能が有利になるという話があります。(コンパイラがこれぐらいの最適化は勝手にしてくれるという話もありますが)
 
 ```java
 int size = list.size();
@@ -96,6 +96,7 @@ for (String element : list) {
     System.out.println(element);
 }
 ```
+
 最近は、Javaのみでなく他の言語でもこれが標準となっているようです(書き方は言語毎に少し違いますが)。それはつまり、インデックスによるループよりも、ループないで扱うオブジェクトを拡張For文で対象のCollection/配列内の要素に確実に制限した方が色々有利だということでしょう。実際、インデックスといいつつ、伝統的なForb文のものはCollection/配列のインデックスと同じものでもないですので、危険なコードでもありますから。
 
 伝統的なFor文と比べ、拡張For文の中ではインデックスを利用することができないという問題があります。ただ、全く方法がないわけではないです。どうしてもインデックスを拡張For文の中で使いたい場合は、ループの外に定数を宣言するか、Collectionなら利用できる`indexOf()`か、`Collections.binarySearch()`を使う方法があります。
@@ -229,7 +230,7 @@ for (Iterator iterator = list.iterator(); iterator.hasNext(); ) {
 
 ## forEach()
 
-モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかも知れません。何よりコードが短くなるのが好きですね。
+モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかも知れません。何よりコードが短くなるのが好きですね。
 
 ```java
 list.forEach(System.out::println)
@@ -407,6 +408,7 @@ public static <T> Collector<T, ?, List<T>> toList() {
                                 CH_ID);
 }
 ```
+
 なので、ついでに他の実装クラスのベンチマークもしてみることにしました。ただ、Listの実装クラスを全部テストするのは無理があるので(特に、AbstractListやAbstractSequentialListは別途実装が必要ですし、CopyOnWriteArrayListはマルチスレッドでないと意味がないし、RoleListやVectorはほとんど使われてなく、Stackをループで利用するとは思わないので)、LinkedListの場合はどうかだけ確認してみました。まあ、ArrayListと違う反例は一つだけあったら十分ですしね。
 
 幸い、Collectorsには`toCollection()`でCollectionの実装を指定できます。なので、上記のベンチマークのコードから、以下のような修正を入れるだけでListの実装を変えることができます。
@@ -418,7 +420,7 @@ values = IntStream.rangeClosed(0, 9999999).mapToObj(format::format).collect(Coll
 
 LinkedListの場合、要素数が増えると急激に性能が低下する傾向があります。なので、ArrayListの時よりも要素数は2桁ほど減らしてベンチマークを実施しました。結果は以下です。
 
-```dos
+```bash
 Benchmark                    Mode  Cnt    Score    Error  Units
 LoopTest.indexLoop          thrpt   25    0.084 ±  0.005  ops/s
 LoopTest.iteratorLoopFor    thrpt   25  854.459 ± 36.771  ops/s

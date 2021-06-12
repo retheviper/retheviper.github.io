@@ -19,7 +19,7 @@ Javaが人気を得た理由の一つの生産性という部分では、今じ�
 
 他の言語と比べてコードが冗長であることがJavaの特徴と先に述べましたが、実際のコードではどうかをまず比較してみましょう。複雑にネストしているオブジェクトのとあるフィールドを読み、Nullだった場合はデフォルト値を返却する例を持って説明します。
 
-#### Java
+### Java
 
 Javaのコードでは、最初のオブジェクトをOptionalでラップし、ネストされているフィールドやメソッドに対してmap()をチェーニングしていくことで次から次へとラップの対象を変えていきます。そして最後に、ターゲットのオブジェクトがNullだった場合はorElse()などのメソッドでデフォルト値を設定しますね。
 
@@ -31,7 +31,7 @@ SomeClass object;
 Optional.ofNullable(object).map(obj::getProp1).map(prop1::getProp2).map(prop2::getProp3).orElse("default");
 ```
 
-#### C#
+### C#
 
 言語そのものがJavaと似ているC#ですが、より若いからか、Javaと比べ進んでいる部分がよく見当たるC#です。こちらでもKotlinとコードの書き方は同じです。違うのは、オブジェクトそのものがNullになる可能性を事前に宣言しないということだけですね。
 
@@ -39,7 +39,7 @@ Optional.ofNullable(object).map(obj::getProp1).map(prop1::getProp2).map(prop2::g
 object?.prop1?.prop2?.prop3? ?? "default";
 ```
 
-#### JavaScript
+### JavaScript
 
 JavaScriptのOptionalもまた、C#とあまり変わらないです。
 
@@ -47,7 +47,7 @@ JavaScriptのOptionalもまた、C#とあまり変わらないです。
 object?.prop1?.prop2?.prop3? ?? "default"
 ```
 
-#### Swift
+### Swift
 
 Swiftでもそう変わりません。
 
@@ -55,7 +55,7 @@ Swiftでもそう変わりません。
 object?.prop1?.prop2?.prop3 ?? "default"
 ```
 
-#### Kotlin
+### Kotlin
 
 Kotlinもデフォルト値指定のためのElvis opertor特有の表現を覗くと、一緒ですね。
 
@@ -69,7 +69,7 @@ object?.prop1?.prop2?.prop3 ?: "default"
 
 Javaの仕様ではメソッドの戻り値となれるオブジェクトは常に一つのみですが、Pythonのような言語では戻り値を複数指定することができます。もちろん、Javaの戻り値が一つという制約を乗り越えるためによくBeanやCollectionに複数のオブジェクトやデータを入れて返すことはできるのでこれはシンタックスシュガー的なものになるだけですが、それでも便利な方法があったら使いたくもなります。
 
-#### Java
+### Java
 
 メソッドの処理結果として複数のデータを受け取りたい場合、Javaだと先に述べたようにBeanやCollectionを使うことになりますね。以下は戻り値が複数の数字である例です。
 
@@ -83,7 +83,7 @@ public List<Integer> multipleReturn() {
 List<Integer> data = multipleReturn();
 ```
 
-#### C#
+### C#
 
 C#でもJavaと似たようなやり方で複数のデータを取得することができますね。実際はref/outパラメータを使ったり、structやclassを使う方法もあるらしいですが、Javaと比べより便利ではないかと思うのはTupleを使う場合です。C#のバージョンによって書き方が違っていて、昔の書き方ではJavaでCollectionを使うのとあまり変わらないものの、新しい書き方ではかなり便利なものとなっています。以下はその二つの例のコードです。
 
@@ -107,7 +107,7 @@ public (int, int) newMultipleReturn()
 (int one, int two) = newMultipleReturn();
 ```
 
-#### Python
+### Python
 
 Pythonの例では、7以後のC#と似たような感覚でコードを書けます。オブジェクト(tuple)として戻り値を全部取得するか、個別の変数として取得するか両方一つのfunctionでできるのがより便利な気もしますね。
 
@@ -125,7 +125,7 @@ d = multiple_return()
 print(d) # (1, 2)
 ```
 
-#### JavaScript
+### JavaScript
 
 ES6から導入された書き方ではPythonと似たようなコードで複数の戻り値を取得できます。
 
@@ -142,7 +142,7 @@ funtion multipleReturn() {
 var (first, second) = multipleReturn()
 ```
 
-#### Swift
+### Swift
 
 SwiftはやはりOptionalと同じく、JavaScriptとあまり変わりません。
 
@@ -156,14 +156,14 @@ func multipleReturn() -> (Int, Int) {
 let (first, second) = multipleReturn()
 ```
 
-#### Kotlin
+### Kotlin
 
-Swiftがそうであるように、Kotlinもまたあまり変わりませんね。
+KotlinではPairかTripleなどがあり、使い方は簡単です。
 
 ```kotlin
 // 複数の戻り値を持つfunction
-fun multipleReturn(): Int, Int {
-    return 1, 2
+fun multipleReturn(): Pair<Int, Int> {
+    return 1 to 2
 }
 
 // 個別の戻り値を取得
@@ -176,7 +176,7 @@ Javaでのコードの書き方の方がメソッドの役割をわかりやす�
 
 たまに、一つのメソッドで引数の型を複数指定できたら便利ではないだろうかと思うことがあります。Javaではこれをオーバーロードで実現していますね。
 
-#### Java
+### Java
 
 ```java
 public void doSomething(String value) {
@@ -190,7 +190,7 @@ public void doSomething(int value) {
 
 もちろん、引数の型をObjectとして宣言し、内部ではinstansofを使って判定することもできます。しかし、前者ならやりたいことに比べコードの量が増えすぎる問題がありますし、後者なら意図した型以外のObjectが渡された場合の挙動がおかしくなる可能性もあります。
 
-#### TypeScript
+### TypeScript
 
 TypeScriptでは、これを簡単に引数のタイプを複数指定できるようにすることで解決しています。
 
@@ -234,7 +234,7 @@ int number = x == 0 ? x : throwSomeException();
 
 個人的にif文は二択しかない結果のために使うのはスペースの無駄遣いと思いますし、無理やりメソッドを作ってまで三項演算子を使う必要はないので、三項演算子でelseの場合には単純に例外を投げられるといいな、と思っていました。そして調べてみると、他の言語ではそれができるようです。
 
-#### C#
+### C#
 
 C#では、二つのやり方があります。まず7以前だと、elseの場合に例外を投げるFuncを実行させることで実現できます。そして7以後では普通に三項演算子でthrowできるようです。まさに私が望んでいた形ですね。
 
@@ -246,7 +246,15 @@ int number = x == 0 ? x : new Func<int>(() => { throw new Exception(); })();
 int number = x == 0 ? x : throw new Exception();
 ```
 
-#### JavaScript
+### Kotlin
+
+Kotlinでは三項演算子がなく、if-elseを使うことになるということだけで、簡単な形になっています。
+
+```kotlin
+val i = if (x == 0) x else throw Exception("error")
+```
+
+### JavaScript
 
 JavaScriptでは、7以前のC#と似た形で例外を投げることができます。
 
@@ -264,6 +272,6 @@ Java 9からモジュールが導入されましたが、自分が経験した�
 
 ## 最後に
 
-最近のJavaの更新履歴をみると、続々と便利な機能が導入され続けています。特に14では、recordでLombokの`@Data`と同じ機能を持つクラス宣言ができるようになるらしいです。次のLTS版は17なので、まだ十分色々と改善される余地はありますね。1.8でも便利な機能は多いですが、これからもどんどん他の言語の良い点を吸収して変転できるといいなと思います。
+最近のJavaの更新履歴をみると、続々と便利な機能が導入され続けています。特に14では、recordでLombokの`@Data`と同じ機能を持つクラス宣言ができるようになるらしいです。次のLTS版は17なので、まだ十分色々と改善される余地はありますね。1.8でも便利な機能は多いですが、これからもどんどん他の言語の良い点を吸収して変転できるといいなと思います。
 
 また、こうやって他の言語ではどうしているかを調べてみるのも良い勉強となりました。特にTypeScriptは最近注目している言語なので、機会があれば経験してみて、Javaとの比較もしてみたいものですね。では、また！

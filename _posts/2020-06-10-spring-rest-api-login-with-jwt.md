@@ -165,7 +165,7 @@ dependencies {
 }
 ```
 
-### JWTを提供するクラスを作る
+### JWTを提供するクラスを作る
 
 依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。
 
@@ -633,7 +633,7 @@ curl -i -X POST "http://localhost:8080/api/v1/web/login" -d "id=user" -d "pass=1
 
 Postmanを使ったJSONでのログインテストはこちらになります。(X-AUTH-TOKENでJWTが帰ってきたのを確認できます!)
 
-![](/assets/images/postimage/jwt_postman_login.png)
+![JWT Postman Login](/assets/images/postimage/jwt_postman_login.png)
 
 ## 最後に
 

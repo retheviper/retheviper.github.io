@@ -19,7 +19,7 @@ tags:
 - クライアントにとあるファイルのダウンロードを提供するAPIがある。
 - サーバからのファイルの取得には以下の二つのケースがある。
   - ファイルがすでに作成されていて、サーバはそのファイルをクライアントに返すだけ。
-  - リクエストに応じて、サーバがDBのレコードをファイルに書き込み(作成し)クライアントに返す。 
+  - リクエストに応じて、サーバがDBのレコードをファイルに書き込み(作成し)クライアントに返す。
 - クライアントがファイルをダウンロードすると、サーバはDBを更新する。
   - サーバはDBに「ファイル出力済み」というフラグと、「更新ユーザ」としてログインユーザの情報を登録する。
 
@@ -43,7 +43,7 @@ tags:
 ただ、クライアント側の観点枯らして、こういう場合はGETが正しい、と決めつけるにはまた違う根拠がいるのではないでしょうか。例えばHTTPの標準とかです。ちょうど、HTTPのスペックに関する文には、[以下のような章](https://tools.ietf.org/html/rfc7231#section-4.2.1)があります。
 
 > 4.2.1.  Safe Methods
->> Request methods are considered "safe" if their defined semantics are essentially read-only; i.e., the client does not request, and does not expect, any state change on the origin server as a result of applying a safe method to a target resource. Likewise, reasonable use of a safe method is not expected to cause any harm, loss of property, or unusual burden on the origin server. 
+>> Request methods are considered "safe" if their defined semantics are essentially read-only; i.e., the client does not request, and does not expect, any state change on the origin server as a result of applying a safe method to a target resource. Likewise, reasonable use of a safe method is not expected to cause any harm, loss of property, or unusual burden on the origin server.
 
 > 4.2.1 安全なメソッド
 >> クライアントがサーバの状態を変えない、変わることを期待しない読み込み専用のリクエストは、「安全」とされる。安全なメソッドを正しく使うことによりサーバにとって害や損となるような事情を発生させなくなる。

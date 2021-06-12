@@ -164,6 +164,7 @@ public boolean isBean (T objectClass) {
     Parameter[] parameters = method.getParameters();
 }
 ```
+
 アノテーションの場合はクラスでもフィールドでも取得できますが、メソッドの場合はそれに加えて引数のアノテーションも取得できるということが特徴です。また、引数そのものを取得することもできますね。もちろん`Parameter`クラスでも引数名を取得するなど色々な操作ができます。
 
 ## 結論

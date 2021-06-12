@@ -11,7 +11,7 @@ tags:
   - linux
 ---
 
-この度は[Ansible](https://www.ansible.com/)を少し、使ってみる機会がありました。`Ansible`もまた一つの自動化ツールで、あらかじめタスクを指定することで複数の環境で適用できるという意味ではJenkinsと似たようなものでした。ただ違う点は、Jenkinsは主にデプロイとリリース、テストなどの自動化に特化しているのに対し、Ansibleはサーバーの自動構築にその目的があるということです。
+この度は[Ansible](https://www.ansible.com/)を少し、使ってみる機会がありました。`Ansible`もまた一つの自動化ツールで、あらかじめタスクを指定することで複数の環境で適用できるという意味ではJenkinsと似たようなものでした。ただ違う点は、Jenkinsは主にデプロイとリリース、テストなどの自動化に特化しているのに対し、Ansibleはサーバーの自動構築にその目的があるということです。
 
 つまり、Ansibleを使えば複数の環境を同じくセッティングできます。例えば私の経験した範囲では「開発」→「内結」→「外結」という流れになっていて、それぞれで使う環境が変わっていました。段階が変わるたびに同じくサーバーを構築するのは時間の無駄で、セッティングすべき項目が増えると人の手では様々な面でミスが起こり得るので、Ansibleで自動化したいというのが今回のタスク。
 
@@ -29,6 +29,7 @@ $ brew install ansible
 $ pip install ansible
 $ sudo apt-get install ansible
 ```
+
 使っている環境に適した方法でインストールしましょう。
 
 ## batchserver.yml
@@ -44,6 +45,7 @@ $ sudo apt-get install ansible
     - common
     - batch
 ```
+
 `hosts`はhostsファイルに記述されたホストのことを意味します。ここで`batchserver`と書くと、Ansibleの実行時は自動的にhostsファイルからbatchserverというグルーブに属している全サーバーに接続し同じ動きをします。全グループに対して実行したい場合は`all`と書きましょう。
 
 そして`become`を`true`に設定すると、接続先での全ての命令ががsudoとして実行されます。`roles`はサーバーで行う行動を指定したYAMLファイルのことを記述していて、私の場合はどんなサーバーでも共通的に実行したことを書いた`common`とバッチサーバーでだけ実行したい`batch`を区分しておいたので両方を書いています。
@@ -61,6 +63,7 @@ $ sudo apt-get install ansible
 192.168.10.1 ansible_ssh_user=webapuser1
 192.168.10.2 ansible_ssh_user=webapuser2
 ```
+
 基本はグルーブを指定して、ホストの情報を書いておくと自動的に分類されます。上に書いたYAMLファイルではまず`batchserver`だけを指定しているので実行時に`webapserver`のグループは無視されます。そして`ansible_ssh_user`はその名の通りAnsibleでSSH接続する時に使われるユーザー名を指定しています。もちろんこうしなくても実行時にユーザー名やパスワードを入れることもできます。
 
 ## roles / batch / tasks / main.yml
@@ -156,6 +159,7 @@ $ sudo apt-get install ansible
       name: java
       path: /usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java
 ```
+
 このファイルでやっていることは、`yum`による全パッケージのアップデートと、OpenJDKのインストールです。JDKをインストールするだけではサーバーでJava実行時の基本バージョンがOpenJDK11にならないのでAlternativeからJavaのバージョンを選択するところまで入れています。同じやり方でPython3をインストールしてAlternativeで基本実行のバージョンを指定するなどのこともできます。
 
 ここまでくるとAnsibleによる基本設定は終わり。難しくないですね！(深く入れば難しくなりそうですが)
@@ -172,6 +176,7 @@ $ ansible-playbook server.yml -i hosts -C
 # SSH接続ユーザー名を入れる場合
 $ ansible-playbook server.yml -i hosts -u hostuser
 ```
+
 こちらも簡単ですね。実行時にSSH接続するユーザーのパスワードを要求される場合がありますが、これはあらかじめSSH接続するユーザーの公開鍵を登録しておくことで回避できます。`sudo`の場合は接続先で`visudo`から`NOPASSWD`を設定しておくと便利です。
 
 ## 最後に

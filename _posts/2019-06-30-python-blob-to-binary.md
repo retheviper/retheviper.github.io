@@ -37,7 +37,6 @@ PostgreSQLの場合は、`psycopg2`を使います。接続に必要となる情
 
 二つのDBに接続するための手順には少し違いがありますが、接続した後の処理は同じです(本当はSQL文の文法も少し違うようですが…)。それではOracleとPostgreSQLの接続方法と接続以後の処理を分けて説明しましょう。
 
-
 ### 接続(Oracleの場合)
 
 ```python
@@ -278,7 +277,7 @@ def getDBConnection():
     pwd = os.path.dirname(os.path.abspath(__file__))
     dbConnection = pwd.rsplit("/", 1)[0] + '/env/DBConnection.conf'
 
-    # ファイルがない場合異常終了
+    # ファイルがない場合異常終了
     if (not os.path.exists(dbConnection)):
         print ('>> Please check DBConnection.conf. quitting.')
         sys.exit(9)

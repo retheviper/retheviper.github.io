@@ -159,7 +159,6 @@ bin % ./encrypt.sh password=password input=this_is_input
 
 このコマンドでの出力結果は以下です。
 
-
 ```shell
 ----ENVIRONMENT-----------------
 

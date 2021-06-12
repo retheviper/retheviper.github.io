@@ -61,7 +61,7 @@ public final class Settings {
             // 読み込んだYAMLファイルをパースしてMapに値を取り込む
             Yaml yaml = new Yaml();
             Map<String, Map<String, Object>> importedMap = autoCast(yaml.load(reader));
-            // 読み込んだ値をフィールドのMapに移す
+            // 読み込んだ値をフィールドのMapに移す
             for (Map.Entry<String, Map<String, Object>> entry : importedMap.entrySet()) {
                 SETTINGS_FROM_FILE.put(entry.getKey(), entry.getValue());
             }

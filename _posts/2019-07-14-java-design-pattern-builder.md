@@ -32,7 +32,7 @@ public class CoffeeOrder{
     private final boolean addCream; 
     private final boolean addSugar;
     private final boolean takeout;
-	
+
     public CoffeeOrder(Stirng size, boolean hot){
         this(size, hot, false, false, false);
     }
@@ -54,6 +54,7 @@ public class CoffeeOrder{
     }
 }
 ```
+
 これでオーダを定義するクラスが一つ、できました。実際使ってみましょう。
 
 ```java
@@ -68,6 +69,7 @@ public class Cafe{
     }
 }
 ```
+
 このパターンのよくない点は、オブジェクトを生成する時、引数の意味を分かりにくいという点です。実際クラスの中身をみないと、連続している`false`や`true`の意味が分かりませんね。そして例えば、サイズとシロップだけを引数として入れたい場合は、それに合わせてまたコンストラクターを作成しなければならないです。変数が増えれば増えるほど、それに合わせコンストラクターを用意する必要があるという問題もあります。あとでオーダーのオプションが増えたり減ったりするとそれに対応するのが難しいですね。
 
 ## Java Bean, DTO(VO)
@@ -126,7 +128,8 @@ public class CoffeeOrder{
     }
 }
 ```
-コンストラクターとして引数を受け取るパターンも含める場合はありますが、Java Beanとしての特徴はこのGetterとSetterにあるので、ここでは省略。では同じく、これでオーダーを生成してみましょう。
+
+コンストラクターとして引数を受け取るパターンも含める場合はありますが、Java Beanとしての特徴はこのGetterとSetterにあるので、ここでは省略。では同じく、これでオーダーを生成してみましょう。
 
 ```java
 public class Cafe{
@@ -144,6 +147,7 @@ public class Cafe{
     }
 }
 ```
+
 さっきよりは個別項目ごとに値を設定することができ、それぞれのSetterをみてどんなオーダーを出しているのかがより明確になりますね。また変数が増えてもそれに合わせてGetterとSetterを用意するだけで良いです。
 
 ただ、一つの注文を完成する時、オプションの数が増えると無題に長いコードになってしまうという問題がありますね。今は5つのフィールドを使っているだけですが、もし20、30のオプションがあったら？それをいちいち書くのはかなり時間もかかることですね。私が失敗したのはこの部分でした。なのでBuilderを使い、この問題を解決してみます。
@@ -158,7 +162,7 @@ public class CoffeeOrder{
     private final boolean addCream; 
     private final boolean addSugar;
     private final boolean takeout;
-	
+
     public CoffeeOrder(Stirng size, boolean hot, boolean addCream, boolean addSugar, boolean takeout){
         this.size = size;
         this.hot = hot;
@@ -178,7 +182,7 @@ public class CoffeeOrder{
         private final boolean addCream; 
         private final boolean addSugar;
         private final boolean takeout;
-	
+
         public Builder(){}
 
         public CoffeeOrder size(String size){
@@ -212,6 +216,7 @@ public class CoffeeOrder{
     }
 }
 ```
+
 Inner Classも入り、何か複雑になったように見えますが、実際使ってみるとそうでもないです。このようなBuilderクラスを使うとどうなるのか、また確認してみましょう。
 
 ```java
@@ -231,6 +236,7 @@ public class Cafe{
     }
 }
 ```
+
 Setterと似たような使い方で、一回だけで複雑なオプションを全部処理できます。また、生成と同時にもオーダーを完成できます。Builderが戻り値として自分自身を使っていて、連続してメソッドを呼び出すことができるからです。これならいくら変数が増えても対応できますね！
 
 ## Lombokを使う
@@ -281,7 +287,6 @@ public class CoffeeOrder{
 デザインパターンの種類に何があって、どんな構造をしているかを把握することも大事ですが、何より大事なことは適材適所に使えることではないかと思いました。最初から自分がBuilderパターンを知っていたとしても、それを使ったらいいと言われなかったら果たして使おうとしていただろうかと思うと、そうでもないような気がしますね。なのでこれからはデザインパターン自体の研究とともに、それをどの場合に使えるかという面から考察していきたいと思います。
 
 それでは、また会いましょう！
-
 
 [^1]: 引数の数や種類を変えることで、同名のメソッドを複数作成する記法。
 [^2]: Object Oriented Programing.オブジェクト指向プログラミングとも言いますね。コードをひたすら上から下まで流れる処理として扱うのではなく(手続き型プログラミング)、隔離されたオブジェクト間のデータ交換として成立するプログラミングのパラダイムです。

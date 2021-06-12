@@ -70,7 +70,7 @@ public class SomeServiceConfig {
 
 ## 定義済みのConditionalアノテーション
 
-#### ConditionalOnProperty
+### ConditionalOnProperty
 
 application.ymlなど、プロパティを書いたファイルやシステムプロパティに、指定したアノテーションがある場合実行されるアノテーションです。Spring Bootアプリケーションで最も一般的に使われるものらしいですね。括弧の中にはプロパティ名と値、そしてそのプロパティが存在しない場合も実行するかどうかを指定できます。
 
@@ -84,7 +84,7 @@ public class TestConfig {
 }
 ```
 
-#### ConditionalOnExpression
+### ConditionalOnExpression
 
 プロパティの記述方法による実行というアノテーションです。括弧で条件を指定できます。ここでいう条件(表現式)は、Valueアノテーションなどでも使われる[SpEL](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#expressions)を使います。application.ymlなどに記載したプロパティが、括弧の中の条件と一致する場合に実行されますね。以下のコードはuse.testmodeとuse.submodeのどちらもtrueの場合に実行される例です。
 
@@ -96,7 +96,7 @@ public class TestSubConfig {
 }
 ```
 
-#### ConditionalOnBean
+### ConditionalOnBean
 
 指定したBeanが存在する場合に実行というアノテーションです。括弧の中にBeanとして登録されているかどうか判定したいクラスを指定するだけで使えます。ConditionalOnPropertyでとあるBeanが登録されたら、それに合わせて必要なサブモジュール的なものも登録したい、といった場合に使えるのかなと思います。以下のコードは、TestRepositoryというクラスがBeanとして登録されている場合に実行される例です。
 
@@ -108,7 +108,7 @@ public class TestBeanConfig {
 }
 ```
 
-#### ConditionalOnMissingBean
+### ConditionalOnMissingBean
 
 ConditionalOnBeanとは逆のものです。こちらは、指定したクラスがBeanとして登録されてない場合に実行というものとなります。以下のコードは、RepositoryがBeanとして登録されてない場合は自動的にTestRepositoryをBeanとして登録する例です。
 
@@ -124,7 +124,7 @@ public class AlternativeConfigutration {
 }
 ```
 
-#### ConditionalOnResource
+### ConditionalOnResource
 
 リソースファイルが存在する場合に実行するというアノテーションです。例えばLogBackを使う場合、xmlファイルが必要となりますが、そのxmlファイルが存在する場合はConfigurationも実行するという構成にしたい場合に使えますね。以下のコードは、そのような場合の例です。
 
@@ -136,7 +136,7 @@ public class LogbackConfig {
 }
 ```
 
-#### ConditionalOnClass
+### ConditionalOnClass
 
 指定したクラスが存在する場合に実行するというアノテーションです。ConditionalOnBeanと似ていますが、こちらはBeanではなくても良いという違いがありますね。例えば依存関係でとあるライブラリがあるかどうかで使えると思います。以下のコードはcom.custom.library.moduleパッケージのSomeClassというクラスが存在する場合に実行される例です。
 
@@ -148,7 +148,7 @@ public class CustomLibraryConfig {
 }
 ```
 
-#### ConditionalOnMissingClass
+### ConditionalOnMissingClass
 
 ConditionalOnClassの逆の場合のアノテーションです。こちらはConditionalOnMissingBeanと似ていますね。同じく、指定するクラスはBeanでなくても良いです。以下のコードは、上のConditionalOnClassの逆の場合の例です。
 
@@ -160,8 +160,7 @@ public class NoCustomLibraryConfig {
 }
 ```
 
-
-#### ConditionalOnJava
+### ConditionalOnJava
 
 アプリケーションがJavaのどのバージョンで実行されているかのによるアノテーションです。JavaのバージョンによってAPIの仕様が変わる場合があるので、複数の環境でアプリケーションを実行する必要がある場合は使うことを考えられますね。以下のコードは、Javaのバージョンが1.8の場合の例です。
 

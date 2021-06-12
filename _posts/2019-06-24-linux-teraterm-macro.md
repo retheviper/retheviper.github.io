@@ -77,7 +77,7 @@ SERVERnameLIST[1] = 'WebAPサーバー'
 SERVERnameLIST[2] = 'CIサーバー'
  
 ;==============================================
-;;　サーバー別INIファイル
+;; サーバー別INIファイル
 ;==============================================
 strdim INILIST 3
 INILIST[0] = '/BatchServer.INI'

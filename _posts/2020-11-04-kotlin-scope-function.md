@@ -130,7 +130,7 @@ var result1 = server.run {
 // letを使う場合
 var result2 = server.let {
     port = 8081
-    get("/members:${it.port})
+    get("/members:${it.port}")
 }
 ```
 
@@ -147,9 +147,9 @@ name?.let { println("name is not null") } ?: also { println("name is null") }
 
 [Kotlin Standard Library (let, run also, apply, with)](https://medium.com/@brijesh1794/kotlin-standard-library-let-run-also-apply-with-bb08473d29fd)では、5つのScope Functionのどれを使うか判断する基準を、フローチャートとして提示しています。以下は、そのフローチャートを簡単に翻訳したものです。どれを使うか悩ましい時は、こういう基準でコードを書いても良さそうですね。
 
-![](/assets/images/postimage/kotlin_select_scope_function.png)
+![Kotlin Select Scope Function](/assets/images/postimage/kotlin_select_scope_function.png)
 
-## 応用
+## 応用
 
 Scope Functionが戻り値としてレシーバーそのものを返すというのは、すなわちBuilderパターンとして使えるという意味でもあります。なので、適切な組み合わせで、Scope Functionによるメソッドチェーンもできます。これをよく活用すると、かなり関数型的な感覚でコードを書くことができるでしょう。以下は、その例の一つです。
 
@@ -163,7 +163,7 @@ var jack: Person = Person("Jack", 30, Gender.MALE).also { println(it.name) }.als
 
 ## 最後に
 
-実は、このようなKotlinの機能は、そう新しいものでもありません。なぜなら、同じJVM言語であり、同じく機能する`with()`のような関数を提供している[Groovy](http://groovy-lang.org)があるからです。自分の中では[Spock](http://spockframework.org)かGradleのイメージしかないのですが…
+実は、このようなKotlinの機能は、そう新しいものでもありません。なぜなら、同じJVM言語であり、同じく機能する`with()`のような関数を提供している[Groovy](http://groovy-lang.org)があるからです。自分の中では[Spock](http://spockframework.org)かGradleのイメージしかないのですが…
 
 ただ、このようにKotlinが提供する機能は「新しくはないけど、快適」という感覚を確かに伝えてくれているような気がします。なのでJavaプログラマーがKotlinに転向していく数も増えているのでしょう。最近は特にPythonやJavaScriptのような言語が人気を得ているところですが(Kotlinは[TIOBE](https://www.tiobe.com/tiobe-index/)の順位からだと見えもしないし…)、もっと性能と安定性、そして快適な開発のバランスを持ちたいと思う人にはぜひおすすめしたい言語です。なのでもっと、Kotlinの魅力をより多くの人(自分を含め)にわかった欲しいところです。今回のポストで少しはそれが伝わると幸いですね。
 

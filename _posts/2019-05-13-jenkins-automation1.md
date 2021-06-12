@@ -33,19 +33,25 @@ GitやSubversionでのバージョン管理をしても、誰がいつPushした
 ## それではインストールしましょう
 
 まず、Jenkinsのリポジトリを持ってきます。
+
 ```bash
 $ sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 ```
+
 ここでwget -Oはフォルダを読み、ファイルとして出力するオプションらしいですね。ここでも勉強になります。
+
 ```bash
 $ sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 ```
+
 rpmはパッケージをインストールする時使うコマンドなのですが、ここでは--importオプションでキーを持って検証を行いますね。
 
 ここまで終わったら、普通のパッケージと同じくyumでインストールできます。
+
 ```bash
 $ yum install jenkins
 ```
+
 これでインストールは終わり。問題なければ、ポートの設定をやって起動するまでです。
 
 （続きます）

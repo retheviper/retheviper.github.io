@@ -51,7 +51,7 @@ User = nodeservice # 実行するユーザー、権限に注意！
 # シンボリックリンクや別名などの設定
 [Install]
 WantedBy = multi-user.target # どこのフォルダにシンボリックリンクを作るかを指定、これが一般的らしい
-``` 
+```
 
 他にも様々なオプションがありますが、基礎的な情報はこのくらいかと。テストのために作成しておいたNode.jsでのWebサーバーはこれで動きました。(と言っても`Hello Node.js!`を出力するだけの簡単なものですが…)
 
@@ -75,6 +75,7 @@ $ systemctl start NodeServer
 # 実行されているサービスの中で検索する
 $ systemctl list-units | grep NodeServer
 ```
+
 ```bash
 # serviceファイルを修正した場合はリロードする
 $ systemctl daemon-reload

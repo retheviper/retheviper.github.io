@@ -120,17 +120,17 @@ Optionalは、Nullになる可能性のあるオブジェクトに対しての�
 
 なら、そんな異質的なAPIをなぜ使うのか？それはOptionalがどんなものであり、どんな特徴を持っているかをまず見て判断することにしましょう。
 
-#### 使い方が簡単
+### 使い方が簡単
 
 map()やfilter()などCollection[^1]やStream[^2]と似たような機能をするメソッドがあり、さらに引数としてLambdaを使えるので、CollectionやStreamに慣れていると簡単に適応できます。
 
 Optionalを効率的に使うためにはメソッドチェーニング[^3]やLambdaにまずなれる必要があるので、まずはjava.util.functionsになれるとしましょう。[以前のポスト](../../../../2019/08/06/java-function)を参考にしてください。
 
-#### 見ただけでわかる
+### 見ただけでわかる
 
 Optionalはオブジェクトを包み、そのオブジェクトがNullである場合の処理のため作られたAPIです。なのでOptionalで包まれているオブジェクトがあると、そのオブジェクトはNullになる可能性があることを明らかにしているということです。なので戻り値だけでNullになる可能性があるコードを見分けることができるようになります。
 
-#### 可読性が上がる
+### 可読性が上がる
 
 Nullチェックという本来の目的に充実しながらも、コードが簡潔になるので読みやすいコードになります。取得したいオブジェクトがネストしている場合もOptionalで対応できます。最初のオブジェクトのNullチェックをして、さらにネストしているオブジェクトをNullチェックしていくような形です。
 
@@ -156,7 +156,7 @@ Optionalが初めての方にはどんなことをしているか一見わから
 
 OptionalはSingletonのjava.util.Optional<T>をインポートしてオブジェクトを包み、包まれたオブジェクトがNullか否かによってどんな挙動をするかのメソッドを持っています。これからそれらのメソッドを一つづつ見ていきましょう。
 
-#### empty()
+### empty()
 
 空のOptionalを作成します。空のOptionalはその名の通り空で、中にラップされたオブジェクトがNullの状態です。
 
@@ -164,7 +164,7 @@ OptionalはSingletonのjava.util.Optional<T>をインポートしてオブジェ
 Optional<String> emtpyName = Optional.empty(); // StringはNull
 ```
 
-#### get()
+### get()
 
 Optionalでラップされたオブジェクトを取得する時に使います。
 
@@ -175,7 +175,7 @@ Optinal<String> name = Optional.of(value);
 System.out.println(name.get()); // Sato
 ```
 
-#### of(T value)
+### of(T value)
 
 引数として渡したオブジェクトを包むOptionalを生成します。ただ、引数のオブジェクトがNullの場合はget()の結果もNullになります。
 
@@ -186,7 +186,7 @@ Optinal<String> name = Optional.of(value);
 name.get(); // Null
 ```
 
-#### ofNullable(T value)
+### ofNullable(T value)
 
 引数として渡したオブジェクトを包むOptionalを生成するということではof()と同じですが、引数のオブジェクトがNullだった場合はempty()で生成されたOptionalを返却します。
 
@@ -197,7 +197,7 @@ Optinal<String> name = Optional.ofNullable(value);
 name.get(); // Optional<String>
 ```
 
-#### map(Function<? super T, ? extends U> mapper)
+### map(Function<? super T, ? extends U> mapper)
 
 CollectionやStreamのmap()と似たようなメソッドです。複雑にネストされているフィールドを安全にチェックする時に使います。mapで取り出したオブジェクトは自動的にOptionalでラップされたクラスとなります。
 
@@ -222,7 +222,7 @@ Consumer<String> print = System.out::print;
 Supplier<String> = String::new;
 ```
 
-#### filter(Predicate<? super T> predicate)
+### filter(Predicate<? super T> predicate)
 
 filter()もまたCollectionやStreamのメソッドに慣れているなら簡単に使えるメソッドの一つです。条件と一致する場合(PredicateによりTrueとなる)にだけ値を返却します。単にNullかどうかの判定だけでなく、何かの処理を付け加えたい時に使います。
 
@@ -246,7 +246,7 @@ public String getSato(Student student) {
 
 Optionalの要素は一つしかないのでfilterで指定した条件の結果がfalseの時は以後のメソッドが無視されます。
 
-#### isPresent()
+### isPresent()
 
 OptionalでラップしたクラスがNullであるかを判定するためのメソッド。Nullでない場合はTrue、Nullの場合はFalseとなるシンプルなものです。
 
@@ -256,7 +256,7 @@ Optional<String> studentName = Optional.ofNullable(name);
 studentName.isPresent(); // true
 ```
 
-#### ifPresent(Consumer<? super T> consumer)
+### ifPresent(Consumer<? super T> consumer)
 
 ラップされたオブジェクトがNullでない場合にだけ実行するメソッドを記述します。
 
@@ -265,7 +265,7 @@ Optional<String> name = Optional.ofNullable(student.getName());
 name.ifPresent(n -> System.out.println(n));
 ```
 
-#### orElse(T other)
+### orElse(T other)
 
 引数として渡したオブジェクトがNullの場合にデフォルト値を使います。このメソッドを使った場合はget()は記述しなくてもよくなります。
 
@@ -275,7 +275,7 @@ Optional<String> name = Optional.ofNullable(student.getName());
 String result = name.orElse(defaultName); // student.getName()がNullの場合defaultNameになる
 ```
 
-#### orElseGet(Supplier<? extends T> other)
+### orElseGet(Supplier<? extends T> other)
 
 引数として渡したオブジェクトがNullの場合にデフォルト値として指定したLambdaを実行し、その結果を返却します。このメソッドを使った場合はget()は記述しなくてもよくなります。
 
@@ -284,7 +284,7 @@ Optional<String> name = Optional.ofNullable(student.getName());
 String result = name.orElseGet(() -> student.getNumber + "の名前がありません"); // student.getName()がNullの場合Lambdaを実行する
 ```
 
-#### orElseThrow(Supplier<? extends X> exceptionSupplier)
+### orElseThrow(Supplier<? extends X> exceptionSupplier)
 
 引数として渡したオブジェクトがNullの場合に例外を投げます。このメソッドを使った場合はget()は記述しなくてもよくなります。
 
@@ -297,7 +297,7 @@ String result = name.orElseThrow((BusinessException::new);
 
 Nullチェックで便利で安全なOptionalですが、全ての状況でNullに関する処理を全部Optionalに変える必要はありません。Optionalの導入を検討する時、注意すべきことについて説明します。
 
-#### 性能を意識する
+### 性能を意識する
 
 すでに気づいている方もいらっしゃると思いますが、Optionalはオブジェクトをラップするものなので必然的に性能の低下と繋がります。なのでNullチェックがいる場面では一旦Optionalを使う、ということはあまり良い考えではありません。簡単なNullチェックはOptionalでなくてもできますし、早いです。
 
@@ -337,7 +337,7 @@ public Student getStudent(String name) {
 }
 ```
 
-#### isPresent()とget()の組み合わせはNG
+### isPresent()とget()の組み合わせはNG
 
 isPresent()でオブジェクトがNullかを確認したあと、get()でオブジェクトを取得するようなコードは結局普通のNullチェックと変わりません。デフォルト値を使いたい場合はorElseGet()を、例外としたい場合はorElseThrow()を活用しましょう。
 
@@ -379,7 +379,7 @@ public void adjustScore(String name, int score) {
 }
 ```
 
-#### フィールドでは使わない
+### フィールドでは使わない
 
 そもそもOptionalはフィールドとして使われる場合を想定していないようです。なぜなら、OptionalはSerializableを継承してないからです。なのでDTOなどでフィールドとしてOptionalを使うとNullチェック以前に問題が起こる可能性があります。
 
@@ -399,7 +399,7 @@ public class Student implements Serializable{
 }
 ```
 
-#### 引数では使わない
+### 引数では使わない
 
 メソッドやコンストラクターの引数としてOptionalを使うと、それを呼び出すたびに引数としてOptionalを生成する必要があります。また、内部的にOptionalでNullチェックのロジックが入るのでコードも複雑になりますね。こういう場合、内部でどんな処理が行われ、期待通りの処理になっているかわからなくなるので不便です。
 
@@ -427,7 +427,7 @@ public class Student {
 }
 ```
 
-#### Collectionの中では使わない
+### Collectionの中では使わない
 
 Collectionの中の要素は無理やり入れない限りNullが入らない場合もあれば、Nullチェックに対応するメソッドを含めている場合もあります。そして中の要素は複数になるので、Optionalを要素として使う場合は性能の低下が必然的に起こります。なので要素ではなるべくOptionalを使わないようにしましょう。また、フィールドや引数と同じく要素を追加したり取得する場合に毎回Optionalを経由しなければならないという不便さがあります。
 
@@ -441,7 +441,7 @@ List<String> names = new ArrayList<>();
 names.add(name1);
 ```
 
-#### CollectionはCollectionで
+### CollectionはCollectionで
 
 Collectionが戻り値のメソッドの場合、NullだとCollections.emptyList()やCollections.emptyMap()などで空のCollectionを返却した方が良い場合が多いです。Collectionは
 
