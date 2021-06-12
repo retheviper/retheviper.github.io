@@ -8,6 +8,7 @@ photos:
 tags:
   - kotlin
   - java
+  - stream
 ---
 
 とある処理を書く方法が色々ある場合は、どれを選んだ方がもっとも良いかと悩ましくなります。こういう場合は、コードの読みやすさやコードの長さ、予想される問題のようなさまざまな観点からそれぞれの方式を比較してどれを選ぶか判断することになりますね。ただ、このような観点から判断するのは多くの場合「書き方が全く違う」場合に有効であって、そもそも似たようなコードを書くことになる場合は他の観点からも考える必要があります。ほんの少しだけ違うから、見た目だけでは違いがわからない場合。こういう時はそのAPIの内部、メカニズムからちゃんと考えて選ぶ必要がありますね。
@@ -117,7 +118,7 @@ Now 10 is String
 ![Kotlin List Processing](/assets/images/postimage/kotlin_list_processing.png)
 *出典：Kotlin公式ドキュメント - [Sequences](https://kotlinlang.org/docs/sequences.html#iterable)*
 
-#### Collectionのopreation
+##### Collectionのopreation
 
 Collectionでの処理は上記の通りですが、実装としてはどうでしょうか。ここではCollectionでの`map()`のコードを見ていきたいと思います。コードとしては以下のようになっています。
 
@@ -192,7 +193,7 @@ Now 6 is String
 
 処理の順番や仕組みが違うので、Collectionの時とは実装もかなり違うだろうと予想ができますね。では、こちらの実装を見ていきましょう。
 
-#### Sequenceでのoperation
+##### Sequenceでのoperation
 
 Collectionと同じく、Sequenceの`map()`の実装を覗いてみましょう。先程のコードでSequenceの`map()`は中間処理であり、新しいCollectionを作り出すわけではないということはわかりました。実装を見ると、以下のようになっていて、処理結果が反映されたSequenceを返しているのがわかります。
 
@@ -228,7 +229,7 @@ constructor(private val sequence: Sequence<T>, private val transformer: (T) -> R
 
 ただ、性能の観点で考えると、CollectionとSequenceの違いはもう一つ考慮すべきところがあります。それはデータ構造の違いです。
 
-## データ構造の違い
+## Stateless
 
 JavaのStreamでもそうでしたが、Sequenceは状態(State)を持たないのが特徴です。ここで状態を持たないということは、持っている要素の数や順番などに対しての情報がないということを意味します。なぜかというと、SequenceがIteratorに基づいているものだからです。そしてそれが原因で、処理の種類によってCollectionよりも性能は劣る可能性もまたあります。
 

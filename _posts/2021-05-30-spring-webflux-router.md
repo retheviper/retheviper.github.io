@@ -9,6 +9,7 @@ tags:
   - spring
   - webflux
   - kotlin
+  - rest api
 ---
 
 以前、[Spring WebFluxに関するポストを書いたこと](../../../../2020/09/06/spring-webflux/)があって、そこで少しだけMVCパターン(`Controller`/`Service`)と`Functional Endpoint`(`Router`/`Handler`)に関して触れました。結論だけ先に述べますと、Functional Endpointの導入はMVCパターンは長く使われている良いパターンでありますが、性能や関数型プログラミングには適してないのという問題があるので、それを改善するためのものだといえます。
