@@ -274,11 +274,11 @@ internal fun <T> List<T>.optimizeReadOnlyList() = when (size) {
 }
 ```
 
-これでわかるように、Sequenceを使って処理をする場合、要素数が多ければ多いほどCollectionよりも性能が劣化する可能性は確かに存在します。CollectionでFunctional functionを呼び出す際にListを作るとしても、すでに要素数はわかっているので、Listのサイズが合わないためのArrayの生成とコピーの処理は不要ですね。なのでCollectionとSequenceのどちらを選ぶかの問題はFunctional functionを呼び出す回数や処理の種類だけでなく、要素の数まで考える必要がありそうです。
+これでわかるように、Sequenceを使って処理したあと、Collectionにまとめるなら要素数が多ければ多いほどCollectionよりも性能が劣化する可能性は確かに存在します。CollectionでFunctional functionを呼び出す際にListを作るとしても、すでに要素数はわかっているので、Listのサイズが合わないためのArrayの生成とコピーの処理は不要ですね。なのでCollectionとSequenceのどちらを選ぶかの問題はFunctional functionを呼び出す回数や処理の種類だけでなく、要素の数まで考える必要がありそうです。
 
-ただ、要素数が多い場合でも、終端処理の種類によってはSequenceの方が有利になる可能性もなくはないです。例えば`forEach()`や`onEach()`など、個別の要素に対して処理を行うだけの関数の場合は依然としてSequenceの方で良い性能を期待できるでしょう。
+ただ、要素数が多い場合でも、終端処理の種類によってはSequenceの方が有利になる可能性もなくはないです。例えば`forEach()`や`onEach()`など、個別の要素に対して処理を行うだけの場合は依然としてSequenceの方で良い性能を期待できるでしょう。
 
-性能に影響する処理としてもう一つ考えられるのは、Sequenceを使う場合でも呼び出せるFunctional functionの中で明らかに「状態を必要とする」ものがあるということです。例えば以下の一覧のようなものです。
+要素数が多い場合に性能に影響する処理としてもう一つ考えられるのは、Sequenceを使う場合でも呼び出せるFunctional functionの中で明らかに「状態を必要とする」ものがあるということです。例えば以下の一覧のようなものです。
 
 - どんな要素が含まれているかわかる必要がある
   - `distinct()`
@@ -311,7 +311,9 @@ public fun <T : Comparable<T>> Sequence<T>.sorted(): Sequence<T> {
 }
 ```
 
-単純ですが、Sequenceを一度Listに変換してsortした後、またSequenceに変えて返していますね。ここでListに変えるために呼び出している関数は`toMutableList()`なので、結局`toList()`を呼び出す場合と同じようなことが起きるということです。なので、やはり要素数が多ければ多いほど性能はCollectionより劣化しやすい、ということがわかります。
+単純ですが、Sequenceを一度Listに変換してsortした後、またSequenceに変えて返していますね。ここでListに変えるために呼び出している関数は`toMutableList()`なので、結局`toList()`を呼び出す場合と同じようなことが起きるということです。なので、状態を必要とする操作の場合は要素数が多ければ多いほど性能はCollectionより劣化しやすい、ということがわかります。
+
+ただ、逆に状態が必要にならない場合は、Collectionと違って中間結果のListを作成しなくなるので、依然としてSequenceが良い性能を見せるだろうと思えます。
 
 ## 最後に
 
@@ -319,11 +321,12 @@ public fun <T : Comparable<T>> Sequence<T>.sorted(): Sequence<T> {
 
 | 条件 | おすすめ |
 |---|---|
-| 要素数が多い | Collection |
 | 処理が複雑 | Sequence |
 | 処理した結果としてCollectionが必要 | Collection |
 | ループするだけ | Sequence |
 | 処理に状態が必要 | Collection |
+| 要素数が少ない | Collection |
+| 要素数が多い | Sequence |
 
 もちろんこれらの条件が複数ある場合も十分考えられるので、必要な処理が何かをよく考えてどちらを使うかを慎重に考える必要がありそうです。多くの場合とりあえずCollectionを使うという方針だとしても特に問題はなさそうな気はしますが…
 
