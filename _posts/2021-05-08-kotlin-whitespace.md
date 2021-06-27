@@ -74,7 +74,7 @@ public inline fun String.trim(): String = (this as CharSequence).trim().toString
 public fun CharSequence.trim(): CharSequence = trim(Char::isWhitespace)
 ```
 
-ここでは、オーバロードした他の`trim()`に`isWhitespace()`をメソッドレファレンスとして渡しているのがわかります。`Boolean`が戻り値なので、引数は`Predicate`であると推測できますね。続けて、こちらで呼び出している`trin(predicate)`の方を確認します。こちらのコードは以下の通りです。
+ここでは、オーバロードした他の`trim()`に`isWhitespace()`をメソッドレファレンスとして渡しているのがわかります。`Boolean`が戻り値なので、引数は`Predicate`であると推測できますね。続けて、こちらで呼び出している`trim(predicate)`の方を確認します。こちらのコードは以下の通りです。
 
 ```kotlin
 public inline fun CharSequence.trim(predicate: (Char) -> Boolean): CharSequence {
