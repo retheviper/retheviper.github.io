@@ -249,7 +249,7 @@ origin.forEach {
 
 幸い、この状況にぴったりな方法をKotlinのスタンダードライブラリが提供しています。[partition](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/partition.html)というoperationです。このopreationを使うと、元のリストの要素を条件に一致するものとそうでないもので分割してくれます。
 
-このopretionの戻り値`Pair<List<T>, List<T>>`なので、[destructuring-declaration](https://kotlinlang.org/docs/destructuring-declarations.html)と組み合わせることでかなり短いコードになります。実際のコードは以下のようになるりますが、かなりスマートですね。
+また、`partition`戻り値は`Pair<List<T>, List<T>>`なので、[destructuring-declaration](https://kotlinlang.org/docs/destructuring-declarations.html)と組み合わせることでかなり短いコードになります。実際のコードは以下のようになるりますが、かなりスマートですね。
 
 ```kotlin
 val origin = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
