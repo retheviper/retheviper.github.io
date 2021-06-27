@@ -325,8 +325,8 @@ public fun <T : Comparable<T>> Sequence<T>.sorted(): Sequence<T> {
 | 処理した結果としてCollectionが必要 | Collection |
 | ループするだけ | Sequence |
 | 処理に状態が必要 | Collection |
-| 要素数が少ない | Collection |
 | 要素数が多い | Sequence |
+| 要素数が少ない | Collection |
 
 もちろんこれらの条件が複数ある場合も十分考えられるので、必要な処理が何かをよく考えてどちらを使うかを慎重に考える必要がありそうです。多くの場合とりあえずCollectionを使うという方針だとしても特に問題はなさそうな気はしますが…
 
