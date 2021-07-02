@@ -98,7 +98,7 @@ for (name in names) {
 オブジェクトをトリガーにして、そのオブジェクトを持って何かの処理を行いたい場合に使うものです。`let`の意味通り、そのオブジェクトを持って何かをするというイメージですね。また、戻り値も最後の結果となるので、それを持ってまた何かができそうです。また、[Safe Call](https://kotlinlang.org/docs/reference/null-safety.html#safe-calls)な使い方ができるため、Nullではない場合のみの動作として指定することも可能です。なのでNullになり得るオブジェクトでは、`let`を使った方が良いでしょう。
 
 ```kotlin
-var name: String? null
+var name: String? = null
 name?.let { println("name is not null") }
 ```
 
