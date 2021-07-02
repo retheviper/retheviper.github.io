@@ -129,7 +129,7 @@ var result1 = server.run {
 
 // letを使う場合
 var result2 = server.let {
-    port = 8081
+    it.port = 8081
     get("/members:${it.port}")
 }
 ```
