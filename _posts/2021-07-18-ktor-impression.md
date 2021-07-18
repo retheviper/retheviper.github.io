@@ -1,6 +1,6 @@
 ---
 title: "Ktorを触ってみた"
-date: 2021-97-18
+date: 2021-07-18
 categories: 
   - kotlin
 photos:
