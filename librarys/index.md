@@ -3,16 +3,19 @@ layout: page
 type: librarys
 ---
 
-![](/assets/images/sideimage/library.jpg)
+![library](/assets/images/sideimage/library.jpg)
 
 自分が使ってみたライブラリー・フレームワーク・プラグインなどを集めてみました。
 
 | ライブラリー名 | 言語 | 特徴 |
 | --- | --- | --- |
 | [KotlinTest](https://github.com/jmfayard/kotlintest){:target="_blank"} | Kotlin | Unit Testフレームワーク |
+| [Ktor](https://ktor.io){:target="_blank"} | Kotlin | Webフレームワーク |
+| [Ktorm](https://www.ktorm.org){:target="_blank"} | Kotlin | DSLを使えるORM |
+| [Exposed](https://github.com/JetBrains/Exposed){:target="_blank"} | Kotlin | DSLとDAOを使えるORM |
 | [Gin](https://github.com/gin-gonic/gin){:target="_blank"} | Go | Webフレームワーク |
-| [jOOQ](https://www.jooq.org){:target="_blank"} | Java | コードでクエリが書けるDBマッピングライブラリ |
-| [Swagger](https://swagger.io){:target="_blank"} | Java | REST APIを構築 |
+| [jOOQ](https://www.jooq.org){:target="_blank"} | Java | DSLを使えるORM |
+| [Swagger](https://swagger.io){:target="_blank"} | Java | REST APの仕様を定義 |
 | [POI](https://poi.apache.org){:target="_blank"} | Java | Excelファイルの操作 |
 | [Lombok](https://projectlombok.org){:target="_blank"} | Java | 定形文をアノテーションで作成 |
 | [im4java](http://im4java.sourceforge.net){:target="_blank"} | Java | ImageMagick/GraphicsMagickでの画像の変換・編集 |
