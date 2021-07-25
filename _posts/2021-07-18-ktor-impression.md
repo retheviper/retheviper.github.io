@@ -30,7 +30,7 @@ Springも軽量とは言われているものの、起動が遅いので、実�
 しかし、Ktorは起動がかなり早いです。同一規模のアプリをSpringとKtorの両方で作成してベンチマークした訳ではないので正確な数値に関しては割愛しますが、体験だと数倍は早いですね。例えば、In memoryタイプのH2と基本的なCRUDを実装したSpring WebFluxアプリケーションの場合、自分のPCで起動に2.7秒ほどかかりました。
 
 ```bash
-2021-07-18 15:08:25.150  INFO 29047 --- [           main] c.r.s.SpringWebfluxSampleApplicationKt   : Started SpringWebfluxSampleApplicationKt in 2.754 seconds (JVM running for 3.088)
+2021-07-18 15:08:25.150  INFO 29047 --- [main] c.r.s.SpringWebfluxSampleApplicationKt   : Started SpringWebfluxSampleApplicationKt in 2.754 seconds (JVM running for 3.088)
 ```
 
 同じ構成でKtorのアプリを実装した場合、起動には1秒もかからなかったです。
@@ -62,7 +62,7 @@ fun main() {
 }
 ```
 
-なので、Ktorの導入直後はモジュールの管理や開発のスピード感という側面ではマイナスになる部分もあるかなと思います。特にまだSpring Securityでは基本的に提供している[Role-Based Authentication](https://ja.wikipedia.org/wiki/%E3%83%AD%E3%83%BC%E3%83%AB%E3%83%99%E3%83%BC%E3%82%B9%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E5%88%B6%E5%BE%A1)などの機能が公式プラグインとして提供されてないので自前の処理を書くしかないという部分もあります。個人的には、モジュール化そのものは慣れたらメリットになる可能性の方が高いと思いますが、導入初期としてはSpringに比べ不利なところなのではないかと思います。
+なので、Ktorの導入直後はモジュールの管理や開発のスピード感という側面ではマイナスになる部分もあるかなと思います。特にまだSpring Securityでは基本的に提供している[Role-Based Authorization](https://ja.wikipedia.org/wiki/%E3%83%AD%E3%83%BC%E3%83%AB%E3%83%99%E3%83%BC%E3%82%B9%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E5%88%B6%E5%BE%A1)などの機能が公式プラグインとして提供されてないので自前の処理を書くしかないという部分もあります。個人的には、モジュール化そのものは慣れたらメリットになる可能性の方が高いと思いますが、導入初期としてはSpringに比べ不利なところなのではないかと思います。
 
 特にKtorはDIに対応していなく、JetBrains公式のモジュールもないので、DIをするためには[Injekt](https://github.com/IVIanuu/injekt), [Kodein](https://kodein.org/Kodein-DI/?6.3/ktor), [Koin](https://insert-koin.io)などをディペンデンシーとして追加する必要があります。ただ、アーキテクチャによってはDIが必要なく、`object`で代替することもできると思いますので、どんなアーキテクチャにするかはよく考えて決める必要があるかなと思います。
 
