@@ -4,7 +4,7 @@ date: 2021-07-26
 categories: 
   - kotlin
 photos:
-  - /assets/images/sideimage/kotlin_logo.jpg
+  - /assets/images/sideimage/exposed_logo.jpg
 tags:
   - kotlin
   - exposed

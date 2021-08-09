@@ -4,7 +4,7 @@ date: 2021-07-18
 categories: 
   - kotlin
 photos:
-  - /assets/images/sideimage/kotlin_logo.jpg
+  - /assets/images/sideimage/ktor_logo.jpg
 tags:
   - kotlin
   - ktor
