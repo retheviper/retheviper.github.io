@@ -115,7 +115,7 @@ fun getMember() {
 Ktorで使える、Kotlinで書かれたORMは代表的に[Exposed](https://github.com/JetBrains/Exposed)があります。Javaの[jOOQ](https://www.jooq.org)がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。
 
 ```kotlin
-List<User> = userInUsa = transaction {
+val userInUsa: List<User> = transaction {
     UserTable.select {
         UserTable.deleted eq false
     }.map {
@@ -133,7 +133,7 @@ List<User> = userInUsa = transaction {
 また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)
 
 ```kotlin
-List<User> userInGermany = transaction {
+val userInGermany: List<User>  = transaction {
     User.find { (UserTable.country eq Country.GERMANY) and (UserTable.deleted eq false)}
 }
 ```
