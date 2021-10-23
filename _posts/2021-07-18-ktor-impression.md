@@ -2,7 +2,7 @@
 title: "Ktorを触ってみた"
 date: 2021-07-18
 categories: 
-  - kotlin
+  - ktor
 photos:
   - /assets/images/sideimage/ktor_logo.jpg
 tags:
@@ -89,7 +89,7 @@ routing {
 ```kotlin
 @Test
 fun getMember() {
-    withTestApplication((Application::module) {
+    withTestApplication(Application::module) {
         handleRequest(HttpMethod.Get, "api/v1/web/members/$id").apply {
             assertEquals(
                 actual = response.status(),

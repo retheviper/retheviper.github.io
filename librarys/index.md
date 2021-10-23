@@ -13,7 +13,9 @@ type: librarys
 | [Ktor](https://ktor.io){:target="_blank"} | Kotlin | Webフレームワーク |
 | [Ktorm](https://www.ktorm.org){:target="_blank"} | Kotlin | DSLを使えるORM |
 | [Exposed](https://github.com/JetBrains/Exposed){:target="_blank"} | Kotlin | DSLとDAOを使えるORM |
+| [Hily](https://dagger.dev/hilt/){:target="_blank"} | Kotlin | Andorid用のDIライブラリ |
 | [Gin](https://github.com/gin-gonic/gin){:target="_blank"} | Go | Webフレームワーク |
+| [Quarkus](https://quarkus.io/){:target="_blank"} | Java | Webフレームワーク |
 | [jOOQ](https://www.jooq.org){:target="_blank"} | Java | DSLを使えるORM |
 | [Swagger](https://swagger.io){:target="_blank"} | Java | REST APの仕様を定義 |
 | [POI](https://poi.apache.org){:target="_blank"} | Java | Excelファイルの操作 |
@@ -21,7 +23,7 @@ type: librarys
 | [im4java](http://im4java.sourceforge.net){:target="_blank"} | Java | ImageMagick/GraphicsMagickでの画像の変換・編集 |
 | [SnakeYaml](https://bitbucket.org/asomov/snakeyaml/src/default){:target="_blank"} | Java | Yamlとオブジェクトの変換 |
 | [Jackson](https://github.com/FasterXML/jackson){:target="_blank"} | Java | Jsonとオブジェクトの変換 |
-| [JUnit](https://junit.org/junit5){:target="_blank"} | Java | ソースコードのテスト自動化 |
+| [JUnit](https://junit.org/junit5){:target="_blank"} | Java | Unit Testフレームワーク |
 | [Spoon](http://spoon.gforge.inria.fr){:target="_blank"} | Java | ソースコード分析・編集 |
 | [JCommander](http://jcommander.org){:target="_blank"} | Java | コマンドライン引数のパース |
 | [ModelMapper](http://modelmapper.org){:target="_blank"} | Java | オブジェクトの自動マッピング |
@@ -40,3 +42,5 @@ type: librarys
 | [Requests](https://requests.kennethreitz.org/en/master){:target="_blank"} | Python | HTTPリクエストを送信 |
 | [python-magic](https://github.com/ahupp/python-magic){:target="_blank"} | Python | ファイルタイプ確認 |
 | [openpyxl](https://openpyxl.readthedocs.io){:target="_blank"} | Python | Excelファイルの操作 |
+| [Patool](https://github.com/wummel/patool){:target="_blank"} | Python | ファイルアーカイブ |
+| [img2pdf](https://github.com/josch/img2pdf){:target="_blank"} | Python | 画像をPDFに変換 |

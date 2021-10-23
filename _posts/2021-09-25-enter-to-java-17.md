@@ -2,7 +2,7 @@
 title: "Java 17は何が変わったか"
 date: 2021-09-25
 categories:
-  - Java
+  - java
 photos:
   - /assets/images/sideimage/java_logo.jpg
 tags:

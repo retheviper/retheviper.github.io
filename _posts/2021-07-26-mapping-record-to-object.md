@@ -2,7 +2,7 @@
 title: "ExposedでOneToManyをどうマッピングするか"
 date: 2021-07-26
 categories: 
-  - kotlin
+  - exposed
 photos:
   - /assets/images/sideimage/exposed_logo.jpg
 tags:
