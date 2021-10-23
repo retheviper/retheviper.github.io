@@ -35,7 +35,7 @@ Javaのアプリを`Kubernetes Native`として作成できる、というのが
 
 Nativeコンパイルができるということは、JVMを使用する必要がなくなるということなので、先に挙げた三つの問題を全部解消できます。だとすると、マイクロサービスやサーバレスのみでなく、コンテナ単位でのデプロイでもかなり有利になりますね。そして、JVMを使った場合でも他のフレームワークに比べて起動速度とメモリ使用量で優位にあると言われているので、これが本当だとNativeコンパイルしない場合でも十分メリットがあると思われます。
 
-## メリットの検証
+## 実際触ってみると
 
 特徴として挙げられているもの全てが魅力的ではありますが、実際そのフレームワークを使ってみないとわからないこともあります。なので、ちょっとしたサンプルを作り触ってみました感想について少し述べたいと思います。
 
@@ -300,9 +300,7 @@ NativeビルドとJarの実行に使ったのはどれもGraalVM CE 21.3.0(OpenJ
 2021-10-23 17:10:42,211 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-3) measured time was 25 ms
 2021-10-23 17:10:44,149 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-10) measured time was 38 ms
 2021-10-23 17:10:46,283 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-2) measured time was 24 ms
-2021-10-23 17:10:48,239 INFO  [com.ret.app.fil.LoggingFilter] (vert.x-eventloop-thread-20) [GET] /api/v1/web/members
 2021-10-23 17:10:48,262 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-20) measured time was 22 ms
-2021-10-23 17:10:49,827 INFO  [com.ret.app.fil.LoggingFilter] (vert.x-eventloop-thread-12) [GET] /api/v1/web/members
 2021-10-23 17:10:49,854 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-12) measured time was 26 ms
 2021-10-23 17:10:51,552 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-23) measured time was 23 ms
 2021-10-23 17:10:52,967 INFO  [com.ret.dom.ser.MemberService] (vert.x-eventloop-thread-7) measured time was 51 ms
