@@ -207,7 +207,7 @@ class PersonService(private val repository: PersonRepository) {
 }
 ```
 
-Springのコードど比較して、使っているアノテーションの種類が違うだけで、ほぼ同じ感覚で実装ができるのがわかります。なので、Ktorの場合のようにアーキテクチャを考え直す必要もなく、移行も簡単になるわけですね。また、RESTEasyを使う場合、ReactiveのAPIを作りやすいというメリットもあります。[Mutiny](https://smallrye.io/smallrye-mutiny/)
+Springのコードど比較して、使っているアノテーションの種類が違うだけで、ほぼ同じ感覚で実装ができるのがわかります。なので、Ktorの場合のようにアーキテクチャを考え直す必要もなく、移行も簡単になるわけですね。また、RESTEasyを使う場合、ReactiveのAPIを作りやすいというメリットもあります。Reactiveだと[Mutiny](https://smallrye.io/smallrye-mutiny/)を使うことになりますが、Uni/Multiの概念がMono/Fluxと1:1対応していると思って良いので、Spring WebFluxや他のReactive Streamを触ったことのある方ならすぐに適応できそうです。
 
 ```kotlin
 @Path("/api/v1/person")
