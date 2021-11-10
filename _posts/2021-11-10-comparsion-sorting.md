@@ -145,9 +145,9 @@ Sytax Sugarをたくさん提供しているKotlinらしく、選べるソート
 |  | Array | [Array.sortedArray()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted-array.html) | 昇順 |
 |  |  | [Array.sortedArrayDescending()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted-array-descending.html) | 降順 |
 |  |  | [Array.reveredArray()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/reversed-array.html) | 逆順 |
-|  | List | [Array/List.sorted()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted.html) |
-|  |  | [Array/List.sortedDescending()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted-descending.html) | 逆順 |
-|  |  | [List/MutableList.asRevered()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/as-reversed.html) | |
+|  | List | [Array/List.sorted()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted.html) | 昇順 |
+|  |  | [Array/List.sortedDescending()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted-descending.html) | 降順 |
+|  |  | [List/MutableList.asRevered()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/as-reversed.html) | 逆順 |
 | Custom | 呼び出し元 | [Array/MutableList.sortBy()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sort-by.html) | 昇順、selector((T) -> R)必要 |
 |  |  | [Array/MutableList.sortByDescending()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sort-by-descending.html) | 降順、selector((T) -> R)必要 |
 |  | List | [Array/Iterable.sortedBy()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/sorted-by.html) | 昇順、selector((T) -> R)必要 |
