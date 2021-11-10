@@ -246,7 +246,7 @@ let data2 = data()
 data2.number = 2
 datas.append(data2)
 
-let descending = datas.sored { $0.number > $1.number }
+let descending = datas.sorted { $0.number > $1.number }
 dump(descending)
 /**
   result: [data] = 2 values {
