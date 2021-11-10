@@ -164,7 +164,7 @@ fun main() {
 }
 
 // ルータにControllerを登録
-fun Application.configureRouting() {d
+fun Application.configureRouting() {
     routing {
         personController()
     }
