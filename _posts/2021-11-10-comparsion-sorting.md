@@ -22,7 +22,7 @@ tags:
 
 さて、前置きが長くなりましたが、ということで、これからはたまにとある操作をするときにいろいろな言語ではどうやってできるのか、そしてそうした場合の特徴などを簡単に比べてみたいと思います。今回は、配列のソートになります。
 
-### JavaScript
+## JavaScript
 
 JavaScriptでは[Array.prototype.sort()](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/sort)で配列のソートができます。なので、以下のようなコードを使えます。シンプルですね。
 
@@ -65,7 +65,7 @@ JavaScriptでは[Array.prototype.sort()](https://developer.mozilla.org/ja/docs/W
 [ 5000, 300, 44, 1, 22 ]
 ```
 
-### Java
+## Java
 
 では、次にJavaの方も見ていきましょう。先に述べた通り、`Comparator`を使うと簡単にソートの方法を実装できるので、基本的には同じです。ただ、Javaの場合だとそもそも[List.sort()](https://docs.oracle.com/javase/8/docs/api/java/util/List.html#sort-java.util.Comparator-)、[Collections.sort()](https://docs.oracle.com/javase/jp/8/docs/api/java/util/Collections.html#sort-java.util.List-)、[Arrays.sort()](https://docs.oracle.com/javase/jp/8/docs/api/java/util/Arrays.html#sort-int:A-)、[Stream.sorted()]など方法が色々あり、ソートしたいCollectionやArrayなどが`Immutable`であるかどうか、`Comparator`や[Comparable](https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html)を自前で実装するか、それともスタンダードライブラリに用意されてあるものを使うかなどのさまざまな選択肢も考慮する必要があるということですね。
 
@@ -133,7 +133,7 @@ b ==> [5000, 300, 44, 22, 1]
 
 Arrayの場合、`Arrays.sort()`を利用してソートできる（もちろん`Comparator`も使えます）上に、ListやStreamに変換することもできるので上記の方法をそのまま使えます。なので選択肢はもっと多いわけですが、便利な（好みに合う）方法を選ぶといいかなと思います。個人的には`Arrays.sort()`に`Comparator`を渡した方が可読性という面で良さそうな気がします。
 
-### Kotlin
+## Kotlin
 
 Sytax Sugarをたくさん提供しているKotlinらしく、選べるソートのオプションがたくさんあります。なので、少しまとめてみました。
 
@@ -184,7 +184,7 @@ Sytax Sugarをたくさん提供しているKotlinらしく、選べるソート
 
 他にも、より複雑な比較の条件を指定したい場合はJavaの場合と同じく、`Comparator`を実装すると良いでしょう。やはりJavaと似ているようで、より単純化した（そしてそのせいで選択肢は増えた）感覚ですね。
 
-### Swift
+## Swift
 
 Swiftでは、シンプルに元のCollectionをソートするかソートされた新しいCollectionを作るかの選択肢しかないようです。あまり変わったことはないですが、元のCollectionをソートする場合は以下のようになります。
 
@@ -260,7 +260,7 @@ dump(descending)
 */
 ```
 
-### Go
+## Go
 
 Goにはジェネリックがないからか、[sort](https://pkg.go.dev/sort)というパッケージに、sliceの種類によってソート用のfuncが色々と用意されています。例えば以下のようなものがあります。
 
@@ -326,7 +326,7 @@ fmt.Println(people) // [{Alice 25} {Alice 75} {Alice 75} {Bob 75} {Bob 25} {Coli
 
 安定ソートはそうでないソートに比べ性能が劣る可能性が高いので（元のインデックスをまで考慮しているので）、一つの値を基準にソートしても問題ない場合は`sort.Slice()`でも十分な気がしますが、そうでない場合は安定ソートを考慮する必要がありそうですね。
 
-### Python
+## Python
 
 Pythonでは[list.sort()](https://docs.python.org/3/library/stdtypes.html#list.sort)か、[sorted()](https://docs.python.org/3/library/functions.html#sorted)を使えます。他の言語でも大体同じだったので命名だけでも推測が可能かと思いますが、前者は元のlistをソートするもので、後者は新しいlistを作り出すものです。
 
