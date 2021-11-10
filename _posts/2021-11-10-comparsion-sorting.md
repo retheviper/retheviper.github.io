@@ -236,24 +236,24 @@ print(descendingStudents) // "["Peter", "Kweku", "Kofi", "Akosua", "Abena"]"
 他に、classのフィールドを基準にソートしたい場合は以下の方法を使えます。
 
 ```swift
-class data { var number = Int() }
+struct Data { var number = 0 }
 
-var datas : [data] = []
-let data1 = data()
-data1.number = 1
-datas.append(data1)
-let data2 = data()
-data2.number = 2
-datas.append(data2)
+let datas = [Data(number: 1), Data(number: 3), Data(number: 4), Data(number: 2)]
 
-let descending = datas.sorted { $0.number > $1.number }
-dump(descending)
+let result = datas.sorted { $0.number > $1.number }
+dump(result)
 /**
-  result: [data] = 2 values {
+  descending: [Data] = 4 values {
     [0] = {
-      number = 2
+      number = 4
     }
     [1] = {
+      number = 3
+    }
+    [2] = {
+      number = 2
+    }
+    [3] = {
       number = 1
     }
   }
