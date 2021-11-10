@@ -240,8 +240,8 @@ struct Data { var number = 0 }
 
 let datas = [Data(number: 1), Data(number: 3), Data(number: 4), Data(number: 2)]
 
-let result = datas.sorted { $0.number > $1.number }
-dump(result)
+let descending = datas.sorted { $0.number > $1.number }
+dump(descending)
 /**
   descending: [Data] = 4 values {
     [0] = {
