@@ -170,7 +170,7 @@ class MyClass {
 
 一見シンプルで良さげなコードですが、Kotlin 1.2.40以前の場合だとかなり裏のコードは汚くなっています。
 
-### Kotlin 1.2.40以前の場合
+#### Kotlin 1.2.40以前の場合
 
 `companion object`に定義されたprivateな定数にアクセスする場合、上記のようなこと（`getter`を利用する）が起こります。
 
@@ -279,7 +279,7 @@ class MyClass() : Parcelable {
 
 最後の方法として、[ProGuard](https://developer.android.com/studio/build/shrink-code)やR8のようなツールを使ってBytecodeの最適化を狙うという方法があるでしょう。
 
-### Kotlin 1.2.40以降の場合
+#### Kotlin 1.2.40以降の場合
 
 Kotlinn 1.2.40からは、`companion object`に定義された値はメインクラスの方に格納されるということには変わりがありませんが、メソッドの生成と呼び出しなしで直接アクセスができるようになりました。これをJavaのコードとして表現すると以下の通りです。
 
