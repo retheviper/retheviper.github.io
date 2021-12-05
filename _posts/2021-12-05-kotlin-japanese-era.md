@@ -178,7 +178,7 @@ Kotlinのスタンダードライブラリ、及び`kotlinx`として提供さ�
 
 ## java.timeの懸念
 
-`JapaneseEra`では明治以前（慶応など）の元号は使えませんが、おそらくその理由は和暦でグレゴリウス暦が使われたのは明治からだったという歴史的な背景があるのではないかと思います。また、`JapaneseDate`でも明治6年以前の日付(西暦1873年1月1日)を指定すると以下のように例外が発生します。
+`JapaneseEra`では明治以前（慶応など）の元号は使えませんが、おそらくその理由は和暦でグレゴリウス暦が使われたのは明治からだったという歴史的な背景があるのではないかと思います。また、`JapaneseDate`でも明治6年(西暦1873年1月1日)以前の日付を指定すると以下のように例外が発生します。
 
 ```shell
 Exception in thread "main" java.time.DateTimeException: JapaneseDate before Meiji 6 is not supported
