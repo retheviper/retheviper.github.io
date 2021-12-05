@@ -56,7 +56,7 @@ val japaneseDateFromSpecificDate = JapaneseDate.of(2000, 12, 31)
 | Locale | 作られるBaseLocaleの設定 |
 |---|---|
 | `JAPAN` | `language = ja, region = JP` |
-| `JAPANESE` | ``language = ja` |
+| `JAPANESE` | `language = ja` |
 
 以下はこれらの定数を渡して元号を文字列として取得する例です。
 
@@ -116,8 +116,6 @@ val eraUnicode = eraUnicodeMap[era] // ㋿
 | REIWA | 3 |
 
 2021年から2022年の3月の場合は令和3年なので、`JapaneseEra.REIWA.value`の値が年度だと勘違いされやすいかなと思います。実際の年度の情報は`JapaneseDate`の方にあるので注意しましょう。
-
-また、JDKのバージョンなどの問題があるためか、`JapaneseEra.REIWA`の取得ができなく、エラーとなるケースがあるので注意する必要があります。（正確な理由はわかりませんが…）
 
 ## 年度を数字で表示する
 
@@ -180,7 +178,7 @@ Kotlinのスタンダードライブラリ、及び`kotlinx`として提供さ�
 
 ## java.timeの懸念
 
-`JapaneseEra`では明治以前（慶応など）の元号は使えませんが、おそらくその理由は和暦でグレゴリウス暦が使われたのは明治からだったという歴史的な背景があるのではないかと思います。また、`JapaneseDate`でも明治6年以前の日付を指定すると以下のように例外が発生します。
+`JapaneseEra`では明治以前（慶応など）の元号は使えませんが、おそらくその理由は和暦でグレゴリウス暦が使われたのは明治からだったという歴史的な背景があるのではないかと思います。また、`JapaneseDate`でも明治6年以前の日付(西暦1873年1月1日)を指定すると以下のように例外が発生します。
 
 ```shell
 Exception in thread "main" java.time.DateTimeException: JapaneseDate before Meiji 6 is not supported
@@ -189,6 +187,8 @@ Exception in thread "main" java.time.DateTimeException: JapaneseDate before Meij
 ```
 
 なので、単純に帳票を作るなどのケースでなく、歴史的な研究のための日付計算ではここで紹介した方法は使えないケースもあるかと思います。
+
+また、JDKのバージョンなどの問題があるためか、`JapaneseEra.REIWA`の取得ができなく、エラーとなるケースがあるので注意する必要があります。この場合でも`value`の値の取得は問題ないので、少し可読性は低下しながら分岐などの判定に定数をそのまま使うのは避けたほうが良さそうです。（正確な理由はわかりませんが…）
 
 ## 最後に
 
