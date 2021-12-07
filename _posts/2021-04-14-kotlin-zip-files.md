@@ -145,27 +145,24 @@ object ZipService {
 
     fun archive(source: Path, target: Path): Unit =
         ZipOutputStream(Files.newOutputStream(target)).use { zos ->
-            when {
-                Files.isHidden(source) -> return
-                Files.isDirectory(source) -> {
-                    Files.walk(source)
-                        .filter { Files.isDirectory(it).not() }
-                        .filter { Files.isHidden(it).not() }
-                        .forEach {
-                            zos.putNextEntry(ZipEntry(it.toString())).also { zos.closeEntry() }
-                        }
+            Files.walk(source)
+                .filter { Files.isHidden(it).not() }
+                .forEach {
+                    if (Files.isDirectory(it)) {
+                        zos.putNextEntry(ZipEntry("$it/"))
+                        zos.closeEntry()
+                    } else {
+                        zos.putNextEntry(ZipEntry(it.toString()))
+                        Files.copy(it, zos)
+                    }
                 }
-                else -> zos.putNextEntry(ZipEntry(source.toString()))
-            }
         }
 }
 ```
 
 簡単に説明しますと、`object`として宣言したSingletonクラスにおくことでどこでも活用できるユーティリティクラスにして、メソッドのシグニチャはより単純なものにしました。引数の`source`には圧縮元のファイルやディレクトリを、`target`には圧縮先のZIPファイルを指定する事になっています。ZipOutputStreamはメソッドの中で生成して、`use()`を使って自動にクローズされるようにしています。
 
-また、内部の分岐は`when`を使ってより単純化して、圧縮元がディレクトリである場合は`Files.walk()`を使って子要素を全部取得するようにしています。取得した子要素は`filter()`でディレクトリでも`hidden`でもない場合はエントリに追加するようにしています。より短く、単純なコードの出来上がりです。
-
-あと、少しだけ補足しますと、あくまで自分の好みですが、Kotlinらしさを追求したいがため`also()`や`not()`を使っています。なのでここはまだ変えられる余地はたくさんあるのかも知れませんね。
+まず優先的に`Files.walk()`を使って子要素を全部取得するようにしています。取得した子要素は`filter()`で`hidden`でない場合を選別しているので、分岐は無くなりますね。また、子要素がディレクトリである場合ディレクトリ名であることを表すために`/`をつけて`ZipEntry`を追加とクローズします。子要素がファイルの場合は`ZipEntry`の追加とコンテンツのコピーを行います。これでより短く、単純なコードの出来上がりです。
 
 ## 最後に
 
