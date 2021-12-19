@@ -123,10 +123,10 @@ Javaの場合、intellだとどのベンダのものを選んでも大差ない�
 
 各ベンダ別のApple Silicon対応済みのLTSバージョンのJDKの一覧は以下の通りです。
 
-| JDK | バージョン |
+| JDK | 対応バージョン |
 |---|---|
 | [Amazon Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-17-ug/downloads-list.html) | 17 |
-| [Azul Zulu](https://www.azul.com/downloads/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk) | 8, 11, 17 |
+| [Azul Zulu](https://www.azul.com/downloads/?version=java-11-lts&os=macos&architecture=arm-64-bit&package=jdk) | 1.8, 11, 17 |
 | [Bellsoft Liberica](https://bell-sw.com/pages/downloads/#/java-11-lts) | 1.8, 11, 17 |
 | [Eclipse Temurin](https://adoptium.net) | 17 |
 | [Microsoft](https://docs.microsoft.com/ja-jp/java/openjdk/download) | 17 |
@@ -139,7 +139,7 @@ Javaの場合、intellだとどのベンダのものを選んでも大差ない�
 
 最近はどのJDKを選んでも特に問題はないかと思いますので、17を選ぶならOracleのでも良いし、他も好みで選んでも良さそうな気がします。私の場合はずっとAdpotOpenJDKを使っていたので、今回もTemurinを選びました。ただ、Temurinだと11がApple Siliconに対応してないので、そこはZuluを選んでいます。インストールにはhomebrewを使いました。
 
-Apple Siliconとは直接的な関係はないですが、以下のコマンドで使うJDKのバージョンを簡単に切り替えできるのでさまざまなベンダーのJDKを使ってみるのもありかもですね。
+Apple Siliconとは直接的な関係はないですが、以下のコマンドで使うJDKのバージョンを簡単に切り替えできるのでさまざまなベンダのJDKを使ってみるのもありかもですね。
 
 ```bash
 $ export JAVA_HOME=`/usr/libexec/java_home -v 11`
