@@ -39,6 +39,7 @@ TimeMachineを使うと最新の状態が反映されないので、使ってい
 
 - Finderから「情報を見る」
 - アクティビティモニタの「種類」をみる
+- 「このMacについて」→「システムレポート」→「ソフトウェア」→「アプリケーション」から探す
 - [Is Apple Silicon ready?](https://isapplesiliconready.com)から探してみる
 
 他にもintell版のアプリの場合は最初実行時にRosettaをインストールするか確認するダイアログが出るのでそれで確認するという方法もあります。主にターミナルで使うプログラミング言語などがそうですね。ただ、一度でもRosettaをインストールしたらintell版のバイナリでもダイアログなしで実行されてしまうので、全体の移行が終わるまではRosettaをインストールしない方が良いかと思います。
@@ -111,11 +112,15 @@ JetBrains社の製品（+ Android Studio）なら[Toolbox](https://www.jetbrains
 
 ToolboxをApple Siliconネイティブに切り替えた後は、メニューからIDEをアンインストール後に再インストールするだけです。もしToolboxを使ってない場合は、使っているIDEのバイナリをダウンロードし直す必要があります。
 
+ちなみに、ToolboxからインストールされるIDEは`~/Applications/JetBrains Toolbox`の配下にLauncherが置かれ、それをシステムレポートなどで確認するとintel版のバイナリになっています。ただ、実行時はちゃんとApple Siliconネイティブになっているので（アクティビティモニタから確認可能）安心してください。
+
 ### Visual Studio Code
 
 [Visual Studio Code](https://code.visualstudio.com/download)の場合は、Universal/Intel/Apple Silicon用のバイナリを全部提供していました。多分あえてIntelバージョンをインストールしてなかったら、自然にUniversalにアップデートされていたのではないかと思います。
 
 あえてUniversalを使う必要はなく、サイズが小さいのでApple Siliconバージョンをダウンロードしたほうがいいかなと思います。
+
+また、最近はモブプロなどでVisual Studio Live Shareを使うケースが多いかなと思いますが、こちらはまだApple Siliconに対応していません。こちらはGitHubのissueで[今後対応する予定](https://github.com/MicrosoftDocs/live-share/issues/4527#issuecomment-984823885)だというので、当面は待つしかないですね。
 
 ### Java
 
@@ -153,6 +158,8 @@ openjdk version "17.0.1" 2021-10-19
 OpenJDK Runtime Environment Temurin-17.0.1+12 (build 17.0.1+12)
 OpenJDK 64-Bit Server VM Temurin-17.0.1+12 (build 17.0.1+12, mixed mode)
 ```
+
+GraalVMの場合は、まだApple Siliconに対応していません。ただ2020年からGithubの[issue](https://github.com/oracle/graal/issues/2666)がオープンの状態であって、Linux+aarch64に対応したバイナリは提供している状態なので、いずれはリリースされるかと思います。
 
 ### Kotlin
 
