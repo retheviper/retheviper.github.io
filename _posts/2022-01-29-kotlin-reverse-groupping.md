@@ -4,7 +4,7 @@ date: 2022-01-29
 categories: 
   - kotlin
 photos:
-  - /assets/images/sideimage/ktor_logo.jpg
+  - /assets/images/sideimage/kotlin_logo.jpg
 tags:
   - kotlin
 ---
