@@ -1,6 +1,6 @@
 ---
 title: "JavaプログラマーがみたKotlin〜その二〜"
-date: 2021-2-28
+date: 2021-02-28
 categories: 
   - kotlin
 photos:
