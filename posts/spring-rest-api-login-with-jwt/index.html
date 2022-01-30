@@ -1,0 +1,808 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分か"><title>JWTによるREST APIのログインを実現する</title>
+<link rel=canonical href=https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="JWTによるREST APIのログインを実現する">
+<meta property="og:description" content="最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分か">
+<meta property="og:url" content="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="spring"><meta property="article:tag" content="spring security"><meta property="article:tag" content="rest api"><meta property="article:tag" content="jwt"><meta property="article:published_time" content="2020-06-10T00:00:00+00:00"><meta property="article:modified_time" content="2020-06-10T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/spring.jpg">
+<meta name=twitter:title content="JWTによるREST APIのログインを実現する">
+<meta name=twitter:description content="最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分か"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/spring.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/spring-rest-api-login-with-jwt/>
+<img src=/../../images/spring.jpg loading=lazy alt="Featured image of post JWTによるREST APIのログインを実現する">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>
+spring
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/spring-rest-api-login-with-jwt/>JWTによるREST APIのログインを実現する</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jun 10, 2020</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+19 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。</p>
+<p>他にもいろいろな方法があるのかも知れませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。</p>
+<h2 id=jwtとは>JWTとは</h2>
+<p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準<a class=link href=https://tools.ietf.org/html/rfc7519 target=_blank rel=noopener>RFC 7519</a>です。JWTのデータは署名されているためこの伝達されるデータの送信元の特定や途中でデータが入れ替えされなかったか(改ざんされてないか)の検証などができるので、多くの場合にユーザの認証で使われます。</p>
+<p>このようにJWTの中には署名や暗号化などに必要なデータは全て含まれているので、サーバサイドではJWTを受け取ることでデータのバリデーションチェックができるなど自己完結性があって、既存のSessionを使った方法とは別にStatelessな方法としてユーザの認証と認可を可能にします。なので今回紹介する、REST APIでのログインのために適している認証方式といえますね。</p>
+<h2 id=jwtでのログインシナリオ>JWTでのログインシナリオ</h2>
+<p>まずJWTを使ったログインの場合、クライアントからログインに必要なクレデンシャル(IDやパスワードなど)をサーバに送ると、サーバからはユーザの情報に基づいてJWTを発行して返します。クライアントはこの情報をリクエスト毎に載せてサーバに伝達し、サーバではJWTのバリデーションを行なってからレスポンスを返すようになります。</p>
+<p>ここでJWTとして作られたJWTをクライアント側に送る時やクライアントがリクエストを送る時、レスポンスやリクエストのHTTP Headerに載せることになります。なぜSessionではなくHeaderに載せるかについては<a class=link href=../../../05/30/spring-rest-api-how-to-login>このポスト</a>を参考にしてください。</p>
+<p>ログインに成功したあとは、Sessionを使う場合と同じく認証させているかをチェックして各URLへのアクセスを認可するようになりますね。ここはSpring Securityが担当するようになります。</p>
+<h2 id=jwtとspring-securityによるログイン>JWTとSpring Securityによるログイン</h2>
+<p>では、以上のシナリオをどう実現できるかを考えてみます。まず、ログイン要請を受けるコントローラとメソッドを用意する必要がありますね。そして、そのコントローラからはサービスクラスから入力されたクレデンシャルを検証してもらいます。検証できたら、その情報を元にJWTのJWTを作る必要がありますね。</p>
+<h3 id=spring-securityの設定jwtを使う前>Spring Securityの設定(JWTを使う前)</h3>
+<p>まずはREST APIでの認証認可を簡単にSpring Securityで実装します。Spring Securityそのものだけでもかなり膨大な量を勉強しなければならないのですが、ここではまず、DBに登録されているユーザの情報を取得し、そのユーザのロールによってアクセスできるURLを制限するという機能だけを実現します。(他にも、ログインとはあまり関係のないクラスのコードは省略しています)</p>
+<h4 id=entityクラス>Entityクラス</h4>
+<p>まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。</p>
+<p>以下のコードは、UserDetailsクラスをSpring Data JPA基準のエンティティとして作成した例です。ここからユーザ名(username)とロール(roles)をJWTに載せて認証と認可に使うことにします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
+<span class=nd>@Entity</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>User</span> <span class=kd>implements</span> <span class=n>UserDetails</span> <span class=o>{</span>
+
+    <span class=nd>@Id</span>
+    <span class=nd>@GeneratedValue</span><span class=o>(</span><span class=n>strategy</span> <span class=o>=</span> <span class=n>GenerationType</span><span class=o>.</span><span class=na>IDENTITY</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+
+    <span class=c1>// ユーザ名(一般的にID)
+</span><span class=c1></span>    <span class=kd>private</span> <span class=n>String</span> <span class=n>username</span><span class=o>;</span>
+    
+    <span class=c1>// ユーザアカウントが満了されているかの設定    
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>accountNonExpired</span><span class=o>;</span>
+
+    <span class=c1>// ユーザアカウントがロックされているかの設定
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>accountNonLocked</span><span class=o>;</span>
+
+    <span class=c1>// ユーザアカウントのクレデンシャルが満了されているかの設定
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>credentialsNonExpired</span><span class=o>;</span>
+
+    <span class=c1>// ユーザアカウントが活性化されているかの設定
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>enabled</span><span class=o>;</span>
+
+    <span class=c1>// 認可のためのユーザのロール
+</span><span class=c1></span>    <span class=nd>@ElementCollection</span><span class=o>(</span><span class=n>fetch</span> <span class=o>=</span> <span class=n>FetchType</span><span class=o>.</span><span class=na>EAGER</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>roles</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
+
+    <span class=c1>// ユーザの認可情報を取得する
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>Collection</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>GrantedAuthority</span><span class=o>&gt;</span> <span class=nf>getAuthorities</span><span class=o>()</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>roles</span><span class=o>.</span><span class=na>stream</span><span class=o>()</span>
+                    <span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>SimpleGrantedAuthority</span><span class=o>::</span><span class=k>new</span><span class=o>)</span>
+                    <span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toUnmodifiableList</span><span class=o>());</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h4 id=serviceクラス>Serviceクラス</h4>
+<p>UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための<code>loadUserByUsername</code>しかないので、これを適切にRepositoryから取得できるように実装します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Service</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>UserServiceImpl</span> <span class=kd>implements</span> <span class=n>UserDetailsService</span> <span class=o>{</span>
+
+    <span class=c1>// UserDetailsを取得できるRepository
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserRepository</span> <span class=n>repository</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>UserServiceImpl</span><span class=o>(</span><span class=n>UserRepository</span> <span class=n>repository</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>repository</span> <span class=o>=</span> <span class=n>repository</span><span class=o>;</span>
+    <span class=o>}</span>
+    
+    <span class=c1>// 認証後にユーザ情報を取得するためのメソッド
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>UserDetails</span> <span class=nf>loadUserByUsername</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>username</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>UsernameNotFoundException</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>repository</span><span class=o>.</span><span class=na>findByUsername</span><span class=o>(</span><span class=n>username</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h4 id=configurationクラス>Configurationクラス</h4>
+<p>認可のためのConfigurationクラスです。ここでは<code>USER</code>というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを<code>ROLE_USER</code>として保存するようにしておくと良いです。</p>
+<p>また、今回作るのはREST APIであり、JWTによる認証と認可を行うことになるので、いくつかのデフォルト設定を変えておきます。例えば<a class=link href=https://ja.wikipedia.org/wiki/Basic%E8%AA%8D%E8%A8%BC target=_blank rel=noopener>Basic Auth</a>と<a class=link href=https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%95%E3%82%A9%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%AA target=_blank rel=noopener>CSRF</a>の設定や、セッション設定などがあります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+
+    <span class=nd>@Bean</span>
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=n>httpSecurity</span>
+                <span class=c1>// Basic認証を使わない
+</span><span class=c1></span>                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=c1>// CSRF設定を使わない
+</span><span class=c1></span>                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=c1>// セッションはStatelessなので使わない
+</span><span class=c1></span>                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// USERではないとどのURLでもアクセスできない
+</span><span class=c1></span>                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;USER&#34;</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>これでSpring Securityを使うための必要最低限の準備は終わりました。他にユーザのCRUDのためのServiceやRepositoryは適宜作成してあるという前提として、次に進めましょう。</p>
+<h3 id=jwtの依存関係の追加>JWTの依存関係の追加</h3>
+<p>次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。</p>
+<p>Spring(Java)で使えるJWTのライブラリはいくつかありますが、JWT自体が標準なのでどちらを選んでも基本は同じです。ただ、ライブラリ毎にJWTの仕様にどこまで対応しているのかは違う場合があるので、公式サイトから<a class=link href=https://jwt.io/#libraries-io target=_blank rel=noopener>対応しているライブラリのリスト</a>を確認してどれを使うかを選びましょう。このポストでは<code>JSON Web Token Support For The JVM</code>を使った場合での実装方法を紹介します。</p>
+<p>Mavenの場合は以下のように依存関係を追加します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=nt>&lt;dependency&gt;</span>
+    <span class=nt>&lt;groupId&gt;</span>io.jsonwebtoken<span class=nt>&lt;/groupId&gt;</span>
+    <span class=nt>&lt;artifactId&gt;</span>jjwt<span class=nt>&lt;/artifactId&gt;</span>
+    <span class=nt>&lt;version&gt;</span>0.9.1<span class=nt>&lt;/version&gt;</span>
+<span class=nt>&lt;/dependency&gt;</span>
+</code></pre></div><p>Gradleの場合の場合は以下となります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>dependencies</span> <span class=o>{</span>
+    <span class=n>implementation</span> <span class=s1>&#39;io.jsonwebtoken:jjwt:0.9.1&#39;</span>
+<span class=o>}</span>
+</code></pre></div><h3 id=jwtを提供するクラスを作る>JWTを提供するクラスを作る</h3>
+<p>依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。</p>
+<h4 id=jwtの仕様>JWTの仕様</h4>
+<p>JWTを作る前に、まず簡単にJWTがどんな構造を持っているかを見ていきましょう。JWTは<code>Header</code>、<code>Payload</code>、<code>Signature</code>という三つの要素で構成されています。それぞれの要素はBase64の文字列としてエンコードして、つなげることで一つのJWTが構成されます。</p>
+<h5 id=headerの構成>Headerの構成</h5>
+<p>Headerではこのトークンがどのようなもので、どのアルゴリズムでエンコードされているかを表す情報を載せるようになります。</p>
+<div class=table-wrapper><table>
+<thead>
+<tr>
+<th>id</th>
+<th>意味</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>typ</td>
+<td>Token Type</td>
+<td>JWTのタイプ(=JWT)</td>
+</tr>
+<tr>
+<td>alg</td>
+<td>Hashing Algoritym</td>
+<td>エンコードする時のアルゴリズム</td>
+</tr>
+</tbody>
+</table></div>
+<h5 id=payloadの構成>Payloadの構成</h5>
+<p>Payloadはnameとvalueのペアで構成された複数の情報単位で構成されている、いわばBodyのようなもので、ここに載せる個々の情報単位たちをClaimと呼びます。今回のログインではこのClaimにユーザのIDとロール、そしてトークンが発行された期間を載せることにします。</p>
+<div class=table-wrapper><table>
+<thead>
+<tr>
+<th>id</th>
+<th>意味</th>
+<th>詳細</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>jti</td>
+<td>JWT ID</td>
+<td>JWTの識別子</td>
+</tr>
+<tr>
+<td>sub</td>
+<td>subject</td>
+<td>JWTのユニークなキー</td>
+</tr>
+<tr>
+<td>iss</td>
+<td>issuer</td>
+<td>JWTを発行者</td>
+</tr>
+<tr>
+<td>aud</td>
+<td>audience</td>
+<td>JWTの利用者</td>
+</tr>
+<tr>
+<td>iat</td>
+<td>issued at</td>
+<td>JWTが発行された時間</td>
+</tr>
+<tr>
+<td>nbf</td>
+<td>not before</td>
+<td>JWTの開始時間</td>
+</tr>
+<tr>
+<td>exp</td>
+<td>expiration time</td>
+<td>JWTの満了時間</td>
+</tr>
+</tbody>
+</table></div>
+<h5 id=sigunature>Sigunature</h5>
+<p>SignatureではHeaderとPayloadをエンコードしたあと、更に任意のシークレットキーを持ってエンコードします。これによって、サーバ側ではクライアントが送ってきたJWTをSignatureをデコードしてHeaderとPayloadを取得できるようになります。</p>
+<p>Header、Payload、Signature順で正しく作成したJWTは、<a class=link href=https://jwt.io target=_blank rel=noopener>JWTの公式サイト</a>から検証できます。以下のようにJWTの構造と格納しているデータを確認してデバッグができるので、興味のある方はぜひ試してみてください。</p>
+<p><figure class=gallery-image style=flex-grow:187;flex-basis:449px>
+<a href=/posts/spring-rest-api-login-with-jwt/jwt_structure.png data-size=2372x1266>
+<img src=/posts/spring-rest-api-login-with-jwt/jwt_structure.png width=2372 height=1266 srcset="/posts/spring-rest-api-login-with-jwt/jwt_structure_huf809874e8a8efce303d1d2bbb99d4ac4_242873_480x0_resize_box_3.png 480w, /posts/spring-rest-api-login-with-jwt/jwt_structure_huf809874e8a8efce303d1d2bbb99d4ac4_242873_1024x0_resize_box_3.png 1024w" loading=lazy alt="Structure of JWT">
+</a>
+<figcaption>Structure of JWT</figcaption>
+</figure></p>
+<h3 id=token-providerクラスの実装>Token Providerクラスの実装</h3>
+<p>では、JWTがどんな情報により構成されているかがわかったので、必要な情報を載せて実際のJWTを作成するクラスを作りましょう。ここでHeader、Payload、Signatureの全部を埋める必要はなく、最低限の情報だけ使うことにします。</p>
+<p>まずトークンを作成するメソッドを作ります。ここで作成されるJWTのPayloadに載せるClaimは、ユーザ名とロールに限定します。また、JWTが発行された時間と満了時間を設定して、期間外では使えないようにします。そして最後にカスタムシークレットキーを設定してSignatureを作成することにします。</p>
+<p>他には、トークンを読み込んでDBのユーザ情報を取得するメソッド、リクエストのHeaderからトークンを取得するメソッド、トークンの有効期間を検証するメソッド、トークンにのせたユーザ名(ID)を取得するメソッドなども作っておきます。(こちらは別途クラスで切っても良さそうな気はします)</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTProvider</span> <span class=o>{</span>
+
+    <span class=c1>// Signatureのエンコードに使うシークレットキー
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TOKEN_SECRET_KEY</span> <span class=o>=</span> <span class=s>&#34;This is secrect!&#34;</span><span class=o>;</span>
+
+    <span class=c1>// トークンの有効期間(1時間)
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>long</span> <span class=n>TOKEN_VAILD_DURATION</span> <span class=o>=</span> <span class=n>1000L</span> <span class=o>*</span> <span class=n>60L</span> <span class=o>*</span> <span class=n>60L</span><span class=o>;</span>
+
+    <span class=c1>// ユーザ情報を取得するためのサービスクラス
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserDetailsService</span> <span class=n>service</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>JWTProvider</span><span class=o>(</span><span class=n>UserDetailService</span> <span class=n>service</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>service</span> <span class=o>=</span> <span class=n>service</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=c1>// UserオブジェクトからJWTを作成する
+</span><span class=c1></span>    <span class=kd>public</span> <span class=n>String</span> <span class=nf>createToken</span><span class=o>(</span><span class=n>User</span> <span class=n>user</span><span class=o>)</span> <span class=o>{</span>
+        <span class=c1>// Claimとしてユーザ名とロールを載せる
+</span><span class=c1></span>        <span class=n>Claims</span> <span class=n>claims</span> <span class=o>=</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>claims</span><span class=o>().</span><span class=na>setSubject</span><span class=o>(</span><span class=n>user</span><span class=o>.</span><span class=na>getId</span><span class=o>());</span>
+        <span class=n>claims</span><span class=o>.</span><span class=na>put</span><span class=o>(</span><span class=s>&#34;roles&#34;</span><span class=o>,</span> <span class=n>user</span><span class=o>.</span><span class=na>getRoles</span><span class=o>());</span>
+        <span class=c1>// トークンの開始時間と満了時間を決める
+</span><span class=c1></span>        <span class=n>Date</span> <span class=n>iat</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Date</span><span class=o>();</span>
+        <span class=n>Date</span> <span class=n>exp</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Date</span><span class=o>(</span><span class=n>start</span><span class=o>.</span><span class=na>getTime</span><span class=o>()</span> <span class=o>+</span> <span class=n>TOKEN_VAILD_DURATION</span><span class=o>);</span>
+        <span class=c1>// JWTの作成
+</span><span class=c1></span>        <span class=k>return</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>builder</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>setClaims</span><span class=o>(</span><span class=n>claims</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>setIssuedAt</span><span class=o>(</span><span class=n>iat</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>setExpiration</span><span class=o>(</span><span class=n>exp</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>signWith</span><span class=o>(</span><span class=n>SignatureAlgorithm</span><span class=o>.</span><span class=na>HS256</span><span class=o>,</span> <span class=n>TOKEN_SECRET_KEY</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>compact</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=c1>// トークンからユーザ情報を取得する
+</span><span class=c1></span>    <span class=kd>public</span> <span class=n>Authentication</span> <span class=nf>getAuthentication</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>UserDetails</span> <span class=n>userDetails</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>service</span><span class=o>.</span><span class=na>loadUserByUsername</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>getSubject</span><span class=o>(</span><span class=n>token</span><span class=o>));</span>
+        <span class=k>return</span> <span class=k>new</span> <span class=n>UsernamePasswordAuthenticationToken</span><span class=o>(</span><span class=n>userDetails</span><span class=o>,</span> <span class=s>&#34;&#34;</span><span class=o>,</span> <span class=n>userDetails</span><span class=o>.</span><span class=na>getAuthorities</span><span class=o>());</span>
+    <span class=o>}</span>
+
+    <span class=c1>// リクエストのHeaderからトークンを取得する
+</span><span class=c1></span>    <span class=kd>public</span> <span class=n>String</span> <span class=nf>resolveToken</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=c1>// トークンの有効期間を検証する
+</span><span class=c1></span>    <span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>validateToken</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>try</span> <span class=o>{</span>
+            <span class=kd>final</span> <span class=n>Jws</span><span class=o>&lt;</span><span class=n>Claims</span><span class=o>&gt;</span> <span class=n>claims</span> <span class=o>=</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>parser</span><span class=o>().</span><span class=na>setSigningKey</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>secretKey</span><span class=o>).</span><span class=na>parseClaimsJws</span><span class=o>(</span><span class=n>token</span><span class=o>);</span>
+            <span class=k>return</span> <span class=o>!</span><span class=n>claims</span><span class=o>.</span><span class=na>getBody</span><span class=o>().</span><span class=na>getExpiration</span><span class=o>().</span><span class=na>before</span><span class=o>(</span><span class=k>new</span> <span class=n>Date</span><span class=o>());</span>
+        <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=kc>false</span><span class=o>;</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=c1>// トークンからユーザ名を取得する
+</span><span class=c1></span>    <span class=n>pubic</span> <span class=n>String</span> <span class=nf>getSubject</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>parser</span><span class=o>().</span><span class=na>setSigningKey</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>secretKey</span><span class=o>).</span><span class=na>parseClaimsJws</span><span class=o>(</span><span class=n>token</span><span class=o>).</span><span class=na>getBody</span><span class=o>().</span><span class=na>getSubject</span><span class=o>();</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h3 id=カスタムfilterクラスの実装>カスタムFilterクラスの実装</h3>
+<p>次に、ログインするときにリクエストを検証するためのFilterクラスを作成します。最初ユーザがログインすると、このクラスでは先に作成したJWTProviderを使って、Headerからトークンを取得、有効期間の検証を行った後、問題なければDBからユーザ情報を取得してSpring Securityの認証情報(Authentication)としてセットするようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTAuthenticationFilter</span> <span class=kd>extends</span> <span class=n>GenericFilterBean</span> <span class=o>{</span>
+
+    <span class=c1>// トークンを検証するためのProvider
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>JWTAuthenticationFilter</span><span class=o>(</span><span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=c1>// ログインに対するフィルタリングを行う
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>doFilter</span><span class=o>(</span><span class=kd>final</span> <span class=n>ServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=kd>final</span> <span class=n>ServletResponse</span> <span class=n>response</span><span class=o>,</span> <span class=kd>final</span> <span class=n>FilterChain</span> <span class=n>filterChain</span><span class=o>)</span>
+            <span class=kd>throws</span> <span class=n>IOException</span><span class=o>,</span> <span class=n>ServletException</span> <span class=o>{</span>
+        <span class=kd>final</span> <span class=n>String</span> <span class=n>token</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>resolveToken</span><span class=o>((</span><span class=n>HttpServletRequest</span><span class=o>)</span> <span class=n>request</span><span class=o>);</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>token</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>&amp;&amp;</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>validateToken</span><span class=o>(</span><span class=n>token</span><span class=o>))</span> <span class=o>{</span>
+            <span class=kd>final</span> <span class=n>Authentication</span> <span class=n>auth</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>getAuthentication</span><span class=o>(</span><span class=n>token</span><span class=o>);</span>
+            <span class=n>SecurityContextHolder</span><span class=o>.</span><span class=na>getContext</span><span class=o>().</span><span class=na>setAuthentication</span><span class=o>(</span><span class=n>auth</span><span class=o>);</span>
+        <span class=o>}</span>
+        <span class=n>filterChain</span><span class=o>.</span><span class=na>doFilter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>response</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h3 id=spring-securityにjwtでのログイン設定を追加する>Spring SecurityにJWTでのログイン設定を追加する</h3>
+<p>では、JWTを作成して検証するための準備が終わったので、これからはSpring Securityでこのクラスたちを使って認証と認可を行うための設定をする版ですね。どれが定番だとかという訳ではないですが、どちらも好みに合わせて(もしくは要件に合わせて)使えるのではないかと思い、三つの方法を用意しました。</p>
+<h4 id=formloginを使う場合>FormLoginを使う場合</h4>
+<p>Spring SecurityのFormLoginを利用してログインのためのURLと、ログイン後のJWT作成を全て設定しておきたい場合の実装です。クライアント側ではログインのためのクレデンシャルをPOSTのFormデータとして送るようになります。</p>
+<p>ここではログインを処理するためのURLとクレデンシャルのためのパラメータなどを設定して、ログインに成功したらトークンを作成して返すための<code>AuthenticationSuccessHandler</code>を設定することになります。</p>
+<h5 id=authenticationsuccesshandlerの作成>AuthenticationSuccessHandlerの作成</h5>
+<p>まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTAuthenticationSuccessHandler</span> <span class=kd>implements</span> <span class=n>AuthenticationSuccessHandler</span> <span class=o>{</span>
+
+    <span class=c1>// トークンを作成するためのProvider
+</span><span class=c1></span>    <span class=kd>final</span> <span class=kd>private</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>JWTAuthenticationSuccessHandler</span><span class=o>(</span><span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>onAuthenticationSuccess</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span>
+                                        <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>,</span>
+                                        <span class=n>Authentication</span> <span class=n>auth</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span><span class=o>,</span> <span class=n>ServletException</span> <span class=o>{</span>
+        <span class=c1>// すでにレスポンスで情報を返した場合は何もしない
+</span><span class=c1></span>        <span class=k>if</span> <span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>isCommitted</span><span class=o>())</span> <span class=o>{</span>
+            <span class=k>return</span><span class=o>;</span>
+        <span class=o>}</span>
+        <span class=c1>// ログインに成功したユーザ情報を取得する
+</span><span class=c1></span>        <span class=n>User</span> <span class=n>user</span> <span class=o>=</span> <span class=o>(</span><span class=n>User</span><span class=o>)</span> <span class=n>auth</span><span class=o>.</span><span class=na>getPrincipal</span><span class=o>();</span>
+        <span class=c1>// Headerにトークンを作成して載せる
+</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>,</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>));</span>
+        <span class=c1>// HTTP Statusは200 OK
+</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setStatus</span><span class=o>(</span><span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>.</span><span class=na>value</span><span class=o>());</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h5 id=spring-securityの設定>Spring Securityの設定</h5>
+<p>では、ログインに成功したときのHandlerクラスを作成したので、Spring Securityの設定を変えていきます。必要なのは<code>loginProcessingUrl()</code>(ログインの処理をするためのPOST通信が行われるURLとHanlderの設定で、ユーザ名のパラメータ名やパスワードのパラメタ名はデフォルトと違う場合にだけ必要となります。そしてFilterはデフォルト設定だと<code>UsernamePasswordAuthenticationFilter</code>が先に実行されるので、先ほど作成した<code>JWTAuthenticationFilter</code>を使うための設定をします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+
+    <span class=c1>// ログインが成功した場合の処理のためのHandler
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>;</span>
+
+    <span class=c1>// ログイン以降の認証認可のためのFilter
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>,</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>successHandler</span> <span class=o>=</span> <span class=n>successHandler</span><span class=o>;</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>filter</span> <span class=o>=</span> <span class=n>filter</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Bean</span>
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=n>httpSecurity</span>
+                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// formLoginを使う
+</span><span class=c1></span>                <span class=o>.</span><span class=na>formLogin</span><span class=o>()</span>
+                <span class=c1>// POSTでクレデンシャルをもらい、ログイン処理を行うURL(UserDetailsServiceを使うことになる)
+</span><span class=c1></span>                <span class=o>.</span><span class=na>loginProcessingUrl</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login&#34;</span><span class=o>)</span>
+                <span class=c1>// ログイン処理ようのURLには認証認可なしでアクセスできる
+</span><span class=c1></span>                <span class=o>.</span><span class=na>permitAll</span><span class=o>()</span>
+                <span class=c1>// ユーザ名のパラメータ(デフォルトはusername)
+</span><span class=c1></span>                <span class=o>.</span><span class=na>usernameParameter</span><span class=o>(</span><span class=s>&#34;id&#34;</span><span class=o>)</span>
+                <span class=c1>// ユーザパスワードのパラメータ(デフォルトはpassword)
+</span><span class=c1></span>                <span class=o>.</span><span class=na>passwordParameter</span><span class=o>(</span><span class=s>&#34;pass&#34;</span><span class=o>)</span>
+                <span class=c1>// ログインに成功したら実行されるsuccessHandlerの指定
+</span><span class=c1></span>                <span class=o>.</span><span class=na>successHandler</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>successHandler</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// デフォルトのFilter設定を変える
+</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h4 id=jsonを使えるfilterを使う場合>JSONを使えるFilterを使う場合</h4>
+<p>Spring SecurityのFormLoginを使う場合、ログインのためのクレデンシャルはFormデータである必要があります。しかし、REST APIならばデータのやりとりはJSONが基本ですね。なのでクレデンシャルもJSONで送るようにしたいのですが、Spring Securityではそのようなメソッドを提供していません。</p>
+<p>こういう場合は、カスタムUsernamePasswordAuthenticationFilterクラスを作ってJSONをパースする必要があります。FormLoginを使う場合に比べて少し複雑になりますが、REST APIらしくやってみましょう。FromLoginでの実装ができると、こちらはFilterをもう一つ追加するだけの感覚で実装ができます。</p>
+<h5 id=jsonusernamepasswordauthenticationfilterの作成>JsonUsernamePasswordAuthenticationFilterの作成</h5>
+<p>クレデンシャルを確認するSpringのデフォルトのFilterクラスはUsernamePasswordAuthenticationFilterというもので、これを継承したカスタムクラスを作り、そこからJSONをパースして使うようにします。以下の実装は、FormデータとJSONの両方に対応している例です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>JsonUsernamePasswordAuthenticationFilter</span> <span class=kd>extends</span> <span class=n>UsernamePasswordAuthenticationFilter</span> <span class=o>{</span>
+
+    <span class=c1>// Headerからコンテントタイプを取得するための定数
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>CONTENT_TYPE</span> <span class=o>=</span> <span class=s>&#34;Content-Type&#34;</span><span class=o>;</span>
+    
+    <span class=c1>// JSONデータを保存するためのMap
+</span><span class=c1></span>    <span class=kd>private</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=o>,</span> <span class=n>String</span><span class=o>&gt;</span> <span class=n>jsonRequest</span><span class=o>;</span>
+
+    <span class=c1>// ユーザ名を取得する
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=n>String</span> <span class=nf>obtainUsername</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>getParameter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>getUsernameParameter</span><span class=o>());</span>
+    <span class=o>}</span>
+
+    <span class=c1>// パスワードを取得する
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=n>String</span> <span class=nf>obtainPassword</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>getParameter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>getPasswordParameter</span><span class=o>());</span>
+    <span class=o>}</span>
+    
+    <span class=c1>// JSONもしくはFormデータのクレデンシャルを取得し、Authenticationとして載せる
+</span><span class=c1></span>    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>Authentication</span> <span class=nf>attemptAuthentication</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>AuthenticationException</span> <span class=o>{</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>headerContentTypeIsJson</span><span class=o>(</span><span class=n>request</span><span class=o>))</span> <span class=o>{</span>
+            <span class=n>ObjectMapper</span> <span class=n>mapper</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ObjectMapper</span><span class=o>();</span>
+            <span class=k>try</span> <span class=o>{</span>
+                <span class=k>this</span><span class=o>.</span><span class=na>jsonRequest</span> <span class=o>=</span> <span class=n>mapper</span><span class=o>.</span><span class=na>readValue</span><span class=o>(</span><span class=n>request</span><span class=o>.</span><span class=na>getReader</span><span class=o>().</span><span class=na>lines</span><span class=o>().</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>joining</span><span class=o>()),</span>
+                        <span class=k>new</span> <span class=n>TypeReference</span><span class=o>&lt;</span><span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=o>,</span> <span class=n>String</span><span class=o>&gt;&gt;()</span> <span class=o>{</span>
+                        <span class=o>});</span>
+            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>IOException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+                <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=n>e</span><span class=o>);</span>
+            <span class=o>}</span>
+        <span class=o>}</span>
+        <span class=n>String</span> <span class=n>username</span> <span class=o>=</span> <span class=n>obtainUsername</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>?</span> <span class=n>obtainUsername</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>:</span> <span class=s>&#34;&#34;</span><span class=o>;</span>
+        <span class=n>String</span> <span class=n>password</span> <span class=o>=</span> <span class=n>obtainPassword</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>?</span> <span class=n>obtainPassword</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>:</span> <span class=s>&#34;&#34;</span><span class=o>;</span>
+        <span class=n>UsernamePasswordAuthenticationToken</span> <span class=n>authRequest</span> <span class=o>=</span> <span class=k>new</span> <span class=n>UsernamePasswordAuthenticationToken</span><span class=o>(</span><span class=n>username</span><span class=o>,</span> <span class=n>password</span><span class=o>);</span>
+        <span class=n>setDetails</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>authRequest</span><span class=o>);</span>
+        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>getAuthenticationManager</span><span class=o>().</span><span class=na>authenticate</span><span class=o>(</span><span class=n>authRequest</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=c1>// リクエストからパラメータ(ユーザ名とパスワード)を取得する
+</span><span class=c1></span>    <span class=kd>private</span> <span class=n>String</span> <span class=nf>getParameter</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=n>String</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>headerContentTypeIsJson</span><span class=o>(</span><span class=n>request</span><span class=o>))</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=n>jsonRequest</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>parameter</span><span class=o>);</span>
+        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getParameter</span><span class=o>(</span><span class=n>parameter</span><span class=o>);</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=c1>// HeaderからコンテントタイプがJSONかどうかを判定する
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=nf>headerContentTypeIsJson</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=n>CONTENT_TYPE</span><span class=o>).</span><span class=na>equals</span><span class=o>(</span><span class=n>MediaType</span><span class=o>.</span><span class=na>APPLICATION_JSON_VALUE</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h5 id=authenticationsuccesshandlerの作成-1>AuthenticationSuccessHandlerの作成</h5>
+<p>ここはFormLoginの場合と同じです。詳細については<a class=link href=#AuthenticationSuccessHandler%e3%81%ae%e4%bd%9c%e6%88%90>こちらを</a>参考にしてください。</p>
+<h5 id=spring-securityの設定-1>Spring Securityの設定</h5>
+<p>ここでは、作成したカスタムUsernamePasswordAuthenticationFilterにFilterProcessUrlと、AuthenticationManager、AuthenticationSuccessHandlerを設定して、デフォルトのフィルタ設定を変えるようになります。この設定ではFormLoginが要らなくなリます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+
+    <span class=c1>// ログインが成功した場合の処理のためのHandler
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>;</span>
+
+    <span class=c1>// ログイン以降の認証認可のためのFilter
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>,</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>successHandler</span> <span class=o>=</span> <span class=n>successHandler</span><span class=o>;</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>filter</span> <span class=o>=</span> <span class=n>filter</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Bean</span>
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=n>httpSecurity</span>
+                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// FormLoginは使わない
+</span><span class=c1></span>                <span class=o>.</span><span class=na>formLogin</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// 認証前にJWTのFilterを設定
+</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
+                <span class=c1>// UsernamePasswordAuthenticationFilterはカスタムクラスに代替
+</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterAt</span><span class=o>(</span><span class=n>getJsonUsernamePasswordAuthenticationFilter</span><span class=o>(),</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=c1>// カスタムUsernamePasswordAuthenticationFilterの設定
+</span><span class=c1></span>    <span class=kd>private</span> <span class=n>JsonUsernamePasswordAuthenticationFilter</span> <span class=nf>getJsonUsernamePasswordAuthenticationFilter</span><span class=o>()</span> <span class=o>{</span>
+        <span class=n>JsonUsernamePasswordAuthenticationFilter</span> <span class=n>jsonFilter</span> <span class=o>=</span> <span class=k>new</span> <span class=n>JsonUsernamePasswordAuthenticationFilter</span><span class=o>();</span>
+        <span class=k>try</span> <span class=o>{</span>
+            <span class=c1>// ログインを処理するURLの設定
+</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setFilterProcessesUrl</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login&#34;</span><span class=o>);</span>
+            <span class=c1>// AuthenticationManagerの設定
+</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setAuthenticationManager</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>());</span>
+            <span class=c1>// AuthenticationSuccessHandlerの設定
+</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setAuthenticationSuccessHandler</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>successHandler</span><span class=o>);</span>
+            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setUsernameParameter</span><span class=o>(</span><span class=s>&#34;id&#34;</span><span class=o>);</span>
+            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setPasswordParameter</span><span class=o>(</span><span class=s>&#34;pass&#34;</span><span class=o>);</span>
+        <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+            <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=n>e</span><span class=o>);</span>
+        <span class=o>}</span>
+        <span class=k>return</span> <span class=n>jsonFilter</span><span class=o>;</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h4 id=ログイン用のcontrollerを使う場合>ログイン用のControllerを使う場合</h4>
+<p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。</p>
+<p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかも知れません。</p>
+<h5 id=controllerの作成>Controllerの作成</h5>
+<p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@RestController</span>
+<span class=nd>@RequestMapping</span><span class=o>(</span><span class=s>&#34;api/v1/web&#34;</span><span class=o>)</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SignApiController</span> <span class=o>{</span>
+
+    <span class=c1>// クレデンシャルを検証するためのサービスクラス
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserService</span> <span class=n>service</span><span class=o>;</span>
+    
+    <span class=c1>// トークンを作成するためのProvider
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>SignApiController</span><span class=o>(</span><span class=n>MemberService</span> <span class=n>service</span><span class=o>,</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>service</span> <span class=o>=</span> <span class=n>service</span><span class=o>;</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=c1>// Formデータでクレデンシャルをもらい、認証を行う
+</span><span class=c1></span>    <span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/login&#34;</span><span class=o>)</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>login</span><span class=o>(</span><span class=nd>@Validated</span> <span class=nd>@RequestBody</span> <span class=n>LoginMemberForm</span> <span class=n>form</span><span class=o>,</span> <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>)</span> <span class=o>{</span>
+        <span class=c1>// クレデンシャルからユーザ情報を取得
+</span><span class=c1></span>        <span class=n>User</span> <span class=n>user</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>service</span><span class=o>.</span><span class=na>getUser</span><span class=o>(</span><span class=n>form</span><span class=o>.</span><span class=na>getId</span><span class=o>(),</span> <span class=n>form</span><span class=o>.</span><span class=na>getPassword</span><span class=o>());</span>
+        <span class=c1>// 取得した情報でトークンを作成
+</span><span class=c1></span>        <span class=n>String</span> <span class=n>token</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>);</span>
+        <span class=c1>// Headerにトークンを作成して載せる
+</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>,</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>));</span>
+        <span class=c1>// HTTP Statusは200 OK
+</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setStatus</span><span class=o>(</span><span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>.</span><span class=na>value</span><span class=o>());</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h5 id=spring-securityの設定-2>Spring Securityの設定</h5>
+<p>Controllerを使った場合は、認可認可なしでもログイン用のURLにアクセスできる設定と、Filterを使うための設定を追加します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+
+    <span class=c1>// ログイン以降の認証認可のためのFilter
+</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+
+    <span class=nd>@Autowired</span>
+    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Bean</span>
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
+        <span class=n>httpSecurity</span>
+                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
+                <span class=c1>// ログイン処理ようのURLには認証認可なしでアクセスできる
+</span><span class=c1></span>                <span class=o>.</span><span class=na>antMatchers</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login/&#34;</span><span class=o>).</span><span class=na>permitAll</span><span class=o>()</span>
+                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
+                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
+                <span class=c1>// デフォルトのFilter設定を変える
+</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><h3 id=テスト>テスト</h3>
+<p>今まで実装したログインのテストは、CURLもしくは<a class=link href=https://www.postman.com target=_blank rel=noopener>Postman</a>などのツールで簡単にできます。</p>
+<p>例えば、FormLoginを使った場合のログインはこちらになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>curl -i -X POST <span class=s2>&#34;http://localhost:8080/api/v1/web/login&#34;</span> -d <span class=s2>&#34;id=user&#34;</span> -d <span class=s2>&#34;pass=1234&#34;</span>
+</code></pre></div><p>Postmanを使ったJSONでのログインテストはこちらになります。(X-AUTH-TOKENでJWTが帰ってきたのを確認できます!)</p>
+<p><figure class=gallery-image style=flex-grow:253;flex-basis:608px>
+<a href=/posts/spring-rest-api-login-with-jwt/jwt_postman_login.png data-size=1926x760>
+<img src=/posts/spring-rest-api-login-with-jwt/jwt_postman_login.png width=1926 height=760 srcset="/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hubd688caa454b02975c5e2a4fff069012_136173_480x0_resize_box_3.png 480w, /posts/spring-rest-api-login-with-jwt/jwt_postman_login_hubd688caa454b02975c5e2a4fff069012_136173_1024x0_resize_box_3.png 1024w" loading=lazy alt="JWT Postman Login">
+</a>
+<figcaption>JWT Postman Login</figcaption>
+</figure></p>
+<h2 id=最後に>最後に</h2>
+<p>思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…</p>
+<p>でも、まだこれで完全な設定ができた訳ではありません。ここではSuccessHandlerのみを作成しましたが、場合によってはログインに失敗した場合の<code>AuthenticationFailureHandler</code>が必要になる可能性もあります。また、これはあくまでログインに関するポストなので扱ってはなかったのですが、認証認可できてないURLへのアクセスに対するException Handlingも必要です。また、JWTを使った認証の場合、クライアントがトークンを持ってしまうのでサーバ側からログアウトを制御できないという点があり、クライアント側の実装ではそこに対しての対策も考えなければなりません。</p>
+<p>が、今回はとりあえず最小限の目標は達成できたということで、いったんここまでとなります。では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/spring/>spring</a>
+<a href=/tags/spring-security/>spring security</a>
+<a href=/tags/rest-api/>rest api</a>
+<a href=/tags/jwt/>jwt</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/refresh-token-and-sliding-session/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>JWTの補完：Refresh TokenとSliding Session</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-security-handling/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>REST APIでのSpring Securityの例外ハンドリングを実装する</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux-dividing-router-and-handler/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux-router/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxではFunctional Enpointを使うべきか</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-how-to-login/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>REST APIでのログインのためには</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#jwtとは>JWTとは</a></li>
+<li><a href=#jwtでのログインシナリオ>JWTでのログインシナリオ</a></li>
+<li><a href=#jwtとspring-securityによるログイン>JWTとSpring Securityによるログイン</a>
+<ol>
+<li><a href=#spring-securityの設定jwtを使う前>Spring Securityの設定(JWTを使う前)</a>
+<ol>
+<li><a href=#entityクラス>Entityクラス</a></li>
+<li><a href=#serviceクラス>Serviceクラス</a></li>
+<li><a href=#configurationクラス>Configurationクラス</a></li>
+</ol>
+</li>
+<li><a href=#jwtの依存関係の追加>JWTの依存関係の追加</a></li>
+<li><a href=#jwtを提供するクラスを作る>JWTを提供するクラスを作る</a>
+<ol>
+<li><a href=#jwtの仕様>JWTの仕様</a></li>
+</ol>
+</li>
+<li><a href=#token-providerクラスの実装>Token Providerクラスの実装</a></li>
+<li><a href=#カスタムfilterクラスの実装>カスタムFilterクラスの実装</a></li>
+<li><a href=#spring-securityにjwtでのログイン設定を追加する>Spring SecurityにJWTでのログイン設定を追加する</a>
+<ol>
+<li><a href=#formloginを使う場合>FormLoginを使う場合</a></li>
+<li><a href=#jsonを使えるfilterを使う場合>JSONを使えるFilterを使う場合</a></li>
+<li><a href=#ログイン用のcontrollerを使う場合>ログイン用のControllerを使う場合</a></li>
+</ol>
+</li>
+<li><a href=#テスト>テスト</a></li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにすると"><title>ExposedでOneToManyをどうマッピングするか</title>
+<link rel=canonical href=https://retheviper.github.io/posts/exposed-mapping-record-to-object/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="ExposedでOneToManyをどうマッピングするか">
+<meta property="og:description" content="DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにすると">
+<meta property="og:url" content="https://retheviper.github.io/posts/exposed-mapping-record-to-object/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:tag" content="exposed"><meta property="article:tag" content="map"><meta property="article:published_time" content="2021-07-26T00:00:00+00:00"><meta property="article:modified_time" content="2021-07-26T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/exposed.jpg">
+<meta name=twitter:title content="ExposedでOneToManyをどうマッピングするか">
+<meta name=twitter:description content="DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにすると"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/exposed.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/exposed-mapping-record-to-object/>
+<img src=/../../images/exposed.jpg loading=lazy alt="Featured image of post ExposedでOneToManyをどうマッピングするか">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/exposed/ style=background-color:#2a9d8f;color:#fff>
+exposed
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/exposed-mapping-record-to-object/>ExposedでOneToManyをどうマッピングするか</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jul 26, 2021</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+10 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにするとしたら、この会員情報のテーブルに配送先のカラムを追加するよりは、配送先のテーブルを分離して別に管理した方がデータの持ち方としては合理的で安全なはずです。そして分離した配送先のテーブルは、会員情報のテーブルとN:1の関係になるのが一般的でしょう。</p>
+<p>ただ、データの持ち方が優先的なDBと、そのデータを処理して形にするアプリケーションでは事情が違いますね。例えば上記の通り、一つの会員情報のレコードに対して複数の配送先のレコードが存在し得る場合、SQLでデータを表現すると、以下のような形になるはずです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>|-----------|-------------|-----------------|
+| member.id | member.name | mailing.address |
+|-----------|-------------|-----------------|
+|         1 |        John |           Tokyo |
+|         1 |        John |        New York |
+|         1 |        John |         Beijing |
+|         2 |     Simpson |           Osaka |
+|         2 |     Simpson |          Nagoya |
+|-----------|-------------|-----------------|
+</code></pre></div><p>しかしアプリケーションではこのような形でデータを扱うことはあまりないですね。一つのレコードに対して複数のレコードが含まれるということは、Kotlinだと以下のように表現するのが一般的かと思います。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>data</span> <span class=k>class</span> <span class=nc>Member</span><span class=p>(</span>
+    <span class=k>val</span> <span class=py>id</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>mailingAdress</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span>
+<span class=p>)</span>
+</code></pre></div><p>そして普通は、このようなオブジェクトをJSONの形にしてREST APIのレスポンスとして使う場合が多いですね。なので、先程のレコードをJSONにした場合は以下のようになるはずです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=p>{</span>
+    <span class=nt>&#34;members&#34;</span><span class=p>:</span> <span class=p>[</span>
+        <span class=p>{</span> 
+            <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=mi>1</span><span class=p>,</span>
+            <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;John&#34;</span><span class=p>,</span>
+            <span class=nt>&#34;mailingAddress&#34;</span><span class=p>:</span> <span class=p>[</span>
+                <span class=s2>&#34;Tokyo&#34;</span><span class=p>,</span>
+                <span class=s2>&#34;New York&#34;</span><span class=p>,</span>
+                <span class=s2>&#34;Beijing&#34;</span>
+            <span class=p>]</span>
+        <span class=p>},</span>
+        <span class=p>{</span>
+            <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=mi>2</span><span class=p>,</span>
+            <span class=nt>&#34;name&#34;</span><span class=p>:</span> <span class=s2>&#34;Simpson&#34;</span><span class=p>,</span>
+            <span class=nt>&#34;mailingAddress&#34;</span><span class=p>:</span> <span class=p>[</span>
+                <span class=s2>&#34;Osaka&#34;</span><span class=p>,</span>
+                <span class=s2>&#34;Nagoya&#34;</span>
+            <span class=p>]</span>            
+        <span class=p>}</span>
+    <span class=p>]</span> 
+<span class=p>}</span>
+</code></pre></div><p>ここで問題は、オブジェクトをJSONに変えることはそう難しくないのですが（<a class=link href=https://github.com/FasterXML/jackson target=_blank rel=noopener>Jackson</a>, <a class=link href=https://github.com/google/gson target=_blank rel=noopener>Gson</a>, <a class=link href=https://github.com/Kotlin/kotlinx.serialization target=_blank rel=noopener>Kotlin Serialization</a>のようなライブラリがすでにありますし）</p>
+<p>では、このような場合、DBから取得したレコードをどうやってオブジェクトにマッピングしたら良いのでしょう。JPAのようなORMを使う場合、クラスにテーブル間の関係を表すフィールドとアノテーションを適切に使うことでレコードへのマッピングは自動に行われますが、<a class=link href=https://www.jooq.org target=_blank rel=noopener>jOOQ</a>や<a class=link href=https://querydsl.com target=_blank rel=noopener>Querydsl</a>, <a class=link href=https://github.com/JetBrains/Exposed target=_blank rel=noopener>Exposed</a>, <a class=link href=https://www.ktorm.org target=_blank rel=noopener>Ktorm</a>のようなORMで、DSLを使ってSQLを書く場合はデータのマッピングを手動で行う必要があります。そして取得したデータは行の配列という形になるので、どうマッピングしたら（効率が）いいかは少し悩ましいところです。</p>
+<p>なので、今回はExposedのDSLを使って取得したOne to Manyのレコードを、コード上でどうやってオブジェクトにマッピングするかについて考えたことを述べたいとお思います。</p>
+<h2 id=テーブルごとにselectする>テーブルごとにSelectする</h2>
+<p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>transaction</span> <span class=p>{</span>
+    <span class=c1>// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
+</span><span class=c1></span>    <span class=k>val</span> <span class=py>member</span> <span class=p>=</span> <span class=n>Member</span><span class=p>.</span><span class=n>select</span> <span class=p>{</span> <span class=n>Member</span><span class=p>.</span><span class=n>id</span> <span class=n>eq</span> <span class=n>id</span> <span class=p>}</span>
+        <span class=p>.</span><span class=n>first</span><span class=p>()</span>
+        <span class=p>.</span><span class=n>let</span> <span class=p>{</span>
+            <span class=n>MemberDto</span><span class=p>(</span>
+                <span class=n>id</span> <span class=p>=</span> <span class=n>row</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>].</span><span class=n>value</span><span class=p>,</span>
+                <span class=n>name</span> <span class=p>=</span> <span class=n>row</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>name</span><span class=p>],</span>
+                <span class=n>role</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=n>row</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>role</span><span class=p>])</span>
+            <span class=p>)</span>
+        <span class=p>}</span>
+
+    <span class=c1>// MailingテーブルをSelectし、リストにする
+</span><span class=c1></span>    <span class=k>val</span> <span class=py>mailingAddress</span> <span class=p>=</span> <span class=n>Mailing</span>
+            <span class=p>.</span><span class=n>select</span> <span class=p>{</span> <span class=n>Mailing</span><span class=p>.</span><span class=n>memberId</span> <span class=n>eq</span> <span class=n>member</span><span class=p>.</span><span class=n>id</span> <span class=p>}</span>
+            <span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=k>it</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>address</span><span class=p>]</span> <span class=p>}</span>
+
+    <span class=c1>// オブジェクトのコピーを作り配送先のデータをマッピング
+</span><span class=c1></span>    <span class=n>member</span><span class=p>.</span><span class=n>copy</span><span class=p>(</span><span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>mailingAddress</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>もっとも簡単で、コードとしてもわかりやすい方法ではありますが、トランザクションの観点からするとあまりよくない方法ですね。Exposedでは、<code>transaction</code>ブロックに包むことでトランザクションの単位を制御できるものの、一回で済ませるクエリの発行が複数になるという問題があります。ここではMemberテーブルを照会するたびにMailingテーブルも照会することになるので1回のクエリが追加されているだけですが、もしMemberテーブルに1:Nの関係となっているテーブルが増えれば増えるほどクエリの発行数も増えることになるでしょう。そして今回は一つのレコードに対してのコードとなっていますが、照会対象のMemberテーブルのレコードが増えれば増えるほど発行されるクエリの数も多くなります。</p>
+<p>また、オブジェクトのインスタンスを作っておいて、わざわあコピーするというのもあまり効率が良いとは言えません。これもまたクエリの数が増える問題と同じく、照会対象のレコードが増えれば増えるほど生成されるオブジェクトのインスタンスも増えることになるという訳ですね。なので、全く性能や効率を考えてないコードと言えます。</p>
+<h2 id=joinしてマッピングする>joinしてマッピングする</h2>
+<p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり<code>join</code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の<a class=link href=https://vmm.dev/ja/cci/cci-0.md target=_blank rel=noopener>Big O記法</a>で表現すると、前者は<code>O(N^2)</code>であり、これは<code>O(1)</code>と表現できるはずです。</p>
+<p>ならばデータを取得する際に、クエリとしては<code>join</code>を使うのが理想的なのはわかりますが、問題はそうやって取得したデータをどう加工するかです。先に述べましたが、取得したデータのうち重複するものがあるからですね。そしてこれが重複しているかどうかはクエリを実行した結果を取得して、確認するまではわかりません。</p>
+<p>ここで考えられる方法は三つほどありますので、一つづつ紹介していきます。</p>
+<h3 id=reduce>reduce</h3>
+<p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、<code>reduce</code>でまとめる方法です。例えば以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>transaction</span> <span class=p>{</span>
+    <span class=n>Member</span><span class=p>.</span><span class=n>leftJoin</span><span class=p>(</span><span class=n>Mailing</span><span class=p>)</span>
+        <span class=p>.</span><span class=n>select</span> <span class=p>{</span> <span class=p>(</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span> <span class=n>eq</span> <span class=n>id</span><span class=p>)</span> <span class=n>and</span> <span class=p>(</span><span class=n>Mailing</span><span class=p>.</span><span class=n>memberId</span> <span class=n>eq</span> <span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>)</span> <span class=p>}</span>
+        <span class=p>.</span><span class=n>map</span> <span class=p>{</span>
+            <span class=c1>// とりあえずオブジェクトにマッピングする
+</span><span class=c1></span>            <span class=n>MemberDto</span><span class=p>(</span>
+                <span class=n>id</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>].</span><span class=n>value</span><span class=p>,</span>
+                <span class=n>name</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>name</span><span class=p>],</span>
+                <span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=k>it</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>address</span><span class=p>])</span>
+            <span class=p>)</span>
+        <span class=p>}.</span><span class=n>reduce</span> <span class=p>{</span> <span class=n>acc</span><span class=p>,</span> <span class=n>memberDto</span> <span class=o>-&gt;</span>
+            <span class=c1>// オブジェクトを一つに集約させる（mailingAddressは累計）
+</span><span class=c1></span>            <span class=n>acc</span><span class=p>.</span><span class=n>copy</span><span class=p>(</span>
+                <span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>acc</span><span class=p>.</span><span class=n>mailingAddress</span> <span class=p>+</span> <span class=n>memberDto</span><span class=p>.</span><span class=n>mailingAddress</span>
+            <span class=p>)</span>
+        <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>このやり方で考えられる問題は、まず行数分のオブジェクトのインスタンスが作られるということです。このクエリとして取得しようとしているMemberのレコードは一つのみですが、そのレコードに紐づくMailingのレコードが多ければ多いほど件数は増え、当然生成されるオブジェクトの数も多くなります。また、マッピングだけでなく、<code>reduce</code>でもオブジェクトをコピーしているので、やはり行数分のオブジェクトが生成されていると考えられます。オブジェクトのインスタンス数は行数x2になる訳ですね。</p>
+<p>そしてもう一つの問題は、Memberのレコードを複数取得する場合、全部一つのオブジェクトにまとまってしまうという問題がありますね。なので、このやり方だと一つのレコードを取得する場合のみしか適応できなくなります。</p>
+<h3 id=groupby>groupBy</h3>
+<p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには<code>groupBy</code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに<code>List</code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>transaction</span> <span class=p>{</span>
+    <span class=n>Member</span><span class=p>.</span><span class=n>leftJoin</span><span class=p>(</span><span class=n>Mailing</span><span class=p>)</span>
+        <span class=p>.</span><span class=n>select</span> <span class=p>{</span> <span class=p>(</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span> <span class=n>eq</span> <span class=n>id</span><span class=p>)</span> <span class=n>and</span> <span class=p>(</span><span class=n>Mailing</span><span class=p>.</span><span class=n>memberId</span> <span class=n>eq</span> <span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>)</span> <span class=p>}</span>
+        <span class=c1>// keyはMemberオブジェクトのマッピング、valueではMailingのレコードを集約
+</span><span class=c1></span>        <span class=p>.</span><span class=n>groupBy</span><span class=p>({</span>
+            <span class=n>MemberDto</span><span class=p>(</span>
+                <span class=n>id</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>].</span><span class=n>value</span><span class=p>,</span>
+                <span class=n>name</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>name</span><span class=p>],</span>
+            <span class=p>)</span>
+        <span class=p>},</span> <span class=p>{</span> <span class=k>it</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>address</span><span class=p>]</span> <span class=p>})</span>
+        <span class=c1>// keyのオブジェクトにMailingのレコードを設定
+</span><span class=c1></span>        <span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=p>(</span><span class=n>key</span><span class=p>,</span> <span class=n>value</span><span class=p>)</span> <span class=o>-&gt;</span>
+            <span class=n>key</span><span class=p>.</span><span class=n>copy</span><span class=p>(</span><span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>value</span><span class=p>)</span>
+        <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>この方法だと、今まで照会した他の方法で考えられる問題をだいぶ解消できそうな気がしますね。ただ、気になるのは、<code>groupBy</code>の引数がLambdaであることです。引数として関数を渡すということは、ループしながらその関数を実行することになるという意味なので、<code>reduce</code>の時と同じ量のインスタンスが作られる可能性がありそうですね。なので、<code>groupBy</code>の実装を見ていきたいと思います。中のコードは、以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=k>inline</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>,</span> <span class=nc>K</span><span class=p>,</span> <span class=nc>V</span><span class=p>&gt;</span> <span class=nf>Iterable</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;.</span><span class=n>groupBy</span><span class=p>(</span><span class=n>keySelector</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>K</span><span class=p>,</span> <span class=n>valueTransform</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>V</span><span class=p>):</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>V</span><span class=p>&gt;&gt;</span> <span class=p>{</span>
+    <span class=k>return</span> <span class=n>groupByTo</span><span class=p>(</span><span class=n>LinkedHashMap</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>MutableList</span><span class=p>&lt;</span><span class=n>V</span><span class=p>&gt;&gt;(),</span> <span class=n>keySelector</span><span class=p>,</span> <span class=n>valueTransform</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p><code>groupBy</code>の実装では、<code>groupByTo</code>という関数に自分の引数と、作られるMapのインスタンスを渡しているだけですね。では、さらに<code>groupByTo</code>の中身を見ていきましょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=k>inline</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>,</span> <span class=nc>K</span><span class=p>,</span> <span class=nc>V</span><span class=p>,</span> <span class=nc>M</span> <span class=p>:</span> <span class=nc>MutableMap</span><span class=p>&lt;</span><span class=k>in</span> <span class=nc>K</span><span class=p>,</span> <span class=nc>MutableList</span><span class=p>&lt;</span><span class=nc>V</span><span class=p>&gt;&gt;&gt;</span> <span class=nf>Iterable</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;.</span><span class=n>groupByTo</span><span class=p>(</span><span class=n>destination</span><span class=p>:</span> <span class=n>M</span><span class=p>,</span> <span class=n>keySelector</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>K</span><span class=p>,</span> <span class=n>valueTransform</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>V</span><span class=p>):</span> <span class=n>M</span> <span class=p>{</span>
+    <span class=k>for</span> <span class=p>(</span><span class=n>element</span> <span class=k>in</span> <span class=k>this</span><span class=p>)</span> <span class=p>{</span>
+        <span class=k>val</span> <span class=py>key</span> <span class=p>=</span> <span class=n>keySelector</span><span class=p>(</span><span class=n>element</span><span class=p>)</span>
+        <span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>destination</span><span class=p>.</span><span class=n>getOrPut</span><span class=p>(</span><span class=n>key</span><span class=p>)</span> <span class=p>{</span> <span class=n>ArrayList</span><span class=p>&lt;</span><span class=n>V</span><span class=p>&gt;()</span> <span class=p>}</span>
+        <span class=n>list</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=n>valueTransform</span><span class=p>(</span><span class=n>element</span><span class=p>))</span>
+    <span class=p>}</span>
+    <span class=k>return</span> <span class=n>destination</span>
+<span class=p>}</span>
+</code></pre></div><p>ここで確かになっていることは、やはり最初のCollectionの要素数分、<code>keySelector</code>と<code>valueTransform</code>を実行しているということです。Mapに変えることになるので、<code>reduce</code>の時とは違ってMemberレコードがいくつあっても一つに集約されるような事態は起こらないと考えられますが、依然としてオブジェクトのインスタンスが複数できてしまうという問題はあります。なので、また他の方法を探してみましょう。</p>
+<h3 id=map>Map</h3>
+<p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、<code>compute</code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。</p>
+<p>トランザクションとは関係のないMapをまず宣言し、Selectしたデータに対して<code>compute</code>を実行することにします。<code>compute</code>では指定したkey（Memberのidなど）がMapの中にない場合にMemberのインスタンスを作成するようにして、すでにある場合はそのオブジェクトにMailingのデータを追加するようにすれば良いでしょう。そしてループが終わったらMapのvalueのみを取得すると良いですね。</p>
+<p>以上のことを、コードで表すと以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// オブジェクトをまとめるためのMap（keyはMember.id）
+</span><span class=c1></span><span class=k>val</span> <span class=py>helperMap</span> <span class=p>=</span> <span class=n>mutableMapOf</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>MemberDto</span><span class=p>&gt;()</span>
+
+<span class=n>transaction</span> <span class=p>{</span>
+    <span class=n>Member</span><span class=p>.</span><span class=n>leftJoin</span><span class=p>(</span><span class=n>Mailing</span><span class=p>)</span>
+        <span class=p>.</span><span class=n>select</span> <span class=p>{</span>
+            <span class=p>(</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span> <span class=n>eq</span> <span class=n>id</span><span class=p>)</span> <span class=n>and</span> <span class=p>(</span><span class=n>Mailing</span><span class=p>.</span><span class=n>memberId</span> <span class=n>eq</span> <span class=n>Mailing</span><span class=p>.</span><span class=n>id</span><span class=p>)</span>
+        <span class=p>}</span>
+        <span class=p>.</span><span class=n>forEach</span> <span class=p>{</span>
+            <span class=n>helperMap</span><span class=p>.</span><span class=n>compute</span><span class=p>(</span><span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>id</span><span class=p>].</span><span class=n>value</span><span class=p>)</span> <span class=p>{</span> <span class=n>key</span><span class=p>,</span> <span class=n>value</span> <span class=o>-&gt;</span>
+                <span class=c1>// valueがnullではない場合、コピーしてmailingAddressを累計
+</span><span class=c1></span>                <span class=n>value</span><span class=o>?.</span><span class=n>copy</span><span class=p>(</span>
+                    <span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>value</span><span class=p>.</span><span class=n>mailingAddress</span> <span class=p>+</span> <span class=k>it</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>address</span><span class=p>]</span>
+                <span class=c1>// valueがnullの場合はインスタンスを作る
+</span><span class=c1></span>                <span class=p>)</span> <span class=o>?:</span> <span class=n>MemberDto</span><span class=p>(</span>
+                    <span class=n>id</span> <span class=p>=</span> <span class=n>key</span><span class=p>,</span>
+                    <span class=n>name</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>Member</span><span class=p>.</span><span class=n>name</span><span class=p>],</span>
+                    <span class=n>mailingAddress</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=k>it</span><span class=p>[</span><span class=n>Mailing</span><span class=p>.</span><span class=n>address</span><span class=p>])</span>
+                <span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}.</span><span class=n>let</span> <span class=p>{</span>
+            <span class=c1>// valueをListに変換
+</span><span class=c1></span>            <span class=n>helperMap</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=k>it</span><span class=p>.</span><span class=n>value</span> <span class=p>}</span>
+        <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>いかがでしょうか。これで重複するデータなく、インスタンスの作成も最低限に抑えることができたかと思います。もちろん、mailingAddressを追加するたびにコピーが発生するという問題はありますが、ここは専用のsetterなどを作っておくことで回避できると思います。</p>
+<p>一つ注意しなくてはならないのは、ここで使っているMapをフィールドとして宣言したりするとデータの整合性やアプリケーションのメモリ使用量に響くということです。なので必ずメソッドの中でのみMapのインスタンスが作成されるようにする必要があります。</p>
+<h2 id=最後に>最後に</h2>
+<p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。</p>
+<p>ただ、ORMでどうやってデータを取得するかの問題だけでなく、ここで扱った「重複するデータをどう違う形のデータに加工するか」の問題は、必ずしもDBからレコードを取得する場合のみのことに限らないので（例えば他のAPIを読んだ結果としてもそんなデータはあり得ますね）、色々方法を考えておく必要はありそうです。今の時点ではMapを利用した方法がもっとも良さそうな気がしますが、他にもっと効率的な方法があるかも知れませんしね。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+<a href=/tags/exposed/>exposed</a>
+<a href=/tags/map/>map</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/ktor-first-impression/>
+<div class=article-image>
+<img src=/../../images/ktor.jpg loading=lazy data-key data-hash=/../../images/ktor.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Ktorを触ってみた</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#テーブルごとにselectする>テーブルごとにSelectする</a></li>
+<li><a href=#joinしてマッピングする>joinしてマッピングする</a>
+<ol>
+<li><a href=#reduce>reduce</a></li>
+<li><a href=#groupby>groupBy</a></li>
+<li><a href=#map>Map</a></li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

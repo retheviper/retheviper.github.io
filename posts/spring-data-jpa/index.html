@@ -1,0 +1,353 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文"><title>MyBatisよりJPAが使いたい</title>
+<link rel=canonical href=https://retheviper.github.io/posts/spring-data-jpa/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="MyBatisよりJPAが使いたい">
+<meta property="og:description" content="個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文">
+<meta property="og:url" content="https://retheviper.github.io/posts/spring-data-jpa/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="database"><meta property="article:tag" content="jdbc"><meta property="article:tag" content="jpa"><meta property="article:tag" content="spring"><meta property="article:published_time" content="2020-07-10T00:00:00+00:00"><meta property="article:modified_time" content="2020-07-10T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/spring.jpg">
+<meta name=twitter:title content="MyBatisよりJPAが使いたい">
+<meta name=twitter:description content="個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/spring.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/spring-data-jpa/>
+<img src=/../../images/spring.jpg loading=lazy alt="Featured image of post MyBatisよりJPAが使いたい">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>
+spring
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/spring-data-jpa/>MyBatisよりJPAが使いたい</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jul 10, 2020</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+13 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文はなるべく最低限のCRUDに制限し、必要な作業は全てアプリにて処理するような実装をしたほうが設計として望ましい形だと思っています。なぜかというと、システム全体の性能、アプリのDBに対しての独立性、処理の容易さという観点からそちらの方が優れていると思っているからです。</p>
+<p>まず性能ですが、DBサーバとAPサーバが物理的に同じ性能のマシンを使っているとしたら、実際は最適化されたクエリーでパフォーマンスをあげることは十分できますね。しかし、勝利すべきデータやリクエストが増えると必ずしもそうとは言えません。Webアプリケーションでユーザ数が増えるとスケールアウト<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>やスケールアップ<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>を考慮することになりますが、スケールアウトする場合の場合にDBへの依存が強いアプリは問題を起こす可能性があります。APサーバは複数を利用してもアプリの動作には変わりがありませんが、DBサーバの場合は台数が増えるとデータの整合性という新しい問題が出てきますね。どのDBにも同じデータが保存されていることを保証したいなら、DBサーバをスケールアウトするよりはAPサーバをスケールアウトした方が良いと思います。なのでこの場合はアプリにデータの「処理」を任せた方が望ましいですね。</p>
+<p>次にアプリのDBに対しての独立性ですが、最近は費用の高い<a class=link href=https://www.oracle.com/database/technologies target=_blank rel=noopener>Oralce</a>から無料の<a class=link href=https://www.postgresql.org target=_blank rel=noopener>PostgreSQL</a>や<a class=link href=https://www.mysql.com target=_blank rel=noopener>MySQL</a>に移行するシステムも増えてきていますね。しかし、ここでDBのクエリーやプラグインに依存した部分が多ければ多いほど移行は難しくなる可能性があります。微妙に違うカラムのデータ型から、互換性のないクエリーや機能などを全面的に検討する必要がありますね。なのでSQL文はなるべく単純にした方が、移植生が上がります。</p>
+<p>最後に、処理の容易さなのですが、現在DBの主流であるRDBSの場合は、徹底的にデータをいかに効率的に保存するかが最も重要な課題となっているものです。正規化を終えたテーブル構造は、データを加工するには適合していません。なのでアプリでは必要に応じてエンティティを作って使いますが、そのエンティティに合わせてSQLを書く際はまた複雑なJoinやWhereなどを描かなければならなくなりますね。エンティティの中に他のエンティティがま他入っていたりする場合はJoinをするか、しないかのケースまで考えてクエリーを描かなければなりません。</p>
+<p>このような理由からして、自分はなるべく複雑なクエリーを排除し、なるべくアプリ中心的に開発できる方法はないかと思っていました。初めはJDBCに触れ、そのあとはMyBatisを使うようになっていましたが、MyBatisを使ってもケース別にクエリーを書く必要があるのはまた同じでした。(プラスで、xmlが必要となることもありますね)最近はテレワークにより通勤時間がなくなり、仕事が終わった後は勉強をかねて自作アプリを実装していますが、ここでより簡単に、またよりアプリに優しいDBのAPIがないかと思っていましたが、そこで発見したのがJPAでした。</p>
+<h2 id=jpaとは>JPAとは</h2>
+<p>JPAは<a class=link href=https://www.oracle.com/java/technologies/persistence-jsp.htm target=_blank rel=noopener>Java Persistence API</a>の略で、Javaが提供する標準APIです。ただ、標準APIだとしても、Interfaceとして定義しているだけなので、これを実装したものが必要となります。JPAを実装したものとして有名なのが<a class=link href=https://hibernate.org target=_blank rel=noopener>Hibernate</a>で、これをさらに使いやすく整理したモジュールとして<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#reference target=_blank rel=noopener>Spring Data JPA</a>が存在しています。</p>
+<p>だいぶ序論が長くなりましたが、結論的に今回言いたいことが何かというと、Spring Data JPAを使うと他のライブラリやフレームワークを使うよりも楽に開発ができるということです。おそらくSQL中心的な開発に関しては自分と同じようなことを考えていた人が他にもいたらしく、JPAは単純なクエリーを自動で作ってくれたり、自動でテーブルのJoinをしてくれるなど全くSQLに触れなくてもDBを扱うことを可能にしてくれています。同じくORMとしてよく使われているMyBatisに比べても、JPAを使った方がより効率的なのではないかな、と個人的には考えています。その理由からか、海外では他のORMよりもJPAを使っている割合の方が圧倒的に高いようでした。なのでもし今もMyBatisを使っている方がいらっしゃるなら、ぜひJPAを一度は使ってみて欲しいところです。</p>
+<p>では、実際にJPA(Spring Data JPA)の特徴と使用法を、一つづつ紹介しましょう。</p>
+<h3 id=jpaの特徴>JPAの特徴</h3>
+<p>まずはJPAの特徴です。正確には特徴というよりは、JPAを使う場合のメリットに近いのではないかと思います。</p>
+<h4 id=自動グラフ探索>自動グラフ探索</h4>
+<p>まず、このようなクラスがあるとします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Team</span> <span class=o>{</span>
+    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p>そしてチームには所属された選手がいます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Player</span> <span class=o>{</span>
+    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+    <span class=kd>private</span> <span class=n>Team</span> <span class=n>team</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p>既存のSQLでこの選手オブジェクトをDBから照会する場合は、以下の手順が必要となります。</p>
+<ol>
+<li>TeamテーブルをSelectする</li>
+<li>TeamオブジェクトにSelectしたデータを埋め込む</li>
+<li>PlayerテーブルをSelectする</li>
+<li>PlayerオブジェクトにSelectしたデータを埋め込む</li>
+<li>PlayerオブジェクトにTeamオブジェクトをセットする</li>
+</ol>
+<p>この手順は、テーブルのJoinが多くなればなるほど増えます。また、SQLもさらに長くなりますね。例えばTeamクラスにRegionというクラスがフィールドとして入り、RegionにはさらにCountryというクラスが入るとしたら？それぞれのテーブルを照会してJoinするようなクエリーを作る必要があって、またオブジェクトも全部マッピングする必要がありますね。もしこの手順に何らかの抜け漏れなどがあったら、コードは思い通りに作動しないはずです。</p>
+<p>JPAでは、このような参照関係を自動で解決してくれます。例えば、何もしなくても以下のようなことが可能です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// RepositoryからPlayerオブジェクトを取得する
+</span><span class=c1></span><span class=n>Player</span> <span class=n>player</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findById</span><span class=o>(</span><span class=n>1</span><span class=o>);</span>
+<span class=c1>// Playerが所属したTeamを取得する
+</span><span class=c1></span><span class=n>Team</span> <span class=n>team</span> <span class=o>=</span> <span class=n>player</span><span class=o>.</span><span class=na>getTeam</span><span class=o>();</span>
+</code></pre></div><h3 id=性能の最適化>性能の最適化</h3>
+<p>自動的にグラフ探索をしてくれるところをみると、まさかPlayerテーブルを照会するたびにTeamテーブルも照会しているような無駄なことをしているわけではないか、と思われそうですが、実際はLazy Loadingにより、Teamは<code>getTeam()</code>を実行した時点でまたのSelect文を発行して照会していることになります。なので、Playerだけの情報が必要な場合はその情報しか照会しないことになります。</p>
+<p>では、場合によっては数回もトランザクションが発生するのではないか、という疑問もあり得ると思いますが、これをJPAではキャッシュとバッチ、フェッチタイプの指定で解決しているようです。これらは以下のように作動します。</p>
+<ul>
+<li>キャッシュ：同じエンティティに対して(同一トランザクションならば)2回目以降のSelectはキャッシュから照会する</li>
+<li>バッチ：バッチメソッドを提供し、一回のコミットで複数のクエリを転送する機能を実装している</li>
+<li>フェッチタイプ：アノテーションによりLazy Loadingをするか、最初からJoinして照会するかを選択可能</li>
+</ul>
+<h4 id=自動クエリ生成>自動クエリ生成</h4>
+<p>先にRepositoryからオブジェクトを取得する例を照会しましたが、これが可能になるのはJPAが自動的に生成してくれるクエリーがあるからです。JPAが提供するアノテーションやインタフェースを使うとこで、自動生成されるクエリーを利用することができます。</p>
+<p>つまり、エンティティとして利用するクラスとJPAをアノテーションとインタフェースに紐づけておくといちいちクエリーを作成してオブジェクトにマッピングする必要がなくなるということです。もちろん自作クエリーを使うこともできるので、自動生成されるクエリーを使いたい場合も問題ないです。</p>
+<p>このクエリーの生成は、エンティティのCRUDだけに限ることではありません。エンティティに変更が生じた場合(フィールドを追加する必要がある場合)は、DDLも自動的に作成してくれます。ここで自動生成されるDDLをDrop-Createにするか、AlterにするかはアプリケーションプロパティのHibernate設定でできます。</p>
+<h3 id=jpaの使用法>JPAの使用法</h3>
+<p>では、実際のJPAをコードとしてはどう使えるかをみていきましょう。</p>
+<h4 id=entity>Entity</h4>
+<p>JPAでは、エンティティとそのフィールド(テーブルのカラムや参照関係)をアノテーションによって簡単に定義することができます。例えば以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Entityとして指定する
+</span><span class=c1></span><span class=nd>@Entity</span>
+<span class=kd>class</span> <span class=nc>Car</span> <span class=o>{</span>
+
+    <span class=c1>// 自動的に増加するPK
+</span><span class=c1></span>    <span class=nd>@Id</span>
+    <span class=nd>@GeneratedValue</span><span class=o>(</span><span class=n>strategy</span> <span class=o>=</span> <span class=n>GenerationType</span><span class=o>.</span><span class=na>IDENTITY</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+
+    <span class=c1>// UniqueかつNonNull設定
+</span><span class=c1></span>    <span class=nd>@Column</span><span class=o>(</span><span class=n>nullable</span> <span class=o>=</span> <span class=kc>false</span><span class=o>,</span> <span class=n>unique</span> <span class=o>=</span> <span class=kc>true</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+
+    <span class=c1>// Companyとは多対一の関係
+</span><span class=c1></span>    <span class=nd>@ManyToOne</span>
+    <span class=nd>@JoinColumn</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;company_id&#34;</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=n>Company</span> <span class=n>company</span><span class=o>;</span>
+
+    <span class=c1>// Insuranceとは一対多の関係で、Lazy Loadingをする
+</span><span class=c1></span>    <span class=nd>@OneToMany</span><span class=o>(</span><span class=n>fetch</span> <span class=o>=</span> <span class=n>FetchType</span><span class=o>.</span><span class=na>LAZY</span><span class=o>)</span>
+    <span class=nd>@JoinColumn</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;insurances_id&#34;</span><span class=o>)</span>
+    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Insurance</span><span class=o>&gt;</span> <span class=n>insurances</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p>こうやってEntityにはGetter・Setterをつけておくことで、Selectした時点でこのクラスに紐づくCompanyはInsuranceのようなテーブルの情報も参照できるようになります。</p>
+<h4 id=repository>Repository</h4>
+<p>JPAでは、いくつかのRepositoryというインタフェースを提供しています。よく使われているものは、<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html target=_blank rel=noopener>JpaRepository</a>や<a class=link href=https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html target=_blank rel=noopener>CrudRepository</a>、<a class=link href=https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/PagingAndSortingRepository.html target=_blank rel=noopener>PagingAndSortingRepository</a>などがあって、それぞれ基本的に提供しているメソッドが異なります。例えばCrudRepositoryは普通にCRUDのためのメソッド(Selectに該当するfind()、Upsertに該当するsave()、Deleteに該当するdelete()など)を基本的に提供していて、PagingAndSortingRepositoryの場合はページング(ページネーション)に対応したメソッドを提供しているなど、基本的によく使われるメソッドが揃っています。例えば以下のようなものです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// レコードを数える
+</span><span class=c1></span><span class=kt>long</span> <span class=n>count</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>count</span><span class=o>();</span>
+
+<span class=c1>// 全レコードを取得
+</span><span class=c1></span><span class=n>Iterable</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=n>cars</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findAll</span><span class=o>();</span>
+
+<span class=c1>// レコードを一件取得する
+</span><span class=c1></span><span class=n>Optional</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=n>car1</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findById</span><span class=o>(</span><span class=n>1</span><span class=o>);</span>
+
+<span class=c1>// レコードを一件削除する
+</span><span class=c1></span><span class=n>repository</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=n>car2</span><span class=o>);</span>
+
+<span class=c1>// レコードを保存する(Upsert)
+</span><span class=c1></span><span class=n>Car</span> <span class=n>saved</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>save</span><span class=o>(</span><span class=n>car3</span><span class=o>);</span>
+</code></pre></div><p>最初エンティティを定義して、それぞれのエンティティに合わせてJPAが提供するRepositoryを作成すると(extend)、そのRepositoryを使ってクエリを発行することができるようになります。また、基本的に提供しているメソッドが十分でない場合は、命名規則に従ってRepositoryに直接<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods target=_blank rel=noopener>クエリーメソッド</a>を書くと自動的にクエリーを作成してくれたり、<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.at-query target=_blank rel=noopener>@Query</a>アノテーションで必要なクエリーを直接書くこともできます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>interface</span> <span class=nc>CarRepository</span> <span class=kd>extends</span> <span class=n>CrudRepository</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>,</span> <span class=n>Long</span><span class=o>&gt;</span> <span class=o>{</span>
+
+    <span class=c1>// nameで照会するカスタムクエリーメソッド
+</span><span class=c1></span>    <span class=kt>boolean</span> <span class=nf>existsByName</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
+
+    <span class=c1>// アノテーションにクエリーを指定する場合
+</span><span class=c1></span>    <span class=nd>@Query</span><span class=o>(</span><span class=s>&#34;select c from Car c where c.name = ?1&#34;</span><span class=o>)</span>
+    <span class=n>Optional</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=nf>findByName</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><h2 id=他に>他に</h2>
+<p>2018年には、<a class=link href=https://spring.io/projects/spring-data-jdbc target=_blank rel=noopener>Spring Data JDBC</a>というものも発表されています。Spring Data JPAとJDBCのAPIの間にはJPA + Hibernateという階層を経由することに比べ、Spring Data JDBCは直接JDBCのAPIを呼び出すことで性能面での利点があるらしいですね。他にも実装をより単純化することでJPAの持つ問題を解消しているらしいですね。例えばキャッシュやLazy Loadingをなくしたとか(JPAのメリットとして紹介しましたが…)</p>
+<p>ただ、Spring Data JDBCは2018年にリリースされたばかりのものなので、クエリーメソッドだけでクエリーを自動生成してくれるなどの機能には対応してなかったり、テーブルやカラムの命名規則がJPAと違うなど、JPAからマイグレートするにはまだいろいろと考慮しなければならない点が多いように思われます。こういうところは、まるでNode.jsとDenoの関係みたいですね。</p>
+<p>Spring Data JDBCは自分でもあまり詳しくなく、サンプルコードをみてテストしてみただけなのですが、すでにSpring Data JPAの経験がある人ならすぐにでも適応できそうな構成となっていました。パッケージは変わってもアノテーションやインタフェースそのものの使い方が大きく変わっている訳でもないので、感覚的には大差ありません。<code>@Entity</code>のようなアノテーションを使う必要がなくなったというところが目立つくらいでした。なので、個人的なプロジェクトでは一度試してみるのも良いかもしれません。(エンタープライズレベルでは、まだ検証すべきところがあると思うので)</p>
+<p>また、Spring 5からReactiveなプログラミングのできる<a class=link href=https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.htm target=_blank rel=noopener>Webflux</a>が紹介されたことと共に、同じくNon-blockingに対応する<a class=link href=https://spring.io/projects/spring-data-r2dbc target=_blank rel=noopener>Spring R2DBC</a>というものも注目されているようです。既存のSpringプロジェクトにWebfluxを今すぐ導入する必要はないらしいのでSpring R2DBCも今すぐ導入する必要はないのかも知れませんが、Non-blockingによって性能を改善できる場合<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>は確実に存在するので、場合によっては導入を考慮する価値があるのかも知れませんね。</p>
+<h2 id=最後に>最後に</h2>
+<p>自分の場合、Springでアプリケーションを作りながらなるべく<code>XML</code>を排除しJavaのコードだけで全てを管理したかったため、クエリーを自動生成してくれるというところで惹かれていましたが、実際に使ってみると使い方も簡単で(癖はあると思いますが)、テーブルが途中で変わっても簡単に直せるというところがかなり魅力的なものですね。占有率としては標準ということもあり、JPAが他のORMと比べよく使われているようですが、自分みたいにMyBatisしか扱ったことのない方には一度触れてみて損はないかと思います。</p>
+<p>JPAの他にも紹介したようにSpring Dataだけでもいろいろなライブラリが存在していてそれぞれの思想が違うので、やっと一つを少しわかったくらいではまだまだ先が遠いような気もしていますね。でもこうやって、一つのライブラリが作られた経緯や思想を調べるだけでも得られる知識は多く、どれも無駄にはならないと思われるくらい新鮮なものなので、意味のあることとなっていると思います。またこうやって情報を集めつつ、それが誰かにとっては貴重な情報になるといいですね。今後もいろいろ調べてブログに載せて行きます。では、また！</p>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p>サーバの台数を増やすこと。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p>サーバのマシンパワーをあげること。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:3 role=doc-endnote>
+<p>スレッドプールが小さすぎたり、一つのリクエストに対して処理時間が長すぎてボトルネックになるケースなど&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/database/>database</a>
+<a href=/tags/jdbc/>jdbc</a>
+<a href=/tags/jpa/>jpa</a>
+<a href=/tags/spring/>spring</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/spring-webflux-dividing-router-and-handler/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux-router/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxではFunctional Enpointを使うべきか</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux-and-nonblocking/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Spring WebFlux、少し触ってみてからの話</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Spring WebFluxって何？</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-security-handling/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>REST APIでのSpring Securityの例外ハンドリングを実装する</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#jpaとは>JPAとは</a>
+<ol>
+<li><a href=#jpaの特徴>JPAの特徴</a>
+<ol>
+<li><a href=#自動グラフ探索>自動グラフ探索</a></li>
+</ol>
+</li>
+<li><a href=#性能の最適化>性能の最適化</a>
+<ol>
+<li><a href=#自動クエリ生成>自動クエリ生成</a></li>
+</ol>
+</li>
+<li><a href=#jpaの使用法>JPAの使用法</a>
+<ol>
+<li><a href=#entity>Entity</a></li>
+<li><a href=#repository>Repository</a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li><a href=#他に>他に</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

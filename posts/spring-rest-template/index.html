@@ -1,0 +1,324 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="ウェブアプリケーションを開発していると、一つのRest APIだけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能が"><title>Rest APIからRest APIにファイルを送る</title>
+<link rel=canonical href=https://retheviper.github.io/posts/spring-rest-template/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Rest APIからRest APIにファイルを送る">
+<meta property="og:description" content="ウェブアプリケーションを開発していると、一つのRest APIだけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能が">
+<meta property="og:url" content="https://retheviper.github.io/posts/spring-rest-template/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="rest api"><meta property="article:tag" content="java"><meta property="article:tag" content="spring"><meta property="article:published_time" content="2020-02-10T00:00:00+00:00"><meta property="article:modified_time" content="2020-02-10T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/spring.jpg">
+<meta name=twitter:title content="Rest APIからRest APIにファイルを送る">
+<meta name=twitter:description content="ウェブアプリケーションを開発していると、一つのRest APIだけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能が"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/spring.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/spring-rest-template/>
+<img src=/../../images/spring.jpg loading=lazy alt="Featured image of post Rest APIからRest APIにファイルを送る">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>
+spring
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/spring-rest-template/>Rest APIからRest APIにファイルを送る</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Feb 10, 2020</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+8 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>ウェブアプリケーションを開発していると、一つの<code>Rest API</code>だけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能がすでに実装されているサーバー(API)が存在している場合もありますね。そういう場合は、素直にそのAPIをコールするだけで簡単に目的を達成できます。実際、仕事で他のRest APIサーバーとの通信が必要となって調べてみましたが、Springではすでにそのような場合に対応できるようなクラスを用意していました。今回のポストの主人公であるRestTemplateです。</p>
+<p>RestTemplateを使うと、簡単にget・post・deleteと言ったHttpメソッドのAPIをコールできます。また、リクエストやレスポンスをカスタムして状況に合わせて使うこともできます。例えばカスタムヘッダーを作ったり、サイズの大きいファイルを転送するリクエストを作ることも可能ですね。なので今回はRestTemplateを利用し、ファイルをアップロードするとそのファイルになんらかの処理をして返してくれるAPIがすでに存在している場合で、そのAPIをコールする部品を作る方法を紹介します。</p>
+<h2 id=サーバー側の例>サーバー側の例</h2>
+<p>すでにファイルを処理するサーバーが存在している場合のことですので、まずはコールしたいAPIで利用するリクエストとレスポンスの形を把握する必要がありますね。ファイルをアップロードされたら、ヘッダーからファイル情報を読み込むようになっていて、ファイルデータが書かれているボディを読み込むようなメソッドがあるとしましょう。ヘッダーの情報に問題がなかったらローカルストレージにファイルを書き込み、処理を行います。そして処理の終わったファイルはレスポンスとして返すサーバーです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/upload&#34;</span><span class=o>)</span>
+<span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>StreamingResponseBody</span><span class=o>&gt;</span> <span class=nf>fileupload</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
+    <span class=c1>// リクエストヘッダーからファイルサイズを取得
+</span><span class=c1></span>    <span class=kt>long</span> <span class=n>fileLength</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getContentLengthLong</span><span class=o>();</span>
+    <span class=c1>// ファイルサイズが0だとIOException
+</span><span class=c1></span>    <span class=k>if</span> <span class=o>(</span><span class=n>fileLength</span> <span class=o>==</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
+       <span class=k>throw</span> <span class=k>new</span> <span class=n>IOException</span><span class=o>(</span><span class=s>&#34;data size is 0&#34;</span><span class=o>);</span>
+    <span class=o>}</span>
+
+    <span class=c1>// ファイルを臨時ファイルとして保存
+</span><span class=c1></span>    <span class=n>String</span> <span class=n>fileName</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=s>&#34;Content-File-Name&#34;</span><span class=o>);</span>
+    <span class=n>Path</span> <span class=n>tempFile</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>createTempFile</span><span class=o>(</span><span class=s>&#34;process_target_&#34;</span><span class=o>,</span> <span class=n>fileName</span><span class=o>);</span>
+    <span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getInputStream</span><span class=o>())</span> <span class=o>{</span>
+        <span class=n>Files</span><span class=o>.</span><span class=na>copy</span><span class=o>(</span><span class=n>is</span><span class=o>,</span> <span class=n>tempFile</span><span class=o>);</span>
+    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>IOException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
+        <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=c1>// ...ファイルを持ってなんらかの処理を行う
+</span><span class=c1></span>
+    <span class=c1>// レスポンス用のヘッダーを作る
+</span><span class=c1></span>    <span class=n>HttpHeaders</span> <span class=n>headers</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Headers</span><span class=o>();</span>
+    <span class=c1>// 処理が終わったファイルを書き込むボディを作る
+</span><span class=c1></span>    <span class=n>StreamingResponseBody</span> <span class=n>body</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StreamingResponseBody</span><span class=o>()</span> <span class=o>{</span>
+        <span class=nd>@Override</span>
+        <span class=kd>public</span> <span class=kt>void</span> <span class=nf>writeTo</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>outputStream</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
+            <span class=kt>byte</span><span class=o>[]</span> <span class=n>bytes</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>readAllBytes</span><span class=o>(</span><span class=n>path</span><span class=o>);</span>
+            <span class=n>outputStream</span><span class=o>.</span><span class=na>write</span><span class=o>(</span><span class=n>bytes</span><span class=o>);</span>
+        <span class=o>}</span>
+    <span class=o>};</span>
+    <span class=c1>// ヘッダーとボディ、HttpStatusをセットしてレスポンスを返す
+</span><span class=c1></span>    <span class=k>return</span> <span class=k>new</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>StreamingResponseBody</span><span class=o>&gt;(</span><span class=n>body</span><span class=o>,</span> <span class=n>headers</span><span class=o>,</span> <span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>サーバーがこういう形になっている場合、APIをコールする側としてはRequestのヘッダーにはファイル情報を書き、ボディにはファイルのデータを書いて転送する必要がありますね。そして処理結果のResponseにもまたファイルデータが入ってあるので、それを受け止める処理が必要となります。そのためにリクエストもレスポンスもカスタムのものを作って、RestTemplateに載せることにしましょう。</p>
+<h2 id=resttemplateを使う>RestTemplateを使う</h2>
+<p>今回はRestTemplateのexecute()というメソッドを使いますが、このメソッドの引数は以下のようになります。</p>
+<ol>
+<li>APIのURL(StringもしくはURI)</li>
+<li>Httpメソッド(ENUM)</li>
+<li>リクエスト(RequestCallbackの実装クラス)</li>
+<li>レスポンス(ResponseExtractorの実装クラス)</li>
+</ol>
+<p>get()・post()・delete()などのメソッドの時と違ってリクエストとレスポンスの方を両方指定する理由は、上に述べた通りリクエストとレスポンスの両方でファイルの転送が必要からです。また、execute()でも引数にURI変数を指定することもできますが、現在はURIが固定なので使いません。では、リクエストとレスポンスのインタフェースをどう実装するかをみていきましょう。</p>
+<h2 id=リクエスト>リクエスト</h2>
+<p>リクエストで使うRequestCallbackの実装クラスを作成します。このインタフェースにはコンストラクターの引数としてファイルを渡すとヘッダーとボディを作るようにしてみましょう。RequestCallbackをimplementsすると、doWithRequest()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpRequestにヘッダーとボディを設定することでリクエスト時のファイルアップロードができます。以下のコードを参照してください。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>FileTransferRequestCallback</span> <span class=kd>implements</span> <span class=n>RequestCallback</span> <span class=o>{</span>
+
+    <span class=c1>// アップロードしたいファイル
+</span><span class=c1></span>    <span class=kd>private</span> <span class=n>Path</span> <span class=n>path</span><span class=o>;</span>
+    
+    <span class=c1>// ヘッダーにファイル情報を載せるためのコンストラクター
+</span><span class=c1></span>    <span class=kd>public</span> <span class=nf>PdfConvertRequestCallback</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>this</span><span class=o>.</span><span class=na>path</span> <span class=o>=</span> <span class=n>file</span><span class=o>.</span><span class=na>toPath</span><span class=o>();</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>doWithRequest</span><span class=o>(</span><span class=n>ClientHttpRequest</span> <span class=n>request</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
+        <span class=c1>// ファイルからヘッダーを作る
+</span><span class=c1></span>        <span class=n>request</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>().</span><span class=na>set</span><span class=o>(</span><span class=s>&#34;Content-Length&#34;</span><span class=o>,</span> <span class=n>Files</span><span class=o>.</span><span class=na>size</span><span class=o>(</span><span class=n>path</span><span class=o>));</span>
+        <span class=n>request</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>().</span><span class=na>set</span><span class=o>(</span><span class=s>&#34;Content-File-Name&#34;</span><span class=o>,</span> <span class=n>path</span><span class=o>.</span><span class=na>getFileName</span><span class=o>().</span><span class=na>toString</span><span class=o>());</span>
+        <span class=c1>// ボディにファイルを書き込む
+</span><span class=c1></span>        <span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>newInputStream</span><span class=o>(</span><span class=n>file</span><span class=o>);</span> <span class=n>OutputStream</span> <span class=n>os</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getBody</span><span class=o>())</span> <span class=o>{</span>
+            <span class=n>is</span><span class=o>.</span><span class=na>transferTo</span><span class=o>(</span><span class=n>os</span><span class=o>);</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>ヘッダーにはサーバーで要求するファイルサイズとファイル名を載せました。そしてアップロードするファイルをInputStreamとして取得して、OutputStreamであるボディに書き込みます。これでリクエストでのファイルアップロード設定は終わりです。次はレスポンスですね。</p>
+<h2 id=レスポンス>レスポンス</h2>
+<p>レスポンスでは、ResponseExctractorをimplementsします。この場合はextractData()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpResponseからはリクエストの時と同じくHttpステータスコード、ヘッダー、ボディを取得できます。このレスポンスの結果からResponseEntityのインスタンスを作成し、レスポンスの結果を載せて返すとRestTemplateからは通信の結果としてResponseEntityを返すようになります。</p>
+<p>ResponseEntityを返すためにはそのボディの型を指定する必要があります。InputStreamの型を指定して、レスポンスのボディがファイルであることを指定しましょう。また、ClientHttpResponseのボディをResponseEntityにそのまま載せると、InputSteamがCloseされるのでボディはコピーしておきます。私は一回byte[]に変えて、さらにByteArrayInputStreamを生成することにしました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>FileTransferResponseExtractor</span> <span class=kd>implements</span> <span class=n>ResponseExtractor</span><span class=o>&lt;</span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;&gt;</span> <span class=o>{</span>
+
+    <span class=nd>@Override</span>
+    <span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;</span> <span class=nf>extractData</span><span class=o>(</span><span class=n>ClientHttpResponse</span> <span class=n>response</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
+        <span class=c1>// レスポンスのボディをコピー
+</span><span class=c1></span>        <span class=kt>byte</span><span class=o>[]</span> <span class=n>bytes</span> <span class=o>=</span> <span class=n>response</span><span class=o>.</span><span class=na>getBody</span><span class=o>().</span><span class=na>readAllBytes</span><span class=o>();</span>
+        <span class=c1>// ステータスコード、ヘッダー、ボディのデータを載せてResponseEntityを返却
+</span><span class=c1></span>        <span class=k>return</span> <span class=n>ResponseEntity</span><span class=o>.</span><span class=na>status</span><span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>getStatusCode</span><span class=o>()).</span><span class=na>headers</span><span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>()).</span><span class=na>body</span><span class=o>(</span><span class=k>new</span> <span class=n>ByteArrayInputStream</span><span class=o>(</span><span class=n>bytes</span><span class=o>));</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>これでレスポンスのファイルを取得できるようになりました。次は、RestTemplateでAPIをコールするだけです。</p>
+<h2 id=rest-apiのコール>Rest APIのコール</h2>
+<p>先に述べましたが、RestTemplateのメソッドを実行するのは簡単です。まずはURLと、アップロードしたいファイルのインスタンスを作っておきましょう。そして、先ほど作成したRequestCallbackとResponseExtractorのインスタンスも作成します(ResponseExtractorは、状態を持たないのでBeanとして登録しても良いです)。</p>
+<p>execute()の引数に、URL・Httpメソッドのタイプ・RequestCallback・ResponseExtractorを指定して実行すると、その結果をResponseEntityとして取得できて、そこからさらにステータスコード、ヘッダー、ボディを取得できます。これでアップロードしたファイルを処理してもらい、処理結果のファイルも即取得可能になりますね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// RestTemplateに渡す引数を準備
+</span><span class=c1></span><span class=n>String</span> <span class=n>url</span> <span class=o>=</span> <span class=s>&#34;http://api/v1/file/upload&#34;</span><span class=o>;</span>
+<span class=n>File</span> <span class=n>uploadFile</span> <span class=o>=</span> <span class=k>new</span> <span class=n>File</span><span class=o>(</span><span class=s>&#34;path/to/upload_file.txt&#34;</span><span class=o>);</span>
+<span class=n>FileTransferRequestCallback</span> <span class=n>requestCallback</span> <span class=o>=</span> <span class=k>new</span> <span class=n>FileTransferRequestCallback</span><span class=o>(</span><span class=n>uploadFile</span><span class=o>);</span>
+<span class=n>FileTransferResponseExtractor</span> <span class=n>responseExtractor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>FileTransferResponseExtractor</span><span class=o>();</span>
+
+<span class=c1>// RestTemplateでAPIコールし、その結果を取得
+</span><span class=c1></span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;</span> <span class=n>responseEntity</span> <span class=o>=</span> <span class=k>new</span> <span class=n>RestTemplate</span><span class=o>().</span><span class=na>execute</span><span class=o>(</span><span class=n>url</span><span class=o>,</span> <span class=n>HttpMethod</span><span class=o>.</span><span class=na>POST</span><span class=o>,</span> <span class=n>requestCallback</span><span class=o>,</span> <span class=n>responseExtractor</span><span class=o>);</span>
+
+<span class=c1>// ResponseEntityからHttpステータスを取得
+</span><span class=c1></span><span class=k>if</span> <span class=o>(</span><span class=n>responseEntity</span><span class=o>.</span><span class=na>getStatusCode</span><span class=o>()</span> <span class=o>!=</span> <span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>)</span> <span class=o>{</span>
+    <span class=k>throw</span> <span class=k>new</span> <span class=n>IOException</span><span class=o>();</span>
+<span class=o>}</span>
+<span class=c1>// ResponseEntityからヘッダーを取得
+</span><span class=c1></span><span class=n>HttpHeaders</span> <span class=n>headers</span> <span class=o>=</span> <span class=n>responseEntity</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>();</span>
+
+<span class=c1>// ResponseEntityからボディを取得
+</span><span class=c1></span><span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>responseEntity</span><span class=o>.</span><span class=na>getBody</span><span class=o>())</span> <span class=o>{</span>
+    <span class=n>File</span> <span class=n>downloadedFile</span> <span class=o>=</span> <span class=k>new</span> <span class=n>File</span><span class=o>(</span><span class=s>&#34;path/to/downloaded_file.txt&#34;</span><span class=o>);</span>
+    <span class=n>Files</span><span class=o>.</span><span class=na>copy</span><span class=o>(</span><span class=n>is</span><span class=o>,</span> <span class=n>downloadedFile</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>意外と簡単！これで他のRest APIとのファイルのやりとりができるようになりました。</p>
+<h2 id=最後に>最後に</h2>
+<p>クラスやメソッドを機能別に分けるだけでなく、Rest APIもまた機能によっては分離されることもありますね。今回の場合がまさにそのような例でした。もちろんネットを経由するのでこのようなやり方は一つのRest API内に機能をまとめて置くよりは安定性が劣るかもしれませんが、再使用性が確保できるという面では良い方法ではないかと思います。同じサーバー内だと通信失敗の確率も下がるだろうし、色々と活用できる余地はありそうですね。</p>
+<p>最近はなかなかブログに載せられるようなコンテンツがなかったので(勉強は続けているつもりですが…)、次は何を書けばいいかなと悩んでいましたが、ちょうど面白い部品を作ることができてよかったです。Springの世界も本当に広くて奥深いものですね。では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/rest-api/>rest api</a>
+<a href=/tags/java/>java</a>
+<a href=/tags/spring/>spring</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/spring-webflux-dividing-router-and-handler/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-webflux-router/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>WebFluxではFunctional Enpointを使うべきか</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-security-handling/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>REST APIでのSpring Securityの例外ハンドリングを実装する</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-login-with-jwt/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>JWTによるREST APIのログインを実現する</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/spring-rest-api-how-to-login/>
+<div class=article-image>
+<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>REST APIでのログインのためには</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#サーバー側の例>サーバー側の例</a></li>
+<li><a href=#resttemplateを使う>RestTemplateを使う</a></li>
+<li><a href=#リクエスト>リクエスト</a></li>
+<li><a href=#レスポンス>レスポンス</a></li>
+<li><a href=#rest-apiのコール>Rest APIのコール</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

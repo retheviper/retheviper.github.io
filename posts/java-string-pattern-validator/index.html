@@ -1,0 +1,395 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="一般的に、アプリケーションには要求される業務的な要件やセキュリティの観点から考慮すべきことがあるので、なんらかの機能を作るときはそれが「動く"><title>パターンと一致する文字列かを判定する</title>
+<link rel=canonical href=https://retheviper.github.io/posts/java-string-pattern-validator/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="パターンと一致する文字列かを判定する">
+<meta property="og:description" content="一般的に、アプリケーションには要求される業務的な要件やセキュリティの観点から考慮すべきことがあるので、なんらかの機能を作るときはそれが「動く">
+<meta property="og:url" content="https://retheviper.github.io/posts/java-string-pattern-validator/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="java"><meta property="article:tag" content="pattern"><meta property="article:tag" content="regular expression"><meta property="article:published_time" content="2020-11-22T00:00:00+00:00"><meta property="article:modified_time" content="2020-11-22T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/java.jpg">
+<meta name=twitter:title content="パターンと一致する文字列かを判定する">
+<meta name=twitter:description content="一般的に、アプリケーションには要求される業務的な要件やセキュリティの観点から考慮すべきことがあるので、なんらかの機能を作るときはそれが「動く"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/java.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/java-string-pattern-validator/>
+<img src=/../../images/java.jpg loading=lazy alt="Featured image of post パターンと一致する文字列かを判定する">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/java/ style=background-color:#2a9d8f;color:#fff>
+java
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/java-string-pattern-validator/>パターンと一致する文字列かを判定する</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Nov 22, 2020</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+9 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>一般的に、アプリケーションには要求される業務的な要件やセキュリティの観点から考慮すべきことがあるので、なんらかの機能を作るときはそれが「動くか」だけでなく、任意のロジックが必要となる場合がありますね。なのでその機能が動くにはとある場合で、動くときはとある条件に合わせて処理をする、といった制限が要求されることがあります。</p>
+<p>今回のポストも、またそのような業務上の要件から生まれた話です。現在、私が関わっている案件では、EC2で起動するSpring Boot基盤のアプリを作っています。このアプリでは、ファイルのデータとアップロード先のパスを指定すると、S3にアップロードするという単純な機能があり、それは自分の担当となっています。</p>
+<p>単純にアップロードパスとデータがあれば、動く機能を作るのは単純です。SpringにはSpring Cloudというフレームワークがあるので、すでに<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/io/ResourceLoader.html target=_blank rel=noopener>ResourceLoader</a>というクラスを持ってファイルアップロードを実現できます。Spring Cloudを使わない場合でも、<a class=link href=https://aws.amazon.com/jp/sdk-for-java target=_blank rel=noopener>AWS SDK</a>を使うと簡単に実装ができます。事実、こちらの昨日もアップロード先のパスとファイルだけあれば良いものとなっているので、実装というまででもないですね。</p>
+<p>ただ、この機能が呼び出されたとき、渡されたアップロード先のパスが「正しいもの」であるかを確認する必要がありました。つまり、業務上ファイルをS3に格納する際に決まったパスのルールがあって、この機能からはパラメータとして渡されたパスが規定のパターンと一致するかどうかを一度チェックする必要がありました。</p>
+<p>渡されたパスが「正しいもの」かどうかをチェックするための機能は、何で作ったら良いでしょうか。そしてどう作った方が良いでしょうか。色々な方法があるかと思いますが、まずここでは自分がどう実装したかを紹介していきたいと思います。</p>
+<h2 id=文字列のパターンは正規表現で>文字列のパターンは正規表現で</h2>
+<p>まず、ファイルのアップロード先(保存先)パスは文字列であり、特定のパターンである必要があります。文字列が特定のパターンで構成されているかどうかの判定は、<a class=link href=https://ja.wikipedia.org/wiki/%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE target=_blank rel=noopener>正規表現</a>を使いますね。なので、「正しいもの」としてのパスのパターンは、正規表現としてあらかじめ宣言しておいて、渡されたパラメータがそれと一致するかをチェックすることとします。ただ、Javaでは正規表現を使って文字列のパターンを判定する方法がいくつかありますので、それらのうちにどれを選ぶべきかを考える必要があります。例えば、以下の方法がありますね。</p>
+<ol>
+<li><code>Pattern.matches()</code>を使う</li>
+<li><code>Pattern</code>から<code>Matcher</code>を取得し使う</li>
+<li><code>Pattern</code>から<code>Predicate</code>を取得し使う</li>
+<li><code>String.matches()</code>を使う</li>
+</ol>
+<p>そして、これらの方法は、以下のコード通りに使うことができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 正規表現の例
+</span><span class=c1></span><span class=n>String</span> <span class=n>patternRegex</span> <span class=o>=</span> <span class=s>&#34;^[0-9]*$&#34;</span><span class=o>;</span>
+<span class=c1>// 正規表現で判定したい文字列
+</span><span class=c1></span><span class=n>String</span> <span class=n>value</span> <span class=o>=</span> <span class=s>&#34;123456789&#34;</span><span class=o>;</span> 
+
+<span class=c1>// Pattern.matches()を使う場合
+</span><span class=c1></span><span class=kt>boolean</span> <span class=n>patternMatches</span> <span class=o>=</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>matches</span><span class=o>(</span><span class=n>patternRegex</span><span class=o>,</span> <span class=n>value</span><span class=o>);</span>
+
+<span class=c1>// Matcherを使う場合
+</span><span class=c1></span><span class=n>Pattern</span> <span class=n>pattern</span> <span class=o>=</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>compile</span><span class=o>(</span><span class=n>patternRegex</span><span class=o>);</span>
+<span class=n>Matcher</span> <span class=n>matcher</span> <span class=o>=</span> <span class=n>pattern</span><span class=o>.</span><span class=na>matcher</span><span class=o>(</span><span class=n>value</span><span class=o>);</span>
+<span class=kt>boolean</span> <span class=n>matcherFind</span> <span class=o>=</span> <span class=n>matcher</span><span class=o>.</span><span class=na>find</span><span class=o>();</span> <span class=c1>// 部分一致
+</span><span class=c1></span><span class=kt>boolean</span> <span class=n>matcherMatches</span> <span class=o>=</span> <span class=n>matcher</span><span class=o>.</span><span class=na>matches</span><span class=o>();</span> <span class=c1>// 完全一致
+</span><span class=c1></span>
+<span class=c1>// Predicateを使う場合
+</span><span class=c1></span><span class=n>Pattern</span> <span class=n>pattern</span> <span class=o>=</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>compile</span><span class=o>(</span><span class=n>patternRegex</span><span class=o>);</span>
+<span class=kt>boolean</span> <span class=n>matcherFind</span> <span class=o>=</span> <span class=n>matcher</span><span class=o>.</span><span class=na>asPredicate</span><span class=o>().</span><span class=na>test</span><span class=o>(</span><span class=n>value</span><span class=o>);</span> <span class=c1>// 部分一致
+</span><span class=c1></span><span class=kt>boolean</span> <span class=n>matcherMatches</span> <span class=o>=</span> <span class=n>matcher</span><span class=o>.</span><span class=na>asMatchPredicate</span><span class=o>().</span><span class=na>test</span><span class=o>(</span><span class=n>value</span><span class=o>);</span> <span class=c1>// 完全一致
+</span><span class=c1></span>
+<span class=c1>// String.matches()を使う場合
+</span><span class=c1></span><span class=kt>boolean</span> <span class=n>stringMatches</span> <span class=o>=</span> <span class=n>value</span><span class=o>.</span><span class=na>matches</span><span class=o>(</span><span class=n>patternRegex</span><span class=o>);</span>
+</code></pre></div><p>ここで<code>Matcher</code>や<code>Predicate</code>を使う場合、部分一致を選べられるので、部分一致の場合はこれらを使うしかなさそうです。しかし、完全一致が必要な場合は何を基準に、どれを選ぶべきでしょうか。どれも同じような結果を出すのであれば、より効率的な方法を選びたくなります。そして、この場合、考えられるのは性能です。つまり、どれを使った時にもっとも早く判定の結果を得られるかということです。</p>
+<h2 id=どれも同じなら性能で>どれも同じなら性能で</h2>
+<p>前述の通り、文字列が与えられた正規表現のパターンと一致するかどうかを判断する様々な方法があるので、中でももっとも早いのはどれか、測定したいと思います。いわゆるストップウォッチ方式(処理終了時点の時間から、処理開始時点の時間を引く)が簡単ですが、より正確な比較がしたかったためOpenjdkから提供する<a class=link href=https://openjdk.java.net/projects/code-tools/jmh target=_blank rel=noopener>JMH</a>を使ってベンチマークを作りました。Java特有の起動が遅い問題で測定に影響が出るのを防ぐためか、何回かのウォーミングアップも含めて測定をしてくれるので、良いですね。</p>
+<p>実際にベンチマークを行うため使ったコードは、以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>RegexTest</span> <span class=o>{</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>PATTERN_REGEX</span> <span class=o>=</span> <span class=s>&#34;^[0-9]*$&#34;</span><span class=o>;</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>DecimalFormat</span> <span class=n>DECIMAL_FORMAT</span> <span class=o>=</span> <span class=k>new</span> <span class=n>DecimalFormat</span><span class=o>(</span><span class=s>&#34;0000000&#34;</span><span class=o>);</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Pattern</span> <span class=n>PATTERN</span> <span class=o>=</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>compile</span><span class=o>(</span><span class=n>PATTERN_REGEX</span><span class=o>);</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Predicate</span> <span class=n>PREDICATE</span> <span class=o>=</span> <span class=n>PATTERN</span><span class=o>.</span><span class=na>asPredicate</span><span class=o>();</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Predicate</span> <span class=n>MATCH_PREDICATE</span> <span class=o>=</span> <span class=n>PATTERN</span><span class=o>.</span><span class=na>asMatchPredicate</span><span class=o>();</span>
+
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>VALUES</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>0</span><span class=o>,</span> <span class=n>9999999</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>DECIMAL_FORMAT</span><span class=o>::</span><span class=n>format</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>patternMatches</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>Pattern</span><span class=o>.</span><span class=na>matches</span><span class=o>(</span><span class=n>PATTERN_REGEX</span><span class=o>,</span> <span class=n>value</span><span class=o>));</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>matcherFind</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>PATTERN</span><span class=o>.</span><span class=na>matcher</span><span class=o>(</span><span class=n>value</span><span class=o>).</span><span class=na>find</span><span class=o>());</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>matcherMatches</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>PATTERN</span><span class=o>.</span><span class=na>matcher</span><span class=o>(</span><span class=n>value</span><span class=o>).</span><span class=na>matches</span><span class=o>());</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>predicate</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>PREDICATE</span><span class=o>.</span><span class=na>test</span><span class=o>(</span><span class=n>value</span><span class=o>));</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>matchPredicate</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>MATCH_PREDICATE</span><span class=o>.</span><span class=na>test</span><span class=o>(</span><span class=n>value</span><span class=o>));</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=nd>@Benchmark</span>
+    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>stringMatches</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>VALUES</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>value</span><span class=o>.</span><span class=na>matches</span><span class=o>(</span><span class=n>PATTERN_REGEX</span><span class=o>));</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>そして、測定の結果は以下の通りです。実際の出力はメソッド名の順番が違いますが、コードでの並び順に合わせて変えています。</p>
+<pre tabindex=0><code class=language-dos data-lang=dos>Benchmark                  Mode  Cnt  Score   Error  Units
+RegexTest.patternMatches  thrpt   25  0.591 ± 0.013  ops/s
+RegexTest.matcherFind     thrpt   25  1.525 ± 0.022  ops/s
+RegexTest.matcherMatches  thrpt   25  1.481 ± 0.030  ops/s
+RegexTest.predicate       thrpt   25  2.050 ± 0.182  ops/s
+RegexTest.matchPredicate  thrpt   25  1.733 ± 0.236  ops/s
+RegexTest.stringMatches   thrpt   25  0.609 ± 0.005  ops/s
+</code></pre><p>この結果からして、性能面では確かに<code>Matcher</code>か<code>Predicate</code>を使った方が良いと言えるでしょう。ただ、ベンチマークの結果としては<code>Predicate</code>が誤差を含めても性能がもっとも良いこととなっていますが、<code>Pattern.asPredicate()</code>はJava 1.8、<code>Pattern.asMatchPredicate()</code>はJava 11から導入されたので、JDKのバージョンに合わせて適切な方を選ぶ必要があります。</p>
+<p>ただ、結果だけでなく理由も知りたくなります。性能がよかった<code>Matcher</code>と<code>Predicate</code>の場合、テストではあらかじめインスタンスを作成しておいたという共通点があります。なので、性能の低い<code>Pattern.matches()</code>と<code>String.matches()</code>の場合、メソッドが呼び出されるたびにインスタンスを作成しているため遅くなっているのではないか、という推測もできますね。実際はどうか、コードをみていきましょう。</p>
+<p>まず<code>Pattern.matches()</code>ですが、実際のコードは以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Pattern.matches
+</span><span class=c1></span><span class=kd>public</span> <span class=kd>static</span> <span class=kt>boolean</span> <span class=nf>matches</span><span class=o>(</span><span class=n>String</span> <span class=n>regex</span><span class=o>,</span> <span class=n>CharSequence</span> <span class=n>input</span><span class=o>)</span> <span class=o>{</span>
+    <span class=n>Pattern</span> <span class=n>p</span> <span class=o>=</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>compile</span><span class=o>(</span><span class=n>regex</span><span class=o>);</span>
+    <span class=n>Matcher</span> <span class=n>m</span> <span class=o>=</span> <span class=n>p</span><span class=o>.</span><span class=na>matcher</span><span class=o>(</span><span class=n>input</span><span class=o>);</span>
+    <span class=k>return</span> <span class=n>m</span><span class=o>.</span><span class=na>matches</span><span class=o>();</span>
+<span class=o>}</span>
+</code></pre></div><p>これをみると、<code>Pattern</code>と<code>Matcher</code>のインスタンスがメソッドを呼び出すたびに生成されるということがわかります(実際、<code>Pattern.compile()</code>と<code>Pattern.matcher()</code>のコードを追ってみるとインスタンスを作成するのがわかります)。なのでこちらが遅くなるのは当然のことですね。</p>
+<p>それでは、<code>String.matches()</code>の場合はどうか、同じくコードから確認しましょう。実際のコードは以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// String.matches
+</span><span class=c1></span><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>matches</span><span class=o>(</span><span class=n>String</span> <span class=n>regex</span><span class=o>)</span> <span class=o>{</span>
+    <span class=k>return</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>matches</span><span class=o>(</span><span class=n>regex</span><span class=o>,</span> <span class=k>this</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>これもまた、単に<code>Pattern.matches()</code>を呼び出しているだけなので、遅いわけですね。ただ一つ違う点は、比較対象となる自分自身のインスタンスが必要なため、<code>Pattern</code>とは違ってstaticメソッドではないというところといえますが、これは性能に影響する部分ではないので、ベンチマークでも誤差範囲の中の結果となったと思います。</p>
+<h2 id=実際のvalidatorを作る>実際のValidatorを作る</h2>
+<p>では、性能で<code>Matcher</code>と<code>Predicate</code>が有利であるということがわかったので、あとはこれを利用して、渡されたパスが許容できるものかどうかを判定するValidatorを作ります。今の案件ではJava 11を使うので、<code>Predicate</code>を選びました。</p>
+<p>パスのパターンは複数あるので、配列やリストとしてパターンを指定して起きます。また、<code>Predicate</code>で判定するので、あらかじめ指定したパターンでインスタンスを作成しておいて、判定が必要なときはパターンの配列やリストをループさせて、一致するものがあるかどうかを返すと良いでしょう。この要件から、実際のコードは以下のようになりました(パスの正規表現は、実際の業務とは違うものとなっていますが)。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@NoArgsConstructor</span><span class=o>(</span><span class=n>access</span> <span class=o>=</span> <span class=n>AccessLevel</span><span class=o>.</span><span class=na>PRIVATE</span><span class=o>)</span>
+<span class=kd>public</span> <span class=kd>class</span> <span class=nc>StorageValidator</span> <span class=o>{</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * 許容されたパスのパターン
+</span><span class=cm>     */</span>
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Predicate</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;&gt;</span> <span class=n>PATH_PATTERN_MATCHERS</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span>
+            <span class=n>createMatcher</span><span class=o>(</span>
+                    <span class=s>&#34;\\/contents\\/images\\/\\d{0,4}\\/(19[0-9]{2}|20[0-9]{2})(0[0-9]|1[0-2])\\/thumbnail\\.(?:bmp|jpg|jpeg|gif|png|BMP|JPG|JPEG|GIF|PNG)$&#34;</span><span class=o>),</span>
+            <span class=n>createMatcher</span><span class=o>(</span>
+                    <span class=s>&#34;\\/contents\\/images\\/\\d{0,4}\\/(19[0-9]{2}|20[0-9]{2})(0[0-9]|1[0-2])\\/thumbnail_backup\\.(?:bmp|jpg|jpeg|gif|png|BMP|JPG|JPEG|GIF|PNG)$&#34;</span><span class=o>));</span>
+
+    <span class=cm>/**
+</span><span class=cm>     *
+</span><span class=cm>     * 与えられた文字列が、SPLで利用できる有効なファイルアップロードパスであるかどうかを判定する.
+</span><span class=cm>     *
+</span><span class=cm>     * @param path 判定対象の文字列(ファイルパス)
+</span><span class=cm>     * @return 判定結果
+</span><span class=cm>     */</span>
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kt>boolean</span> <span class=nf>isValidUploadPath</span><span class=o>(</span><span class=n>String</span> <span class=n>path</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>PATH_PATTERN_MATCHERS</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>anyMatch</span><span class=o>(</span><span class=n>predicate</span> <span class=o>-&gt;</span> <span class=n>predicate</span><span class=o>.</span><span class=na>test</span><span class=o>(</span><span class=n>path</span><span class=o>));</span>
+    <span class=o>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     *
+</span><span class=cm>     * 与えられた正規表現から、{@link Predicate}型のパターンマッチャーオブジェクトを返す.
+</span><span class=cm>     *
+</span><span class=cm>     * @param pattern 正規表現
+</span><span class=cm>     * @return 生成されたパターンマッチャーオブジェクト
+</span><span class=cm>     */</span>
+    <span class=kd>private</span> <span class=kd>static</span> <span class=n>Predicate</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=nf>createMatcher</span><span class=o>(</span><span class=n>String</span> <span class=n>pattern</span><span class=o>)</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>Pattern</span><span class=o>.</span><span class=na>compile</span><span class=o>(</span><span class=n>pattern</span><span class=o>).</span><span class=na>asMatchPredicate</span><span class=o>();</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>以上で、渡されたパスが想定のパターンと一致するものかどうか判定することができるようになりました。簡単ですね。</p>
+<h3 id=番外kotlinで書いてみたら>番外：Kotlinで書いてみたら？</h3>
+<p>今回のポストの内容とはあまり関係のないものですが、ちょっとした興味本位から、Javaで作成したValidatorをKotlinのコードに変えてみました。幸い、intellijには、Javaで書かれたコードをKotlinに変えてくれる便利な機能がありますので簡単にできます。そもそもKotlinを作ったのがJetbrain社なので、Kotlinを普及するための機能であるとは思いますが、おかげでJavaプログラマがKotlinに入門するのも簡単になりますね。</p>
+<p><code>static final</code>なフィールドをKotlinでは<code>companion object</code>として扱うことになるらしく、コード自体はそう変わらない感覚です。ただ、Kotlinでは<code>stream()</code>を呼び出さなくてもCollectionから直接呼び出すことのできるメソッド(<code>any</code>)があったり、<code>List.of()</code>も<code>listOf()</code>で代替できるのですが、自動変換ではそこまでしてくれなかったので、そういうところ自分で変えるしかないです。それで完成したコードは、以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>StorageValidator</span> <span class=p>{</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
+        <span class=k>private</span> <span class=k>val</span> <span class=py>PATH</span><span class=n>_PATTERN_UPLOAD</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span> <span class=c1>// 画像の保存先パスのパターン(正規)
+</span><span class=c1></span>            <span class=n>Pattern</span><span class=p>.</span><span class=n>compile</span><span class=p>(</span>
+                <span class=s2>&#34;</span><span class=se>\\</span><span class=s2>/contents</span><span class=se>\\</span><span class=s2>/images</span><span class=se>\\</span><span class=s2>/</span><span class=se>\\</span><span class=s2>d{0,4}</span><span class=se>\\</span><span class=s2>/(19[0-9]{2}|20[0-9]{2})(0[0-9]|1[0-2])</span><span class=se>\\</span><span class=s2>/thumbnail</span><span class=se>\\</span><span class=s2>.(?:bmp|jpg|jpeg|gif|png|BMP|JPG|JPEG|GIF|PNG)$&#34;</span>
+            <span class=p>)</span>
+                <span class=p>.</span><span class=n>asMatchPredicate</span><span class=p>(),</span>
+            <span class=n>Pattern</span><span class=p>.</span><span class=n>compile</span><span class=p>(</span>
+                <span class=s2>&#34;</span><span class=se>\\</span><span class=s2>/contents</span><span class=se>\\</span><span class=s2>/images</span><span class=se>\\</span><span class=s2>/</span><span class=se>\\</span><span class=s2>d{0,4}</span><span class=se>\\</span><span class=s2>/(19[0-9]{2}|20[0-9]{2})(0[0-9]|1[0-2])</span><span class=se>\\</span><span class=s2>/thumbnail_backup</span><span class=se>\\</span><span class=s2>.(?:bmp|jpg|jpeg|gif|png|BMP|JPG|JPEG|GIF|PNG)$&#34;</span>
+            <span class=p>)</span>
+                <span class=p>.</span><span class=n>asMatchPredicate</span><span class=p>()</span>
+        <span class=p>)</span>
+    <span class=p>}</span>
+
+    <span class=k>fun</span> <span class=nf>isValidUploadPath</span><span class=p>(</span><span class=n>path</span><span class=p>:</span> <span class=n>String</span><span class=p>):</span> <span class=n>Boolean</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>PATH_PATTERN_UPLOAD</span><span class=p>.</span><span class=n>any</span> <span class=p>{</span> <span class=n>predicate</span> <span class=o>-&gt;</span> <span class=n>predicate</span><span class=p>.</span><span class=n>test</span><span class=p>(</span><span class=n>path</span><span class=p>)</span> <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=最後に>最後に</h2>
+<p>本当は、正規表現を使って文字列がパターンと一致するかどうかを判定する、という機能を作るのはそう難しいことではないですね。どちらかというと、正規表現そのものの書き方が難しいのでは、と思います。ただ、最近は<a class=link href=https://regexr.com target=_blank rel=noopener>RegExr</a>、<a class=link href=https://www.regextester.com target=_blank rel=noopener>RegEx Testing</a>、<a class=link href=https://regex101.com target=_blank rel=noopener>regular expressions 101</a>など、その場で入力した正規表現をテストしながら作成できるオンラインのツールなども多いので、じっくり時間をかけるといくらでも必要なパターンに合わせたものを作ることができると思います。</p>
+<p>個人的な感想としては、書いたコードは短く簡単でしたが、久々に色々と考えられる(効率の面で)チャンスとなったのでなかなか面白い作業になったと思っています。これからもこのような要件があるとしたら、また違う方法で挑戦してみたくなりますね。では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/java/>java</a>
+<a href=/tags/pattern/>pattern</a>
+<a href=/tags/regular-expression/>regular expression</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/java-enter-to-17/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Java 17は何が変わったか</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-string-concat-and-split/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更な文字列操作の話</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-file-copy/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更なI/Oの話</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-new-methods-from-9-to-11/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>9からの新メソッドめぐり</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-collection-loop/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更なループの話</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#文字列のパターンは正規表現で>文字列のパターンは正規表現で</a></li>
+<li><a href=#どれも同じなら性能で>どれも同じなら性能で</a></li>
+<li><a href=#実際のvalidatorを作る>実際のValidatorを作る</a>
+<ol>
+<li><a href=#番外kotlinで書いてみたら>番外：Kotlinで書いてみたら？</a></li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

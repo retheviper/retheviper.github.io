@@ -1,0 +1,366 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="今回の仕事で学んだことは、自分のコードを他人がライブラリーとして使うときはどのように実装していくかの方法です。とある機能をするスクリプトを書"><title>ReflectionとGenericを活用する</title>
+<link rel=canonical href=https://retheviper.github.io/posts/java-reflection/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="ReflectionとGenericを活用する">
+<meta property="og:description" content="今回の仕事で学んだことは、自分のコードを他人がライブラリーとして使うときはどのように実装していくかの方法です。とある機能をするスクリプトを書">
+<meta property="og:url" content="https://retheviper.github.io/posts/java-reflection/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="reflection"><meta property="article:tag" content="generic"><meta property="article:tag" content="java"><meta property="article:published_time" content="2019-07-30T00:00:00+00:00"><meta property="article:modified_time" content="2019-07-30T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/java.jpg">
+<meta name=twitter:title content="ReflectionとGenericを活用する">
+<meta name=twitter:description content="今回の仕事で学んだことは、自分のコードを他人がライブラリーとして使うときはどのように実装していくかの方法です。とある機能をするスクリプトを書"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/java.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/java-reflection/>
+<img src=/../../images/java.jpg loading=lazy alt="Featured image of post ReflectionとGenericを活用する">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/java/ style=background-color:#2a9d8f;color:#fff>
+java
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/java-reflection/>ReflectionとGenericを活用する</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jul 30, 2019</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+8 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>今回の仕事で学んだことは、自分のコードを他人がライブラリーとして使うときはどのように実装していくかの方法です。とある機能をするスクリプトを書くこと、エンドユーザーが使うUIやそコンテンツを処理するロジックなどだけに関わったことのない自分にとってはとても新しい経験になりました。今までだと自分が担当した機能を具現し、それを最適化していいだけでした。でも、ライブラリーは基本的にコードを扱える人が使うものなので設計が全く違いますね。</p>
+<p>そして、難しかった部分の一つは、柔軟性を持たせることでした。例えばデータを受け取り、処理していく中で、今までは自分が実装したBeanにデータがマッピングされていることを第一の前提条件としていました。それが今の仕事では、「どんなBeanが入ってくるかわからないから、それに対応する」ようにする必要がありました。</p>
+<p>まずクラスやインスタンスを引数として受け取る方法を知る必要がありますね。最初はObjectそのものを使おうと思いましたが、調べてみると<code>Generic</code>というものがあったので、そちらを使うことにしました。</p>
+<p>次にそのGenericを使って、引数として受け取ったBeanです。自分が設計したBeanだけを使うなら、Beanが持つフィールドのデータ型も知っていいて、Getter/Setterからデータのやりとりができますね。しかし自分が作ったものではないと、フィールドのデータ型もGetter/Setterメソッドもどう呼ぶかもわからなくなります。ここでどう対応したらいいだろうか…と悩み、探し出した答えが<code>Reflection</code>でした。</p>
+<p>今回のポストはその二つを使い、どう「自分が作っていないBeanを処理」したかについて述べ地と思います。</p>
+<h2 id=generic>Generic</h2>
+<p>Genericとは、「データのタイプを一般化」するということです。総称型とも呼ぶらしいです。クラスの中で使うタイプを、クラスの外部から設定するとき用いられると言いますね。今までは主に複数のデータ型やオブジェクトを処理したい場合は<code>Object</code>を使ってきました。Javaでは一部のPrimitive(参照型)を覗くと、ほとんどのデータががオブジェクトとして扱われているので、もっとも上位のタイプであるObjectに変えられらからです。</p>
+<p>しかし、Objectを引数として使うと、メソッドの中のフィールドが何があるかわからなくなります。また、Getter/Setterによる値の指定・取得などの操作もできませんね。なのでオブジェクトそのものを受け取るだけでなく、インスタンスの中を直接覗く必要があります。</p>
+<p>ここでGenericを使うと、Objectと同じ機能(どんなインスタンスやクラスでも受け取れる)をしながらも、最初に具体的なタイプが決まるのでキャストがいらなくなります。これなら性能的にもよく、より安全な挙動を期待できますね。あとは実際どんな構造をしているかわからないObjectに対し、Reflectionを活用して、クラスやインスタンスの中を覗いたらメソッドもフィールドも取得できるというメリットもあります。</p>
+<p>まずインスタンスを引数として受け取る方法から見てみましょう。引数として<code>T</code><sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>を指定します。これでGenericタイプの引数を受け入れられます。つまり、インスタンス自体が引数となるということです。ただ、引数が<code>T</code>の場合はメソッドの戻り値の前でも<code>&lt;T></code>を宣言する必要があります。コードで表現すると以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Beanのインスタンスを受け取るメソッド
+</span><span class=c1></span><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
+    <span class=c1>// ... 何かの処理
+</span><span class=c1></span><span class=o>}</span>
+
+<span class=c1>// 使用例
+</span><span class=c1></span><span class=n>BeanObject</span> <span class=n>beanObject</span> <span class=o>=</span> <span class=k>new</span> <span class=n>BeanObject</span><span class=o>();</span>
+
+<span class=k>if</span> <span class=o>(</span><span class=n>isBean</span><span class=o>(</span><span class=n>beanObject</span><span class=o>))</span> <span class=o>{</span>
+    <span class=c1>// ... 何かの処理
+</span><span class=c1></span><span class=o>}</span>
+</code></pre></div><p>Listの中にもGenericを使うことができます。たとえば以下のように書くと、どんなタイプも受け入れられるようになりますね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
+</code></pre></div><p>インスタンスではなく、クラスそのものをGenericで受け入れるには以下のように書きます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Beanのクラスを受け取るメソッド
+</span><span class=c1></span><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
+    <span class=c1>// ... 何かの処理
+</span><span class=c1></span><span class=o>}</span>
+
+<span class=c1>// 継承もできる(限定)
+</span><span class=c1></span><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isStringBean</span> <span class=o>(</span><span class=n>Class</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>String</span><span class=o>&gt;</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
+    <span class=c1>// ... 何かの処理
+</span><span class=c1></span><span class=o>}</span>
+
+<span class=c1>// 使用例
+</span><span class=c1></span><span class=k>if</span> <span class=o>(</span><span class=n>isBean</span><span class=o>(</span><span class=n>BeanObject</span><span class=o>.</span><span class=na>class</span><span class=o>))</span> <span class=o>{</span>
+    <span class=c1>// ... 何かの処理
+</span><span class=c1></span><span class=o>}</span>
+</code></pre></div><p>こうやってGenericの引数を渡してもらう準備は完了です。次は、そうやって受け取った引数を扱うReflectionについて調べてみましょう。</p>
+<h2 id=reflection>Reflection</h2>
+<p>クラスの具体的なタイプをわからなくても、メソッド・コンストラクター・フィールドなどににアクセスできるようにしてくれるAPIをReflectionと言います。取得したメソッド・コンストラクター・フィールドはいずれもそのまま使ったり、値(戻り値)を取得したり、つけられているアノテーションを取得するなど、普通のクラスでできることは全部できます。</p>
+<p>では、このReflectionを実際どう使うかを以下のコードで紹介します。まずはインスタンスからクラスを取得する方法と、さらに取得したクラスからコンストラクターを取得するコードです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>object</span><span class=o>)</span> <span class=o>{</span>
+
+    <span class=c1>// インスタンスからクラスを取得
+</span><span class=c1></span>    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+    <span class=c1>// クラスからさらにインスタンスを生成する
+</span><span class=c1></span>    <span class=n>Object</span> <span class=n>instance</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>newInstance</span><span class=o>();</span>
+
+    <span class=c1>// クラスのパッケージ名を取得
+</span><span class=c1></span>    <span class=n>String</span> <span class=kn>package</span> <span class=err>= </span><span class=nn>objectClass.getPackage</span><span class=o>();</span>
+    <span class=c1>// パッケージを含むクラス名を取得
+</span><span class=c1></span>    <span class=n>Stirng</span> <span class=n>classNamePackageInvolved</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getName</span><span class=o>();</span>
+    <span class=c1>// クラス名だけを取得
+</span><span class=c1></span>    <span class=n>String</span> <span class=n>className</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getSimpleName</span><span class=o>();</span>   
+    
+    <span class=c1>// 配列でpublicコンストラクターたちをを取得
+</span><span class=c1></span>    <span class=n>Constructor</span><span class=o>[]</span> <span class=n>constructors</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getConstructors</span><span class=o>();</span>
+    <span class=c1>// 特定のpublicコンストラクターを取得
+</span><span class=c1></span>    <span class=n>Constructor</span> <span class=n>constructor</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getConstructor</span><span class=o>(</span><span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
+    <span class=c1>// 取得したコンストラクターからインスタンスを生成
+</span><span class=c1></span>    <span class=n>Object</span> <span class=n>instance2</span> <span class=o>=</span> <span class=n>constructor</span><span class=o>.</span><span class=na>newInstance</span><span class=o>();</span>
+
+<span class=o>}</span>
+</code></pre></div><p>クラス自体を扱うことができるので、その中身がわかれば新しいインスタンスを生成して使うこともできますね。それでは次に、フィールドを取得する方法を紹介します。</p>
+<h2 id=fieldの取得>Fieldの取得</h2>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>object</span><span class=o>)</span> <span class=o>{</span>
+
+    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+
+    <span class=c1>// 配列でpublicフィールドたちを取得
+</span><span class=c1></span>    <span class=n>Field</span><span class=o>[]</span> <span class=n>fields</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getFields</span><span class=o>();</span>
+    <span class=c1>// 特定のpublicフィールドを取得
+</span><span class=c1></span>    <span class=n>Field</span> <span class=n>field</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getField</span><span class=o>(</span><span class=s>&#34;フィールド名&#34;</span><span class=o>);</span>
+    <span class=c1>// 配列で全フィールドたちを取得(public以外も)
+</span><span class=c1></span>    <span class=n>Field</span><span class=o>[]</span> <span class=n>declaredFields</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclardFields</span><span class=o>();</span>
+    <span class=c1>// 特定のフィールドを取得(public以外も)
+</span><span class=c1></span>    <span class=n>Field</span> <span class=n>declaredFiled</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredField</span><span class=o>(</span><span class=s>&#34;フィールド名&#34;</span><span class=o>);</span>
+
+    <span class=c1>// Fieldでできること
+</span><span class=c1></span>    <span class=c1>// フィールドに値を設定
+</span><span class=c1></span>    <span class=n>field</span><span class=o>.</span><span class=na>set</span><span class=o>(</span><span class=n>object</span><span class=o>,</span> <span class=n>parameter</span><span class=o>);</span>
+    <span class=c1>// フィールドの値を取得
+</span><span class=c1></span>    <span class=n>String</span> <span class=n>fieldValue</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>object</span><span class=o>);</span>
+    <span class=c1>// フィールドのアノテーションを取得
+</span><span class=c1></span>    <span class=n>Annotation</span><span class=o>[]</span> <span class=n>annotations</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>getAnnotations</span><span class=o>();</span>
+<span class=o>}</span>
+</code></pre></div><p>ここで注意すべき部分は、フィールドを取得するときはクラスからであって、実際値を代入したり取得するときはその対象としてインスタンスを使うということです。クラスが設計図であり、インスタンスがその設計図で生成されたものだということが明確になる瞬間ですね。Reflectionを使うことのメリットはここにもあるのかも知れません。</p>
+<p>次には、メソッドをみていきます。</p>
+<h2 id=methodの取得>Methodの取得</h2>
+<p>メソッドもフィールドの場合とそう変わりません。クラスからメソッドを取得し、そのメソッドからさらに色々できるようになります。またコードを以下に用意しました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>objectClass</span><span class=o>)</span> <span class=o>{</span>
+
+    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+
+    <span class=c1>// 配列でpublicメソッドたちを取得
+</span><span class=c1></span>    <span class=n>Method</span><span class=o>[]</span> <span class=n>methods</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getMethods</span><span class=o>();</span>
+    <span class=c1>// 特定のpublicメソッドを取得 
+</span><span class=c1></span>    <span class=n>Method</span> <span class=n>method</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getMethod</span><span class=o>(</span><span class=s>&#34;メソッド名&#34;</span><span class=o>,</span> <span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
+    <span class=c1>// 配列でメソッドたちを取得(public以外も)
+</span><span class=c1></span>    <span class=n>Method</span><span class=o>[]</span> <span class=n>declaredMethods</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredMethods</span><span class=o>();</span>
+    <span class=c1>// 特定のメソッドを取得(public以外も)
+</span><span class=c1></span>    <span class=n>Method</span> <span class=n>declaredMethod</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredMethod</span><span class=o>(</span><span class=s>&#34;メソッド名&#34;</span><span class=o>,</span> <span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
+    
+    <span class=c1>// Methodでできること
+</span><span class=c1></span>    <span class=c1>// メソッド名の取得
+</span><span class=c1></span>    <span class=n>String</span> <span class=n>methodName</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getName</span><span class=o>();</span>
+    <span class=c1>// メソッドの実行
+</span><span class=c1></span>    <span class=n>Object</span> <span class=n>methodInvoked</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>invoke</span><span class=o>();</span>
+    <span class=c1>// 引数のアノテーションを取得
+</span><span class=c1></span>    <span class=n>Annotation</span><span class=o>[]</span> <span class=n>parameterAnnotations</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getParameterAnnotations</span><span class=o>();</span>
+    <span class=c1>// 引数を取得
+</span><span class=c1></span>    <span class=n>Parameter</span><span class=o>[]</span> <span class=n>parameters</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getParameters</span><span class=o>();</span>
+<span class=o>}</span>
+</code></pre></div><p>アノテーションの場合はクラスでもフィールドでも取得できますが、メソッドの場合はそれに加えて引数のアノテーションも取得できるということが特徴です。また、引数そのものを取得することもできますね。もちろん<code>Parameter</code>クラスでも引数名を取得するなど色々な操作ができます。</p>
+<h2 id=結論>結論</h2>
+<p>結局、道が見えてくると、解決の方法も見えてくるものです。メソッドをやコンストラクターに触れる必要もなく、引数で受け取ったインスタンスからフィールドを取得して、その値をObjectに代入する。そしてinstanceofを活用して分岐させ、キャストすることでデータを扱う、というシンプルな構造で自分のタスクは完成されました。簡単なコードで表現すると以下のような形ですね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// クラスをわからないBeanを引数とするメソッド
+</span><span class=c1></span><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=nf>processSomething</span><span class=o>(</span><span class=n>T</span> <span class=n>bean</span><span class=o>)</span> <span class=o>{</span>
+    <span class=c1>// 複数のタイプのオブジェクトがある
+</span><span class=c1></span>    <span class=n>String</span> <span class=n>stringObject</span><span class=o>;</span>
+    <span class=n>Integer</span> <span class=n>intObject</span><span class=o>;</span>
+
+    <span class=c1>// クラスとフィールドの取得
+</span><span class=c1></span>    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>beanClass</span> <span class=o>=</span> <span class=n>bean</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+    <span class=n>Field</span><span class=o>[]</span> <span class=n>beanFields</span> <span class=o>=</span> <span class=n>beanClass</span><span class=o>.</span><span class=na>getDeclardFields</span><span class=o>();</span>
+
+    <span class=c1>// ループで個別フィールドを取得し、一致するタイプのオブジェクトにフィールドの値を入れる
+</span><span class=c1></span>    <span class=k>for</span> <span class=o>(</span><span class=n>Field</span> <span class=n>field</span> <span class=o>:</span> <span class=n>beanFields</span><span class=o>)</span> <span class=o>{</span>
+        <span class=c1>// privateフィールドの場合はアクセスできない場合があるためアクセス可能にする
+</span><span class=c1></span>        <span class=k>if</span> <span class=o>(</span><span class=n>field</span><span class=o>.</span><span class=na>canAccess</span><span class=o>(</span><span class=n>bean</span><span class=o>))</span> <span class=o>{</span>
+            <span class=n>field</span><span class=o>.</span><span class=na>setAccessible</span><span class=o>(</span><span class=kc>true</span><span class=o>);</span>
+        <span class=o>}</span>
+
+        <span class=c1>// フィールドの値を取得し、型を判断
+</span><span class=c1></span>        <span class=n>Object</span> <span class=n>value</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>bean</span><span class=o>);</span>
+        <span class=k>if</span> <span class=o>(</span><span class=n>value</span> <span class=k>instanceof</span> <span class=n>String</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>stringObject</span> <span class=o>=</span> <span class=o>(</span><span class=n>String</span><span class=o>)</span><span class=n>value</span><span class=o>;</span>
+        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>value</span> <span class=k>instanceof</span> <span class=n>Integer</span><span class=o>)</span> <span class=o>{</span>
+            <span class=n>intObject</span> <span class=o>=</span> <span class=o>(</span><span class=kt>int</span><span class=o>)</span><span class=n>value</span><span class=o>();</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>どうですか。方法がわかれば簡単にできるものなのでは。さらに応用して、インスタンスの一部の値だけを修正して返すなどの挙動もできそうです。色々活用できそうな面が多いですね。</p>
+<h2 id=最後に>最後に</h2>
+<p>このようにだいたいフィールドとメソッドがわかれば、これでどんなインスタンスやクラスが入ってきても、対応できそうな気がします。実際どうかはコンパイルして実行してみない限りわからないものですが…でも一つ、賢くなったような気はします。皆さんもぜひ、Reflectionを通じてクラスとインスタンスに対する理解を深めてみてください。</p>
+<p>それでは、また！</p>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p>Typeのこと。ただ、E(Element)やK(Key)、N(Number)、V(Value)も使えるらしいです。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/reflection/>reflection</a>
+<a href=/tags/generic/>generic</a>
+<a href=/tags/java/>java</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/java-enter-to-17/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Java 17は何が変わったか</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-string-concat-and-split/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更な文字列操作の話</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-file-copy/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更なI/Oの話</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-new-methods-from-9-to-11/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>9からの新メソッドめぐり</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/java-collection-loop/>
+<div class=article-image>
+<img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>今更なループの話</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#generic>Generic</a></li>
+<li><a href=#reflection>Reflection</a></li>
+<li><a href=#fieldの取得>Fieldの取得</a></li>
+<li><a href=#methodの取得>Methodの取得</a></li>
+<li><a href=#結論>結論</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

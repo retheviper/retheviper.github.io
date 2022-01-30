@@ -1,0 +1,309 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSprin"><title>Ktorを触ってみた</title>
+<link rel=canonical href=https://retheviper.github.io/posts/ktor-first-impression/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Ktorを触ってみた">
+<meta property="og:description" content="サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSprin">
+<meta property="og:url" content="https://retheviper.github.io/posts/ktor-first-impression/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:tag" content="ktor"><meta property="article:tag" content="exposed"><meta property="article:published_time" content="2021-07-18T00:00:00+00:00"><meta property="article:modified_time" content="2021-07-18T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/ktor.jpg">
+<meta name=twitter:title content="Ktorを触ってみた">
+<meta name=twitter:description content="サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSprin"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/ktor.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/ktor-first-impression/>
+<img src=/../../images/ktor.jpg loading=lazy alt="Featured image of post Ktorを触ってみた">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/ktor/ style=background-color:#2a9d8f;color:#fff>
+ktor
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/ktor-first-impression/>Ktorを触ってみた</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jul 18, 2021</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+10 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSpringが多いかと思います。理由としては会社ごとの事情というものもあるはずですが、一般的な理由としてはJavaエンジニアにとってKotlinは馴染みやすい物であっても、フレームワークの場合はそうでなく、Springほど検証されたフレームワークはないからということからでしょう。いまだにStrutsを使っていて、Springに移行しようとするところもありますしね。</p>
+<p>KotlinはJavaと完璧（に近い）互換性があるので、Javaで書かれてあるアプリをそのままKotlinに移行しても大した問題はありません。Javaより生産性が高い上にSpringだけでなくJackson、Apache POI、JUnit、Jacocoなどの数多くのライブラリをそのまま使えるのは確かにメリットであって、企業側としてKotlinの導入を検討する理由は確かにそこにあると思います。Javaエンジニアはその数が多いので、エンジニアを募集し安くなるというところもメリットの一つと言えるでしょう。</p>
+<p>ただ、Kotlinを使う場合に長期的にはKotlinで書かれたライブラリやフレームワークを導入することを検討した方が良いかもしれません。コンパイルした結果として生成されるByte codeがJavaと全く一緒だとしても、そもそものソースコードが違う言語なので、使う側のコード（クライアントコード）としては不便なところがあったり、Kotlinに最適化されてない場合もある可能性があるからです。また、KotlinはJVMだけでなく、ネイティブにコンパイルすることもできるので、ネイティブなアプリを作りたい場合はJavaに依存しないAPIを選ぶ必要があるでしょう。</p>
+<p>ということで、今回はJetBrains制のウェブフレームワーク、Ktorと、Ktorと一緒に使えるORMのExposedを少し触ってみて、Springと比べながら紹介したいと思います。</p>
+<h2 id=ktor>Ktor</h2>
+<p>Ktorは、JetBrainsで開発しているマイクロサービス向けの軽量ウェブフレームワークです。<a class=link href=https://ktor.io target=_blank rel=noopener>公式ホームページ</a>の紹介にも色々書いてありますが、特にSpringと比べて以下の特徴があるかと思います。</p>
+<h3 id=軽量>軽量</h3>
+<p>Springも軽量とは言われているものの、起動が遅いので、実装する側としてはあまり軽量だという感覚はないです。Springで書かれたアプリケーションの起動が遅いのは、起動時にさまざまなアノテーションを読み込み、DIや設定などを完璧に終わらせているというフレームワークそのもののアーキテクチャに起因しているのではないかと思います。なのでDIされるオブジェクトをLate initにするなどで起動速度を短縮させるテクニックなどが知られていますね。</p>
+<p>しかし、Ktorは起動がかなり早いです。同一規模のアプリをSpringとKtorの両方で作成してベンチマークした訳ではないので正確な数値に関しては割愛しますが、体験だと数倍は早いですね。例えば、In memoryタイプのH2と基本的なCRUDを実装したSpring WebFluxアプリケーションの場合、自分のPCで起動に2.7秒ほどかかりました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>2021-07-18 15:08:25.150  INFO <span class=m>29047</span> --- <span class=o>[</span>main<span class=o>]</span> c.r.s.SpringWebfluxSampleApplicationKt   : Started SpringWebfluxSampleApplicationKt in 2.754 seconds <span class=o>(</span>JVM running <span class=k>for</span> 3.088<span class=o>)</span>
+</code></pre></div><p>同じ構成でKtorのアプリを実装した場合、起動には1秒もかからなかったです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>2021-07-18 15:09:29.683 <span class=o>[</span>main<span class=o>]</span> INFO  ktor.application - Application started in 0.747 seconds.
+</code></pre></div><p>これはおそらく基本的にDIをしなく、アノテーションをあまり使わない（Reflectionを使わない）構造やKtorそのものはREST APIを作成するための必要最低限の機能だけを揃っているのが理由かと思われます。</p>
+<p>アプリの起動が早いというのは、テストにかかる時間を短縮させられるという面でもメリットといえますが、サーバレスなアプリにも適しているということにもなるでしょう。私もAWSのLambdaやAzureのFunctionsなどを触った経験がありますが、この場合にJavaやKotlinの使用を考慮したことはありません。サーバレスの場合、アプリが常に稼働中ではないので、リクエストが発生したたびにアプリを起動しなければならないです。なので起動の遅いSpringはそもそもの考慮対象にならなかったですね。Ktorを使う場合は起動速度が大幅に短縮できるので、JVMの起動速度が許されるというならば、サーバレスアーキテクチャで導入を検討できるレベルになっていると思います。</p>
+<h3 id=拡張可能>拡張可能</h3>
+<p>Ktorが軽量であることとも繋がる話ですが、必要な機能があればプラグイン（モジュール）を追加したり、自分で実装する必要はあります。コードとしては、以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>embeddedServer</span><span class=p>(</span><span class=n>Netty</span><span class=p>,</span> <span class=n>port</span> <span class=p>=</span> <span class=m>8080</span><span class=p>,</span> <span class=n>host</span> <span class=p>=</span> <span class=s2>&#34;127.0.0.1&#34;</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>install</span><span class=p>(</span><span class=n>CORS</span><span class=p>)</span>
+        <span class=n>install</span><span class=p>(</span><span class=n>Compression</span><span class=p>)</span>
+        <span class=n>install</span><span class=p>(</span><span class=n>Sessions</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>cookie</span><span class=p>&lt;</span><span class=n>MyCookie</span><span class=p>&gt;(</span><span class=s2>&#34;MY_COOKIE&#34;</span><span class=p>)</span>
+        <span class=p>}</span>
+        <span class=n>install</span><span class=p>(</span><span class=n>ContentNegotiation</span><span class=p>)</span> <span class=p>{</span> <span class=c1>// kotlinx.serialization
+</span><span class=c1></span>            <span class=n>json</span><span class=p>()</span>
+        <span class=p>}</span>
+    <span class=p>}.</span><span class=n>start</span><span class=p>(</span><span class=n>wait</span> <span class=p>=</span> <span class=k>true</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>なので、Ktorの導入直後はモジュールの管理や開発のスピード感という側面ではマイナスになる部分もあるかなと思います。特にまだSpring Securityでは基本的に提供している<a class=link href=https://ja.wikipedia.org/wiki/%E3%83%AD%E3%83%BC%E3%83%AB%E3%83%99%E3%83%BC%E3%82%B9%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E5%88%B6%E5%BE%A1 target=_blank rel=noopener>Role-Based Authorization</a>などの機能が公式プラグインとして提供されてないので自前の処理を書くしかないという部分もあります。個人的には、モジュール化そのものは慣れたらメリットになる可能性の方が高いと思いますが、導入初期としてはSpringに比べ不利なところなのではないかと思います。</p>
+<p>特にKtorはDIに対応していなく、JetBrains公式のモジュールもないので、DIをするためには<a class=link href=https://github.com/IVIanuu/injekt target=_blank rel=noopener>Injekt</a>, <a class=link href=https://kodein.org/Kodein-DI/?6.3/ktor target=_blank rel=noopener>Kodein</a>, <a class=link href=https://insert-koin.io target=_blank rel=noopener>Koin</a>などをディペンデンシーとして追加する必要があります。ただ、アーキテクチャによってはDIが必要なく、<code>object</code>で代替することもできると思いますので、どんなアーキテクチャにするかはよく考えて決める必要があるかなと思います。</p>
+<h3 id=coroutine対応>Coroutine対応</h3>
+<p>Spring WebFluxもそうでしたが、最近は多くのウェブフレームワークに非同期・ノンブロッキング対応が行われていますね。PaaSが普及され簡単にインフラの構築ができ、ハードウェアが安くなった今でもソフトウェアで性能を改善できる箇所があるならそれは十分価値があると思っています。だとすると、非同期・ノンブロッキング対応のフレームワークを導入するということも良い選択ではないかと思います。</p>
+<p>Ktorではルーティングの実装として、<a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/-route/index.html target=_blank rel=noopener>Route</a>の<a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/route.html target=_blank rel=noopener>route</a>、もしくは<a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/get.html target=_blank rel=noopener>get</a>, <a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/post.html target=_blank rel=noopener>post</a>, <a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/put.html target=_blank rel=noopener>put</a>, <a class=link href=https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/delete.html target=_blank rel=noopener>delete</a>などのfunctionを呼び出すことになります。これはSpring WebFluxのRouter/Hanlder Functionとよく似ていますね。コードで表すと、以下のようなものです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>routing</span> <span class=p>{</span>
+    <span class=k>get</span><span class=p>(</span><span class=s2>&#34;/hello&#34;</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>call</span><span class=p>.</span><span class=n>respondText</span><span class=p>(</span><span class=s2>&#34;Hello&#34;</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>そしてこのHttpメソッドごとの関数のbodyを実装することになりますが、これが基本的に<code>suspend</code>となっています。これはつまり、実装する側で特に意識しなくてもコードは非同期になるということですね。Spring WebFluxの場合も、Coroutineを使うと簡単に実装ができましたが、<code>suspend</code>すら意識しなくて良いというところはKtorならではのメリットなのではという気がします。</p>
+<h3 id=テスト>テスト</h3>
+<p><code>ktor-server-test-host</code>や<code>kotlin-test</code>、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、<code>Get</code>をのレスポンスをテストするためには以下のようなコードを書くことができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=nd>@Test</span>
+<span class=k>fun</span> <span class=nf>getMember</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>withTestApplication</span><span class=p>(</span><span class=n>Application</span><span class=o>::</span><span class=n>module</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>handleRequest</span><span class=p>(</span><span class=n>HttpMethod</span><span class=p>.</span><span class=n>Get</span><span class=p>,</span> <span class=s2>&#34;api/v1/web/members/</span><span class=si>$id</span><span class=s2>&#34;</span><span class=p>).</span><span class=n>apply</span> <span class=p>{</span>
+            <span class=n>assertEquals</span><span class=p>(</span>
+                <span class=k>actual</span> <span class=p>=</span> <span class=n>response</span><span class=p>.</span><span class=n>status</span><span class=p>(),</span>
+                <span class=n>expected</span> <span class=p>=</span> <span class=n>HttpStatusCode</span><span class=p>.</span><span class=n>OK</span>
+            <span class=p>)</span>
+            <span class=n>assertEquals</span><span class=p>(</span>
+                <span class=k>actual</span> <span class=p>=</span> <span class=n>response</span><span class=p>.</span><span class=n>content</span><span class=p>,</span>
+                <span class=n>expected</span> <span class=p>=</span> <span class=n>Json</span><span class=p>.</span><span class=n>encodeToString</span><span class=p>(</span>
+                    <span class=n>MemberResponse</span><span class=p>(</span>
+                        <span class=n>id</span> <span class=p>=</span> <span class=n>id</span><span class=p>,</span>
+                        <span class=n>userId</span> <span class=p>=</span> <span class=n>userId</span><span class=p>,</span>
+                        <span class=n>name</span> <span class=p>=</span> <span class=n>name</span>
+                    <span class=p>)</span>
+                <span class=p>),</span>
+            <span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=exposed>Exposed</h2>
+<p>Ktorで使える、Kotlinで書かれたORMは代表的に<a class=link href=https://github.com/JetBrains/Exposed target=_blank rel=noopener>Exposed</a>があります。Javaの<a class=link href=https://www.jooq.org target=_blank rel=noopener>jOOQ</a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>userInUsa</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>User</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>transaction</span> <span class=p>{</span>
+    <span class=n>UserTable</span><span class=p>.</span><span class=n>select</span> <span class=p>{</span>
+        <span class=n>UserTable</span><span class=p>.</span><span class=n>deleted</span> <span class=n>eq</span> <span class=k>false</span>
+    <span class=p>}.</span><span class=n>map</span> <span class=p>{</span>
+        <span class=n>User</span><span class=p>(</span>
+            <span class=n>id</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>UserTable</span><span class=p>.</span><span class=n>id</span><span class=p>],</span>
+            <span class=n>name</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>UserTable</span><span class=p>.</span><span class=n>name</span><span class=p>],</span>
+            <span class=n>country</span> <span class=p>=</span> <span class=k>it</span><span class=p>[</span><span class=n>UserTable</span><span class=p>.</span><span class=n>country</span><span class=p>]</span>
+        <span class=p>)</span>
+    <span class=p>}.</span><span class=n>filter</span> <span class=p>{</span>
+        <span class=k>it</span><span class=p>.</span><span class=n>country</span> <span class=p>=</span> <span class=n>Country</span><span class=p>.</span><span class=n>USA</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>userInGermany</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>User</span><span class=p>&gt;</span>  <span class=p>=</span> <span class=n>transaction</span> <span class=p>{</span>
+    <span class=n>User</span><span class=p>.</span><span class=n>find</span> <span class=p>{</span> <span class=p>(</span><span class=n>UserTable</span><span class=p>.</span><span class=n>country</span> <span class=n>eq</span> <span class=n>Country</span><span class=p>.</span><span class=n>GERMANY</span><span class=p>)</span> <span class=n>and</span> <span class=p>(</span><span class=n>UserTable</span><span class=p>.</span><span class=n>deleted</span> <span class=n>eq</span> <span class=k>false</span><span class=p>)}</span>
+<span class=p>}</span>
+</code></pre></div><p>また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで<a class=link href=https://www.liquibase.org target=_blank rel=noopener>Liquibase</a>や<a class=link href=https://flywaydb.org target=_blank rel=noopener>Flyway</a>でDBの形状管理をやっていたことが多かったのですが、個人的に実際のDBとアプリケーションのテーブル定義に乖離があるケースを考えるとこうやってコードの中に定義した方が、データのオーナーという観点からもかなり良いのではないかと思います。特に、頻繁なテーブル定義の修正があったり、マイクロサービスが多いケースではかなり開発が便利になるのではないかと思います。</p>
+<p>Exposedのテーブル定義は、以下のようにできます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>object</span> <span class=nc>Member</span> <span class=p>:</span> <span class=n>IntIdTable</span><span class=p>()</span> <span class=p>{</span>
+    <span class=k>val</span> <span class=py>userId</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;user_id&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>name</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;name&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>password</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;password&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>255</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>deleted</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>Boolean</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>bool</span><span class=p>(</span><span class=s2>&#34;deleted&#34;</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>createdBy</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=s2>&#34;created_by&#34;</span><span class=p>,</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>createdDate</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>LocalDateTime</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>datetime</span><span class=p>(</span><span class=s2>&#34;created_date&#34;</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>lastModifiedBy</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=s2>&#34;last_modified_by&#34;</span><span class=p>,</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>lastModifiedDate</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>LocalDateTime</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>datetime</span><span class=p>(</span><span class=s2>&#34;last_modified_date&#34;</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>そして実際発行されるSQLは以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-sql data-lang=sql><span class=k>CREATE</span><span class=w> </span><span class=k>TABLE</span><span class=w> </span><span class=k>IF</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>EXISTS</span><span class=w> </span><span class=s2>&#34;MEMBER&#34;</span><span class=w> </span><span class=p>(</span><span class=n>ID</span><span class=w> </span><span class=nb>INT</span><span class=w> </span><span class=n>AUTO_INCREMENT</span><span class=w> </span><span class=k>PRIMARY</span><span class=w> </span><span class=k>KEY</span><span class=p>,</span><span class=w> </span><span class=n>DELETED</span><span class=w> </span><span class=nb>BOOLEAN</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>CREATED_BY</span><span class=w> </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>16</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>CREATED_DATE</span><span class=w> </span><span class=n>DATETIME</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>LAST_MODIFIED_BY</span><span class=w> </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>16</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>LAST_MODIFIED_DATE</span><span class=w> </span><span class=n>DATETIME</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>USER_ID</span><span class=w> </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>16</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=s2>&#34;NAME&#34;</span><span class=w> </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>16</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>,</span><span class=w> </span><span class=n>PASSWORD</span><span class=w> </span><span class=nb>VARCHAR</span><span class=p>(</span><span class=mi>255</span><span class=p>)</span><span class=w> </span><span class=k>NOT</span><span class=w> </span><span class=k>NULL</span><span class=p>)</span><span class=w>
+</span></code></pre></div><p>ここで、JPAやR2DBCの場合、Auditableクラスを定義して、エンティティがそれを継承することでカラムを共有したり、Spring Securityに連携することができましたが、Exposedでも似たようなことができました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>abstract</span> <span class=k>class</span> <span class=nc>Audit</span> <span class=p>:</span> <span class=n>IntIdTable</span><span class=p>()</span> <span class=p>{</span>
+    <span class=k>val</span> <span class=py>deleted</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>Boolean</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>bool</span><span class=p>(</span><span class=s2>&#34;deleted&#34;</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>createdBy</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=s2>&#34;created_by&#34;</span><span class=p>,</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>createdDate</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>LocalDateTime</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>datetime</span><span class=p>(</span><span class=s2>&#34;created_date&#34;</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>lastModifiedBy</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=s2>&#34;last_modified_by&#34;</span><span class=p>,</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>lastModifiedDate</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>LocalDateTime</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>datetime</span><span class=p>(</span><span class=s2>&#34;last_modified_date&#34;</span><span class=p>)</span>
+<span class=p>}</span>
+
+<span class=k>object</span> <span class=nc>Member</span> <span class=p>:</span> <span class=n>Audit</span><span class=p>()</span> <span class=p>{</span> <span class=c1>// Auditのカラムも含めてテーブルが作成される
+</span><span class=c1></span>    <span class=k>val</span> <span class=py>userId</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;user_id&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>name</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;name&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>16</span><span class=p>)</span>
+    <span class=k>val</span> <span class=py>password</span><span class=p>:</span> <span class=n>Column</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>varchar</span><span class=p>(</span><span class=n>name</span> <span class=p>=</span> <span class=s2>&#34;password&#34;</span><span class=p>,</span> <span class=n>length</span> <span class=p>=</span> <span class=m>255</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>MyBatisなどに慣れている場合は少し適応に時間が必要かもしれませんが、基本的にはテーブルの定義を除くとほぼSQLの発行をKotlinのコードで書くことになるという感覚なので、便利になるかと思います。</p>
+<h2 id=最後に>最後に</h2>
+<p>以上で、簡単なCRUDアプリをKtor + Exposedで実装してみた後の感想と紹介を少し書いてみました。まとめると、かなりサクサクコードを書けて性能も良いので、マイクロサービスに特化している構成ではないかと思いました。また、冒頭に述べた通り、ピュアなKotlin制のフレームワークであることも良いですね。Ktorの紹介でもKotlin Multiplatformに基づいていてどのプラットフォームにもアプリをデプロイできると強調していますので、色々なところで活用ができるかと思います。</p>
+<p>まだSpringと他のJavaライブラリに比べ足りないモジュールや機能もありますが、Exposed以外でも<a class=link href=https://www.ktorm.org target=_blank rel=noopener>Ktorm</a>のようなORMがあるなどKotlin制のライブラリの開発も進めていて、IntellijでもKtorのサポートは強力なので今後も発展を期待できそうであります。個人的にまだ仕事で使うことには無理があっても、自作アプリなどを作りたい時は導入をぜひ検討したいと思いました。Kotlinでできることがだんだん増えてきていて、嬉しいですね。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+<a href=/tags/ktor/>ktor</a>
+<a href=/tags/exposed/>exposed</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/ktor-role-based-authorization/>
+<div class=article-image>
+<img src=/../../images/ktor.jpg loading=lazy data-key data-hash=/../../images/ktor.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>KtorでRole-based Authorizationを実装する</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/quarkus-first-impression/>
+<div class=article-image>
+<img src=/../../images/quarkus.jpg loading=lazy data-key data-hash=/../../images/quarkus.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Quarkusを触ってみた</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/exposed-mapping-record-to-object/>
+<div class=article-image>
+<img src=/../../images/exposed.jpg loading=lazy data-key data-hash=/../../images/exposed.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>ExposedでOneToManyをどうマッピングするか</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#ktor>Ktor</a>
+<ol>
+<li><a href=#軽量>軽量</a></li>
+<li><a href=#拡張可能>拡張可能</a></li>
+<li><a href=#coroutine対応>Coroutine対応</a></li>
+<li><a href=#テスト>テスト</a></li>
+</ol>
+</li>
+<li><a href=#exposed>Exposed</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

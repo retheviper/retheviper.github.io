@@ -1,0 +1,477 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Kotlinの隠されたコスト、その最後の記事となります。今までの記事もかなり興味深かったですが、今回はさらにKotlinならではの機能に触れ"><title>Kotlinの隠されたコストーその３</title>
+<link rel=canonical href=https://retheviper.github.io/posts/kotlin-hidden-cost-3/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Kotlinの隠されたコストーその３">
+<meta property="og:description" content="Kotlinの隠されたコスト、その最後の記事となります。今までの記事もかなり興味深かったですが、今回はさらにKotlinならではの機能に触れ">
+<meta property="og:url" content="https://retheviper.github.io/posts/kotlin-hidden-cost-3/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:tag" content="java"><meta property="article:published_time" content="2021-11-28T00:00:00+00:00"><meta property="article:modified_time" content="2021-11-28T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/kotlin.jpg">
+<meta name=twitter:title content="Kotlinの隠されたコストーその３">
+<meta name=twitter:description content="Kotlinの隠されたコスト、その最後の記事となります。今までの記事もかなり興味深かったですが、今回はさらにKotlinならではの機能に触れ"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/kotlin.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/kotlin-hidden-cost-3/>
+<img src=/../../images/kotlin.jpg loading=lazy alt="Featured image of post Kotlinの隠されたコストーその３">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/kotlin/ style=background-color:#2a9d8f;color:#fff>
+kotlin
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/kotlin-hidden-cost-3/>Kotlinの隠されたコストーその３</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Nov 28, 2021</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+11 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>Kotlinの隠されたコスト、その最後の記事となります。今までの記事もかなり興味深かったですが、今回はさらにKotlinならではの機能に触れているので、Kotlinそのものに対する理解も含めてみる必要があり、さらに深い内容となっているかと思います。</p>
+<p>今回のアジェンダは、「委譲プロパティ」と「rangeを使ったループ」になります。この記事は<a class=link href=https://bladecoder.medium.com/exploring-kotlins-hidden-costs-part-3-3bf6e0dbf0a4 target=_blank rel=noopener>Exploring Kotlin’s hidden costs - Part 3</a>の内容を要約したものです。</p>
+<h2 id=委譲プロパティ>委譲プロパティ</h2>
+<p><a class=link href=https://kotlinlang.org/docs/delegated-properties.html target=_blank rel=noopener>委譲プロパティ</a>とは、<code>getter</code>と<code>setter</code>が<code>委譲(delegate)</code>というオブジェクトによって実装された<a class=link href=https://kotlinlang.org/docs/properties.html target=_blank rel=noopener>プロパティ</a>を指します。これによって再利用可能なカスタムプロパティを作ることができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>Example</span> <span class=p>{</span>
+    <span class=k>var</span> <span class=py>p</span><span class=p>:</span> <span class=n>String</span> <span class=k>by</span> <span class=n>Delegate</span><span class=p>()</span>
+<span class=p>}</span>
+</code></pre></div><p>委譲オブジェクトはプロパティの設定と読み込みのため<code>getValue()</code>と<code>setValue()</code>を実装する必要があります。そしてこれらの関数はプロパティのメタデータ（プロパティ名）とオブジェクトのインスタンスを引数として必要とします。</p>
+<p>クラスが委譲プロパティとして定義されると、コンパイラは下記のようなコードを生成します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>Example</span> <span class=o>{</span>
+   <span class=nd>@NotNull</span>
+   <span class=kd>private</span> <span class=kd>final</span> <span class=n>Delegate</span> <span class=n>p$delegate</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Delegate</span><span class=o>();</span>
+   <span class=c1>// $FF: 生成されたフィールド
+</span><span class=c1></span>   <span class=kd>static</span> <span class=kd>final</span> <span class=n>KProperty</span><span class=o>[]</span> <span class=n>$$delegatedProperties</span> <span class=o>=</span> <span class=k>new</span> <span class=n>KProperty</span><span class=o>[]{(</span><span class=n>KProperty</span><span class=o>)</span><span class=n>Reflection</span><span class=o>.</span><span class=na>mutableProperty1</span><span class=o>(</span><span class=k>new</span> <span class=n>MutablePropertyReference1Impl</span><span class=o>(</span><span class=n>Reflection</span><span class=o>.</span><span class=na>getOrCreateKotlinClass</span><span class=o>(</span><span class=n>Example</span><span class=o>.</span><span class=na>class</span><span class=o>),</span> <span class=s>&#34;p&#34;</span><span class=o>,</span> <span class=s>&#34;getP()Ljava/lang/String;&#34;</span><span class=o>))};</span>
+
+   <span class=nd>@NotNull</span>
+   <span class=kd>public</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>getP</span><span class=o>()</span> <span class=o>{</span>
+      <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>p$delegate</span><span class=o>.</span><span class=na>getValue</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=n>$$delegatedProperties</span><span class=o>[</span><span class=n>0</span><span class=o>]);</span>
+   <span class=o>}</span>
+
+   <span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>setP</span><span class=o>(</span><span class=nd>@NotNull</span> <span class=n>String</span> <span class=n>var1</span><span class=o>)</span> <span class=o>{</span>
+      <span class=n>Intrinsics</span><span class=o>.</span><span class=na>checkParameterIsNotNull</span><span class=o>(</span><span class=n>var1</span><span class=o>,</span> <span class=s>&#34;&lt;set-?&gt;&#34;</span><span class=o>);</span>
+      <span class=k>this</span><span class=o>.</span><span class=na>p$delegate</span><span class=o>.</span><span class=na>setValue</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=n>$$delegatedProperties</span><span class=o>[</span><span class=n>0</span><span class=o>],</span> <span class=n>var1</span><span class=o>);</span>
+   <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>一部staticプロパティのメタデータがクラスに追加されます。そして毎回値の設定と読み込みが発生するたびにコンストラクタによる初期化が起こります。</p>
+<h3 id=委譲インスタンス>委譲インスタンス</h3>
+<p>上記サンプルでは新しい委譲のインスタンスがプロパティの実装のため生成されています。委譲がstatefulの場合にこのようになります。たとえはローカルで計算されたプロパティを使うなどの場合です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>StringDelegate</span> <span class=p>{</span>
+    <span class=k>private</span> <span class=k>var</span> <span class=py>cache</span><span class=p>:</span> <span class=n>String</span><span class=p>?</span> <span class=p>=</span> <span class=k>null</span>
+
+    <span class=k>operator</span> <span class=k>fun</span> <span class=nf>getValue</span><span class=p>(</span><span class=n>thisRef</span><span class=p>:</span> <span class=n>Any</span><span class=p>?,</span> <span class=k>property</span><span class=p>:</span> <span class=n>KProperty</span><span class=p>&lt;*&gt;):</span> <span class=n>String</span> <span class=p>{</span>
+        <span class=k>var</span> <span class=py>result</span> <span class=p>=</span> <span class=n>cache</span>
+        <span class=k>if</span> <span class=p>(</span><span class=n>result</span> <span class=o>==</span> <span class=k>null</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>result</span> <span class=p>=</span> <span class=n>someOperation</span><span class=p>()</span>
+            <span class=n>cache</span> <span class=p>=</span> <span class=n>result</span>
+        <span class=p>}</span>
+        <span class=k>return</span> <span class=n>result</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>またコンストラクタに追加のパラメータが渡されると、新しい委譲のインスタンスが必要となります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>Example</span> <span class=p>{</span>
+    <span class=k>private</span> <span class=k>val</span> <span class=py>nameView</span> <span class=k>by</span> <span class=n>BindViewDelegate</span><span class=p>&lt;</span><span class=n>TextView</span><span class=p>&gt;(</span><span class=n>R</span><span class=p>.</span><span class=n>id</span><span class=p>.</span><span class=n>name</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>statelessであり、すでに渡されたオブジェクトのインスタンスとプロパティ名を保ちたいだけなら委譲クラスに<code>object</code>をつけてsingletonにする方法があります。たとえば下記のようなものです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>object</span> <span class=nc>FragmentDelegate</span> <span class=p>{</span>
+    <span class=k>operator</span> <span class=k>fun</span> <span class=nf>getValue</span><span class=p>(</span><span class=n>thisRef</span><span class=p>:</span> <span class=n>Activity</span><span class=p>,</span> <span class=k>property</span><span class=p>:</span> <span class=n>KProperty</span><span class=p>&lt;*&gt;):</span> <span class=n>Fragment</span><span class=p>?</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>thisRef</span><span class=p>.</span><span class=n>fragmentManager</span><span class=p>.</span><span class=n>findFragmentByTag</span><span class=p>(</span><span class=k>property</span><span class=p>.</span><span class=n>name</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>また既存のオブジェクトを拡張して委譲することもできます。つまり、<code>getValue()</code>や<code>setValue()</code>を拡張関数として定義することもできるということです。Kotlinではすでに<code>Map</code>と<code>MutableMap</code>に拡張関数として委譲するパターンを使っています。（プロパティ名をキーで使っています）</p>
+<p>もし一つのクラス内でローカルの委譲インスタンスに複数のプロパティを保持して再利用したいなら、そのクラスのコンストラクタでインスタンスを初期化しましょう。</p>
+<p>Kotlin 1.1以降、<a class=link href=https://kotlinlang.org/docs/delegated-properties.html#local-delegated-properties target=_blank rel=noopener>関数内のローカル変数を委譲プロパティにする</a>こともできます。この場合、委譲は後で初期化できます。</p>
+<p>クラスに定義された委譲プロパティごとにオーバーヘッドとメタデータの追加が発生するのでなるべくプロパティを再利用できるようにした方が良いでしょう。また、定義したい項目が多い場合に、果たして委譲プロパティが良い選択肢であるかを考慮すべきです。</p>
+<h3 id=ジェネリック委譲>ジェネリック委譲</h3>
+<p>委譲関数はジェネリックでも定義できます。なので委譲クラスをさまざまな型のプロパティとして定義することもできます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>private</span> <span class=k>var</span> <span class=py>maxDelay</span><span class=p>:</span> <span class=n>Long</span> <span class=k>by</span> <span class=n>SharedPreferencesDelegate</span><span class=p>&lt;</span><span class=n>Long</span><span class=p>&gt;()</span>
+</code></pre></div><p>ただ、上記のようにprimitiveをジェネリック委譲を使う場合、<code>boxing</code>と<code>unboxing</code>が値の指定と読み込みで発生することに注意する必要があります。これはプロパティがnon-nullの場合でも起こることです。</p>
+<p>なのでnon-nullなprimitive型の委譲プロパティを定義する場合はジェネリックで定義を避けたほうが良いです。</p>
+<h3 id=スタンダード委譲lazy>スタンダード委譲（lazy()）</h3>
+<p>Kotlinでは<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-delegates/not-null.html target=_blank rel=noopener>Delegates.notNull()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.properties/-delegates/observable.html target=_blank rel=noopener>Delegates.observable()</a>や<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/lazy.html target=_blank rel=noopener>lazy()</a>のような委譲のための標準機能が存在しています。</p>
+<p><code>lazy()</code>は読み込み専用の委譲プロパティのための関数です。初めて読み込みが発生する際、プロパティを初期化するた目にlambdaを指定できます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>private</span> <span class=k>val</span> <span class=py>dateFormat</span><span class=p>:</span> <span class=n>DateFormat</span> <span class=k>by</span> <span class=n>lazy</span> <span class=p>{</span>
+    <span class=n>SimpleDateFormat</span><span class=p>(</span><span class=s2>&#34;dd-MM-yyyy&#34;</span><span class=p>,</span> <span class=n>Locale</span><span class=p>.</span><span class=n>getDefault</span><span class=p>())</span>
+<span class=p>}</span>
+</code></pre></div><p>これはその値が実際に読み込まれるまで高いコストの初期化を遅延させるという、パフォーマンスと可読性の側面で優れた方法です。</p>
+<p>ただ、<code>lazy()</code>はinline関数ではなく、引数として渡されたlambdaは別の<code>Function</code>クラスとしてコンパイルされ、戻り値の委譲オブジェクトもまたinline化されないことには注意する必要があります。</p>
+<p>そして<code>lazy()</code>関数で見逃しやすいのは<code>mode</code>という引数で戻り値の委譲タイプを決められるということです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>lazy</span><span class=p>(</span><span class=n>initializer</span><span class=p>:</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>T</span><span class=p>):</span> <span class=n>Lazy</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>SynchronizedLazyImpl</span><span class=p>(</span><span class=n>initializer</span><span class=p>)</span>
+<span class=k>public</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>lazy</span><span class=p>(</span><span class=n>mode</span><span class=p>:</span> <span class=n>LazyThreadSafetyMode</span><span class=p>,</span> <span class=n>initializer</span><span class=p>:</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>T</span><span class=p>):</span> <span class=n>Lazy</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span>
+        <span class=k>when</span> <span class=p>(</span><span class=n>mode</span><span class=p>)</span> <span class=p>{</span>
+            <span class=n>LazyThreadSafetyMode</span><span class=p>.</span><span class=n>SYNCHRONIZED</span> <span class=o>-&gt;</span> <span class=n>SynchronizedLazyImpl</span><span class=p>(</span><span class=n>initializer</span><span class=p>)</span>
+            <span class=n>LazyThreadSafetyMode</span><span class=p>.</span><span class=n>PUBLICATION</span> <span class=o>-&gt;</span> <span class=n>SafePublicationLazyImpl</span><span class=p>(</span><span class=n>initializer</span><span class=p>)</span>
+            <span class=n>LazyThreadSafetyMode</span><span class=p>.</span><span class=n>NONE</span> <span class=o>-&gt;</span> <span class=n>UnsafeLazyImpl</span><span class=p>(</span><span class=n>initializer</span><span class=p>)</span>
+        <span class=p>}</span>
+</code></pre></div><p><code>mode</code>を指定していない場合、デフォルトとしては<code>LazyThreadSafetyMode.SYNCHRONIZED</code>が使われますが、これは複数のスレッドで初期化ブロックが安全に実行されることを保証するためにコストの高い<code>double-checked lock</code>を行います。</p>
+<p>シングルスレッドしかプロパティに対するアクセスがないというのがわかっているなら、無駄なロックは下げた方がいいでしょう。こういう場合は<code>LazyThreadSafetyMode.NONE</code>を使えます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>dateFormat</span><span class=p>:</span> <span class=n>DateFormat</span> <span class=k>by</span> <span class=n>lazy</span><span class=p>(</span><span class=n>LazyThreadSafetyMode</span><span class=p>.</span><span class=n>NONE</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>SimpleDateFormat</span><span class=p>(</span><span class=s2>&#34;dd-MM-yyyy&#34;</span><span class=p>,</span> <span class=n>Locale</span><span class=p>.</span><span class=n>getDefault</span><span class=p>())</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=ranges>Ranges</h2>
+<p><a class=link href=https://kotlinlang.org/docs/ranges.html target=_blank rel=noopener>Ranges</a>で限定された範囲の値のセットを定義できます。この値は<code>Comparable</code>なものならなんでも指定できますね。そして、この表現式を使うと<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-closed-range/ target=_blank rel=noopener>ClosedRange</a>というインタフェースの実装ができることになります。</p>
+<h3 id=包含テスト>包含テスト</h3>
+<p>rangeを使って範囲内に特定の値が含まれているかどうかを<code>in</code>や<code>!in</code>を使って検知することができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>if</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>1.</span><span class=p>.</span><span class=m>10</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>rangeはnon-nullなprimitive型（<code>Int</code>, <code>Long</code>, <code>Byte</code>, <code>Short</code>, <code>Float</code>, <code>Double</code>, <code>Char</code>）に対する最適化が行われるので、コンパイルされた結果は以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>if</span><span class=o>(</span><span class=n>1</span> <span class=o>&lt;=</span> <span class=n>i</span> <span class=o>&amp;&amp;</span> <span class=n>i</span> <span class=o>&lt;=</span> <span class=n>10</span><span class=o>)</span> <span class=o>{</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>なので、オーバーヘッドや追加オブジェクトの割り当てなどは起こらないです。しかし、primitiveではない場合はどうでしょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>if</span> <span class=p>(</span><span class=n>name</span> <span class=k>in</span> <span class=s2>&#34;Alfred&#34;</span><span class=o>..</span><span class=s2>&#34;Alicia&#34;</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>name</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>Kotlin 1.1.50以前はコンパイル時に<code>ClosedRange</code>オブジェクトが常に生成されました。しかし、1.1.50からは以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>if</span><span class=p>(</span><span class=n>name</span><span class=p>.</span><span class=n>compareTo</span><span class=p>(</span><span class=s2>&#34;Alfred&#34;</span><span class=p>)</span> <span class=o>&gt;=</span> <span class=m>0</span><span class=p>)</span> <span class=p>{</span>
+   <span class=k>if</span><span class=p>(</span><span class=n>name</span><span class=p>.</span><span class=n>compareTo</span><span class=p>(</span><span class=s2>&#34;Alicia&#34;</span><span class=p>)</span> <span class=o>&lt;=</span> <span class=m>0</span><span class=p>)</span> <span class=p>{</span>
+      <span class=n>System</span><span class=p>.</span><span class=k>out</span><span class=p>.</span><span class=n>println</span><span class=p>(</span><span class=n>name</span><span class=p>);</span>
+   <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>rangeはまた、<code>when</code>の条件式でも使えます。<code>if-else</code>より可読性が良くなりますね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>message</span> <span class=p>=</span> <span class=k>when</span> <span class=p>(</span><span class=n>statusCode</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>in</span> <span class=m>200.</span><span class=p>.</span><span class=m>299</span> <span class=o>-&gt;</span> <span class=s2>&#34;OK&#34;</span>
+    <span class=k>in</span> <span class=m>300.</span><span class=p>.</span><span class=m>399</span> <span class=o>-&gt;</span> <span class=s2>&#34;Find it somewhere else&#34;</span>
+    <span class=k>else</span> <span class=o>-&gt;</span> <span class=s2>&#34;Oops&#34;</span>
+<span class=p>}</span>
+</code></pre></div><p>ただ、rangeを使う場合、特定の値が含まれているかどうかをチェックするとき、指定された範囲とそれを使うコードの間に間があるとコストがかかることになります。たとえば以下のようなコードがあるとします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>private</span> <span class=k>val</span> <span class=py>myRange</span> <span class=k>get</span><span class=p>()</span> <span class=p>=</span> <span class=m>1.</span><span class=p>.</span><span class=m>10</span>
+
+<span class=k>fun</span> <span class=nf>rangeTest</span><span class=p>(</span><span class=n>i</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>if</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=n>myRange</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>この場合はコンパイルすると<code>IntRange</code>オブジェクトが追加されます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>private</span> <span class=kd>final</span> <span class=n>IntRange</span> <span class=nf>getMyRange</span><span class=o>()</span> <span class=o>{</span>
+   <span class=k>return</span> <span class=k>new</span> <span class=n>IntRange</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>10</span><span class=o>);</span>
+<span class=o>}</span>
+
+<span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>rangeTest</span><span class=o>(</span><span class=kt>int</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
+   <span class=k>if</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>getMyRange</span><span class=o>().</span><span class=na>contains</span><span class=o>(</span><span class=n>i</span><span class=o>))</span> <span class=o>{</span>
+      <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+   <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>これはプロパティのgetterを<code>inline</code>として定義しても同じです。なのでなるべくrangeが使われるテストの方に直接書くことでオブジェクトが追加されない要因した方が良いです。また、primitiveではないオブジェクトを使う場合は定数として定義し、<code>ClosedRange</code>のインスタンスを再利用する方法があります。</p>
+<h3 id=forループ>forループ</h3>
+<p><code>Float</code>と<code>Double</code>を除いたprimitive型の範囲をループで使うのも良い選択です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>1.</span><span class=p>.</span><span class=m>10</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>コンパイルされた結果にはオーバーヘッドが発生しません。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>1</span><span class=o>;</span>
+<span class=k>for</span><span class=o>(</span><span class=kt>byte</span> <span class=n>var2</span> <span class=o>=</span> <span class=n>11</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>var2</span><span class=o>;</span> <span class=o>++</span><span class=n>i</span><span class=o>)</span> <span class=o>{</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>逆順にループしたい場合は<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/down-to.html target=_blank rel=noopener>downTo()</a>を使えます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>10</span> <span class=n>downTo</span> <span class=m>1</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>これにもまた、オーバーヘッドは発生しません。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>10</span><span class=o>;</span>
+<span class=kt>byte</span> <span class=n>var1</span> <span class=o>=</span> <span class=n>1</span><span class=o>;</span>
+<span class=k>while</span><span class=o>(</span><span class=kc>true</span><span class=o>)</span> <span class=o>{</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+   <span class=k>if</span><span class=o>(</span><span class=n>i</span> <span class=o>==</span> <span class=n>var1</span><span class=o>)</span> <span class=o>{</span>
+      <span class=k>return</span><span class=o>;</span>
+   <span class=o>}</span>
+   <span class=o>--</span><span class=n>i</span><span class=o>;</span>
+<span class=o>}</span>
+</code></pre></div><p><a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/until.html target=_blank rel=noopener>until</a>を使って特定の値未満にループするのも良いですね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>0</span> <span class=n>until</span> <span class=n>size</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>以前は少しコストがかかることになりましたが、Kotlin 1.1.4以降は以下のようなコードが生成されます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
+<span class=k>for</span><span class=o>(</span><span class=kt>int</span> <span class=n>var2</span> <span class=o>=</span> <span class=n>size</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>var2</span><span class=o>;</span> <span class=o>++</span><span class=n>i</span><span class=o>)</span> <span class=o>{</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>ただ、そのほかは最適化があまり効いてないケースもあります。<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/reversed.html target=_blank rel=noopener>reversed()</a>を使う例があるとしましょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=p>(</span><span class=m>1.</span><span class=p>.</span><span class=m>10</span><span class=p>).</span><span class=n>reversed</span><span class=p>())</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>コンパイルされたコードがあまり綺麗とは言えません。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>IntProgression</span> <span class=n>var10000</span> <span class=p>=</span> <span class=n>RangesKt</span><span class=p>.</span><span class=n>reversed</span><span class=p>((</span><span class=n>IntProgression</span><span class=p>)(</span><span class=n>new</span> <span class=n>IntRange</span><span class=p>(</span><span class=m>1</span><span class=p>,</span> <span class=m>10</span><span class=p>)));</span>
+<span class=n>int</span> <span class=n>i</span> <span class=p>=</span> <span class=n>var10000</span><span class=p>.</span><span class=n>getFirst</span><span class=p>();</span>
+<span class=n>int</span> <span class=n>var3</span> <span class=p>=</span> <span class=n>var10000</span><span class=p>.</span><span class=n>getLast</span><span class=p>();</span>
+<span class=n>int</span> <span class=n>var4</span> <span class=p>=</span> <span class=n>var10000</span><span class=p>.</span><span class=n>getStep</span><span class=p>();</span>
+<span class=k>if</span><span class=p>(</span><span class=n>var4</span> <span class=p>&gt;</span> <span class=m>0</span><span class=p>)</span> <span class=p>{</span>
+   <span class=k>if</span><span class=p>(</span><span class=n>i</span> <span class=p>&gt;</span> <span class=n>var3</span><span class=p>)</span> <span class=p>{</span>
+      <span class=k>return</span><span class=p>;</span>
+   <span class=p>}</span>
+<span class=p>}</span> <span class=k>else</span> <span class=k>if</span><span class=p>(</span><span class=n>i</span> <span class=p>&lt;</span> <span class=n>var3</span><span class=p>)</span> <span class=p>{</span>
+   <span class=k>return</span><span class=p>;</span>
+<span class=p>}</span>
+
+<span class=k>while</span><span class=p>(</span><span class=k>true</span><span class=p>)</span> <span class=p>{</span>
+   <span class=n>System</span><span class=p>.</span><span class=k>out</span><span class=p>.</span><span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>);</span>
+   <span class=k>if</span><span class=p>(</span><span class=n>i</span> <span class=o>==</span> <span class=n>var3</span><span class=p>)</span> <span class=p>{</span>
+      <span class=k>return</span><span class=p>;</span>
+   <span class=p>}</span>
+
+   <span class=n>i</span> <span class=o>+=</span> <span class=n>var4</span><span class=p>;</span>
+<span class=p>}</span>
+</code></pre></div><p><code>IntRange</code>オブジェクトが範囲を再定義するため生成され、さらに<code>IntProgression</code>オブジェクトが逆順に要素を整列するために生成されます。</p>
+<p><code>progression</code>を作るのに二つ以上の関数が使われていると、二つ以上のオブジェクトを作るようなオーバーヘッドが発生することになります。</p>
+<p>上記のルールは<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/step.html target=_blank rel=noopener>step()</a>を使う場合も同じで、<code>step 1</code>を指定しても状況は変わりません。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>1.</span><span class=p>.</span><span class=m>10</span> <span class=n>step</span> <span class=m>2</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>i</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>さらに、生成されたコードで最後の値を読み込む時、<code>IntProgression</code>オブジェクトの最後の要素と<code>step()</code>で指定した範囲を考慮して追加の処理が行われます。上記のサンプルだと最後の要素は<code>9</code>です。</p>
+<p>なので、<code>for</code>を利用したループをするときはなるべく<code>..</code>、<code>downTo()</code>、<code>until()</code>を利用してオーバーヘッドを避けた方が良いでしょう。</p>
+<h3 id=foreachループ>forEachループ</h3>
+<p><code>for</code>ループの代わりに、rangeに対してinline拡張関数の<code>forEach()</code>を使う場合も結果はあまり変わりません。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>(</span><span class=m>1.</span><span class=p>.</span><span class=m>10</span><span class=p>).</span><span class=n>forEach</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=k>it</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>しかし、<code>forEach()</code>は<code>Iterable</code>に対してのみ最適化されてないです。これはつまり、iteratorを生成する必要があるということを意味します。なので、コンパイルされると以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>Iterable</span> <span class=n>$receiver$iv</span> <span class=o>=</span> <span class=o>(</span><span class=n>Iterable</span><span class=o>)(</span><span class=k>new</span> <span class=n>IntRange</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>10</span><span class=o>));</span>
+<span class=n>Iterator</span> <span class=n>var1</span> <span class=o>=</span> <span class=n>$receiver$iv</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span>
+
+<span class=k>while</span><span class=o>(</span><span class=n>var1</span><span class=o>.</span><span class=na>hasNext</span><span class=o>())</span> <span class=o>{</span>
+   <span class=kt>int</span> <span class=n>element$iv</span> <span class=o>=</span> <span class=o>((</span><span class=n>IntIterator</span><span class=o>)</span><span class=n>var1</span><span class=o>).</span><span class=na>nextInt</span><span class=o>();</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>element$iv</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p>これは今までのサンプルよりもコストのかかるものです。<code>IntRange</code>オブジェクトを生成するだけでなく、<code>IntIterator</code>オブジェクトも生成しているからです。primitiveではない場合はさらにコストがかかるでしょう。</p>
+<p>なので、rangeを使ったループが必要な場合は<code>forEach()</code>より<code>for</code>ループを使ってオーバーヘッドを減らした方が良いです。</p>
+<h3 id=collectionインデックスループ>collectionインデックスループ</h3>
+<p>Kotlinのスタンダードライブラリは<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/indices.html target=_blank rel=noopener>indices</a>という拡張プロパティで配列と<code>Collection</code>のインテックスを提供します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=s2>&#34;A&#34;</span><span class=p>,</span> <span class=s2>&#34;B&#34;</span><span class=p>,</span> <span class=s2>&#34;C&#34;</span><span class=p>)</span>
+<span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=n>list</span><span class=p>.</span><span class=n>indices</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>println</span><span class=p>(</span><span class=n>list</span><span class=p>[</span><span class=n>i</span><span class=p>])</span>
+<span class=p>}</span>
+</code></pre></div><p><code>indices</code>のコンパイルされた結果は良い最適化を見せてくれます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span> <span class=n>list</span> <span class=o>=</span> <span class=n>CollectionsKt</span><span class=o>.</span><span class=na>listOf</span><span class=o>(</span><span class=k>new</span> <span class=n>String</span><span class=o>[]{</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>});</span>
+<span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
+<span class=k>for</span><span class=o>(</span><span class=kt>int</span> <span class=n>var2</span> <span class=o>=</span> <span class=o>((</span><span class=n>Collection</span><span class=o>)</span><span class=n>list</span><span class=o>).</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>var2</span><span class=o>;</span> <span class=o>++</span><span class=n>i</span><span class=o>)</span> <span class=o>{</span>
+   <span class=n>Object</span> <span class=n>var3</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
+   <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>var3</span><span class=o>);</span>
+<span class=o>}</span>
+</code></pre></div><p><code>IntRange</code>オブジェクトが作られてないです。では、自前で実装してみるとどうなるのでしょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>inline</span> <span class=k>val</span> <span class=py>SparseArray</span><span class=p>&lt;*&gt;.</span><span class=n>indices</span><span class=p>:</span> <span class=n>IntRange</span>
+    <span class=k>get</span><span class=p>()</span> <span class=p>=</span> <span class=m>0</span> <span class=n>until</span> <span class=n>size</span><span class=p>()</span>
+
+<span class=k>fun</span> <span class=nf>printValues</span><span class=p>(</span><span class=n>map</span><span class=p>:</span> <span class=n>SparseArray</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;)</span> <span class=p>{</span>
+    <span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=n>map</span><span class=p>.</span><span class=n>indices</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>println</span><span class=p>(</span><span class=n>map</span><span class=p>.</span><span class=n>valueAt</span><span class=p>(</span><span class=n>i</span><span class=p>))</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>拡張プロパティとして定義してコンパイルすると、あまり効率的ではないコードになっていることがわかります。<code>IntRange</code>オブジェクトが作られてます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=n>static</span> <span class=k>final</span> <span class=n>void</span> <span class=n>printValues</span><span class=p>(</span><span class=nd>@NotNull</span> <span class=n>SparseArray</span> <span class=n>map</span><span class=p>)</span> <span class=p>{</span>
+   <span class=n>Intrinsics</span><span class=p>.</span><span class=n>checkParameterIsNotNull</span><span class=p>(</span><span class=n>map</span><span class=p>,</span> <span class=s2>&#34;map&#34;</span><span class=p>);</span>
+   <span class=n>IntRange</span> <span class=n>var10000</span> <span class=p>=</span> <span class=n>RangesKt</span><span class=p>.</span><span class=n>until</span><span class=p>(</span><span class=m>0</span><span class=p>,</span> <span class=n>map</span><span class=p>.</span><span class=n>size</span><span class=p>());</span>
+   <span class=n>int</span> <span class=n>i</span> <span class=p>=</span> <span class=n>var10000</span><span class=p>.</span><span class=n>getFirst</span><span class=p>();</span>
+   <span class=n>int</span> <span class=n>var2</span> <span class=p>=</span> <span class=n>var10000</span><span class=p>.</span><span class=n>getLast</span><span class=p>();</span>
+   <span class=k>if</span><span class=p>(</span><span class=n>i</span> <span class=o>&lt;=</span> <span class=n>var2</span><span class=p>)</span> <span class=p>{</span>
+      <span class=k>while</span><span class=p>(</span><span class=k>true</span><span class=p>)</span> <span class=p>{</span>
+         <span class=n>Object</span> <span class=err>$</span><span class=k>receiver</span><span class=err>$</span><span class=n>iv</span> <span class=p>=</span> <span class=n>map</span><span class=p>.</span><span class=n>valueAt</span><span class=p>(</span><span class=n>i</span><span class=p>);</span>
+         <span class=n>System</span><span class=p>.</span><span class=k>out</span><span class=p>.</span><span class=n>println</span><span class=p>(</span><span class=err>$</span><span class=k>receiver</span><span class=err>$</span><span class=n>iv</span><span class=p>);</span>
+         <span class=k>if</span><span class=p>(</span><span class=n>i</span> <span class=o>==</span> <span class=n>var2</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>break</span><span class=p>;</span>
+         <span class=p>}</span>
+         <span class=o>++</span><span class=n>i</span><span class=p>;</span>
+      <span class=p>}</span>
+   <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>この場合は代わりに<code>until()</code>と<code>for</code>ループを使った方が良いでしょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>printValues</span><span class=p>(</span><span class=n>map</span><span class=p>:</span> <span class=n>SparseArray</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;)</span> <span class=p>{</span>
+    <span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>0</span> <span class=n>until</span> <span class=n>map</span><span class=p>.</span><span class=n>size</span><span class=p>())</span> <span class=p>{</span>
+        <span class=n>println</span><span class=p>(</span><span class=n>map</span><span class=p>.</span><span class=n>valueAt</span><span class=p>(</span><span class=n>i</span><span class=p>))</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=最後に>最後に</h2>
+<p>いかがでしたか。個人的にはあまり委譲プロパティを使ったことがなく、そもそもの理解を兼ねてかなり勉強になりました。また、rangeに関しても、Javaでの習慣でテストクラスのフィールドとして定義していろいろな関数で使い回していましたが、まさかそれがよりコストのかかることだとは思ってなかったので少しショックでした。</p>
+<p>また、改めてKotlinで提供している機能とAPIに対して正しく理解する必要があると思いました。そして<a class=link href=https://ja.wikipedia.org/wiki/%E3%82%AA%E3%83%83%E3%82%AB%E3%83%A0%E3%81%AE%E5%89%83%E5%88%80 target=_blank rel=noopener>オッカムの剃刀</a>でも話しているように、なるべくシンプルなロジックとコードを追求する必要があるとも思いましたね。intellijのメニューのうち、<code>Tools > Kotlin > Show Kotlin Bytecode</code> でいつでもJavaのコードにdecomplieされたコードを確認できるので、最新だとどのように変換されるのかを確認してみながらコードを最適化を行なった方が良いかも知れません。</p>
+<p>今月はいつもの、自分の経験や仮説を紹介するようなポストでなく、ほぼ翻訳のみになってしまいましたが、私自身としてはかなり貴重な知識を得られたと思っています。またの機会で何か良いものがあったら、是非とも紹介させていただきたいですね。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+<a href=/tags/java/>java</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/kotlin-japanese-era/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで和暦を使う</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-2/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその２</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-1/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその１</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-code-in-my-style-3/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで書いてみた〜その三〜</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-collection-and-sequence/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Sequenceは常にいいか</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#委譲プロパティ>委譲プロパティ</a>
+<ol>
+<li><a href=#委譲インスタンス>委譲インスタンス</a></li>
+<li><a href=#ジェネリック委譲>ジェネリック委譲</a></li>
+<li><a href=#スタンダード委譲lazy>スタンダード委譲（lazy()）</a></li>
+</ol>
+</li>
+<li><a href=#ranges>Ranges</a>
+<ol>
+<li><a href=#包含テスト>包含テスト</a></li>
+<li><a href=#forループ>forループ</a></li>
+<li><a href=#foreachループ>forEachループ</a></li>
+<li><a href=#collectionインデックスループ>collectionインデックスループ</a></li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

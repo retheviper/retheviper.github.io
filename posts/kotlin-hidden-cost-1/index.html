@@ -1,0 +1,431 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Kotlinは便利ですが、何が便利かというと代表的に挙げられるものがたくさんのシンタクスシュガーではないかと思います。同じJVM言語のJav"><title>Kotlinの隠されたコストーその１</title>
+<link rel=canonical href=https://retheviper.github.io/posts/kotlin-hidden-cost-1/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Kotlinの隠されたコストーその１">
+<meta property="og:description" content="Kotlinは便利ですが、何が便利かというと代表的に挙げられるものがたくさんのシンタクスシュガーではないかと思います。同じJVM言語のJav">
+<meta property="og:url" content="https://retheviper.github.io/posts/kotlin-hidden-cost-1/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:tag" content="java"><meta property="article:published_time" content="2021-11-14T00:00:00+00:00"><meta property="article:modified_time" content="2021-11-14T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/kotlin.jpg">
+<meta name=twitter:title content="Kotlinの隠されたコストーその１">
+<meta name=twitter:description content="Kotlinは便利ですが、何が便利かというと代表的に挙げられるものがたくさんのシンタクスシュガーではないかと思います。同じJVM言語のJav"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/kotlin.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/kotlin-hidden-cost-1/>
+<img src=/../../images/kotlin.jpg loading=lazy alt="Featured image of post Kotlinの隠されたコストーその１">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/kotlin/ style=background-color:#2a9d8f;color:#fff>
+kotlin
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/kotlin-hidden-cost-1/>Kotlinの隠されたコストーその１</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Nov 14, 2021</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+11 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>Kotlinは便利ですが、何が便利かというと代表的に挙げられるものがたくさんのシンタクスシュガーではないかと思います。同じJVM言語のJavaと比べ、多くの場合でコード量が劇的に減るのが嬉しいという評価も多いものですね。しかし、この便利さの裏には隠されたコスト（性能面での）があるという話があります。今回はそれについて説明している良い記事を見つけたので、共有したいと思います。ただ、翻訳よりは要約に近いものなので、そこはご了承ください。</p>
+<p>ちなみにここで紹介している記事（<a class=link href=https://bladecoder.medium.com/exploring-kotlins-hidden-costs-part-1-fbb9935d9b62 target=_blank rel=noopener>Exploring Kotlin’s hidden costs - Part 1</a>）は、2017年に作成された（Kotlinがまだ1.1だったころ）ので、1.5にまでバージョンアップを成している今からすると、コンパイラの改善などで少し状況が違うケースもあるかと思いますが、述べている内容のレベルが高いので一度は目を通してみても良いかなと思います。また、記事で紹介しているKotlinのBytecodeに対しても、直接最近のKotlinが生成しているコードと比較してみるのも面白いかもですね。</p>
+<p>また、今回紹介している記事は<code>Part 1</code>ですが、そのほかにも<code>Part 2</code>や<code>Part 3</code>の記事がありますので、今後も順次紹介させていただきたいと思います。では、まず<code>Lambda表現式とcompanion object</code>編を、どうぞ。</p>
+<h2 id=高階関数とlambda表現式>高階関数とLambda表現式</h2>
+<p>例えば以下のような関数を定義しておいたとしましょう。渡されたパラメータをDBのトランザクションの中で実行し、実行結果の行数を返すものです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>transaction</span><span class=p>(</span><span class=n>db</span><span class=p>:</span> <span class=n>Database</span><span class=p>,</span> <span class=n>body</span><span class=p>:</span> <span class=p>(</span><span class=n>Database</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Int</span><span class=p>):</span> <span class=n>Int</span> <span class=p>{</span>
+    <span class=n>db</span><span class=p>.</span><span class=n>beginTransaction</span><span class=p>()</span>
+    <span class=k>try</span> <span class=p>{</span>
+        <span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>body</span><span class=p>(</span><span class=n>db</span><span class=p>)</span>
+        <span class=n>db</span><span class=p>.</span><span class=n>setTransactionSuccessful</span><span class=p>()</span>
+        <span class=k>return</span> <span class=n>result</span>
+    <span class=p>}</span> <span class=k>finally</span> <span class=p>{</span>
+        <span class=n>db</span><span class=p>.</span><span class=n>endTransaction</span><span class=p>()</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>上記の関数は、Lambdaを渡して以下のように使えますね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>deletedRows</span> <span class=p>=</span> <span class=n>transaction</span><span class=p>(</span><span class=n>db</span><span class=p>)</span> <span class=p>{</span>
+    <span class=k>it</span><span class=p>.</span><span class=n>delete</span><span class=p>(</span><span class=err>“</span><span class=n>Customers</span><span class=err>”</span><span class=p>,</span> <span class=k>null</span><span class=p>,</span> <span class=k>null</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>KotlinはJava 1.6のJVMから使えますが、Java 1.6のJVMではLambdaに対応していないのです。なので、Kotlinはその互換性を維持するためにLambda（匿名関数も）を<code>Function</code>というオブジェクトを生成することで対応しています。</p>
+<h3 id=functionオブジェクト>Functionオブジェクト</h3>
+<p>では、実際コンパイルされたLambda（body）がJavaのコードとしてはどうなっているかをみていきましょう。（ここでは、Intellij/Android Studioの<code>Show Kotlin Bytecode</code>の<code>Decompile</code>機能を使っています）</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>MyClass$myMethod$1</span> <span class=kd>implements</span> <span class=n>Function1</span> <span class=o>{</span>
+   <span class=c1>// $FF: 生成されたメソッド
+</span><span class=c1></span>   <span class=c1>// $FF: ブリッジメソッド
+</span><span class=c1></span>   <span class=kd>public</span> <span class=n>Object</span> <span class=nf>invoke</span><span class=o>(</span><span class=n>Object</span> <span class=n>var1</span><span class=o>)</span> <span class=o>{</span>
+      <span class=k>return</span> <span class=n>Integer</span><span class=o>.</span><span class=na>valueOf</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>invoke</span><span class=o>((</span><span class=n>Database</span><span class=o>)</span><span class=n>var1</span><span class=o>));</span>
+   <span class=o>}</span>
+
+   <span class=kd>public</span> <span class=kd>final</span> <span class=kt>int</span> <span class=nf>invoke</span><span class=o>(</span><span class=nd>@NotNull</span> <span class=n>Database</span> <span class=n>it</span><span class=o>)</span> <span class=o>{</span>
+      <span class=n>Intrinsics</span><span class=o>.</span><span class=na>checkParameterIsNotNull</span><span class=o>(</span><span class=n>it</span><span class=o>,</span> <span class=s>&#34;it&#34;</span><span class=o>);</span>
+      <span class=k>return</span> <span class=n>it</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=s>&#34;Customers&#34;</span><span class=o>,</span> <span class=kc>null</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+   <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>これを見るとわかりますが、Lambda（匿名関数）を使う場合、コンパイルされた結果としては基本的に3、4個のメソッドが追加で生成されるということになります。ここで追加された<code>Function</code>オブジェクトのインスタンスは、必要な時にだけ生成されます。正確には、以下のような動作をします。</p>
+<ul>
+<li>value captureがある場合、毎回パラメータが渡されるたび<code>Function</code>のインスタンスが生成され、GCの対象になる</li>
+<li>value captureがない場合、<code>Function</code>はSingletonとしてインスタンスが生成され再利用できる</li>
+</ul>
+<p>先ほどのコードでは、value captureがないため、Lambdaの呼び出し元は以下のようなコードとしてコンパイルされます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>this</span><span class=o>.</span><span class=na>transaction</span><span class=o>(</span><span class=n>db</span><span class=o>,</span> <span class=o>(</span><span class=n>Function1</span><span class=o>)</span><span class=n>MyClass$myMethod$1</span><span class=o>.</span><span class=na>INSTANCE</span><span class=o>);</span>
+</code></pre></div><p>しかし、value captureのある高階関数を繰り返し呼び出す場合はGCによる性能の低下を考えれます。</p>
+<h3 id=boxingオーバーヘッド>Boxingオーバーヘッド</h3>
+<p>Lambdaに対応しているJava 1.8以降のバージョンでは、<code>Function</code>インタフェースを複数提供していることでなるべくboxing/unboxingを避けようとしています。しかし、Kotlinでコンパイルされた場合はgenericを利用しています。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=cm>/** 引数を一つ受け取る関数 */</span>
+<span class=k>public</span> <span class=k>interface</span> <span class=nc>Function1</span><span class=p>&lt;</span><span class=k>in</span> <span class=n>P1</span><span class=p>,</span> <span class=k>out</span> <span class=n>R</span><span class=p>&gt;</span> <span class=p>:</span> <span class=n>Function</span><span class=p>&lt;</span><span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
+    <span class=cm>/** 引数を受け取り関数を実行する */</span>
+    <span class=k>public</span> <span class=k>operator</span> <span class=k>fun</span> <span class=nf>invoke</span><span class=p>(</span><span class=n>p1</span><span class=p>:</span> <span class=n>P1</span><span class=p>):</span> <span class=n>R</span>
+<span class=p>}</span>
+</code></pre></div><p>これらをみてわかるのは、高階関数でパラメータとして渡された関数を呼び出す時に、その関数にprimitiveタイプの値が存在する場合（パラメータ、もしくは戻り値）boxing/unboxingが起こるということです。先ほどのコンパイルされたLambdaにおいて、戻り値が<code>Integer</code>としてboxingされたのを確認できましたね。</p>
+<p>primitiveタイプを使用するLambdaをパラメータとしてとる高階関数は、参照回数が少なければあまり意識しなくてもよいコストになりますが、そうでない場合は性能に影響があると推定できます。</p>
+<h3 id=inline関数>Inline関数</h3>
+<p>幸い、Kotlinでは<code>inline</code>と言うキーワドを提供しています。これを使うと高階関数をインライン化できますね。インライン化されると呼び出し元のコードに<code>Function</code>の中身を直接含ませてコンパイルします。なので、インライン化された場合は以下のような面で性能の向上を考えられます。</p>
+<ul>
+<li>Functionオブジェクトのインスタンスが生成されない</li>
+<li>primitiveタイプを使う関数に対してboxing/unboxingが起こらない</li>
+<li>メソッドカウントが増えない（Androidの場合、アプリが参照できるメソッドの数字に制限がある）</li>
+<li>関数の呼び出しが増えない（CPU依存が高く、呼び出される頻度の高いコードのパフォーマンスの改善を期待できる）</li>
+</ul>
+<p>インライン化された場合のコードを確認してみましょう。<code>transaction</code>関数が消え、<code>db.delete</code>を直接呼び出しているのがわかります。また、戻り値の<code>result</code>もWrapperクラスからprimitiveタイプになっているのがわかります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>db</span><span class=o>.</span><span class=na>beginTransaction</span><span class=o>();</span>
+<span class=k>try</span> <span class=o>{</span>
+   <span class=kt>int</span> <span class=n>result$iv</span> <span class=o>=</span> <span class=n>db</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=s>&#34;Customers&#34;</span><span class=o>,</span> <span class=kc>null</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
+   <span class=n>db</span><span class=o>.</span><span class=na>setTransactionSuccessful</span><span class=o>();</span>
+<span class=o>}</span> <span class=k>finally</span> <span class=o>{</span>
+   <span class=n>db</span><span class=o>.</span><span class=na>endTransaction</span><span class=o>();</span>
+<span class=o>}</span>
+</code></pre></div><p>ただ、<code>inline</code>キーワードを使うときは以下のことを考慮しなければならないです。</p>
+<ul>
+<li>インライン関数は自分自身を直接呼び出したり、他のインライン関数から呼び出せない</li>
+<li>クラスに定義されたpublicなインライン関数はそのクラスのpublic関数とフィールドのみアクセスできる</li>
+<li>コンパイルされたコードが大きくなる（繰り返し参照される場合はより大きくなる）</li>
+</ul>
+<p>なるべく高階関数をインライン化し、必要であれば長いコードブロックをインラインではない関数に写した方がいいです。また、性能が大事なところでは呼び出された関数をインライン化することも考えられます。</p>
+<h2 id=companion-object>Companion object</h2>
+<p>Kotlinではクラスがstaticなフィールドやメソッドを定義できません。その代わりに<code>companion object</code>を使うことになっていますね。</p>
+<h3 id=クラスのprivateフィールドをcompanion-objectからアクセスする>クラスのprivateフィールドをcompanion objectからアクセスする</h3>
+<p>以下のような例があるとしましょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=k>private</span> <span class=k>constructor</span><span class=p>()</span> <span class=p>{</span>
+
+    <span class=k>private</span> <span class=k>var</span> <span class=py>hello</span> <span class=p>=</span> <span class=m>0</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
+        <span class=k>fun</span> <span class=nf>newInstance</span><span class=p>()</span> <span class=p>=</span> <span class=n>MyClass</span><span class=p>()</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>上記のコードがコンパイスされると、<code>companion object</code>はSingletonクラスになります。なので、クラスのprivateフィールドに外部クラスからアクセスできるようにする必要があり、コンパイラが<code>getter</code>、<code>setter</code>を追加で生成することになるということです。生成されたメソッドは<code>companion object</code>から参照されることになります。以下を見てください。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>ALOAD 1
+INVOKESTATIC be/myapplication/MyClass.access$getHello$p (Lbe/myapplication/MyClass;)I
+ISTORE 2
+</code></pre></div><p>Javaだとこれを避けるためにアクセス制限を<code>package</code>単位にすることができましたが、Kotlinではそのようなキーワードがないですね。<code>public</code>や<code>internal</code>を使う場合も<code>getter</code>と<code>setter</code>は基本的に生成されます。また、これらのメソッドはinstanceメソッドであり、staticメソッドよりもコストが高いですね。なので、最適化のためフィールドのアクセス制限を変えるということは避けた方が良いです。</p>
+<p>もし<code>companion object</code>からクラスのフィールドに頻繁なアクセスが発生するとしたら、この隠れているメソッドの呼び出しを避けるためにフィールドの値をキャッシュするという方法も考慮できます。</p>
+<h3 id=companion-objectの定数にアクセスする>Companion objectの定数にアクセスする</h3>
+<p>Kotlinでは、クラス内のstaticな定数は<code>companion object</code>の中に定義するのが一般的です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=p>{</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
+        <span class=k>private</span> <span class=k>val</span> <span class=py>TAG</span> <span class=p>=</span> <span class=s2>&#34;TAG&#34;</span>
+    <span class=p>}</span>
+
+    <span class=k>fun</span> <span class=nf>helloWorld</span><span class=p>()</span> <span class=p>{</span>
+        <span class=n>println</span><span class=p>(</span><span class=n>TAG</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>一見シンプルで良さげなコードですが、Kotlin 1.2.40以前の場合だとかなり裏のコードは汚くなっています。</p>
+<h4 id=kotlin-1240以前の場合>Kotlin 1.2.40以前の場合</h4>
+<p><code>companion object</code>に定義されたprivateな定数にアクセスする場合、上記のようなこと（<code>getter</code>を利用する）が起こります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.Companion : Lbe/myapplication/MyClass$Companion;
+INVOKESTATIC be/myapplication/MyClass$Companion.access$getTAG$p (Lbe/myapplication/MyClass$Companion;)Ljava/lang/String;
+ASTORE 1
+</code></pre></div><p>問題はこれだけではありません。生成されたメソッドは実際の値を返すわけでなく、instanceメソッドとして生成された<code>getter</code>を呼び出すことになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>ALOAD 0
+INVOKESPECIAL be/myapplication/MyClass$Companion.getTAG ()Ljava/lang/String;
+ARETURN
+</code></pre></div><p>定数が<code>public</code>になっている場合はダイレクトにアクセスできるようになりますが、依然として<code>getter</code>メソッドを通して値にアクセスことになります。</p>
+<p>そして定数の値を格納するために、Kotlinコンパイラは<code>companion object</code>ではなく、それを持つクラスの方に<code>private static final</code>フィールドを生成します。さらに<code>companion object</code>からこのフィールドにアクセスするため、またのメソッドを生成することとなります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>INVOKESTATIC be/myapplication/MyClass.access$getTAG$cp()Ljava/lang/String; 
+ARETURN
+</code></pre></div><p>こういう長い道のりで、やっと値を読み込むことになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.TAG : Ljava/lang/String; 
+ARETURN
+</code></pre></div><p>まとめると、Kotlin 1.2.40以前のバージョンを使っている場合は以下のようになります。</p>
+<ul>
+<li><code>companion object</code>から静的メソッドを呼び出す
+<ul>
+<li><code>companion object</code>からinstanceメソッドを呼び出す
+<ul>
+<li>クラスのstaticメソッドを呼び出す
+<ul>
+<li>staticフィールドから値を読み込む</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>これをJavaのコードで表現すると以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>MyClass</span> <span class=o>{</span>
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TAG</span> <span class=o>=</span> <span class=s>&#34;TAG&#34;</span><span class=o>;</span>
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Companion</span> <span class=n>companion</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Companion</span><span class=o>();</span>
+
+    <span class=c1>// 生成されるメソッド
+</span><span class=c1></span>    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>access$getTAG$cp</span><span class=o>()</span> <span class=o>{</span>
+        <span class=k>return</span> <span class=n>TAG</span><span class=o>;</span>
+    <span class=o>}</span>
+
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>Companion</span> <span class=o>{</span>
+        <span class=kd>private</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>getTAG</span><span class=o>()</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=n>MyClass</span><span class=o>.</span><span class=na>access$getTAG$cp</span><span class=o>();</span>
+        <span class=o>}</span>
+
+        <span class=c1>// 生成されるメソッド
+</span><span class=c1></span>        <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>access$getTAG$p</span><span class=o>(</span><span class=n>Companion</span> <span class=n>c</span><span class=o>)</span> <span class=o>{</span>
+            <span class=k>return</span> <span class=n>c</span><span class=o>.</span><span class=na>getTAG</span><span class=o>();</span>
+        <span class=o>}</span>
+    <span class=o>}</span>
+
+    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>helloWorld</span><span class=o>()</span> <span class=o>{</span>
+        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>Companion</span><span class=o>.</span><span class=na>access$getTAG$p</span><span class=o>(</span><span class=n>companion</span><span class=o>));</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>よりコストの低いBytecodeを生成することも可能ですが、それは簡単ではないです。</p>
+<p>まず<code>const</code>キーワードを使ってコンパイルタイム定数を定義することでメソッドの呼び出しをなくすことができます。しかし、KotlinではprimitiveかStringに対してのみ可能な方法です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=p>{</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
+        <span class=k>private</span> <span class=k>const</span> <span class=k>val</span> <span class=py>TAG</span> <span class=p>=</span> <span class=s2>&#34;TAG&#34;</span>
+    <span class=p>}</span>
+
+    <span class=k>fun</span> <span class=nf>helloWorld</span><span class=p>()</span> <span class=p>{</span>
+        <span class=n>println</span><span class=p>(</span><span class=n>TAG</span><span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>または<code>@JvmField</code>を使ってJavaのアプローチを取る方法を考えられます。こうすることで<code>getter</code>や<code>setter</code>が生成されず、フィールドに直接アクセスができるようになります。ただ、<code>@Jvm</code>系のアノテーションはJavaとの互換性のためのものであるのでこれが果たして良い方法かどうかを考えた方が良いでしょう。そして<code>public</code>なフィールドのみ可能な方法です。</p>
+<p>Androidの開発の場合だと、<code>Parcelable</code>オブジェクトを自前で実装する場合のみ有効な方法に思われます。例えば以下のようにですね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span><span class=p>()</span> <span class=p>:</span> <span class=n>Parcelable</span> <span class=p>{</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
+        <span class=nd>@JvmField</span>
+        <span class=k>val</span> <span class=py>CREATOR</span> <span class=p>=</span> <span class=n>creator</span> <span class=p>{</span> <span class=n>MyClass</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>private</span> <span class=k>constructor</span><span class=p>(</span><span class=n>parcel</span><span class=p>:</span> <span class=n>Parcel</span><span class=p>)</span> <span class=p>:</span> <span class=k>this</span><span class=p>()</span>
+
+    <span class=k>override</span> <span class=k>fun</span> <span class=nf>writeToParcel</span><span class=p>(</span><span class=n>dest</span><span class=p>:</span> <span class=n>Parcel</span><span class=p>,</span> <span class=n>flags</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=p>{}</span>
+
+    <span class=k>override</span> <span class=k>fun</span> <span class=nf>describeContents</span><span class=p>()</span> <span class=p>=</span> <span class=m>0</span>
+<span class=p>}</span>
+</code></pre></div><p>最後の方法として、<a class=link href=https://developer.android.com/studio/build/shrink-code target=_blank rel=noopener>ProGuard</a>やR8のようなツールを使ってBytecodeの最適化を狙うという方法があるでしょう。</p>
+<h4 id=kotlin-1240以降の場合>Kotlin 1.2.40以降の場合</h4>
+<p>Kotlinn 1.2.40からは、<code>companion object</code>に定義された値はメインクラスの方に格納されるということには変わりがありませんが、メソッドの生成と呼び出しなしで直接アクセスができるようになりました。これをJavaのコードとして表現すると以下の通りです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>MyClass</span> <span class=o>{</span>
+    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TAG</span> <span class=o>=</span> <span class=s>&#34;TAG&#34;</span><span class=o>;</span>
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Companion</span> <span class=n>companion</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Companion</span><span class=o>();</span>
+
+    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>Companion</span> <span class=o>{</span>
+    <span class=o>}</span>
+
+    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>helloWorld</span><span class=o>()</span> <span class=o>{</span>
+        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>TAG</span><span class=o>);</span>
+    <span class=o>}</span>
+<span class=o>}</span>
+</code></pre></div><p>また、上記のように<code>companion object</code>にメソッドが一つもない場合は、ProGuardやR8によるツールと使うとクラス自体が消えることで最適化されます。</p>
+<p>ただ、<code>companion object</code>に定義さえたメソッドの場合はコストが少しかかります。フィールドがメインクラスの方に格納されてあるため、<code>companion object</code>に定義されたprivateフィールドにアクセスするためには依然として生成されたメソッドを経由することになります。</p>
+<h2 id=最後に>最後に</h2>
+<p>今回は人の書いた記事を読んだだけですが、かなり勉強になる内容でした。特に私個人としては、intellijを使っていると何を基準に<code>inline</code>キーワードを使った方がいいという警告が出るのか悩ましい場面がありましたが、それが少し理解できました。<code>companion object</code>に関する話も、今は問題が解決されたものの、何も考えず「定数だから<code>companion object</code>だな」と思っていた自分を反省することになりましたね。そしてこの後の記事でも面白い内容が色々と出てくるので、またの機会でぜひ紹介したいと思います。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+<a href=/tags/java/>java</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/kotlin-japanese-era/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで和暦を使う</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-3/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその３</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-2/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその２</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-code-in-my-style-3/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで書いてみた〜その三〜</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-collection-and-sequence/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Sequenceは常にいいか</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#高階関数とlambda表現式>高階関数とLambda表現式</a>
+<ol>
+<li><a href=#functionオブジェクト>Functionオブジェクト</a></li>
+<li><a href=#boxingオーバーヘッド>Boxingオーバーヘッド</a></li>
+<li><a href=#inline関数>Inline関数</a></li>
+</ol>
+</li>
+<li><a href=#companion-object>Companion object</a>
+<ol>
+<li><a href=#クラスのprivateフィールドをcompanion-objectからアクセスする>クラスのprivateフィールドをcompanion objectからアクセスする</a></li>
+<li><a href=#companion-objectの定数にアクセスする>Companion objectの定数にアクセスする</a>
+<ol>
+<li><a href=#kotlin-1240以前の場合>Kotlin 1.2.40以前の場合</a></li>
+<li><a href=#kotlin-1240以降の場合>Kotlin 1.2.40以降の場合</a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

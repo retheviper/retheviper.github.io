@@ -1,0 +1,344 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単"><title>ルーターにSSL証明書を入れる</title>
+<link rel=canonical href=https://retheviper.github.io/posts/linux-implementation-ssl-in-router/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="ルーターにSSL証明書を入れる">
+<meta property="og:description" content="実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単">
+<meta property="og:url" content="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="ssl"><meta property="article:tag" content="linux"><meta property="article:published_time" content="2019-12-01T00:00:00+00:00"><meta property="article:modified_time" content="2019-12-01T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/linux_terminal.jpg">
+<meta name=twitter:title content="ルーターにSSL証明書を入れる">
+<meta name=twitter:description content="実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/linux_terminal.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/linux-implementation-ssl-in-router/>
+<img src=/../../images/linux_terminal.jpg loading=lazy alt="Featured image of post ルーターにSSL証明書を入れる">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/linux/ style=background-color:#2a9d8f;color:#fff>
+linux
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/linux-implementation-ssl-in-router/>ルーターにSSL証明書を入れる</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Dec 01, 2019</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+11 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単にマシンスペックだけでなく、ファームウェアレベルで提供している機能も少し違います。例えばAiMeshといった機能はRT-AC58Uでは対応していません。</p>
+<p>そしてこないだファームウェアをアップデートすると、管理ページにWANからアクセスするにはhttpsしかできないという制約ができました。RT-AC68Uの場合は<a class=link href=https://letsencrypt.org target=_blank rel=noopener>Let&rsquo;s encrypt</a>でSSL証明書<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>を作成して更新まで自動で行われる機能を持っているので特に問題はないですが、残念ながらRT-AC58Uはそうではないです。なのでいつもブラウザからRT-AC58Uの管理ページに接続すると証明書がおかしいと怒られます。</p>
+<p>これから修正される可能性もなくはないと思いますが、最近は<a class=link href=https://ja.wikipedia.org/wiki/IEEE_802.11#IEEE_802.11ax target=_blank rel=noopener>802.11ax</a>に対応した新型が続々と登場しているので、もう古くなってしまったRT-AC58Uのファームウェアバージョンアップがいつまで続くかわからない状態です。そして毎回証明書がおかしいと怒られるのをみると少し不安になりますね。</p>
+<p>実家と家のルーターの場合、ソフトウェアそのものはそう変わらないだろうと思って調べてみたらやはりそうでしたので、手動でもSSL証明書を入れられる方法がありそうな気がしました。もっと調べてみるとOSはLinuxであって、結論から言うと58Uにも証明書を入れることは成功しました。</p>
+<p>今回はそのSSL証明書をRT-AC58Uに適用させるまでの方法を記載します。</p>
+<h2 id=システム構成>システム構成</h2>
+<p>現在のシステム構成図を絵で表現するとこちら。</p>
+<p><figure class=gallery-image style=flex-grow:369;flex-basis:886px>
+<a href=/posts/linux-implementation-ssl-in-router/ssl_organization.png data-size=1563x423>
+<img src=/posts/linux-implementation-ssl-in-router/ssl_organization.png width=1563 height=423 srcset="/posts/linux-implementation-ssl-in-router/ssl_organization_hu4d7c17b8995ca9372043a18e221797e6_44022_480x0_resize_box_3.png 480w, /posts/linux-implementation-ssl-in-router/ssl_organization_hu4d7c17b8995ca9372043a18e221797e6_44022_1024x0_resize_box_3.png 1024w" loading=lazy alt=構成図>
+</a>
+<figcaption>構成図</figcaption>
+</figure></p>
+<p>ここでやりたいことは、DDNS<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>を登録したルーターにSSL証明書を入れ、httpsで接続した管理ページで怒られないようにすることです。これを試した理由のもう一つはのちにこのルーターの下にホームサーバーとして機能するLinuxのマシンもおきたいからでもあります。ホームサーバーにはのちに簡単なWebアプリケーションを置いて運用する予定で、今回試したことが成功したら同じ仕組みでそちらにもSSL証明書を適用できると思います。</p>
+<p>それでは、自分がどうやってSSL証明書を作成してルーターにアップロードし、適用したかを述べていきます。</p>
+<h2 id=ルーターの設定1>ルーターの設定(1)</h2>
+<p>ルーターではまず、DDNS設定が必要です。ASUS社のルーターの場合、Chromeなどのブラウザーから<code>http://router.asus.com</code>を入力するとローカルのルーターの管理ページにアクセスできます。そして「詳細設定」メニューから「WAN]を選び、さらにDDNSのタブに入って好みのアドレスとして登録します。ASUS社のルーターはasuscomm.comという無料のサーバーを提供しているのでそちらを使いましょう。DDNSの登録ができたら、「管理」メニュー配下の「システム」タブで「WANからの接続を許可」を「はい」にしておきます。私は家から接続するために事前に実家のルーターで予めDDNSの設定をしておきました。</p>
+<p>DDNSでの管理ページ接続設定が終わったら、次はルーターへのSSH接続を設定します。こちらも同じく「管理」ページから設定することができます。SSHを接続設定が終わったらテストをして、なるべく公開鍵でアクセスできるようにして、ポート番号も変えておきましょう。SSHのポートを変えた場合は、ターミナルでは以下のコマンドでアクセスできます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># SSHのポートが2022の場合</span>
+$ ssh -p <span class=m>2022</span> retheviper@javaman.asuscomm.com
+</code></pre></div><p>SSH時のIDとアドレスは管理ページのIDとDDNSで登録したものとなります。ここまでできたらSSL証明書を作成するためのルーター側の準備はまず終わります。</p>
+<h2 id=macでの設定1>macでの設定(1)</h2>
+<p>ルーターのOSはLinuxとなっていますが、やはり重要なコマンドがいくつか足りていないです。代表的にパッケージ管理用の<code>yum</code>や<code>apt</code>、<code>dnf</code>のどちらも搭載されていなく、CPUの性能も怪しいので重要な作業はまずmacで行うことにしました。</p>
+<p>また、SSL証明書自体はRT-AC68Uで対応しているLet&rsquo;s encryptを使います。こちらは有効期間が90日にすぎないですが、発給も更新も無料となっているのでこういう簡単な作業で使うには最適です。</p>
+<p>まず、ターミナルでLet&rsquo;s encryptをインストールします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ brew install letsencrypt
+</code></pre></div><p>インストールが終わったら、<code>certbot</code>コマンドで証明書を作成できます。ただ、証明書を作成する前にDDNSを登録して置く必要があります。私はすでにルーターで提供している機能でドメインを登録してあるので、それをそのまま使います。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sudo certbot certonly --manual
+</code></pre></div><p>コマンドを入力すると以下のような画面が出力されます。ただ、自分は何回か同じコマンドを実行しているので初めての実行で出力される画面は少し違う可能性はあります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator manual, Installer None
+Please enter in your domain name<span class=o>(</span>s<span class=o>)</span> <span class=o>(</span>comma and/or space separated<span class=o>)</span>  <span class=o>(</span>Enter <span class=s1>&#39;c&#39;</span>
+to cancel<span class=o>)</span>: <span class=o>[</span>ドメイン<span class=o>]</span>
+</code></pre></div><p>ルーターで使っているDDNSのドメインを入力してエンターを押下すると次の画面へ。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge <span class=k>for</span> <span class=o>[</span>ドメイン<span class=o>]</span>
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+NOTE: The IP of this machine will be publicly logged as having requested this
+certificate. If you<span class=s1>&#39;re running certbot in manual mode on a machine that is not
+</span><span class=s1>your server, please ensure you&#39;</span>re okay with that.
+
+Are you OK with your IP being logged?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<span class=o>(</span>Y<span class=o>)</span>es/<span class=o>(</span>N<span class=o>)</span>o: Y
+</code></pre></div><p>IPが記録されることに同意しますかという質問が表示されます。同意するしかないので<code>Y</code>を入力。すると以下の画面が現れます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Create a file containing just this data:
+
+<span class=o>[</span>コード<span class=o>]</span>
+
+And make it available on your web server at this URL:
+
+<span class=o>[</span>httpアドレス<span class=o>]</span>
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Press Enter to Continue  
+</code></pre></div><p>この画面で一旦作業を止め、画面に表示されるコードとURLはコピーしておきましょう。あとでここに戻ってきます。</p>
+<h2 id=pcでの設定>PCでの設定</h2>
+<p>先ほど出力された画面は、「このURLにリクエストを送るので、このコードがレスポンスとして取得できるようにしてください」という意味です。なので一時的にサーバーを立てて、レスポンスできるようにしておく必要があります。</p>
+<p>ただ単にサーバー上でアクセスできるファイルを作る方法もありますが、別の方法を試すことにしました。準備するものはルーターに繋がっているPC上でレスポンスの提供ができるサーバーを立てること。ルーターの性能が十分であればルーターでやっても良いのですが、自分のRT-AC58UはPythonをダウンロードして圧縮ファイルを解凍するだけでもしばらく死んでいました。ここではPCにNode.jsを使って簡単サーバーを作ってみます。他にPythonやRubyなどを使っても構いません。これはあくまで自分が最速でサーバーを立てられる方法がNode.jsだっただけです。</p>
+<p>実家のPCはWindowsなので、<a class=link href=https://nodejs.org target=_blank rel=noopener>公式ホームページ</a>からNode.jsをダウンロードしてインストールします。また、expressを使ってサーバーを構築することにします。インストールが終わったらコマンドラインからnpmを使えるようになリます。以下のコードでexpressのスタータープロジェクトを作ることができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-cmd data-lang=cmd><span class=p>&gt;</span> mkdir node
+<span class=p>&gt;</span> cd node
+<span class=p>&gt;</span> npm install express
+</code></pre></div><p>このあとはVSCodeなどのテキストエディタを使って、以下のコードを作成します。ファイル名は<code>app.js</code>にして、先ほどexpressをインストールしたフォルダに保存します。先ほどコピーしておいたURLとコードはは忘れずに入力しておきましょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-javascript data-lang=javascript><span class=kd>var</span> <span class=nx>express</span> <span class=o>=</span> <span class=nx>require</span><span class=p>(</span><span class=s1>&#39;express&#39;</span><span class=p>)</span>
+  <span class=p>,</span> <span class=nx>http</span> <span class=o>=</span> <span class=nx>require</span><span class=p>(</span><span class=s1>&#39;http&#39;</span><span class=p>)</span>
+  <span class=p>,</span> <span class=nx>app</span> <span class=o>=</span> <span class=nx>express</span><span class=p>()</span>
+  <span class=p>,</span> <span class=nx>server</span> <span class=o>=</span> <span class=nx>http</span><span class=p>.</span><span class=nx>createServer</span><span class=p>(</span><span class=nx>app</span><span class=p>);</span>
+
+<span class=nx>app</span><span class=p>.</span><span class=nx>get</span><span class=p>(</span><span class=s1>&#39;/[コピーしておいたhttpアドレス]&#39;</span><span class=p>,</span> <span class=kd>function</span> <span class=p>(</span><span class=nx>req</span><span class=p>,</span> <span class=nx>res</span><span class=p>)</span> <span class=p>{</span>
+    <span class=nx>res</span><span class=p>.</span><span class=nx>send</span><span class=p>(</span><span class=s1>&#39;コピーしておいたコード&#39;</span><span class=p>);</span>
+  <span class=p>});</span>
+
+<span class=nx>server</span><span class=p>.</span><span class=nx>listen</span><span class=p>(</span><span class=mi>80</span><span class=p>,</span> <span class=kd>function</span><span class=p>()</span> <span class=p>{</span>
+  <span class=nx>console</span><span class=p>.</span><span class=nx>log</span><span class=p>(</span><span class=s1>&#39;Express server listening on port &#39;</span> <span class=o>+</span> <span class=nx>server</span><span class=p>.</span><span class=nx>address</span><span class=p>().</span><span class=nx>port</span><span class=p>);</span>
+<span class=p>});</span>
+</code></pre></div><p>ファイルを保存したらコマンドラインから実行して、サーバーを起動します。以下のコマンドで実行できます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-cmd data-lang=cmd><span class=p>&gt;</span> node app.js
+</code></pre></div><p>サーバーが起動したら、ローカルからアクセスできるか確認します。ブラウザーでURLを入力してみて、ちゃんとコードが表示されるかを確認できたらPCでの設定は終わりです。</p>
+<h2 id=macでの設定2>macでの設定(2)</h2>
+<p>PCでサーバーを起動している状態でmacに戻ります。エンターを押下するとサーバーとの通信が始まって、結果として以下の画面が出力されます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>Waiting <span class=k>for</span> verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/javaman.asuscomm.com/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/javaman.asuscomm.com/privkey.pem
+   Your cert will expire on 2020-02-14. To obtain a new or tweaked
+   version of this certificate in the future, simply run certbot
+   again. To non-interactively renew *all* of your certificates, run
+   <span class=s2>&#34;certbot renew&#34;</span>
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let<span class=err>&#39;</span>s Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+</code></pre></div><p>SSL認証書の作成が無事完了しました。この画面からは認証書が保存された位置と、満了日を確認できます。また、cerbot renewを入力すると更新ができるということを教えてくれます。</p>
+<p>SSL証明書を作成したので、あとはルーターにコピーして適用するだけです。まず画面に表示されたパスに入って、以下のファイルをコピーしておきましょう。</p>
+<ul>
+<li>cert.pem</li>
+<li>key.pem</li>
+</ul>
+<p>コピーができたら、ルーターに接続します。</p>
+<h2 id=ルーターでの設定2>ルーターでの設定(2)</h2>
+<p>SSHでルーターに接続して以下のパスに移動します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ <span class=nb>cd</span> /tmp/etc
+</code></pre></div><p>ディレクトリー内のファイルをみると、先ほどコピーしておいたファイルと同じものが置かれてあるのを確認できます。viでファイルをあけ、先ほどコピーしておいたもので上書きします。</p>
+<p>cert.pemとkey.pemの上書きが終わったら、次にルーター内でのプロセス目録を確認します。すでに管理ページがhttpdsのサービスとして実行されているため、新しい証明書を適用するためには一回サービスを終了して再実行する必要があります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ ps
+</code></pre></div><p>以上のコマンドを入力すると、現在実行中のプロセスの目録が出力されます。そのうち、<code>httpds -s -i br0 -p 8443</code>があればそれを終了させます。8443は管理ページで指定したデフォルトのポート番号です。プロセスの左に出力されるのがプロセスのID(PID)なので覚えておきましょう。その後は以下のコマンドを入力します。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># PIDが562の場合</span>
+$ <span class=nb>kill</span> <span class=m>562</span>
+
+<span class=c1># プロセスの再実行</span>
+$ /usr/sbin/httpds -s -i br0 -p <span class=m>8443</span> <span class=p>&amp;</span>
+</code></pre></div><p><code>&</code>を入力しないと他のコマンドを入力できなくなるので注意しましょう。入力が終わり、もう一度<code>ps</code>を入力してちゃんとプロセスが起動していたらこちらでの設定は終わり。<code>exit</code>を押してsshから抜け出した後は、ブラウザからルーターの管理ページに接続して証明書で怒られるかを確認します。今までの過程で特に問題なかったら、問題ないはずです。</p>
+<p>ただ一つ、注意しなければならないことはルーターの再起動です。自分は週に一回は再起動するようにしていますが、こういう場合はせっかく入れたSSL証明書の値が初期化されるみたいです。なので再起動はなるべくしないか、再起動後には証明書を入れ直す必要があります。</p>
+<h2 id=最後に>最後に</h2>
+<p>以上のことで特に問題がなかったら、WANからルーターの管理ページにアクセスしても証明書がおかしいと怒られるようなことはなくなります。これで安心して外からの管理ができますね！</p>
+<p>ただ、これで全てが完璧になったわけではないです。残りのタスクは以下です。</p>
+<ul>
+<li>証明書の更新はどうするか</li>
+<li>ルーターの再起動にどう対応するか</li>
+</ul>
+<p>Let&rsquo;s encryptで作成してもらった証明書は有効期間が90日なので、のちに更新する必要があります。更新自体はcertbotのコマンドを打つだけで簡単に終わりますが、更新後の処理(ルーターにアップロードする、アプリケーションを再起動する)が必要となりますね。こちらは<code>crontab</code>でスケジューリングすると何んとかなりそうですが、残念ながらルーターにはコマンドとして入ってなかったです。</p>
+<p>ルーターが再起動した時もどう対応できるかは検証対象ですね。最初はscpでファイルを上書き、httpsdプロセスも再起動するようなシェルスクリプトを作ることで対応できるかと思ったら、権限問題があったりするのでより簡単にできる方法はないか考えています。</p>
+<p>ま、結果的にLinuxでサーバー構築ができたらWANからルーターの管理ページに接続するようなことはなくなる可能性もなくはないですが。とにかく何かわかったらまたポストとして書くことにしましょう。</p>
+<p>それでは、皆さんもぜひ、SSL証明書で安全かつ快適なWeb生活を！</p>
+<section class=footnotes role=doc-endnotes>
+<hr>
+<ol>
+<li id=fn:1 role=doc-endnote>
+<p>SSL証明書とは、このサーバーは信頼できるかを証明してくれる電子文書のことです。SSL証明書を適用することによりhttpsでの通信は第三者の攻撃より守られます。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+<li id=fn:2 role=doc-endnote>
+<p>Dynamic Domain Name Systemの略で、家庭用のルーターはIPアドレスが動的に変わることが多いですが、これを文字列のホスト名とつなげてくれる便利なサービスです。ルーターのIPアドレスがどうかわろうが、DDNSの設定ができていたらいつでも同じURLからルーターにアクセスできます。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/ssl/>ssl</a>
+<a href=/tags/linux/>linux</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/linux-systemctl-service/>
+<div class=article-image>
+<img src=/../../images/linux_terminal.jpg loading=lazy data-key data-hash=/../../images/linux_terminal.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Linuxのシステムサービスを作る</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/linux-teraterm-macro/>
+<div class=article-image>
+<img src=/../../images/linux_terminal.jpg loading=lazy data-key data-hash=/../../images/linux_terminal.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Tera Termを使う</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/linux-mac-shortcut/>
+<div class=article-image>
+<img src=/../../images/linux_terminal.jpg loading=lazy data-key data-hash=/../../images/linux_terminal.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>macOSでもショートカットが使いたい</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/linux-command-tips/>
+<div class=article-image>
+<img src=/../../images/linux_terminal.jpg loading=lazy data-key data-hash=/../../images/linux_terminal.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>知っていれば便利なLinuxのコツ</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#システム構成>システム構成</a></li>
+<li><a href=#ルーターの設定1>ルーターの設定(1)</a></li>
+<li><a href=#macでの設定1>macでの設定(1)</a></li>
+<li><a href=#pcでの設定>PCでの設定</a></li>
+<li><a href=#macでの設定2>macでの設定(2)</a></li>
+<li><a href=#ルーターでの設定2>ルーターでの設定(2)</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

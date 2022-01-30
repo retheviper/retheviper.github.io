@@ -1,0 +1,394 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="前回、Ktorを紹介しながら、KtorにはまだRole-based Authorizationに対応してないので、自前でそのような機能を実装す"><title>KtorでRole-based Authorizationを実装する</title>
+<link rel=canonical href=https://retheviper.github.io/posts/ktor-role-based-authorization/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="KtorでRole-based Authorizationを実装する">
+<meta property="og:description" content="前回、Ktorを紹介しながら、KtorにはまだRole-based Authorizationに対応してないので、自前でそのような機能を実装す">
+<meta property="og:url" content="https://retheviper.github.io/posts/ktor-role-based-authorization/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:tag" content="ktor"><meta property="article:tag" content="authorization"><meta property="article:published_time" content="2021-08-09T00:00:00+00:00"><meta property="article:modified_time" content="2021-08-09T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/ktor.jpg">
+<meta name=twitter:title content="KtorでRole-based Authorizationを実装する">
+<meta name=twitter:description content="前回、Ktorを紹介しながら、KtorにはまだRole-based Authorizationに対応してないので、自前でそのような機能を実装す"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/ktor.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/ktor-role-based-authorization/>
+<img src=/../../images/ktor.jpg loading=lazy alt="Featured image of post KtorでRole-based Authorizationを実装する">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/ktor/ style=background-color:#2a9d8f;color:#fff>
+ktor
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/ktor-role-based-authorization/>KtorでRole-based Authorizationを実装する</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Aug 09, 2021</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+12 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>前回、Ktorを紹介しながら、Ktorにはまだ<code>Role-based Authorization</code>に対応してないので、自前でそのような機能を実装する必要がある、と述べました。Ktorはまだ歴史が短く、SpringやDjango、Railsのように幅広く使われているフレームワークでもないので、おそらく他に比べ実のアプリケーションを作るにあたっては必要な機能が十分でない可能性がありますね。なので、こうやって必要な機能がない場合は直接その機能を実装するしかないです。</p>
+<p>幸い、Ktorでは機能を<a class=link href=https://ktor.io/docs/plugins.html target=_blank rel=noopener>Plugin</a>といい、モジュール単位で追加できるため、必要な機能を実装するのもそのPluginを作ることでできるようになります。ただ、モジュールを利用するということは、機能単位の管理がやりやすくなるものの、そのモジュールはどうやって機能するか、また、どういうお作法が必要となるかを知る必要がありますね。</p>
+<p>今回はネット上に公開されてある<a class=link href=https://medium.com/@shrikantjagtap99/role-based-authorization-feature-in-ktor-web-framework-in-kotlin-dda88262a86a target=_blank rel=noopener>記事</a>を参考にしながら、KtorのRole-based Authorizationを<code>Plugin</code>として実装してみました。そこで、今回のポストではこういう自作の<code>Plugin</code>がどうやってKtorの機能として動作するか、どうやって実装するのかについて述べたいと思います。</p>
+<h2 id=role-based-authorizationとは>Role-based Authorizationとは</h2>
+<p>まずは、そもそも<code>Role-based Authorization</code>とは何か、からですね。これは、ウェブアプリケーションでよく言われている「認可」の方式のうち、ユーザの<code>Role</code>（役割）に基づいて、APIの実行を制御するものです。例えばECサイトの場合、商品に対して問い合わせをするのは認証されたユーザなら誰でもできるべきですが、「お知らせを書く」や「商品の在庫数を変更する」などの機能はその権限を持つユーザ（Admin）に限定すべきですね。なので、ここで「一般ユーザ」と「管理者」などの<code>Role</code>を設け、APIに対してのリクエストが発生した際にその<code>Role</code>をまず確認し、その権限のあるユーザのみがAPIを実行できるようにする、というのが<code>Role-based Authorization</code>の基本的な概念です。</p>
+<p>これを実現するために既存のアプリに導入する必要のあるものは、大きく分けて<code>Role</code>の概念と、それを元にリクエストをフィルタリングする機構の二つです。前者の場合はどんなロールがあり、どういう形でユーザに紐付けるかを考えればいいだけなので、テーブルやカラムを追加して既存のユーザの情報と紐づけるだけですみます。しかし、後者はまずフレームワークでどうやってリクエストをフィルタするか、まずその構造から理解する必要がありますね。なんので、まずはKtorでリクエストを扱う方法に対して紹介したいと思います。</p>
+<h2 id=pipelineとfeature>PipelineとFeature</h2>
+<p>Ktorの特徴のうち、最も重要と言えるものは、<a class=link href=https://ktor.io/docs/pipelines.html target=_blank rel=noopener>Pipeline</a>の概念です。この<code>Pipeline</code>に対して、公式では以下のように説明しています。</p>
+<blockquote>
+<p>The pipeline is a structure containing a sequence of functions (blocks/lambdas) that are called one after another, distributed in phases topologically ordered, with the ability to mutate the sequence and to call the remaining functions in the pipeline and then return to current block.</p>
+</blockquote>
+<p>この説明だけでは理解が難しいものですが、要するに、Ktorにおいての処理の単位のことを指していると言ってもよいものです。<code>Pipeline</code>ではAPIのコールからレスポンスまで一連の流れとしての処理を定義することができます。なので<code>Pipeline</code>として実現されている代表的な機能は<code>Router</code>、リクエストに対してのハンドリングを定義する機能（Springの<code>Controller</code>に対応するもの）となります。</p>
+<p>また、<code>Pipeline</code>は拡張できるものなので、その形式に合わせて新しい<code>Pipeline</code>を実装することでモジュール(公式の表現では<code>Plugin</code>)を実現するのもできます。これらのモジュールを実装し、アプリケーションにインストールすることで、そのモジュールの機能を利用できるようになるのがKtorの特徴です。例えば、kotlin公式のJSON Mapperである<a class=link href=https://github.com/Kotlin/kotlinx.serialization target=_blank rel=noopener>kotlinx.serialization</a>をアプリケーションに追加するためには以下のようなコードを書きます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Application</span><span class=p>.</span><span class=n>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>install</span><span class=p>(</span><span class=n>ContentNegotiation</span><span class=p>)</span> <span class=p>{</span>
+        <span class=n>json</span><span class=p>()</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>ここで呼び出している<code>install</code>関数の実装を見ると、以下のようになっています。<code>feature</code>(モジュール)と、そのモジュールの設定となる<code>configure</code>が引数になっているのがわかります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>P</span> <span class=p>:</span> <span class=nc>Pipeline</span><span class=p>&lt;*,</span> <span class=nc>ApplicationCall</span><span class=p>&gt;,</span> <span class=nc>B</span> <span class=p>:</span> <span class=nc>Any</span><span class=p>,</span> <span class=nc>F</span> <span class=p>:</span> <span class=nc>Any</span><span class=p>&gt;</span> <span class=nf>P</span><span class=p>.</span><span class=n>install</span><span class=p>(</span>
+    <span class=n>feature</span><span class=p>:</span> <span class=n>ApplicationFeature</span><span class=p>&lt;</span><span class=n>P</span><span class=p>,</span> <span class=n>B</span><span class=p>,</span> <span class=n>F</span><span class=p>&gt;,</span>
+    <span class=n>configure</span><span class=p>:</span> <span class=n>B</span><span class=p>.()</span> <span class=o>-&gt;</span> <span class=n>Unit</span> <span class=p>=</span> <span class=p>{}</span>
+<span class=p>):</span> <span class=n>F</span>
+</code></pre></div><p>先ほどの<code>kotlinx.serialization</code>をインストールするために使っていたコードでは、<code>feature</code>として<code>ContentNegotiation</code>を渡し、その設定として<code>json</code>を使うという設定をしているのだなという推測ができますね。実際、<code>ContentNegotiation</code>の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には<code>Configuration</code>というクラスと、<code>ApplicationFeature</code>を継承した<code>companion object</code>を中に持っているのがわかります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>public</span> <span class=k>class</span> <span class=nc>ContentNegotiation</span> <span class=k>internal</span> <span class=k>constructor</span><span class=p>(</span>
+    <span class=k>public</span> <span class=k>val</span> <span class=py>registrations</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>ConverterRegistration</span><span class=p>&gt;,</span>
+    <span class=k>private</span> <span class=k>val</span> <span class=py>acceptContributors</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>AcceptHeaderContributor</span><span class=p>&gt;,</span>
+    <span class=k>private</span> <span class=k>val</span> <span class=py>checkAcceptHeaderCompliance</span><span class=p>:</span> <span class=n>Boolean</span> <span class=p>=</span> <span class=k>false</span>
+<span class=p>)</span> <span class=p>{</span>
+
+    <span class=c1>// ...
+</span><span class=c1></span>
+    <span class=cm>/**
+</span><span class=cm>     * Configuration type for [ContentNegotiation] feature
+</span><span class=cm>     */</span>
+    <span class=k>public</span> <span class=k>class</span> <span class=nc>Configuration</span> <span class=p>{</span>
+        <span class=c1>// ...
+</span><span class=c1></span>    <span class=p>}</span>
+
+    <span class=cm>/**
+</span><span class=cm>     * Implementation of an [ApplicationFeature] for the [ContentNegotiation]
+</span><span class=cm>     */</span>
+    <span class=k>public</span> <span class=k>companion</span> <span class=k>object</span> <span class=n>Feature</span> <span class=p>:</span> <span class=n>ApplicationFeature</span><span class=p>&lt;</span><span class=n>ApplicationCallPipeline</span><span class=p>,</span> <span class=n>Configuration</span><span class=p>,</span> <span class=n>ContentNegotiation</span><span class=p>&gt;</span> <span class=p>{</span>
+        <span class=c1>// ...
+</span><span class=c1></span>    <span class=p>}</span>
+</code></pre></div><p>上記の実装でわかるように、<code>Pipeline</code>として機能するためにはモジュールの設定のための<code>Configuration</code>というクラスと、モジュールとして機能するための<code>ApplicationFeature</code>を継承した<code>companion object</code>が必要であることがわかります。なので、この構造を持ったクラスを定義できれば、自作のモジュールをアプリケーションに実装できるということがわかりますね。</p>
+<h2 id=pluginの実装>Pluginの実装</h2>
+<p>では、実際に<code>Pipeline</code>として、リクエストに対する認可を判定する機能を作るとしましょう。まずはロールを定義します。<code>enum</code>が良さそうですね。ここではシンプルに管理者と一般ユーザの2種を作ってみます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>enum</span> <span class=k>class</span> <span class=nc>Role</span><span class=p>(</span><span class=k>val</span> <span class=py>value</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>ADMIN</span><span class=p>(</span><span class=s2>&#34;ADMIN&#34;</span><span class=p>),</span>
+    <span class=n>USER</span><span class=p>(</span><span class=s2>&#34;USER&#34;</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>これらのロールは、テーブルなどで管理する必要もありますが、ログイン中のユーザ情報から取得する必要もありますね。認可のためには、ログイン中のユーザにとあるロールが与えられているかどうかの確認が必要となるからです。なので、<code>io.ktor.auth.Principal</code>を継承したユーザの情報もクラスとして作り、ログインに成功した時はこのクラスにユーザのロールを格納することにします（方法は認可とは関係ないのでここでは割愛させてください）。以下はユーザの情報を格納するための簡単な例です。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>data</span> <span class=k>class</span> <span class=nc>UserPrincipal</span><span class=p>(</span>
+    <span class=k>val</span> <span class=py>username</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>roles</span><span class=p>:</span> <span class=n>Set</span><span class=p>&lt;</span><span class=n>Role</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>emptySet</span><span class=p>()</span>
+<span class=p>)</span> <span class=p>:</span> <span class=n>Principal</span>
+</code></pre></div><p>次に、ロールでアクセスを制限する関数を作ります。<code>Router</code>のエンドポイントに、どのロールの場合にアクセスできるかを指定するようなイメージです。例えば以下のような形で使えたらいいかと思います。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Application</span><span class=p>.</span><span class=n>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=n>routing</span> <span class=p>{</span>
+        <span class=c1>// 管理者のみアクセスできる
+</span><span class=c1></span>        <span class=n>withRole</span><span class=p>(</span><span class=n>Role</span><span class=p>.</span><span class=n>ADMIN</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>get</span><span class=p>(</span><span class=s2>&#34;/admin&#34;</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>call</span><span class=p>.</span><span class=n>respond</span><span class=p>(</span><span class=s2>&#34;This is admin page&#34;</span><span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+
+        <span class=c1>// 一般ユーザがアクセスできる
+</span><span class=c1></span>        <span class=n>withRole</span><span class=p>(</span><span class=n>Role</span><span class=p>.</span><span class=n>USER</span><span class=p>)</span> <span class=p>{</span>
+            <span class=k>get</span><span class=p>(</span><span class=s2>&#34;/user&#34;</span><span class=p>)</span> <span class=p>{</span>
+                <span class=n>call</span><span class=p>.</span><span class=n>respond</span><span class=p>(</span><span class=s2>&#34;This is user page&#34;</span><span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p><code>Router</code>の使い方でわかるように、<code>Pipeline</code>でのコードブロック（関数）はネストが可能なのでこのように一つのレイヤーを挟むのも可能です。ここで追加した<code>withRole</code>という関数でロールを確認し、APIにアクセスできるかどうかを判定するようにしたら良いでしょう。</p>
+<h3 id=authorizedrotueselectorの実装>AuthorizedRotueSelectorの実装</h3>
+<p>まずは<code>RouteSelector</code>を実装します。これは、<code>routing</code>の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>AuthorizedRouteSelector</span><span class=p>()</span> <span class=p>:</span> <span class=n>RouteSelector</span><span class=p>()</span> <span class=p>{</span>
+    <span class=k>override</span> <span class=k>fun</span> <span class=nf>evaluate</span><span class=p>(</span><span class=n>context</span><span class=p>:</span> <span class=n>RoutingResolveContext</span><span class=p>,</span> <span class=n>segmentIndex</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=p>=</span> <span class=n>RouteSelectorEvaluation</span><span class=p>.</span><span class=n>Constant</span>
+<span class=p>}</span>
+</code></pre></div><h3 id=child-routeの実装>child routeの実装</h3>
+<p>先に実装した<code>AuthorizedRouteSelector</code>を利用して、実際に<code>child route</code>として機能する関数を作ります。この<code>child route</code>は<code>Router</code>の下にネストすることになるので、<code>Route</code>の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Route</span><span class=p>.</span><span class=n>withRole</span><span class=p>(</span><span class=k>val</span> <span class=py>role</span><span class=p>:</span> <span class=n>Role</span><span class=p>,</span> <span class=n>build</span><span class=p>:</span> <span class=n>Route</span><span class=p>.()</span> <span class=o>-&gt;</span> <span class=n>Unit</span><span class=p>):</span> <span class=n>Route</span> <span class=p>{</span>
+    <span class=k>val</span> <span class=py>authorizedRoute</span> <span class=p>=</span> <span class=n>createChild</span><span class=p>(</span><span class=n>AuthorizedRouteSelector</span><span class=p>())</span>
+    <span class=n>application</span><span class=p>.</span><span class=n>feature</span><span class=p>(</span><span class=n>RoleBaseAuthorizer</span><span class=p>).</span><span class=n>interceptPipeline</span><span class=p>(</span><span class=k>this</span><span class=p>,</span> <span class=n>role</span><span class=p>)</span>
+    <span class=n>build</span><span class=p>()</span>
+    <span class=k>return</span> <span class=n>authorizedRoute</span>
+<span class=p>}</span>
+</code></pre></div><p>ここで実装しているものは、まず<code>AuthorizedRouteSelector</code>で<code>child route</code>を作り、その後<code>Pipeline</code>をインターセプトして、ユーザが指定したロールに該当するかどうかを判定します。問題なければ<code>build</code>を実行させますが、これがネストしている<code>child route</code>になります。最後に、エンドポイントをネストできるように先ほど作成した<code>child route</code>のインスタンスを返します。</p>
+<p><code>Pipeline</code>をインターセプトする時に呼び出している<code>RoleBaseAuthorizer</code>は、別途クラスとして作ることにします。これを<code>Feature</code>として作ることになります。</p>
+<h3 id=認可処理のモジュールの実装>認可処理のモジュールの実装</h3>
+<p>では、本格的に認可の処理を担当するモジュール（<code>Feature</code>）を実装することにします。先に述べた通り、<code>Configuration</code>と<code>Feature</code>を内部に持ったクラスを作ります。ここで<code>Configuration</code>は、ログイン中のユーザからどうやってロールの情報を取得するかの設定ができるクラスにします。こうすることで、以下のようなことが可能になるでしょう。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Application</span><span class=p>.</span><span class=n>main</span><span class=p>()</span> <span class=p>{</span>
+    <span class=c1>// RoleBaseAuthorizerをFeatureとしてインストール
+</span><span class=c1></span>    <span class=n>install</span><span class=p>(</span><span class=n>RoleBaseAuthorizer</span><span class=p>)</span> <span class=p>{</span>
+        <span class=c1>// ログイン中のユーザの情報からロールを取得する方法をConfigurationとして指定
+</span><span class=c1></span>        <span class=n>getRoles</span> <span class=p>{</span> <span class=p>(</span><span class=k>it</span> <span class=k>as</span> <span class=n>UserPrincipal</span><span class=p>).</span><span class=n>roles</span> <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p><code>Configuration</code>では、ログイン中のユーザ情報となる<code>UserPrincipal</code>から<code>roles</code>を取得する、という関数を渡します。これを持って、<code>RoleBaseAuthorizer</code>では<code>withRole</code>関数で指定したロールとユーザのロールを比較するようにします。</p>
+<p>認可のモジュールの設定方法のイメージができたので、次に<code>RoleBaseAuthorizer</code>を実装します。例えば以下のようになります。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>RoleBaseAuthorizer</span><span class=p>(</span><span class=n>config</span><span class=p>:</span> <span class=n>Configuration</span><span class=p>)</span> <span class=p>{</span>
+
+    <span class=k>class</span> <span class=nc>Configuration</span> <span class=p>{</span>
+        <span class=k>var</span> <span class=py>userRoles</span><span class=p>:</span> <span class=p>(</span><span class=n>Principal</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Set</span><span class=p>&lt;</span><span class=n>Role</span><span class=p>&gt;</span> <span class=p>=</span> <span class=p>{</span> <span class=n>emptySet</span><span class=p>()</span> <span class=p>}</span>
+
+        <span class=c1>// ログイン中のユーザの情報からロールの取得方法をセット
+</span><span class=c1></span>        <span class=k>fun</span> <span class=nf>getRoles</span><span class=p>(</span><span class=n>roles</span><span class=p>:</span> <span class=p>(</span><span class=n>Principal</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Set</span><span class=p>&lt;</span><span class=n>Role</span><span class=p>&gt;)</span> <span class=p>{</span>
+            <span class=n>userRoles</span> <span class=p>=</span> <span class=n>roles</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>private</span> <span class=k>val</span> <span class=py>getRoles</span> <span class=p>=</span> <span class=n>config</span><span class=p>.</span><span class=n>userRoles</span>
+
+    <span class=k>fun</span> <span class=nf>interceptPipeline</span><span class=p>(</span>
+        <span class=n>pipeline</span><span class=p>:</span> <span class=n>ApplicationCallPipeline</span><span class=p>,</span>
+        <span class=n>role</span><span class=p>:</span> <span class=n>Role</span>
+    <span class=p>)</span> <span class=p>{</span>
+        <span class=c1>// Pipelineの位置付け
+</span><span class=c1></span>        <span class=n>pipeline</span><span class=p>.</span><span class=n>insertPhaseAfter</span><span class=p>(</span><span class=n>ApplicationCallPipeline</span><span class=p>.</span><span class=n>Features</span><span class=p>,</span> <span class=n>Authentication</span><span class=p>.</span><span class=n>ChallengePhase</span><span class=p>)</span>
+        <span class=n>pipeline</span><span class=p>.</span><span class=n>insertPhaseAfter</span><span class=p>(</span><span class=n>Authentication</span><span class=p>.</span><span class=n>ChallengePhase</span><span class=p>,</span> <span class=n>AuthorizationPhase</span><span class=p>)</span>
+
+        <span class=c1>// インターセプト時の処理
+</span><span class=c1></span>        <span class=n>pipeline</span><span class=p>.</span><span class=n>intercept</span><span class=p>(</span><span class=n>AuthorizationPhase</span><span class=p>)</span> <span class=p>{</span>
+            <span class=c1>// ログイン中のユーザの情報を取得
+</span><span class=c1></span>            <span class=k>val</span> <span class=py>principal</span> <span class=p>=</span> <span class=n>call</span><span class=p>.</span><span class=n>authentication</span><span class=p>.</span><span class=n>principal</span><span class=p>&lt;</span><span class=n>UserPrincipal</span><span class=p>&gt;()</span>
+                <span class=o>?:</span> <span class=k>throw</span> <span class=n>AuthorizationException</span><span class=p>(</span><span class=s2>&#34;Missing principal&#34;</span><span class=p>)</span>
+
+            <span class=c1>// ユーザ情報からロールを取得
+</span><span class=c1></span>            <span class=k>val</span> <span class=py>roles</span> <span class=p>=</span> <span class=n>getRoles</span><span class=p>(</span><span class=n>principal</span><span class=p>)</span>
+
+            <span class=k>if</span> <span class=p>(</span><span class=n>roles</span><span class=p>.</span><span class=n>none</span> <span class=p>{</span> <span class=n>role</span> <span class=p>})</span> <span class=p>{</span>
+                <span class=c1>// ログイン中のユーザのロールに、アクセス可能なロールが含まれてない場合の処理
+</span><span class=c1></span>            <span class=p>}</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=k>companion</span> <span class=k>object</span> <span class=n>Feature</span> <span class=p>:</span> <span class=n>ApplicationFeature</span><span class=p>&lt;</span><span class=n>ApplicationCallPipeline</span><span class=p>,</span> <span class=n>Configuration</span><span class=p>,</span> <span class=n>RoleBaseAuthorizer</span><span class=p>&gt;</span> <span class=p>{</span>
+
+        <span class=k>override</span> <span class=k>val</span> <span class=py>key</span> <span class=p>=</span> <span class=n>AttributeKey</span><span class=p>&lt;</span><span class=n>RoleBaseAuthorizer</span><span class=p>&gt;(</span><span class=s2>&#34;RoleBaseAuthorizer&#34;</span><span class=p>)</span>
+
+        <span class=k>val</span> <span class=py>AuthorizationPhase</span> <span class=p>=</span> <span class=n>PipelinePhase</span><span class=p>(</span><span class=s2>&#34;Authorization&#34;</span><span class=p>)</span>
+
+        <span class=k>override</span> <span class=k>fun</span> <span class=nf>install</span><span class=p>(</span>
+            <span class=n>pipeline</span><span class=p>:</span> <span class=n>ApplicationCallPipeline</span><span class=p>,</span>
+            <span class=n>configure</span><span class=p>:</span> <span class=n>Configuration</span><span class=p>.()</span> <span class=o>-&gt;</span> <span class=n>Unit</span>
+        <span class=p>):</span> <span class=n>RoleBasedAuthorization</span> <span class=p>{</span>
+            <span class=k>val</span> <span class=py>configuration</span> <span class=p>=</span> <span class=n>Configuration</span><span class=p>().</span><span class=n>apply</span><span class=p>(</span><span class=n>configure</span><span class=p>)</span>
+            <span class=k>return</span> <span class=n>RoleBaseAuthorizer</span><span class=p>(</span><span class=n>configuration</span><span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>先に説明した通り、<code>Configuration</code>ではユーザのロール情報を取得する関数を設定し、保存します。そして<code>interceptPipeline</code>では、その関数を持って<code>Pipeline</code>をインターセプトし、ロールの検証を行うようにします。</p>
+<p>また、<code>interceptPipeline</code>では、引数として渡された<code>Pipeline</code>の位置付けを設定する必要があります。上記のコードでは、「認証の後」に位置付けしています。その後のロジックは、色々な方法があると思いますので、ここでは割愛させていただきます。</p>
+<p>他に、<code>Feature</code>の場合は、<code>RoleBaseAuthorizer</code>が独立したモジュールとして使える設定を行います。単純に名前をつけてインスタンスを返すような、お作法的なものですね。</p>
+<p>ここまでの実装が終わったら、一通り認可に関するモジュールの作成は終わります。ただ、<code>interceptPipeline</code>の処理としてユーザのロールが、APIにアクセスできない場合の処理として考えられることは二つほどあります。</p>
+<h4 id=レスポンスを返して終了>レスポンスを返して終了</h4>
+<p>まず考えられる方法は、適当なレスポンスを返し、そこで処理を終了させることです。この場合、以下のように実装ができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>if</span> <span class=p>(</span><span class=n>roles</span><span class=p>.</span><span class=n>none</span> <span class=p>{</span> <span class=n>role</span> <span class=p>})</span> <span class=p>{</span>
+    <span class=c1>// レスポンスを返す
+</span><span class=c1></span>    <span class=n>call</span><span class=p>.</span><span class=n>respond</span><span class=p>(</span>
+        <span class=n>status</span> <span class=p>=</span> <span class=n>HttpStatusCode</span><span class=p>.</span><span class=n>Forbidden</span><span class=p>,</span>
+        <span class=n>message</span> <span class=p>=</span> <span class=s2>&#34;permission not granted: </span><span class=si>$role</span><span class=s2>&#34;</span>
+    <span class=p>)</span>
+
+    <span class=c1>// Pipelineの終了
+</span><span class=c1></span>    <span class=n>finish</span><span class=p>()</span>
+<span class=p>}</span>
+</code></pre></div><p>ここで注意すべきことは、レスポンスを返すだけで<code>Pipeline</code>は終わらないということです。レスポンスを返し処理を止めたい場合は必ず<code>finish()</code>を呼び出して、<code>Pipeline</code>を終了させましょう。</p>
+<h4 id=exceptionを投げる>Exceptionを投げる</h4>
+<p>もう一つの方法は、例外を投げる方法ですね。例えば以下のようにします。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// 認可されてない場合の例外
+</span><span class=c1></span><span class=k>class</span> <span class=nc>AuthorizationException</span><span class=p>(</span><span class=k>override</span> <span class=k>val</span> <span class=py>message</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span> <span class=p>:</span> <span class=n>Exception</span><span class=p>(</span><span class=n>message</span><span class=p>)</span>
+
+<span class=k>if</span> <span class=p>(</span><span class=n>roles</span><span class=p>.</span><span class=n>none</span> <span class=p>{</span> <span class=n>role</span> <span class=p>})</span> <span class=p>{</span>
+    <span class=k>throw</span> <span class=n>AuthorizationException</span><span class=p>(</span><span class=s2>&#34;permission not granted: </span><span class=si>$role</span><span class=s2>&#34;</span><span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>例外を投げる場合は、当然<code>Pipeline</code>の処理が止まることになりますが、アプリケーションのログでも例外になるのであまり良くないですね。幸い、KtorにもSpringの<code>ExceptionHandler</code>のような機能があるので、それを活用したら適切な例外のハンドリングが可能になります。例えば以下のようなことができますね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// 認可されてない場合のレスポンス
+</span><span class=c1></span><span class=k>data</span> <span class=k>class</span> <span class=nc>AuthFailedResponse</span><span class=p>(</span><span class=k>val</span> <span class=py>reason</span><span class=p>:</span> <span class=n>String</span><span class=p>)</span>
+
+<span class=c1>// 例外のハンドリング
+</span><span class=c1></span><span class=n>install</span><span class=p>(</span><span class=n>StatusPages</span><span class=p>)</span> <span class=p>{</span>
+    <span class=n>exception</span><span class=p>&lt;</span><span class=n>Throwable</span><span class=p>&gt;</span> <span class=p>{</span> <span class=n>cause</span> <span class=o>-&gt;</span>
+        <span class=k>when</span> <span class=p>(</span><span class=n>cause</span><span class=p>)</span> <span class=p>{</span>
+            <span class=c1>// 認可の場合の処理
+</span><span class=c1></span>            <span class=k>is</span> <span class=n>AuthorizationException</span> <span class=o>-&gt;</span> <span class=p>{</span>
+                <span class=n>call</span><span class=p>.</span><span class=n>respond</span><span class=p>(</span>
+                    <span class=n>status</span> <span class=p>=</span> <span class=n>HttpStatusCode</span><span class=p>.</span><span class=n>Forbidden</span><span class=p>,</span>
+                    <span class=n>message</span> <span class=p>=</span> <span class=n>AuthFailedResponse</span><span class=p>(</span>
+                        <span class=n>reason</span> <span class=p>=</span> <span class=n>cause</span><span class=p>.</span><span class=n>message</span>
+                    <span class=p>)</span>
+                <span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>これでアプリケーションのログも綺麗になりますし、他の例外処理に対しても<code>when</code>の分岐を増やすだけで対応ができるようになります。</p>
+<h2 id=最後に>最後に</h2>
+<p>最初に思っていたことよりも膨大な内容を扱うことになったので、いつもより説明が大雑把な気もしますが、これで<code>Pipeline</code>とそれを応用した自作モジュールの実装についての説明は一通りできたかなと思います。なので、これを応用すれば、他のモジュールを追加するのもそう難しくなさそうな気がしますね。深堀すると色々また出そうな気がしますが、それについては機会があればまた今度のポストのネタにしましょう。（正直あまり詳しくありませんので…）</p>
+<p>個人的には、このようにRole-based Authorizationの機能を作りながら知った。一連の処理を<code>Pipeline</code>という単位で扱うという概念ががかなり新鮮で、良いと思いました。処理に対してのインターセプトはSpringでもできるのですが、処理の流れ自体を一つの単位として扱えるならより色々なことができそうな気もしますね。まだKtorに触れたばかりなので、詳しいことはもっと時間をかけてゆっくり調べる必要がありそうですが。</p>
+<p>確かなのは、Ktorはかなり魅力的なフレームワークであるということです。最初はSpringなど、既存の有名なフレームワークと比べ色々と機能が足りない認証だったのですが、こうやって簡単にモジュールを作れるとしたら意外と問題ないかもしれない、という気がします。もちろんそれでも、プロダクションレベルのものを作るにはまだ色々と検証が必要そうな認証はありますが。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+<a href=/tags/ktor/>ktor</a>
+<a href=/tags/authorization/>authorization</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/ktor-first-impression/>
+<div class=article-image>
+<img src=/../../images/ktor.jpg loading=lazy data-key data-hash=/../../images/ktor.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Ktorを触ってみた</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/quarkus-first-impression/>
+<div class=article-image>
+<img src=/../../images/quarkus.jpg loading=lazy data-key data-hash=/../../images/quarkus.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Quarkusを触ってみた</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#role-based-authorizationとは>Role-based Authorizationとは</a></li>
+<li><a href=#pipelineとfeature>PipelineとFeature</a></li>
+<li><a href=#pluginの実装>Pluginの実装</a>
+<ol>
+<li><a href=#authorizedrotueselectorの実装>AuthorizedRotueSelectorの実装</a></li>
+<li><a href=#child-routeの実装>child routeの実装</a></li>
+<li><a href=#認可処理のモジュールの実装>認可処理のモジュールの実装</a>
+<ol>
+<li><a href=#レスポンスを返して終了>レスポンスを返して終了</a></li>
+<li><a href=#exceptionを投げる>Exceptionを投げる</a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>

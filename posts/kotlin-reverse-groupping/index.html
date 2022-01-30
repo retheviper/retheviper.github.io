@@ -1,0 +1,383 @@
+<!doctype html><html lang=en-us>
+<head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正"><title>Kotlinでデータの逆転グルーピング</title>
+<link rel=canonical href=https://retheviper.github.io/posts/kotlin-reverse-groupping/>
+<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Kotlinでデータの逆転グルーピング">
+<meta property="og:description" content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正">
+<meta property="og:url" content="https://retheviper.github.io/posts/kotlin-reverse-groupping/">
+<meta property="og:site_name" content="Korean-man in Tokyo">
+<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="kotlin"><meta property="article:published_time" content="2022-01-29T00:00:00+00:00"><meta property="article:modified_time" content="2022-01-29T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/kotlin.jpg">
+<meta name=twitter:title content="Kotlinでデータの逆転グルーピング">
+<meta name=twitter:description content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正"><meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://retheviper.github.io/images/kotlin.jpg">
+<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
+<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
+<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
+<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
+<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
+<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
+<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
+<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
+<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
+<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
+<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
+<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
+<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
+<link rel=manifest href=/favicon/manifest.json>
+<meta name=msapplication-TileColor content="#ffffff">
+<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
+<meta name=theme-color content="#ffffff">
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
+</head>
+<body class="article-page has-toc">
+<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<div class="container main-container flex
+extended">
+<div id=article-toolbar>
+<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
+<span>Back</span>
+</a>
+</div>
+<main class="main full-width">
+<article class="has-image main-article">
+<header class=article-header>
+<div class=article-image>
+<a href=/posts/kotlin-reverse-groupping/>
+<img src=/../../images/kotlin.jpg loading=lazy alt="Featured image of post Kotlinでデータの逆転グルーピング">
+</a>
+</div>
+<div class=article-details>
+<header class=article-category>
+<a href=/categories/kotlin/ style=background-color:#2a9d8f;color:#fff>
+kotlin
+</a>
+</header>
+<h2 class=article-title>
+<a href=/posts/kotlin-reverse-groupping/>Kotlinでデータの逆転グルーピング</a>
+</h2>
+<footer class=article-time>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>Jan 29, 2022</time>
+</div>
+<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>
+6 minute read
+</time>
+</div>
+</footer>
+</div>
+</header>
+<section class=article-content>
+<p>DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正規化などを通じてより効率的にデータを保存する方法を考える必要のあるDBと、データをいかに加工して使うかを工夫するアプリの違いによるものもありますが、アプリの改修が続くと同じデータでも活用する箇所や表現の仕方が変わってくるからでもあるかなと思います。</p>
+<p>そういうわけで、今回はそのようなケースで一つ活用できる方法をご紹介したいと思います。アルゴリズムというわけでもありませんし、より効率的な方法はあるかなと思いますが、応用すれば結構色々な場所で使えそうな方法ではないかと思います。</p>
+<h2 id=シナリオ>シナリオ</h2>
+<p>例えば以下のようなシナリオがあるとします。</p>
+<ol>
+<li>社員はA、Bという二つの部署に配属される</li>
+<li>社員が部署に配属される日付はそれぞれ</li>
+</ol>
+<p>この場合、データの作りには色々な観点があるかと思いますが、まず部署の配属日を基準にデータを作るとしたら、部署の種類、配属日とその日付に配属となった社員のリストを持つような形になるかと思います。Kotlinのコードとして表現するとしたら以下のような形ですね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>enum</span> <span class=k>class</span> <span class=nc>DepartmentType</span> <span class=p>{</span> <span class=n>A</span><span class=p>,</span> <span class=n>B</span> <span class=p>}</span>
+
+<span class=k>data</span> <span class=k>class</span> <span class=nc>Department</span><span class=p>(</span>
+    <span class=k>val</span> <span class=py>departmentType</span><span class=p>:</span> <span class=n>DepartmentType</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>date</span><span class=p>:</span> <span class=n>LocalDate</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>employers</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Employer</span><span class=p>&gt;</span>
+<span class=p>)</span> <span class=p>{</span>
+    <span class=k>data</span> <span class=k>class</span> <span class=nc>Employer</span><span class=p>(</span>
+        <span class=k>val</span> <span class=py>id</span><span class=p>:</span> <span class=n>Int</span>
+    <span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>ここで社員の3人がいて、それぞれ部署Aと部署Bに配属された日付が違うケースがあるとしましょう。データとしては、以下のようなものです。</p>
+<div class=table-wrapper><table>
+<thead>
+<tr>
+<th>社員番号</th>
+<th>部署A配属</th>
+<th>部署B配属</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1月1日</td>
+<td>1月1日</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1月1日</td>
+<td>2月1日</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2月1日</td>
+<td>2月1日</td>
+</tr>
+</tbody>
+</table></div>
+<p>上記のデータを持って、先ほどの部署のデータを実際のリストとして作るとしたら以下のようになるかなと思います。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>departments</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
+    <span class=n>Department</span><span class=p>(</span>
+        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>,</span>
+        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>1</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
+        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>1</span><span class=p>),</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>2</span><span class=p>)</span>
+        <span class=p>),</span>
+    <span class=p>),</span>
+    <span class=n>Department</span><span class=p>(</span>
+        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>,</span>
+        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
+        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>3</span><span class=p>)</span>
+        <span class=p>),</span>
+    <span class=p>),</span>
+    <span class=n>Department</span><span class=p>(</span>
+        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>,</span>
+        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>1</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
+        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>1</span><span class=p>)</span>
+        <span class=p>),</span>
+    <span class=p>),</span>
+    <span class=n>Department</span><span class=p>(</span>
+        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>,</span>
+        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
+        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>2</span><span class=p>),</span>
+            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>3</span><span class=p>),</span>
+        <span class=p>)</span>
+    <span class=p>)</span>
+<span class=p>)</span>
+</code></pre></div><p>ただ、これを社員を基準に、それぞれの部署に配属された日付をデータとして加工するにはどうしたら良いでしょうか。社員番号と部署に配属となった日付の二つを持つような形です。例えば、コードで表現すると以下のようなものです。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>data</span> <span class=k>class</span> <span class=nc>JoinedDates</span><span class=p>(</span>
+    <span class=k>val</span> <span class=py>employerId</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>departmentA</span><span class=p>:</span> <span class=n>LocalDate</span><span class=p>,</span>
+    <span class=k>val</span> <span class=py>departmentB</span><span class=p>:</span> <span class=n>LocalDate</span>
+<span class=p>)</span>
+</code></pre></div><p>つまり、やりたいことは先ほどの<code>departments</code>を、最終的に以下のようなデータにしたいということですね。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=na>[
+</span><span class=na>  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
+</span><span class=na>  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
+</span><span class=na>  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
+</span><span class=na>]</span>
+</code></pre></div><p>データの整列の基準がひっくり返されるので、どうしたら良いかと悩ましくなる場面です。今回は、これを解決した自分の方法を紹介したいと思います。</p>
+<h2 id=ロジック>ロジック</h2>
+<p>Departmentを基準に考えるとEmployerのデータが複数になりますが、これを逆転させて、Employerを基準に複数のDepartmentを持つという形に加工したいというのが今回の要件です。だとすると、考えられるロジックは以下がポイントかなと思います。</p>
+<ol>
+<li>EmployerのID単位でまとめる</li>
+<li>EmployerごとにDepartmentをType別に分けた配列を持たせる</li>
+</ol>
+<p>まずはネスとしているEmployerのリストに入り、そのIDを抽出する必要がありますね。このIDは重複させたくないので、MapのKeyにしておくと良さげです。</p>
+<p>あとは、そのMapにEmployerのIDがKeyとして存在するかどうかで以下の処理をすると良いでしょう。</p>
+<ol>
+<li>Keyが存在しない場合は、新しくDepartmentのタイプとその日付をinsert</li>
+<li>Keyが存在する場合は、そのvalueを取り出してDepartmentのタイプと日付を追加</li>
+</ol>
+<p>なので、一回DepartmentのListをMapに変換して、さらにJoinedDatesのListに変換することとなります。ちょうど上記の分岐については、<a class=link href=https://docs.oracle.com/javase/8/docs/api/java/util/Map.html#compute-K-java.util.function.BiFunction- target=_blank rel=noopener>compute()</a>を活用するとできるので、中間データとしてのMapがどんな形になるかを考えると良いかなと思います。</p>
+<p>私の場合はMapの方がデータを取りやすいので、最終的には以下のような処理となりました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>List</span><span class=p>&lt;</span><span class=n>Department</span><span class=p>&gt;.</span><span class=n>toJoinedDates</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>JoinedDates</span><span class=p>&gt;</span> <span class=p>{</span>
+    <span class=c1>// 中間データ
+</span><span class=c1></span>    <span class=k>val</span> <span class=py>tempMap</span> <span class=p>=</span> <span class=n>mutableMapOf</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>DepartmentType</span><span class=p>,</span> <span class=n>LocalDate</span><span class=p>&gt;&gt;()</span>
+
+    <span class=k>this</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>department</span> <span class=o>-&gt;</span>
+        <span class=c1>// Departmentのタイプとその日付のPair
+</span><span class=c1></span>        <span class=k>val</span> <span class=py>departmentJoined</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>departmentType</span> <span class=n>to</span> <span class=n>department</span><span class=p>.</span><span class=n>date</span>
+
+        <span class=n>department</span><span class=p>.</span><span class=n>employers</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>employer</span> <span class=o>-&gt;</span>
+
+            <span class=c1>// EmployerのIDがKeyとして存在したら足して、なかったらMapを追加
+</span><span class=c1></span>            <span class=n>tempMap</span><span class=p>.</span><span class=n>compute</span><span class=p>(</span><span class=n>employer</span><span class=p>.</span><span class=n>id</span><span class=p>)</span> <span class=p>{</span> <span class=n>_</span><span class=p>,</span> <span class=n>value</span> <span class=o>-&gt;</span>
+                <span class=n>value</span><span class=o>?.</span><span class=n>let</span> <span class=p>{</span> <span class=n>value</span> <span class=p>+</span> <span class=n>departmentJoined</span> <span class=p>}</span> <span class=o>?:</span> <span class=n>mapOf</span><span class=p>(</span><span class=n>departmentJoined</span><span class=p>)</span>
+            <span class=p>}</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=c1>// 中間データをJoinedDatesのListに変えて返却
+</span><span class=c1></span>    <span class=k>return</span> <span class=n>tempMap</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=p>(</span><span class=n>id</span><span class=p>,</span> <span class=n>department</span><span class=p>)</span> <span class=o>-&gt;</span>
+        <span class=n>JoinedDates</span><span class=p>(</span>
+            <span class=n>employerId</span> <span class=p>=</span> <span class=n>id</span><span class=p>,</span>
+            <span class=n>departmentA</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>),</span>
+            <span class=n>departmentB</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>)</span>
+        <span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><h2 id=共通ロジック化>共通ロジック化</h2>
+<p>ジェネリックを使ったclassとして上記のロジックを一部分離すれば、似たようなケースで色々使い回せるのではないかと思いましたので、以下のようなコードも書いてみました。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>Aggregator</span><span class=p>&lt;</span><span class=n>T</span><span class=p>,</span> <span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>,</span> <span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
+    <span class=k>private</span> <span class=k>val</span> <span class=py>tempMap</span> <span class=p>=</span> <span class=n>mutableMapOf</span><span class=p>&lt;</span><span class=n>T</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;&gt;()</span>
+
+    <span class=c1>// データの追加
+</span><span class=c1></span>    <span class=k>fun</span> <span class=nf>add</span><span class=p>(</span><span class=n>key</span><span class=p>:</span> <span class=n>T</span><span class=p>,</span> <span class=n>value</span><span class=p>:</span> <span class=n>Pair</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;)</span> <span class=p>{</span>
+        <span class=n>tempMap</span><span class=p>.</span><span class=n>compute</span><span class=p>(</span><span class=n>key</span><span class=p>)</span> <span class=p>{</span> <span class=n>_</span><span class=p>,</span> <span class=n>existingValue</span> <span class=o>-&gt;</span>
+            <span class=n>existingValue</span><span class=o>?.</span><span class=n>let</span> <span class=p>{</span> <span class=n>existingValue</span> <span class=p>+</span> <span class=n>value</span> <span class=p>}</span> <span class=o>?:</span> <span class=n>mapOf</span><span class=p>(</span><span class=n>value</span><span class=p>)</span>
+        <span class=p>}</span>
+    <span class=p>}</span>
+
+    <span class=c1>// 指定したListとして取得
+</span><span class=c1></span>    <span class=k>fun</span> <span class=nf>getList</span><span class=p>(</span><span class=n>transfer</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;)</span> <span class=o>-&gt;</span> <span class=n>R</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
+        <span class=k>return</span> <span class=n>tempMap</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=n>transfer</span><span class=p>(</span><span class=k>it</span><span class=p>.</span><span class=n>key</span><span class=p>,</span> <span class=k>it</span><span class=p>.</span><span class=n>value</span><span class=p>)</span> <span class=p>}</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+</code></pre></div><p>これの場合は以下のような使い方ができます。</p>
+<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>aggregator</span> <span class=p>=</span> <span class=n>Aggregator</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>DepartmentType</span><span class=p>,</span> <span class=n>LocalDate</span><span class=p>,</span> <span class=n>JoinedDates</span><span class=p>&gt;()</span>
+
+<span class=c1>// データの追加
+</span><span class=c1></span><span class=n>departments</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>a</span> <span class=o>-&gt;</span>
+    <span class=n>a</span><span class=p>.</span><span class=n>employers</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>b</span> <span class=o>-&gt;</span>
+        <span class=n>aggregator</span><span class=p>.</span><span class=n>add</span><span class=p>(</span>
+            <span class=n>key</span> <span class=p>=</span> <span class=n>b</span><span class=p>.</span><span class=n>id</span><span class=p>,</span>
+            <span class=n>value</span> <span class=p>=</span> <span class=n>a</span><span class=p>.</span><span class=n>departmentType</span> <span class=n>to</span> <span class=n>a</span><span class=p>.</span><span class=n>date</span>
+        <span class=p>)</span>
+    <span class=p>}</span>
+<span class=p>}</span>
+
+<span class=c1>// Listの結果を取得
+</span><span class=c1></span><span class=k>val</span> <span class=py>joinedDates</span> <span class=p>=</span> <span class=n>aggregator</span><span class=p>.</span><span class=n>getList</span> <span class=p>{</span> <span class=n>id</span><span class=p>,</span> <span class=n>joinedDate</span> <span class=o>-&gt;</span>
+    <span class=n>JoinedDates</span><span class=p>(</span>
+        <span class=n>employerId</span> <span class=p>=</span> <span class=n>id</span><span class=p>,</span>
+        <span class=n>departmentA</span> <span class=p>=</span> <span class=n>joinedDate</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>),</span>
+        <span class=n>departmentB</span> <span class=p>=</span> <span class=n>joinedDate</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>)</span>
+    <span class=p>)</span>
+<span class=p>}</span>
+</code></pre></div><p>汎用性はあるものの、呼び出し元のコードが増えたり、指定している型の意味や意図がよくわからないので適切なKDocやコメントがないと少しわかりにくいところがデメリットかも知れませんね。ただ大事なのは中間データの型と<code>compute()</code>による分岐処理なので、そこだけをうまく取り出して他でも応用できるかなと思います。</p>
+<h2 id=最後に>最後に</h2>
+<p>サーバサイドKoltinだと、多くの場合にデータを<code>List</code>として扱うのが普通かなと思いますが、場合によっては<code>Map</code>を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した<code>compute()</code>以外でも、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html target=_blank rel=noopener>getOrPut()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html target=_blank rel=noopener>getOrDefault()</a>などの機能が便利なので色々と活用できる場面が多いかなと思います。</p>
+<p>プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。</p>
+<p>では、また！</p>
+</section>
+<footer class=article-footer>
+<section class=article-tags>
+<a href=/tags/kotlin/>kotlin</a>
+</section>
+<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span>
+</section>
+</footer>
+</article>
+<aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2>
+<div class=related-contents>
+<div class="flex article-list--tile">
+<article class=has-image>
+<a href=/posts/kotlin-japanese-era/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで和暦を使う</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-3/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその３</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-2/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその２</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-hidden-cost-1/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその１</h2>
+</div>
+</a>
+</article>
+<article class=has-image>
+<a href=/posts/kotlin-code-in-my-style-3/>
+<div class=article-image>
+<img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
+</div>
+<div class=article-details>
+<h2 class=article-title>Kotlinで書いてみた〜その三〜</h2>
+</div>
+</a>
+</article>
+</div>
+</div>
+</aside>
+<footer class=site-footer>
+<section class=copyright>
+&copy;
+2019 -
+2022 Korean-man in Tokyo
+</section>
+<section class=powerby>
+Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
+Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
+</section>
+</footer>
+<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div>
+<div class=pswp__scroll-wrap>
+<div class=pswp__container>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+<div class=pswp__item></div>
+</div>
+<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__top-bar>
+<div class=pswp__counter></div>
+<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+<div class=pswp__preloader>
+<div class=pswp__preloader__icn>
+<div class=pswp__preloader__cut>
+<div class=pswp__preloader__donut></div>
+</div>
+</div>
+</div>
+</div>
+<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div>
+</div>
+<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+</button>
+<div class=pswp__caption>
+<div class=pswp__caption__center></div>
+</div>
+</div>
+</div>
+</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main>
+<aside class="sidebar right-sidebar sticky">
+<section class="widget archives">
+<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
+</div>
+<h2 class="widget-title section-title">Table of contents</h2>
+<div class=widget--toc>
+<nav id=TableOfContents>
+<ol>
+<li><a href=#シナリオ>シナリオ</a></li>
+<li><a href=#ロジック>ロジック</a></li>
+<li><a href=#共通ロジック化>共通ロジック化</a></li>
+<li><a href=#最後に>最後に</a></li>
+</ol>
+</nav>
+</div>
+</section>
+</aside>
+</div>
+<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
+</body>
+</html>
