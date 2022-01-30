@@ -1,3 +1,3 @@
-## Information
+# TL;DR
 
-個人用のブログです。ツールはJekyll、テーマは[NexT.Muse](https://github.com/simpleyyt/jekyll-theme-next)を使っています。
+記録用の技術ブログです。Hugoを使っています。
