@@ -2,7 +2,7 @@
 title: "個人的な2021年のロードマップ"
 date: 2021-01-24
 categories: 
-  - recent news
+  - recent
 image: "../../images/magic.jpg"
 tags:
   - blog

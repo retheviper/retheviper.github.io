@@ -2,7 +2,7 @@
 title: "Apple Silicon Macに移行する"
 date: 2021-12-19
 categories: 
-  - recent news
+  - recent
 image: "../../images/magic.jpg"
 tags:
   - mac

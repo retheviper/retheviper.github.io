@@ -2,7 +2,7 @@
 title:  "ブログ刷新"
 date: 2020-05-03
 categories: 
-  - recent news
+  - recent
 image: "../../images/tools.jpg"
 tags:
   - blog

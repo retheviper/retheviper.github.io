@@ -2,7 +2,7 @@
 title: "最近注目しているものたち"
 date: 2020-06-29
 categories: 
-  - recent news
+  - recent
 image: "../../images/magic.jpg"
 tags:
   - apple

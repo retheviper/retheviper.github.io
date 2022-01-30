@@ -2,7 +2,7 @@
 title: "GETとPOSTの間"
 date: 2020-09-21
 categories: 
-  - recent news
+  - recent
 image: "../../images/magic.jpg"
 tags:
   - blog

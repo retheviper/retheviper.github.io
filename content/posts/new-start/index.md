@@ -2,7 +2,7 @@
 title: "はじめに"
 date: 2019-05-12
 categories: 
-  - recent news
+  - recent
 image: "../../images/tools.jpg"
 tags:
   - blog

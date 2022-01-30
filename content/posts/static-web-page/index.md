@@ -2,7 +2,7 @@
 title: "静的ウェブページに興味を持つ"
 date: 2020-08-23
 categories: 
-  - recent news
+  - recent
 image: "../../images/tools.jpg"
 tags:
   - blog
