@@ -78,139 +78,139 @@ java
 <p>しかし、Objectを引数として使うと、メソッドの中のフィールドが何があるかわからなくなります。また、Getter/Setterによる値の指定・取得などの操作もできませんね。なのでオブジェクトそのものを受け取るだけでなく、インスタンスの中を直接覗く必要があります。</p>
 <p>ここでGenericを使うと、Objectと同じ機能(どんなインスタンスやクラスでも受け取れる)をしながらも、最初に具体的なタイプが決まるのでキャストがいらなくなります。これなら性能的にもよく、より安全な挙動を期待できますね。あとは実際どんな構造をしているかわからないObjectに対し、Reflectionを活用して、クラスやインスタンスの中を覗いたらメソッドもフィールドも取得できるというメリットもあります。</p>
 <p>まずインスタンスを引数として受け取る方法から見てみましょう。引数として<code>T</code><sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>を指定します。これでGenericタイプの引数を受け入れられます。つまり、インスタンス自体が引数となるということです。ただ、引数が<code>T</code>の場合はメソッドの戻り値の前でも<code>&lt;T></code>を宣言する必要があります。コードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Beanのインスタンスを受け取るメソッド
-</span><span class=c1></span><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// ... 何かの処理
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Beanのインスタンスを受け取るメソッド
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isBean</span> <span style=color:#ff79c6>(</span>T parameter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// ... 何かの処理
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 
-<span class=c1>// 使用例
-</span><span class=c1></span><span class=n>BeanObject</span> <span class=n>beanObject</span> <span class=o>=</span> <span class=k>new</span> <span class=n>BeanObject</span><span class=o>();</span>
+<span style=color:#6272a4>// 使用例
+</span><span style=color:#6272a4></span>BeanObject beanObject <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> BeanObject<span style=color:#ff79c6>();</span>
 
-<span class=k>if</span> <span class=o>(</span><span class=n>isBean</span><span class=o>(</span><span class=n>beanObject</span><span class=o>))</span> <span class=o>{</span>
-    <span class=c1>// ... 何かの処理
-</span><span class=c1></span><span class=o>}</span>
+<span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>isBean<span style=color:#ff79c6>(</span>beanObject<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// ... 何かの処理
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><p>Listの中にもGenericを使うことができます。たとえば以下のように書くと、どんなタイプも受け入れられるようになりますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
 </code></pre></div><p>インスタンスではなく、クラスそのものをGenericで受け入れるには以下のように書きます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Beanのクラスを受け取るメソッド
-</span><span class=c1></span><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// ... 何かの処理
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Beanのクラスを受け取るメソッド
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isBean</span> <span style=color:#ff79c6>(</span>Class<span style=color:#ff79c6>&lt;?&gt;</span> parameter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// ... 何かの処理
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 
-<span class=c1>// 継承もできる(限定)
-</span><span class=c1></span><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isStringBean</span> <span class=o>(</span><span class=n>Class</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>String</span><span class=o>&gt;</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// ... 何かの処理
-</span><span class=c1></span><span class=o>}</span>
+<span style=color:#6272a4>// 継承もできる(限定)
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isStringBean</span> <span style=color:#ff79c6>(</span>Class<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> String<span style=color:#ff79c6>&gt;</span> parameter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// ... 何かの処理
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 
-<span class=c1>// 使用例
-</span><span class=c1></span><span class=k>if</span> <span class=o>(</span><span class=n>isBean</span><span class=o>(</span><span class=n>BeanObject</span><span class=o>.</span><span class=na>class</span><span class=o>))</span> <span class=o>{</span>
-    <span class=c1>// ... 何かの処理
-</span><span class=c1></span><span class=o>}</span>
+<span style=color:#6272a4>// 使用例
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>isBean<span style=color:#ff79c6>(</span>BeanObject<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// ... 何かの処理
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><p>こうやってGenericの引数を渡してもらう準備は完了です。次は、そうやって受け取った引数を扱うReflectionについて調べてみましょう。</p>
 <h2 id=reflection>Reflection</h2>
 <p>クラスの具体的なタイプをわからなくても、メソッド・コンストラクター・フィールドなどににアクセスできるようにしてくれるAPIをReflectionと言います。取得したメソッド・コンストラクター・フィールドはいずれもそのまま使ったり、値(戻り値)を取得したり、つけられているアノテーションを取得するなど、普通のクラスでできることは全部できます。</p>
 <p>では、このReflectionを実際どう使うかを以下のコードで紹介します。まずはインスタンスからクラスを取得する方法と、さらに取得したクラスからコンストラクターを取得するコードです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>object</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isBean</span> <span style=color:#ff79c6>(</span>T object<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// インスタンスからクラスを取得
-</span><span class=c1></span>    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
-    <span class=c1>// クラスからさらにインスタンスを生成する
-</span><span class=c1></span>    <span class=n>Object</span> <span class=n>instance</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>newInstance</span><span class=o>();</span>
+    <span style=color:#6272a4>// インスタンスからクラスを取得
+</span><span style=color:#6272a4></span>    Class<span style=color:#ff79c6>&lt;?&gt;</span> objectClass <span style=color:#ff79c6>=</span> object<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getClass</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// クラスからさらにインスタンスを生成する
+</span><span style=color:#6272a4></span>    Object instance <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>newInstance</span><span style=color:#ff79c6>();</span>
 
-    <span class=c1>// クラスのパッケージ名を取得
-</span><span class=c1></span>    <span class=n>String</span> <span class=kn>package</span> <span class=err>= </span><span class=nn>objectClass.getPackage</span><span class=o>();</span>
-    <span class=c1>// パッケージを含むクラス名を取得
-</span><span class=c1></span>    <span class=n>Stirng</span> <span class=n>classNamePackageInvolved</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getName</span><span class=o>();</span>
-    <span class=c1>// クラス名だけを取得
-</span><span class=c1></span>    <span class=n>String</span> <span class=n>className</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getSimpleName</span><span class=o>();</span>   
+    <span style=color:#6272a4>// クラスのパッケージ名を取得
+</span><span style=color:#6272a4></span>    String <span style=color:#ff79c6>package</span> = objectClass.getPackage<span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// パッケージを含むクラス名を取得
+</span><span style=color:#6272a4></span>    Stirng classNamePackageInvolved <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getName</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// クラス名だけを取得
+</span><span style=color:#6272a4></span>    String className <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getSimpleName</span><span style=color:#ff79c6>();</span>   
     
-    <span class=c1>// 配列でpublicコンストラクターたちをを取得
-</span><span class=c1></span>    <span class=n>Constructor</span><span class=o>[]</span> <span class=n>constructors</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getConstructors</span><span class=o>();</span>
-    <span class=c1>// 特定のpublicコンストラクターを取得
-</span><span class=c1></span>    <span class=n>Constructor</span> <span class=n>constructor</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getConstructor</span><span class=o>(</span><span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
-    <span class=c1>// 取得したコンストラクターからインスタンスを生成
-</span><span class=c1></span>    <span class=n>Object</span> <span class=n>instance2</span> <span class=o>=</span> <span class=n>constructor</span><span class=o>.</span><span class=na>newInstance</span><span class=o>();</span>
+    <span style=color:#6272a4>// 配列でpublicコンストラクターたちをを取得
+</span><span style=color:#6272a4></span>    Constructor<span style=color:#ff79c6>[]</span> constructors <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getConstructors</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 特定のpublicコンストラクターを取得
+</span><span style=color:#6272a4></span>    Constructor constructor <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getConstructor</span><span style=color:#ff79c6>(</span>parameter1<span style=color:#ff79c6>,</span> parameter2<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...);</span>
+    <span style=color:#6272a4>// 取得したコンストラクターからインスタンスを生成
+</span><span style=color:#6272a4></span>    Object instance2 <span style=color:#ff79c6>=</span> constructor<span style=color:#ff79c6>.</span><span style=color:#50fa7b>newInstance</span><span style=color:#ff79c6>();</span>
 
-<span class=o>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>クラス自体を扱うことができるので、その中身がわかれば新しいインスタンスを生成して使うこともできますね。それでは次に、フィールドを取得する方法を紹介します。</p>
 <h2 id=fieldの取得>Fieldの取得</h2>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>object</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isBean</span> <span style=color:#ff79c6>(</span>T object<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+    Class<span style=color:#ff79c6>&lt;?&gt;</span> objectClass <span style=color:#ff79c6>=</span> object<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getClass</span><span style=color:#ff79c6>();</span>
 
-    <span class=c1>// 配列でpublicフィールドたちを取得
-</span><span class=c1></span>    <span class=n>Field</span><span class=o>[]</span> <span class=n>fields</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getFields</span><span class=o>();</span>
-    <span class=c1>// 特定のpublicフィールドを取得
-</span><span class=c1></span>    <span class=n>Field</span> <span class=n>field</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getField</span><span class=o>(</span><span class=s>&#34;フィールド名&#34;</span><span class=o>);</span>
-    <span class=c1>// 配列で全フィールドたちを取得(public以外も)
-</span><span class=c1></span>    <span class=n>Field</span><span class=o>[]</span> <span class=n>declaredFields</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclardFields</span><span class=o>();</span>
-    <span class=c1>// 特定のフィールドを取得(public以外も)
-</span><span class=c1></span>    <span class=n>Field</span> <span class=n>declaredFiled</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredField</span><span class=o>(</span><span class=s>&#34;フィールド名&#34;</span><span class=o>);</span>
+    <span style=color:#6272a4>// 配列でpublicフィールドたちを取得
+</span><span style=color:#6272a4></span>    Field<span style=color:#ff79c6>[]</span> fields <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getFields</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 特定のpublicフィールドを取得
+</span><span style=color:#6272a4></span>    Field field <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getField</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;フィールド名&#34;</span><span style=color:#ff79c6>);</span>
+    <span style=color:#6272a4>// 配列で全フィールドたちを取得(public以外も)
+</span><span style=color:#6272a4></span>    Field<span style=color:#ff79c6>[]</span> declaredFields <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getDeclardFields</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 特定のフィールドを取得(public以外も)
+</span><span style=color:#6272a4></span>    Field declaredFiled <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getDeclaredField</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;フィールド名&#34;</span><span style=color:#ff79c6>);</span>
 
-    <span class=c1>// Fieldでできること
-</span><span class=c1></span>    <span class=c1>// フィールドに値を設定
-</span><span class=c1></span>    <span class=n>field</span><span class=o>.</span><span class=na>set</span><span class=o>(</span><span class=n>object</span><span class=o>,</span> <span class=n>parameter</span><span class=o>);</span>
-    <span class=c1>// フィールドの値を取得
-</span><span class=c1></span>    <span class=n>String</span> <span class=n>fieldValue</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>object</span><span class=o>);</span>
-    <span class=c1>// フィールドのアノテーションを取得
-</span><span class=c1></span>    <span class=n>Annotation</span><span class=o>[]</span> <span class=n>annotations</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>getAnnotations</span><span class=o>();</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// Fieldでできること
+</span><span style=color:#6272a4></span>    <span style=color:#6272a4>// フィールドに値を設定
+</span><span style=color:#6272a4></span>    field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>set</span><span style=color:#ff79c6>(</span>object<span style=color:#ff79c6>,</span> parameter<span style=color:#ff79c6>);</span>
+    <span style=color:#6272a4>// フィールドの値を取得
+</span><span style=color:#6272a4></span>    String fieldValue <span style=color:#ff79c6>=</span> field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>object<span style=color:#ff79c6>);</span>
+    <span style=color:#6272a4>// フィールドのアノテーションを取得
+</span><span style=color:#6272a4></span>    Annotation<span style=color:#ff79c6>[]</span> annotations <span style=color:#ff79c6>=</span> field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getAnnotations</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ここで注意すべき部分は、フィールドを取得するときはクラスからであって、実際値を代入したり取得するときはその対象としてインスタンスを使うということです。クラスが設計図であり、インスタンスがその設計図で生成されたものだということが明確になる瞬間ですね。Reflectionを使うことのメリットはここにもあるのかも知れません。</p>
 <p>次には、メソッドをみていきます。</p>
 <h2 id=methodの取得>Methodの取得</h2>
 <p>メソッドもフィールドの場合とそう変わりません。クラスからメソッドを取得し、そのメソッドからさらに色々できるようになります。またコードを以下に用意しました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>isBean</span> <span class=o>(</span><span class=n>T</span> <span class=n>objectClass</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>isBean</span> <span style=color:#ff79c6>(</span>T objectClass<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>objectClass</span> <span class=o>=</span> <span class=n>object</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
+    Class<span style=color:#ff79c6>&lt;?&gt;</span> objectClass <span style=color:#ff79c6>=</span> object<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getClass</span><span style=color:#ff79c6>();</span>
 
-    <span class=c1>// 配列でpublicメソッドたちを取得
-</span><span class=c1></span>    <span class=n>Method</span><span class=o>[]</span> <span class=n>methods</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getMethods</span><span class=o>();</span>
-    <span class=c1>// 特定のpublicメソッドを取得 
-</span><span class=c1></span>    <span class=n>Method</span> <span class=n>method</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getMethod</span><span class=o>(</span><span class=s>&#34;メソッド名&#34;</span><span class=o>,</span> <span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
-    <span class=c1>// 配列でメソッドたちを取得(public以外も)
-</span><span class=c1></span>    <span class=n>Method</span><span class=o>[]</span> <span class=n>declaredMethods</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredMethods</span><span class=o>();</span>
-    <span class=c1>// 特定のメソッドを取得(public以外も)
-</span><span class=c1></span>    <span class=n>Method</span> <span class=n>declaredMethod</span> <span class=o>=</span> <span class=n>objectClass</span><span class=o>.</span><span class=na>getDeclaredMethod</span><span class=o>(</span><span class=s>&#34;メソッド名&#34;</span><span class=o>,</span> <span class=n>parameter1</span><span class=o>,</span> <span class=n>parameter2</span><span class=o>,</span> <span class=o>...);</span>
+    <span style=color:#6272a4>// 配列でpublicメソッドたちを取得
+</span><span style=color:#6272a4></span>    Method<span style=color:#ff79c6>[]</span> methods <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getMethods</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 特定のpublicメソッドを取得 
+</span><span style=color:#6272a4></span>    Method method <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getMethod</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;メソッド名&#34;</span><span style=color:#ff79c6>,</span> parameter1<span style=color:#ff79c6>,</span> parameter2<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...);</span>
+    <span style=color:#6272a4>// 配列でメソッドたちを取得(public以外も)
+</span><span style=color:#6272a4></span>    Method<span style=color:#ff79c6>[]</span> declaredMethods <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getDeclaredMethods</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 特定のメソッドを取得(public以外も)
+</span><span style=color:#6272a4></span>    Method declaredMethod <span style=color:#ff79c6>=</span> objectClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getDeclaredMethod</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;メソッド名&#34;</span><span style=color:#ff79c6>,</span> parameter1<span style=color:#ff79c6>,</span> parameter2<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...);</span>
     
-    <span class=c1>// Methodでできること
-</span><span class=c1></span>    <span class=c1>// メソッド名の取得
-</span><span class=c1></span>    <span class=n>String</span> <span class=n>methodName</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getName</span><span class=o>();</span>
-    <span class=c1>// メソッドの実行
-</span><span class=c1></span>    <span class=n>Object</span> <span class=n>methodInvoked</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>invoke</span><span class=o>();</span>
-    <span class=c1>// 引数のアノテーションを取得
-</span><span class=c1></span>    <span class=n>Annotation</span><span class=o>[]</span> <span class=n>parameterAnnotations</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getParameterAnnotations</span><span class=o>();</span>
-    <span class=c1>// 引数を取得
-</span><span class=c1></span>    <span class=n>Parameter</span><span class=o>[]</span> <span class=n>parameters</span> <span class=o>=</span> <span class=n>method</span><span class=o>.</span><span class=na>getParameters</span><span class=o>();</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// Methodでできること
+</span><span style=color:#6272a4></span>    <span style=color:#6272a4>// メソッド名の取得
+</span><span style=color:#6272a4></span>    String methodName <span style=color:#ff79c6>=</span> method<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getName</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// メソッドの実行
+</span><span style=color:#6272a4></span>    Object methodInvoked <span style=color:#ff79c6>=</span> method<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 引数のアノテーションを取得
+</span><span style=color:#6272a4></span>    Annotation<span style=color:#ff79c6>[]</span> parameterAnnotations <span style=color:#ff79c6>=</span> method<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getParameterAnnotations</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 引数を取得
+</span><span style=color:#6272a4></span>    Parameter<span style=color:#ff79c6>[]</span> parameters <span style=color:#ff79c6>=</span> method<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getParameters</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>アノテーションの場合はクラスでもフィールドでも取得できますが、メソッドの場合はそれに加えて引数のアノテーションも取得できるということが特徴です。また、引数そのものを取得することもできますね。もちろん<code>Parameter</code>クラスでも引数名を取得するなど色々な操作ができます。</p>
 <h2 id=結論>結論</h2>
 <p>結局、道が見えてくると、解決の方法も見えてくるものです。メソッドをやコンストラクターに触れる必要もなく、引数で受け取ったインスタンスからフィールドを取得して、その値をObjectに代入する。そしてinstanceofを活用して分岐させ、キャストすることでデータを扱う、というシンプルな構造で自分のタスクは完成されました。簡単なコードで表現すると以下のような形ですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// クラスをわからないBeanを引数とするメソッド
-</span><span class=c1></span><span class=kd>public</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=nf>processSomething</span><span class=o>(</span><span class=n>T</span> <span class=n>bean</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// 複数のタイプのオブジェクトがある
-</span><span class=c1></span>    <span class=n>String</span> <span class=n>stringObject</span><span class=o>;</span>
-    <span class=n>Integer</span> <span class=n>intObject</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// クラスをわからないBeanを引数とするメソッド
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>processSomething</span><span style=color:#ff79c6>(</span>T bean<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// 複数のタイプのオブジェクトがある
+</span><span style=color:#6272a4></span>    String stringObject<span style=color:#ff79c6>;</span>
+    Integer intObject<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// クラスとフィールドの取得
-</span><span class=c1></span>    <span class=n>Class</span><span class=o>&lt;?&gt;</span> <span class=n>beanClass</span> <span class=o>=</span> <span class=n>bean</span><span class=o>.</span><span class=na>getClass</span><span class=o>();</span>
-    <span class=n>Field</span><span class=o>[]</span> <span class=n>beanFields</span> <span class=o>=</span> <span class=n>beanClass</span><span class=o>.</span><span class=na>getDeclardFields</span><span class=o>();</span>
+    <span style=color:#6272a4>// クラスとフィールドの取得
+</span><span style=color:#6272a4></span>    Class<span style=color:#ff79c6>&lt;?&gt;</span> beanClass <span style=color:#ff79c6>=</span> bean<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getClass</span><span style=color:#ff79c6>();</span>
+    Field<span style=color:#ff79c6>[]</span> beanFields <span style=color:#ff79c6>=</span> beanClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getDeclardFields</span><span style=color:#ff79c6>();</span>
 
-    <span class=c1>// ループで個別フィールドを取得し、一致するタイプのオブジェクトにフィールドの値を入れる
-</span><span class=c1></span>    <span class=k>for</span> <span class=o>(</span><span class=n>Field</span> <span class=n>field</span> <span class=o>:</span> <span class=n>beanFields</span><span class=o>)</span> <span class=o>{</span>
-        <span class=c1>// privateフィールドの場合はアクセスできない場合があるためアクセス可能にする
-</span><span class=c1></span>        <span class=k>if</span> <span class=o>(</span><span class=n>field</span><span class=o>.</span><span class=na>canAccess</span><span class=o>(</span><span class=n>bean</span><span class=o>))</span> <span class=o>{</span>
-            <span class=n>field</span><span class=o>.</span><span class=na>setAccessible</span><span class=o>(</span><span class=kc>true</span><span class=o>);</span>
-        <span class=o>}</span>
+    <span style=color:#6272a4>// ループで個別フィールドを取得し、一致するタイプのオブジェクトにフィールドの値を入れる
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Field field <span style=color:#ff79c6>:</span> beanFields<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// privateフィールドの場合はアクセスできない場合があるためアクセス可能にする
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>canAccess</span><span style=color:#ff79c6>(</span>bean<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+            field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAccessible</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>true</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
 
-        <span class=c1>// フィールドの値を取得し、型を判断
-</span><span class=c1></span>        <span class=n>Object</span> <span class=n>value</span> <span class=o>=</span> <span class=n>field</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>bean</span><span class=o>);</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>value</span> <span class=k>instanceof</span> <span class=n>String</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>stringObject</span> <span class=o>=</span> <span class=o>(</span><span class=n>String</span><span class=o>)</span><span class=n>value</span><span class=o>;</span>
-        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>value</span> <span class=k>instanceof</span> <span class=n>Integer</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>intObject</span> <span class=o>=</span> <span class=o>(</span><span class=kt>int</span><span class=o>)</span><span class=n>value</span><span class=o>();</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+        <span style=color:#6272a4>// フィールドの値を取得し、型を判断
+</span><span style=color:#6272a4></span>        Object value <span style=color:#ff79c6>=</span> field<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>bean<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>instanceof</span> String<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            stringObject <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>(</span>String<span style=color:#ff79c6>)</span>value<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>instanceof</span> Integer<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            intObject <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span><span style=color:#ff79c6>)</span>value<span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>どうですか。方法がわかれば簡単にできるものなのでは。さらに応用して、インスタンスの一部の値だけを修正して返すなどの挙動もできそうです。色々活用できそうな面が多いですね。</p>
 <h2 id=最後に>最後に</h2>
 <p>このようにだいたいフィールドとメソッドがわかれば、これでどんなインスタンスやクラスが入ってきても、対応できそうな気がします。実際どうかはコンパイルして実行してみない限りわからないものですが…でも一つ、賢くなったような気はします。皆さんもぜひ、Reflectionを通じてクラスとインスタンスに対する理解を深めてみてください。</p>

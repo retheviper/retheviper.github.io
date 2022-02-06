@@ -74,7 +74,7 @@ ansible
 <p>ただYAMLファイルとフォルダー構成などが少し複雑なので、ここでは一つ一つのファイルの設定を述べてみようと思います。以下のYAML設定は、AMAZON Linuxを基準に書かれています。</p>
 <h2 id=ansibleのインストール>Ansibleのインストール</h2>
 <p>Ansibleは<code>yum</code>、<code>brew</code>、<code>pip</code>、<code>apt-get</code>でインストールできます。簡単ですね！ただ場合によってはPython2やPIPが必要となるので、事前にインストールしておきましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ yum install ansible
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ yum install ansible
 $ brew install ansible
 $ pip install ansible
 $ sudo apt-get install ansible
@@ -82,16 +82,16 @@ $ sudo apt-get install ansible
 <h2 id=batchserveryml>batchserver.yml</h2>
 <p>まずはサーバーごとのYAMLファイルを生成します。Ansible実行時に使われるのはこっちで、どのサーバーでどんな動作をするかを記述します。サーバーごとにしたいことに関しては別のYAMLファイルを用意し、共通、バッチサーバー、WEBAPサーバー用のYAMLファイルをそれぞれ作るというイメージです。</p>
 <p>以下のコードは、バッチサーバーを想定した場合の例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml>- <span class=nt>hosts</span><span class=p>:</span><span class=w> </span><span class=l>batchserver</span><span class=w>
-</span><span class=w>  </span><span class=nt>become</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
-</span><span class=w>  </span><span class=nt>roles</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span>- <span class=l>common</span><span class=w>
-</span><span class=w>    </span>- <span class=l>batch</span><span class=w>
-</span></code></pre></div><p><code>hosts</code>はhostsファイルに記述されたホストのことを意味します。ここで<code>batchserver</code>と書くと、Ansibleの実行時は自動的にhostsファイルからbatchserverというグルーブに属している全サーバーに接続し同じ動きをします。全グループに対して実行したい場合は<code>all</code>と書きましょう。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>- <span style=color:#ff79c6>hosts</span>: batchserver
+  <span style=color:#ff79c6>become</span>: <span style=color:#ff79c6>true</span>
+  <span style=color:#ff79c6>roles</span>:
+    - common
+    - batch
+</code></pre></div><p><code>hosts</code>はhostsファイルに記述されたホストのことを意味します。ここで<code>batchserver</code>と書くと、Ansibleの実行時は自動的にhostsファイルからbatchserverというグルーブに属している全サーバーに接続し同じ動きをします。全グループに対して実行したい場合は<code>all</code>と書きましょう。</p>
 <p>そして<code>become</code>を<code>true</code>に設定すると、接続先での全ての命令ががsudoとして実行されます。<code>roles</code>はサーバーで行う行動を指定したYAMLファイルのことを記述していて、私の場合はどんなサーバーでも共通的に実行したことを書いた<code>common</code>とバッチサーバーでだけ実行したい<code>batch</code>を区分しておいたので両方を書いています。</p>
 <h2 id=hosts>hosts</h2>
 <p>このファイルは上述した通り、Ansibleで自動設定を行いたい接続先のことを書きます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>[batchserver]
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>[batchserver]
 192.168.0.1 ansible_ssh_user=batchuser1
 192.168.0.2 ansible_ssh_user=batchuser2
 
@@ -102,91 +102,91 @@ $ sudo apt-get install ansible
 <h2 id=roles--batch--tasks--mainyml>roles / batch / tasks / main.yml</h2>
 <p>ここは<code>batchserver.yml</code>で指定した<code>roles</code>で、実際どんなことがしたいかを記述するYAMLファイルが入ります。<code>roles</code>は同盟のフォルダーの下に作っておいたものしか実行できませんので注意してください。</p>
 <p>本格的にやりたいことを書くファイルなので、どんな行動が指定できるかまず参考にしてください。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Create user groups</span><span class=w>
-</span><span class=w>    </span><span class=nt>group</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item.group_name } }&#34;</span><span class=w> </span><span class=c># マークダウンの仕様のためスペースを入れているが、実際はスペースなし</span><span class=w>
-</span><span class=w>      </span><span class=nt>gid</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item.group_id } }&#34;</span><span class=w>
-</span><span class=w>    </span><span class=nt>with_items</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span>- {<span class=w> </span><span class=nt>group_name: &#39;group01&#39;, group_id</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;101&#39;</span><span class=w> </span>}<span class=w>
-</span><span class=w>    </span>- {<span class=w> </span><span class=nt>group_name: &#39;group02&#39;, group_id</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;201&#39;</span><span class=w> </span>}<span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Create users</span><span class=w>
-</span><span class=w>    </span><span class=nt>user</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item.user_name } }&#34;</span><span class=w>
-</span><span class=w>      </span><span class=nt>password</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item.user_passwd } }&#34;</span><span class=w>
-</span><span class=w>      </span><span class=nt>uid</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item.user_id } }&#34;</span><span class=w>
-</span><span class=w>      </span><span class=nt>group</span><span class=p>:</span><span class=w>  </span><span class=s2>&#34;{ { item.user_group } }&#34;</span><span class=w>
-</span><span class=w>      </span><span class=nt>shell</span><span class=p>:</span><span class=w> </span><span class=l>/bin/bash</span><span class=w>
-</span><span class=w>    </span><span class=nt>with_items</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span>- {<span class=w> </span><span class=nt>user_name: &#39;user01&#39;, user_group: &#39;group01&#39;, user_id: &#39;101&#39;, user_passwd</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;user01&#39;</span><span class=w> </span>}<span class=w>
-</span><span class=w>    </span>- {<span class=w> </span><span class=nt>user_name: &#39;user02&#39;, user_group: &#39;group02&#39;, user_id: &#39;201&#39;, user_passwd</span><span class=p>:</span><span class=w> </span><span class=s1>&#39;user02&#39;</span><span class=w> </span>}<span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name </span><span class=p>:</span><span class=w> </span><span class=l>Create folders</span><span class=w>
-</span><span class=w>    </span><span class=nt>file</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=l>path={ { item } }</span><span class=w>
-</span><span class=w>      </span><span class=l>owner=user01</span><span class=w>
-</span><span class=w>      </span><span class=l>group=user01</span><span class=w>
-</span><span class=w>      </span><span class=l>mode=0755</span><span class=w>
-</span><span class=w>      </span><span class=l>state=directory</span><span class=w>
-</span><span class=w>    </span><span class=nt>with_items</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span>- <span class=l>/user01</span><span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Package install by yum</span><span class=w>
-</span><span class=w>    </span><span class=nt>yum</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { packages } }&#34;</span><span class=w>
-</span><span class=w>    </span><span class=nt>vars</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>packages</span><span class=p>:</span><span class=w>
-</span><span class=w>        </span>- <span class=l>python2-pip</span><span class=w>
-</span><span class=w>        </span>- <span class=l>postgresql</span><span class=w>
-</span><span class=w>        </span>- <span class=l>postgresql-devel</span><span class=w>
-</span><span class=w> 
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Upgrade pip by shell command</span><span class=w>
-</span><span class=w>    </span><span class=nt>shell</span><span class=p>:</span><span class=w> </span><span class=l>bash -lc &#34;pip install --upgrade pip&#34;</span><span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Install python modules</span><span class=w>
-</span><span class=w>    </span><span class=nt>pip</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{ { item } }&#34;</span><span class=w>
-</span><span class=w>      </span><span class=nt>executable</span><span class=p>:</span><span class=w> </span><span class=l>pip</span><span class=w>
-</span><span class=w>    </span><span class=nt>with_items</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span>- <span class=l>cx_Oracle</span><span class=w>
-</span><span class=w>      </span>- <span class=l>psycopg2</span><span class=w>
-</span><span class=w>      </span>- <span class=l>boto3</span><span class=w>
-</span><span class=w>      </span>- <span class=l>paramiko</span><span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Copy files</span><span class=w>
-</span><span class=w>    </span><span class=nt>copy</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=l>src= { { item.source } }</span><span class=w>
-</span><span class=w>      </span><span class=l>dest= { { item.dest } }</span><span class=w>
-</span><span class=w>      </span><span class=l>owner=root</span><span class=w>
-</span><span class=w>      </span><span class=l>group=root</span><span class=w>
-</span><span class=w>      </span><span class=l>mode=0755</span><span class=w>
-</span><span class=w>    </span><span class=nt>with_items</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span>- {<span class=w> </span><span class=nt>source: etc/somefile.zip, dest</span><span class=p>:</span><span class=w> </span><span class=l>/etc/somefile.zip }</span><span class=w>
-</span></code></pre></div><p>上から順番に、ユーザーグループ作成、ユーザー作成、フォルダー作成、<code>yum</code>でパッケージインストール、シェルコマンドの実行、ファイル転送となります。結局はSSH接続してシェルスクリプトを実行するようなものですね。でもYAMLファイルにより簡単に設定できるということが良いところではないかと思います。なんども繰り返して実行しても良いですしね。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>  - <span style=color:#ff79c6>name</span>: Create user groups
+    <span style=color:#ff79c6>group</span>:
+      <span style=color:#ff79c6>name</span>: <span style=color:#f1fa8c>&#34;{ { item.group_name } }&#34;</span> <span style=color:#6272a4># マークダウンの仕様のためスペースを入れているが、実際はスペースなし</span>
+      <span style=color:#ff79c6>gid</span>: <span style=color:#f1fa8c>&#34;{ { item.group_id } }&#34;</span>
+    <span style=color:#ff79c6>with_items</span>:
+    - { <span style=color:#ff79c6>group_name: &#39;group01&#39;, group_id</span>: <span style=color:#f1fa8c>&#39;101&#39;</span> }
+    - { <span style=color:#ff79c6>group_name: &#39;group02&#39;, group_id</span>: <span style=color:#f1fa8c>&#39;201&#39;</span> }
+
+  - <span style=color:#ff79c6>name</span>: Create users
+    <span style=color:#ff79c6>user</span>:
+      <span style=color:#ff79c6>name</span>: <span style=color:#f1fa8c>&#34;{ { item.user_name } }&#34;</span>
+      <span style=color:#ff79c6>password</span>: <span style=color:#f1fa8c>&#34;{ { item.user_passwd } }&#34;</span>
+      <span style=color:#ff79c6>uid</span>: <span style=color:#f1fa8c>&#34;{ { item.user_id } }&#34;</span>
+      <span style=color:#ff79c6>group</span>:  <span style=color:#f1fa8c>&#34;{ { item.user_group } }&#34;</span>
+      <span style=color:#ff79c6>shell</span>: /bin/bash
+    <span style=color:#ff79c6>with_items</span>:
+    - { <span style=color:#ff79c6>user_name: &#39;user01&#39;, user_group: &#39;group01&#39;, user_id: &#39;101&#39;, user_passwd</span>: <span style=color:#f1fa8c>&#39;user01&#39;</span> }
+    - { <span style=color:#ff79c6>user_name: &#39;user02&#39;, user_group: &#39;group02&#39;, user_id: &#39;201&#39;, user_passwd</span>: <span style=color:#f1fa8c>&#39;user02&#39;</span> }
+
+  - <span style=color:#ff79c6>name </span>: Create folders
+    <span style=color:#ff79c6>file</span>:
+      path={ { item } }
+      owner=user01
+      group=user01
+      mode=0755
+      state=directory
+    <span style=color:#ff79c6>with_items</span>:
+    - /user01
+
+  - <span style=color:#ff79c6>name</span>: Package install by yum
+    <span style=color:#ff79c6>yum</span>:
+      <span style=color:#ff79c6>name</span>: <span style=color:#f1fa8c>&#34;{ { packages } }&#34;</span>
+    <span style=color:#ff79c6>vars</span>:
+      <span style=color:#ff79c6>packages</span>:
+        - python2-pip
+        - postgresql
+        - postgresql-devel
+ 
+  - <span style=color:#ff79c6>name</span>: Upgrade pip by shell command
+    <span style=color:#ff79c6>shell</span>: bash -lc &#34;pip install --upgrade pip&#34;
+
+  - <span style=color:#ff79c6>name</span>: Install python modules
+    <span style=color:#ff79c6>pip</span>:
+      <span style=color:#ff79c6>name</span>: <span style=color:#f1fa8c>&#34;{ { item } }&#34;</span>
+      <span style=color:#ff79c6>executable</span>: pip
+    <span style=color:#ff79c6>with_items</span>:
+      - cx_Oracle
+      - psycopg2
+      - boto3
+      - paramiko
+
+  - <span style=color:#ff79c6>name</span>: Copy files
+    <span style=color:#ff79c6>copy</span>:
+      src= { { item.source } }
+      dest= { { item.dest } }
+      owner=root
+      group=root
+      mode=0755
+    <span style=color:#ff79c6>with_items</span>:
+      - { <span style=color:#ff79c6>source: etc/somefile.zip, dest</span>: /etc/somefile.zip }
+</code></pre></div><p>上から順番に、ユーザーグループ作成、ユーザー作成、フォルダー作成、<code>yum</code>でパッケージインストール、シェルコマンドの実行、ファイル転送となります。結局はSSH接続してシェルスクリプトを実行するようなものですね。でもYAMLファイルにより簡単に設定できるということが良いところではないかと思います。なんども繰り返して実行しても良いですしね。</p>
 <p>ただSSH接続したあとはYAMLファイルの上から一行づつ読みコマンドを実行していくので、実行したいことの順番には気をつける必要があります。例えば当たり前なことなんですが、ユーザーグループを作成する前に特定のグループにユーザーを作成するとかはできないので注意してください。</p>
 <h2 id=roles--batch--files>roles / batch / files</h2>
 <p>このフォルダーには転送に使いたいファイルをおきます。例えば上の<code>main.yml</code>に書いた<code>etc/somfile.zip</code>を転送したい場合は、このフォルダーの配下に同じパスのファイルを置きます。もちろん複数のファイルを転送することも、それぞれ違うフォルダーに分けておくことも可能です。</p>
 <h2 id=roles--common--tasks--mainyml>roles / common / tasks / main.yml</h2>
 <p>このファイルはどんなサーバーでも共通的に実行したいコマンドを集めています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Upgrade all packages by yum</span><span class=w>
-</span><span class=w>    </span><span class=nt>yum</span><span class=p>:</span><span class=w> </span><span class=l>name=* state=latest</span><span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Install openjdk 11</span><span class=w>
-</span><span class=w>    </span><span class=nt>shell</span><span class=p>:</span><span class=w> </span><span class=l>bash -lc &#34;amazon-linux-extras install java-openjdk11&#34;</span><span class=w>
-</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Correct java version selected</span><span class=w>
-</span><span class=w>    </span><span class=nt>alternatives</span><span class=p>:</span><span class=w>
-</span><span class=w>      </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>java</span><span class=w>
-</span><span class=w>      </span><span class=nt>path</span><span class=p>:</span><span class=w> </span><span class=l>/usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java</span><span class=w>
-</span></code></pre></div><p>このファイルでやっていることは、<code>yum</code>による全パッケージのアップデートと、OpenJDKのインストールです。JDKをインストールするだけではサーバーでJava実行時の基本バージョンがOpenJDK11にならないのでAlternativeからJavaのバージョンを選択するところまで入れています。同じやり方でPython3をインストールしてAlternativeで基本実行のバージョンを指定するなどのこともできます。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml>  - <span style=color:#ff79c6>name</span>: Upgrade all packages by yum
+    <span style=color:#ff79c6>yum</span>: name=* state=latest
+
+  - <span style=color:#ff79c6>name</span>: Install openjdk 11
+    <span style=color:#ff79c6>shell</span>: bash -lc &#34;amazon-linux-extras install java-openjdk11&#34;
+
+  - <span style=color:#ff79c6>name</span>: Correct java version selected
+    <span style=color:#ff79c6>alternatives</span>:
+      <span style=color:#ff79c6>name</span>: java
+      <span style=color:#ff79c6>path</span>: /usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java
+</code></pre></div><p>このファイルでやっていることは、<code>yum</code>による全パッケージのアップデートと、OpenJDKのインストールです。JDKをインストールするだけではサーバーでJava実行時の基本バージョンがOpenJDK11にならないのでAlternativeからJavaのバージョンを選択するところまで入れています。同じやり方でPython3をインストールしてAlternativeで基本実行のバージョンを指定するなどのこともできます。</p>
 <p>ここまでくるとAnsibleによる基本設定は終わり。難しくないですね！(深く入れば難しくなりそうですが)</p>
 <h2 id=実行する>実行する</h2>
 <p>それではPlaybookが用意されたので実行します。以下のコマンドで実行できます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># 一般的な実行</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#6272a4># 一般的な実行</span>
 $ ansible-playbook server.yml -i hosts
-<span class=c1># Dry runの場合(Playbookの文法チェック用)</span>
+<span style=color:#6272a4># Dry runの場合(Playbookの文法チェック用)</span>
 $ ansible-playbook server.yml -i hosts -C
-<span class=c1># SSH接続ユーザー名を入れる場合</span>
+<span style=color:#6272a4># SSH接続ユーザー名を入れる場合</span>
 $ ansible-playbook server.yml -i hosts -u hostuser
 </code></pre></div><p>こちらも簡単ですね。実行時にSSH接続するユーザーのパスワードを要求される場合がありますが、これはあらかじめSSH接続するユーザーの公開鍵を登録しておくことで回避できます。<code>sudo</code>の場合は接続先で<code>visudo</code>から<code>NOPASSWD</code>を設定しておくと便利です。</p>
 <h2 id=最後に>最後に</h2>

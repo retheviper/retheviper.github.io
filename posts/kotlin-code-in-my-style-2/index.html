@@ -74,166 +74,166 @@ kotlin
 <h2 id=sequentialなデータを作成する>Sequentialなデータを作成する</h2>
 <p>よくユニットテストなどでテスト用データを作成して使う場合がありますね。こういう時に必要となるデータの種類は色々とあるかと思いますが、複数のレコードを番号をつけて順番に揃えた感じのものを作りたい場合もあると思います。例えばData01、Data02、Data03…といったデータを作りたい場合ですね。</p>
 <p>この場合は、ループでデータを作り、Listにまとめるというのが一般的ではないかと思います。例えば以下のような例があるとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// テスト用データを作成する
-</span><span class=c1></span><span class=k>fun</span> <span class=nf>createTestDatas</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=c1>// テスト用データのリスト
-</span><span class=c1></span>    <span class=k>val</span> <span class=py>testDatas</span> <span class=p>=</span> <span class=n>mutableListOf</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// テスト用データを作成する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createTestDatas</span>(): List&lt;String&gt; {
+    <span style=color:#6272a4>// テスト用データのリスト
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> testDatas = mutableListOf&lt;String&gt;()
     
-    <span class=c1>// 10件のデータを追加
-</span><span class=c1></span>    <span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=k>in</span> <span class=m>0</span> <span class=n>until</span> <span class=m>10</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>testDatas</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=s2>&#34;テスト</span><span class=si>$i</span><span class=s2>&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
+    <span style=color:#6272a4>// 10件のデータを追加
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>for</span> (i <span style=color:#ff79c6>in</span> <span style=color:#bd93f9>0</span> until <span style=color:#bd93f9>10</span>) {
+        testDatas.add(<span style=color:#f1fa8c>&#34;テスト</span><span style=color:#f1fa8c>$i</span><span style=color:#f1fa8c>&#34;</span>)
+    }
 
-    <span class=c1>// read-onlyに変換して返却
-</span><span class=c1></span>    <span class=k>return</span> <span class=n>testDatas</span><span class=p>.</span><span class=n>toList</span><span class=p>()</span>
-<span class=p>}</span>
+    <span style=color:#6272a4>// read-onlyに変換して返却
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> testDatas.toList()
+}
 </code></pre></div><p>ただ、どちらかというとこれはJavaのやり方に近いので、まずはこれをベースに、Kotlinらしきコードではどうやって同じことができるかを考えてみたいと思います。</p>
 <h3 id=repeat>repeat</h3>
 <p>まず考えられる方法は、ループの単純化ですね。サイズが10のリストを作りたいということは、ループが10回であることなので、それに相応しい関数を使います。例えば<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/repeat.html target=_blank rel=noopener>repeat</a>がありますね。<code>repeat</code>を使うと、スコープ内のパラメータとしてインデックスが渡されるので、簡単に</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>createTestDatas</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=k>val</span> <span class=py>testDatas</span> <span class=p>=</span> <span class=n>mutableListOf</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createTestDatas</span>(): List&lt;String&gt; {
+    <span style=color:#ff79c6>val</span> testDatas = mutableListOf&lt;String&gt;()
 
-    <span class=c1>// 10回繰り返す
-</span><span class=c1></span>    <span class=n>repeat</span><span class=p>(</span><span class=m>10</span><span class=p>)</span> <span class=p>{</span> 
-        <span class=n>testDatas</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=s2>&#34;テスト</span><span class=si>$i</span><span class=s2>&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
+    <span style=color:#6272a4>// 10回繰り返す
+</span><span style=color:#6272a4></span>    repeat(<span style=color:#bd93f9>10</span>) { 
+        testDatas.add(<span style=color:#f1fa8c>&#34;テスト</span><span style=color:#f1fa8c>$i</span><span style=color:#f1fa8c>&#34;</span>)
+    }
 
-    <span class=k>return</span> <span class=n>testDatas</span><span class=p>.</span><span class=n>toList</span><span class=p>()</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>return</span> testDatas.toList()
+}
 </code></pre></div><p>次に考えたいのは、<code>MutableList</code>を<code>Immutable</code>に変えることです。テストで使うデータとしては問題ない場合はありますが、変更する必要のないデータをそのまま<code>Mutable</code>にしておくのはあまり良い選択ではありませんね。なので、データの作成を最初から<code>List</code>にできる方法を取りたいものです。</p>
 <p>ここでは二つの道があって、最初からサイズを指定した<code>List</code>を宣言するか、ループの範囲、つまり<a class=link href=https://kotlinlang.org/docs/ranges.html#range target=_blank rel=noopener>Range</a>を指定する方法があります。</p>
 <h3 id=list>List</h3>
 <p>まずはサイズを指定した<code>List</code>を作る方法からみていきましょう。インスタンスの作成時に、サイズと要素に対してのイニシャライザを引数として渡すことで簡単に指定したサイズ分の要素を作ることができます。例えば、上で紹介したコードは<code>List</code>を使うことで以下のように変えることができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>createTestDatasByList</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=n>List</span><span class=p>(</span><span class=m>10</span><span class=p>)</span> <span class=p>{</span> <span class=s2>&#34;テスト</span><span class=si>$it</span><span class=s2>&#34;</span> <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createTestDatasByList</span>(): List&lt;String&gt; =
+    List(<span style=color:#bd93f9>10</span>) { <span style=color:#f1fa8c>&#34;テスト</span><span style=color:#f1fa8c>$it</span><span style=color:#f1fa8c>&#34;</span> }
 </code></pre></div><p>この方法は、実は先に紹介した方法と根本的に違うものではありません。実装としては、以下のようになっているので、Syntax sugarとして使えるということがわかります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=nd>@SinceKotlin</span><span class=p>(</span><span class=s2>&#34;1.1&#34;</span><span class=p>)</span>
-<span class=nd>@kotlin</span><span class=p>.</span><span class=k>internal</span><span class=p>.</span><span class=n>InlineOnly</span>
-<span class=k>public</span> <span class=k>inline</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>List</span><span class=p>(</span><span class=n>size</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=k>init</span><span class=p>:</span> <span class=p>(</span><span class=n>index</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>T</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>MutableList</span><span class=p>(</span><span class=n>size</span><span class=p>,</span> <span class=k>init</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>@SinceKotlin(<span style=color:#f1fa8c>&#34;1.1&#34;</span>)
+@kotlin.<span style=color:#ff79c6>internal</span>.InlineOnly
+<span style=color:#ff79c6>public</span> <span style=color:#ff79c6>inline</span> <span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>T</span>&gt; <span style=color:#50fa7b>List</span>(size: Int, <span style=color:#ff79c6>init</span>: (index: Int) <span style=color:#ff79c6>-&gt;</span> T): List&lt;T&gt; = MutableList(size, <span style=color:#ff79c6>init</span>)
 
-<span class=nd>@SinceKotlin</span><span class=p>(</span><span class=s2>&#34;1.1&#34;</span><span class=p>)</span>
-<span class=nd>@kotlin</span><span class=p>.</span><span class=k>internal</span><span class=p>.</span><span class=n>InlineOnly</span>
-<span class=k>public</span> <span class=k>inline</span> <span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>MutableList</span><span class=p>(</span><span class=n>size</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=k>init</span><span class=p>:</span> <span class=p>(</span><span class=n>index</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>T</span><span class=p>):</span> <span class=n>MutableList</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>ArrayList</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;(</span><span class=n>size</span><span class=p>)</span>
-    <span class=n>repeat</span><span class=p>(</span><span class=n>size</span><span class=p>)</span> <span class=p>{</span> <span class=n>index</span> <span class=o>-&gt;</span> <span class=n>list</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=k>init</span><span class=p>(</span><span class=n>index</span><span class=p>))</span> <span class=p>}</span>
-    <span class=k>return</span> <span class=n>list</span>
-<span class=p>}</span>
+@SinceKotlin(<span style=color:#f1fa8c>&#34;1.1&#34;</span>)
+@kotlin.<span style=color:#ff79c6>internal</span>.InlineOnly
+<span style=color:#ff79c6>public</span> <span style=color:#ff79c6>inline</span> <span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>T</span>&gt; <span style=color:#50fa7b>MutableList</span>(size: Int, <span style=color:#ff79c6>init</span>: (index: Int) <span style=color:#ff79c6>-&gt;</span> T): MutableList&lt;T&gt; {
+    <span style=color:#ff79c6>val</span> list = ArrayList&lt;T&gt;(size)
+    repeat(size) { index <span style=color:#ff79c6>-&gt;</span> list.add(<span style=color:#ff79c6>init</span>(index)) }
+    <span style=color:#ff79c6>return</span> list
+}
 </code></pre></div><p>他にも<code>List</code>を使う場合は、<code>itnit</code>としてどんな関数を渡すかによって、<code>step</code>の設定などができるのも便利ですね。例えば以下のようなことができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=n>List</span><span class=p>(</span><span class=m>5</span><span class=p>)</span> <span class=p>{</span> <span class=s2>&#34;Test</span><span class=si>${ it * 2 }</span><span class=s2>&#34;</span> <span class=p>}</span>
-<span class=c1>// [Test0, Test2, Test4, Test6, Test8]
-</span><span class=c1></span>
-<span class=n>List</span><span class=p>(</span><span class=m>5</span><span class=p>)</span> <span class=p>{</span> <span class=p>(</span><span class=k>it</span> <span class=p>*</span> <span class=m>2</span><span class=p>).</span><span class=n>let</span> <span class=p>{</span> <span class=n>index</span> <span class=o>-&gt;</span> <span class=s2>&#34;</span><span class=si>$index</span><span class=s2> は偶数&#34;</span> <span class=p>}</span> <span class=p>}</span>
-<span class=c1>// [0 は偶数, 2 は偶数, 4 は偶数, 6 は偶数, 8 は偶数]
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>List(<span style=color:#bd93f9>5</span>) { <span style=color:#f1fa8c>&#34;Test</span><span style=color:#f1fa8c>${ it * 2 }</span><span style=color:#f1fa8c>&#34;</span> }
+<span style=color:#6272a4>// [Test0, Test2, Test4, Test6, Test8]
+</span><span style=color:#6272a4></span>
+List(<span style=color:#bd93f9>5</span>) { (<span style=color:#ff79c6>it</span> * <span style=color:#bd93f9>2</span>).let { index <span style=color:#ff79c6>-&gt;</span> <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>$index</span><span style=color:#f1fa8c> は偶数&#34;</span> } }
+<span style=color:#6272a4>// [0 は偶数, 2 は偶数, 4 は偶数, 6 は偶数, 8 は偶数]
 </span></code></pre></div><p>ただ、結果的に作られる<code>List</code>のインスタンスは<code>MutableList</code>なので、生成したデータをread-onlyにしたい場合はまたこれを<code>toList()</code>などで変換する必要があるという問題があります。</p>
 <h3 id=range>Range</h3>
 <p>では、もう一つの方法をまた試してみましょう。Kotlinでは数字の範囲を指定することだけで簡単に<code>Range</code>オブジェクトを作成することができます。<code>Range</code>を使う場合、上記のコードは以下のように変えられます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// Rangeを使ってテストデータを作る
-</span><span class=c1></span><span class=k>fun</span> <span class=nf>createTestDatasByRange</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=p>(</span><span class=m>0.</span><span class=p>.</span><span class=m>10</span><span class=p>).</span><span class=n>map</span> <span class=p>{</span> <span class=s2>&#34;テスト%it&#34;</span> <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// Rangeを使ってテストデータを作る
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createTestDatasByRange</span>(): List&lt;String&gt; =
+    (<span style=color:#bd93f9>0.</span>.<span style=color:#bd93f9>10</span>).map { <span style=color:#f1fa8c>&#34;テスト%it&#34;</span> }
 </code></pre></div><p><code>List</code>の時とは違って、<code>Range</code>には<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-int-range target=_blank rel=noopener>IntRange</a>や<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-long-range target=_blank rel=noopener>LongRange</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/-char-range target=_blank rel=noopener>CharRange</a>などがあり、引数の数字や文字を調整することで簡単にアレンジができるということも良いです。</p>
 <p>また、一般的に性能は<code>List</code>より<code>Range</code>の方が良いようです。以下のようなコードでベンチマークした際、大抵<code>Range</code>の方が<code>List</code>の倍ぐらい早いのを確認できました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>import</span> <span class=nn>kotlin.system.measureTimeMillis</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>import</span> kotlin.system.measureTimeMillis
 
-<span class=k>data</span> <span class=k>class</span> <span class=nc>Person</span><span class=p>(</span><span class=k>val</span> <span class=py>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span> <span class=k>val</span> <span class=py>Num</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span>
+<span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Person</span>(<span style=color:#ff79c6>val</span> name: String, <span style=color:#ff79c6>val</span> Num: Int)
 
-<span class=k>fun</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=n>benchmark</span> <span class=p>{</span> <span class=n>list</span><span class=p>()</span> <span class=p>}</span>
-    <span class=n>benchmark</span> <span class=p>{</span> <span class=n>range</span><span class=p>()</span> <span class=p>}</span>
-<span class=p>}</span>
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>main</span>() {
+    benchmark { list() }
+    benchmark { range() }
+}
 
-<span class=k>fun</span> <span class=nf>benchmark</span><span class=p>(</span><span class=n>function</span><span class=p>:</span> <span class=p>()</span> <span class=o>-&gt;</span> <span class=n>Unit</span><span class=p>)</span> <span class=p>=</span>
-    <span class=n>println</span><span class=p>(</span><span class=n>measureTimeMillis</span> <span class=p>{</span> <span class=n>function</span><span class=p>()</span> <span class=p>})</span>
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>benchmark</span>(function: () <span style=color:#ff79c6>-&gt;</span> Unit) =
+    println(measureTimeMillis { function() })
     
-<span class=k>fun</span> <span class=nf>list</span><span class=p>()</span> <span class=p>=</span>
-    <span class=n>List</span><span class=p>(</span><span class=m>200000</span><span class=p>)</span> <span class=p>{</span> <span class=n>Person</span><span class=p>(</span><span class=s2>&#34;person</span><span class=si>$it</span><span class=s2>&#34;</span><span class=p>,</span> <span class=k>it</span><span class=p>)</span> <span class=p>}</span>
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>list</span>() =
+    List(<span style=color:#bd93f9>200000</span>) { Person(<span style=color:#f1fa8c>&#34;person</span><span style=color:#f1fa8c>$it</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#ff79c6>it</span>) }
     
-<span class=k>fun</span> <span class=nf>range</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Person</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=p>(</span><span class=m>0.</span><span class=p>.</span><span class=m>200000</span><span class=p>).</span><span class=n>map</span> <span class=p>{</span> <span class=n>Person</span><span class=p>(</span><span class=s2>&#34;person</span><span class=si>$it</span><span class=s2>&#34;</span><span class=p>,</span> <span class=k>it</span><span class=p>)</span> <span class=p>}</span>
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>range</span>(): List&lt;Person&gt; =
+    (<span style=color:#bd93f9>0.</span>.<span style=color:#bd93f9>200000</span>).map { Person(<span style=color:#f1fa8c>&#34;person</span><span style=color:#f1fa8c>$it</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#ff79c6>it</span>) }
 </code></pre></div><p>一つ気にしなくてはならないのは、<code>Range</code>の場合は基本的に値が1づつ増加することになっているので、<code>for</code>や<code>List</code>のような<code>step</code>の条件が使えません。なので場合によってどちらを使うかは考える必要があります。</p>
 <h2 id=check>Check</h2>
 <p>Validationなどで、パラメータの値を確認しなければならない場合があります。Kotlinでは<code>Nullable</code>オブジェクトとそうでないオブジェクトが分けられているので、Javaと違って引数に<code>null</code>が渡される場合はコンパイルエラーとなりますが、ビジネスロジックによってはそれ以外のことをチェックする必要もあり、自前のチェックをコードで書くしかないです。</p>
 <p>まず、お馴染みのJavaのやり方を踏襲してみると、以下のようなコードを書くことができるでしょう。関数の引数と、その戻り値のチェックが含まれている例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>doSomething</span><span class=p>(</span><span class=n>parameter</span><span class=p>:</span> <span class=n>String</span><span class=p>):</span> <span class=n>String</span> <span class=p>{</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>parameter</span><span class=p>.</span><span class=n>isBlank</span><span class=p>())</span> <span class=p>{</span>
-        <span class=k>throw</span> <span class=n>IllegalArgumentException</span><span class=p>(</span><span class=s2>&#34;文字列が空です&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>doSomething</span>(parameter: String): String {
+    <span style=color:#ff79c6>if</span> (parameter.isBlank()) {
+        <span style=color:#ff79c6>throw</span> IllegalArgumentException(<span style=color:#f1fa8c>&#34;文字列が空です&#34;</span>)
+    }
 
-    <span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>someRepository</span><span class=p>.</span><span class=n>find</span><span class=p>(</span><span class=n>parameter</span><span class=p>)</span>
+    <span style=color:#ff79c6>val</span> result = someRepository.find(parameter)
 
-    <span class=k>if</span> <span class=p>(</span><span class=n>result</span> <span class=o>==</span> <span class=k>null</span><span class=p>)</span> <span class=p>{</span>
-        <span class=k>throw</span> <span class=n>IllegalStateException</span><span class=p>(</span><span class=s2>&#34;結果がnullです&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
-    <span class=k>return</span> <span class=n>result</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>if</span> (result <span style=color:#ff79c6>==</span> <span style=color:#ff79c6>null</span>) {
+        <span style=color:#ff79c6>throw</span> IllegalStateException(<span style=color:#f1fa8c>&#34;結果がnullです&#34;</span>)
+    }
+    <span style=color:#ff79c6>return</span> result
+}
 </code></pre></div><p>ここで少し違う言語の例をみていきたいと思います。Kotlinとよく似ていると言われているSwiftの場合、ここで<a class=link href=https://docs.swift.org/swift-book/ReferenceManual/Statements.html#grammar_if-statement target=_blank rel=noopener>Guard Statement</a>を使うのが一般的のようです。チェックのための表現が存在することで、ビジネスロジックとチェックが分離されるのが良いですね。Swiftをあまり触ったことがないので良い例にはなっていないかも知れませんが、イメージ的には以下のようなコードになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-swift data-lang=swift><span class=kd>func</span> <span class=nf>doSomething</span><span class=p>(</span><span class=n>parameter</span><span class=p>:</span> <span class=nb>String</span><span class=p>)</span> <span class=kr>throws</span> <span class=p>-&gt;</span> <span class=nb>String</span> <span class=p>{</span>
-    <span class=k>guard</span> <span class=o>!</span><span class=n>parameter</span><span class=p>.</span><span class=bp>isEmpty</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=k>throw</span> <span class=n>ValidationError</span><span class=p>.</span><span class=n>invalidArgument</span>
-    <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-swift data-lang=swift><span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>doSomething</span>(parameter: <span style=color:#8be9fd;font-style:italic>String</span>) <span style=color:#ff79c6>throws</span> -&gt; <span style=color:#8be9fd;font-style:italic>String</span> {
+    <span style=color:#ff79c6>guard</span> <span style=color:#ff79c6>!</span>parameter.isEmpty <span style=color:#ff79c6>else</span> {
+        <span style=color:#ff79c6>throw</span> ValidationError.invalidArgument
+    }
 
-    <span class=k>guard</span> <span class=kd>let</span> <span class=nv>result</span> <span class=p>=</span> <span class=n>someRepository</span><span class=p>.</span><span class=bp>find</span><span class=p>(</span><span class=n>parameter</span><span class=p>)</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=k>throw</span> <span class=n>ValidationError</span><span class=p>.</span><span class=n>notFound</span>
-    <span class=p>}</span>
-    <span class=k>return</span> <span class=n>result</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>guard</span> <span style=color:#8be9fd;font-style:italic>let</span> <span style=color:#8be9fd;font-style:italic>result</span> = someRepository.find(parameter) <span style=color:#ff79c6>else</span> {
+        <span style=color:#ff79c6>throw</span> ValidationError.notFound
+    }
+    <span style=color:#ff79c6>return</span> result
+}
 </code></pre></div><p>同じく、Kotlinでもチェックのための表現とビジネスロジックが分離できれば、コードの意味がより明確になるはずです。Kotlinではどうやってそれを実現できるのでしょうか。例えば以下のようなことを考えられます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>doSomething</span><span class=p>(</span><span class=n>parameter</span><span class=p>:</span> <span class=n>String</span><span class=p>?):</span> <span class=n>String</span> <span class=p>{</span>
-    <span class=k>val</span> <span class=py>checkedParameter</span> <span class=p>=</span> <span class=n>requireNotNull</span><span class=p>(</span><span class=n>parameter</span><span class=p>)</span> <span class=p>{</span>
-        <span class=s2>&#34;文字列がnullです&#34;</span>
-    <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>doSomething</span>(parameter: String?): String {
+    <span style=color:#ff79c6>val</span> checkedParameter = requireNotNull(parameter) {
+        <span style=color:#f1fa8c>&#34;文字列がnullです&#34;</span>
+    }
 
-    <span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>someRepository</span><span class=p>.</span><span class=n>find</span><span class=p>(</span><span class=n>checkedParameter</span><span class=p>)</span>
+    <span style=color:#ff79c6>val</span> result = someRepository.find(checkedParameter)
 
-    <span class=k>return</span> <span class=n>checkNotNull</span><span class=p>(</span><span class=n>result</span><span class=p>)</span> <span class=p>{</span>
-        <span class=s2>&#34;結果がnullです&#34;</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>return</span> checkNotNull(result) {
+        <span style=color:#f1fa8c>&#34;結果がnullです&#34;</span>
+    }
+}
 </code></pre></div><p><a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/require-not-null.html target=_blank rel=noopener>requireNotNull</a>は、渡された引数が<code>null</code>である場合は<code>IllegalArgumentException</code>を投げ、そうでない場合は引数を<code>non-null</code>タイプとして返します、明確に<code>null</code>チェックをしていることが解るだけでなく、以降チェックがいらないので便利です。また、<code>lazy message</code>として<code>IllegalArgumentException</code>が発生した時のメッセージを指定できるのも良いですね。</p>
 <p><a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/check-not-null.html target=_blank rel=noopener>checkNotNull</a>の場合も機能的には<code>requireNotNull</code>と変わらないですが、<code>null</code>の場合に投げる例外が<code>IllegalStateException</code>となります。なので、用途に合わせてこの二つを分けて使えますね。</p>
 <p>他に使えるものとしては<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/require.html target=_blank rel=noopener>require</a>があります。こちらは条件式を渡すことで、<code>null</code>チェック以外のこともできます。なので、以下のコードのように、<code>Int</code>型のデータに対して範囲をチェックするということもできるようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>doSomething</span><span class=p>(</span><span class=n>parameter</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=p>{</span>
-    <span class=n>require</span><span class=p>(</span><span class=n>parameter</span> <span class=p>&gt;</span> <span class=m>100</span><span class=p>)</span> <span class=p>{</span>
-        <span class=s2>&#34;</span><span class=si>$parameterは大きすぎます</span><span class=s2>&#34;</span>
-    <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>doSomething</span>(parameter: Int) {
+    require(parameter &gt; <span style=color:#bd93f9>100</span>) {
+        <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>$parameterは大きすぎます</span><span style=color:#f1fa8c>&#34;</span>
+    }
 
-    <span class=c1>// ...
-</span><span class=c1></span><span class=p>}</span>
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>}
 </code></pre></div><p>他にも、<a class=link href=https://kotlinlang.org/docs/null-safety.html#elvis-operator target=_blank rel=noopener>Elvis operator</a>を使う方法もありますね。この場合は、<code>null</code>の場合にただ例外を投げるだけでなく、代替となる処理を書くことができますので色々と活用できる余地があります。例えば以下のようなことができますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>doSomething</span><span class=p>(</span><span class=n>parameter</span><span class=p>:</span> <span class=n>String</span><span class=p>?):</span> <span class=n>String</span> <span class=p>{</span>
-    <span class=k>val</span> <span class=py>checkedParameter</span> <span class=p>=</span> <span class=n>parameter</span> <span class=o>?:</span> <span class=s2>&#34;default&#34;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>doSomething</span>(parameter: String?): String {
+    <span style=color:#ff79c6>val</span> checkedParameter = parameter <span style=color:#ff79c6>?:</span> <span style=color:#f1fa8c>&#34;default&#34;</span>
 
-    <span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>someRepository</span><span class=p>.</span><span class=n>find</span><span class=p>(</span><span class=n>checkedParameter</span><span class=p>)</span>
+    <span style=color:#ff79c6>val</span> result = someRepository.find(checkedParameter)
 
-    <span class=k>return</span> <span class=n>result</span> <span class=o>?:</span> <span class=k>throw</span> <span class=n>CustomException</span><span class=p>(</span><span class=s2>&#34;結果がnullです&#34;</span><span class=p>)</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>return</span> result <span style=color:#ff79c6>?:</span> <span style=color:#ff79c6>throw</span> CustomException(<span style=color:#f1fa8c>&#34;結果がnullです&#34;</span>)
+}
 </code></pre></div><h2 id=listの分割>Listの分割</h2>
 <p>とある条件と一致するデータをListから抽出したい場合は、<code>filter</code>のようなoperationを使うことでできます。しかし、条件が二つだとどうすればいいでしょうか。正確には、一つのリストに対して、指定した条件に一致する要素とそうでない要素の二つのリストに分離したい場合です。</p>
 <p>こういう場合はとりあえず下記のように2回ループさせる方法があると思いますが、これはあまり効率がよくないです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>origin</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=m>1</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>3</span><span class=p>,</span> <span class=m>4</span><span class=p>,</span> <span class=m>5</span><span class=p>,</span> <span class=m>6</span><span class=p>,</span> <span class=m>7</span><span class=p>,</span> <span class=m>8</span><span class=p>,</span> <span class=m>9</span><span class=p>,</span> <span class=m>10</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> origin = listOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>, <span style=color:#bd93f9>4</span>, <span style=color:#bd93f9>5</span>, <span style=color:#bd93f9>6</span>, <span style=color:#bd93f9>7</span>, <span style=color:#bd93f9>8</span>, <span style=color:#bd93f9>9</span>, <span style=color:#bd93f9>10</span>)
 
-<span class=c1>// 奇数を抽出
-</span><span class=c1></span><span class=k>val</span> <span class=py>odd</span> <span class=p>=</span> <span class=n>origin</span><span class=p>.</span><span class=n>filter</span> <span class=p>{</span> <span class=k>it</span> <span class=p>%</span> <span class=m>2</span> <span class=o>!=</span> <span class=m>0</span> <span class=p>}</span>
-<span class=c1>// 偶数を抽出
-</span><span class=c1></span><span class=k>val</span> <span class=py>even</span> <span class=p>=</span> <span class=n>origin</span><span class=p>.</span><span class=n>filter</span> <span class=p>{</span> <span class=k>it</span> <span class=p>%</span> <span class=m>2</span> <span class=o>==</span> <span class=m>0</span> <span class=p>}</span>
+<span style=color:#6272a4>// 奇数を抽出
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> odd = origin.filter { <span style=color:#ff79c6>it</span> % <span style=color:#bd93f9>2</span> <span style=color:#ff79c6>!=</span> <span style=color:#bd93f9>0</span> }
+<span style=color:#6272a4>// 偶数を抽出
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> even = origin.filter { <span style=color:#ff79c6>it</span> % <span style=color:#bd93f9>2</span> <span style=color:#ff79c6>==</span> <span style=color:#bd93f9>0</span> }
 </code></pre></div><p>ループを減らすためには、あらかじめ宣言したリストに対してループの中で分岐処理を行うという方法があるでしょう。例えば以下のようにです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>origin</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=m>1</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>3</span><span class=p>,</span> <span class=m>4</span><span class=p>,</span> <span class=m>5</span><span class=p>,</span> <span class=m>6</span><span class=p>,</span> <span class=m>7</span><span class=p>,</span> <span class=m>8</span><span class=p>,</span> <span class=m>9</span><span class=p>,</span> <span class=m>10</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> origin = listOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>, <span style=color:#bd93f9>4</span>, <span style=color:#bd93f9>5</span>, <span style=color:#bd93f9>6</span>, <span style=color:#bd93f9>7</span>, <span style=color:#bd93f9>8</span>, <span style=color:#bd93f9>9</span>, <span style=color:#bd93f9>10</span>)
 
-<span class=c1>// 奇数と偶数のリストを宣言しておく
-</span><span class=c1></span><span class=k>val</span> <span class=py>odd</span> <span class=p>=</span> <span class=n>mutableListOf</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>&gt;()</span>
-<span class=k>val</span> <span class=py>even</span> <span class=p>=</span> <span class=n>mutableListOf</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>&gt;()</span>
+<span style=color:#6272a4>// 奇数と偶数のリストを宣言しておく
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> odd = mutableListOf&lt;Int&gt;()
+<span style=color:#ff79c6>val</span> even = mutableListOf&lt;Int&gt;()
 
-<span class=c1>// ループ処理
-</span><span class=c1></span><span class=n>origin</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span>
-    <span class=k>if</span> <span class=p>(</span><span class=k>it</span> <span class=p>%</span> <span class=m>2</span> <span class=o>!=</span> <span class=m>0</span><span class=p>)</span> <span class=p>{</span>
-        <span class=n>odd</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=c1>// 奇数のリストに追加
-</span><span class=c1></span>    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=n>even</span><span class=p>.</span><span class=n>add</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=c1>// 偶数のリストに追加
-</span><span class=c1></span>    <span class=p>}</span>
-<span class=p>}</span>
+<span style=color:#6272a4>// ループ処理
+</span><span style=color:#6272a4></span>origin.forEach {
+    <span style=color:#ff79c6>if</span> (<span style=color:#ff79c6>it</span> % <span style=color:#bd93f9>2</span> <span style=color:#ff79c6>!=</span> <span style=color:#bd93f9>0</span>) {
+        odd.add(<span style=color:#ff79c6>it</span>) <span style=color:#6272a4>// 奇数のリストに追加
+</span><span style=color:#6272a4></span>    } <span style=color:#ff79c6>else</span> {
+        even.add(<span style=color:#ff79c6>it</span>) <span style=color:#6272a4>// 偶数のリストに追加
+</span><span style=color:#6272a4></span>    }
+}
 </code></pre></div><p>幸い、この状況にぴったりな方法をKotlinのスタンダードライブラリが提供しています。<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/partition.html target=_blank rel=noopener>partition</a>というoperationです。このopreationを使うと、元のリストの要素を条件に一致するものとそうでないもので分割してくれます。</p>
 <p>また、<code>partition</code>戻り値は<code>Pair&lt;List&lt;T>, List&lt;T>></code>なので、<a class=link href=https://kotlinlang.org/docs/destructuring-declarations.html target=_blank rel=noopener>destructuring-declaration</a>と組み合わせることでかなり短いコードになります。実際のコードは以下のようになるりますが、かなりスマートですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>origin</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=m>1</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>3</span><span class=p>,</span> <span class=m>4</span><span class=p>,</span> <span class=m>5</span><span class=p>,</span> <span class=m>6</span><span class=p>,</span> <span class=m>7</span><span class=p>,</span> <span class=m>8</span><span class=p>,</span> <span class=m>9</span><span class=p>,</span> <span class=m>10</span><span class=p>)</span>
-<span class=k>val</span> <span class=err>(</span><span class=py>odd</span><span class=p>,</span> <span class=n>even</span><span class=p>)</span> <span class=p>=</span> <span class=n>origin</span><span class=p>.</span><span class=n>partition</span> <span class=p>{</span> <span class=k>it</span> <span class=p>%</span> <span class=m>2</span> <span class=o>!=</span> <span class=m>0</span> <span class=p>}</span> <span class=c1>// 条件に一致するものと一致しないものでリストを分離
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> origin = listOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>, <span style=color:#bd93f9>4</span>, <span style=color:#bd93f9>5</span>, <span style=color:#bd93f9>6</span>, <span style=color:#bd93f9>7</span>, <span style=color:#bd93f9>8</span>, <span style=color:#bd93f9>9</span>, <span style=color:#bd93f9>10</span>)
+<span style=color:#ff79c6>val</span> (odd, even) = origin.partition { <span style=color:#ff79c6>it</span> % <span style=color:#bd93f9>2</span> <span style=color:#ff79c6>!=</span> <span style=color:#bd93f9>0</span> } <span style=color:#6272a4>// 条件に一致するものと一致しないものでリストを分離
 </span></code></pre></div><h2 id=最後に>最後に</h2>
 <p>Kotlinは便利ではありますが、言語自体が提供する便利さ（機能）が多いゆえに、APIの使い方を正しく活用できるかどうかでコードのクォリティが左右される部分が他の言語と比べ多いような気がしています。さらにバージョンアップも早く、次々と機能が追加されるのでキャッチアップも大事ですね。</p>
 <p>でも確かに一つづつKotlinでできることを工夫するうちに、色々とできることが増えていく気もしていますね。研究すればするほど力になる言語を使うということは嬉しいことです。ということで、これからもKotlinで書いてみたシリーズは続きます。</p>

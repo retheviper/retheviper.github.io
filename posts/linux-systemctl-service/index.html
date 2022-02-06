@@ -78,23 +78,23 @@ linux
 <p><code>Node.js</code>の場合、<code>$ node /node/index.js</code>みたいな簡単なコマンドで実行できますね。これをサービスに登録する場合は以下のようになります。</p>
 <h2 id=serviceファイルを作成する>serviceファイルを作成する</h2>
 <p>まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ vi /etc/systemd/system/NodeServer.service
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ vi /etc/systemd/system/NodeServer.service
 </code></pre></div><p>それでは以下のような形で中を書いていきます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># サービスとしての設定</span>
-<span class=o>[</span>Unit<span class=o>]</span>
-<span class=nv>Description</span> <span class=o>=</span> NodeServer <span class=c1># この名称でサービスが登録される</span>
-<span class=nv>After</span> <span class=o>=</span> syslog.target network.target <span class=c1># システム起動時の実行の優先順位(syslogとnetworkの後に実行する)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#6272a4># サービスとしての設定</span>
+<span style=color:#ff79c6>[</span>Unit<span style=color:#ff79c6>]</span>
+<span style=color:#8be9fd;font-style:italic>Description</span> <span style=color:#ff79c6>=</span> NodeServer <span style=color:#6272a4># この名称でサービスが登録される</span>
+<span style=color:#8be9fd;font-style:italic>After</span> <span style=color:#ff79c6>=</span> syslog.target network.target <span style=color:#6272a4># システム起動時の実行の優先順位(syslogとnetworkの後に実行する)</span>
 
-<span class=c1># 実行するプログラムの設定</span>
-<span class=o>[</span>Service<span class=o>]</span>
-<span class=nv>Type</span> <span class=o>=</span> simple <span class=c1># 動作の様子を決める・デフォルトはsimple</span>
-<span class=nv>ExecStart</span> <span class=o>=</span> /usr/bin/node /node/index.js <span class=c1># node /node/index.jsと同じだがシンボリックリンクなしで記述する</span>
-<span class=nv>Restart</span> <span class=o>=</span> on-failure <span class=c1># 起動に失敗すると再実行</span>
-<span class=nv>User</span> <span class=o>=</span> nodeservice <span class=c1># 実行するユーザー、権限に注意！</span>
+<span style=color:#6272a4># 実行するプログラムの設定</span>
+<span style=color:#ff79c6>[</span>Service<span style=color:#ff79c6>]</span>
+<span style=color:#8be9fd;font-style:italic>Type</span> <span style=color:#ff79c6>=</span> simple <span style=color:#6272a4># 動作の様子を決める・デフォルトはsimple</span>
+<span style=color:#8be9fd;font-style:italic>ExecStart</span> <span style=color:#ff79c6>=</span> /usr/bin/node /node/index.js <span style=color:#6272a4># node /node/index.jsと同じだがシンボリックリンクなしで記述する</span>
+<span style=color:#8be9fd;font-style:italic>Restart</span> <span style=color:#ff79c6>=</span> on-failure <span style=color:#6272a4># 起動に失敗すると再実行</span>
+<span style=color:#8be9fd;font-style:italic>User</span> <span style=color:#ff79c6>=</span> nodeservice <span style=color:#6272a4># 実行するユーザー、権限に注意！</span>
 
-<span class=c1># シンボリックリンクや別名などの設定</span>
-<span class=o>[</span>Install<span class=o>]</span>
-<span class=nv>WantedBy</span> <span class=o>=</span> multi-user.target <span class=c1># どこのフォルダにシンボリックリンクを作るかを指定、これが一般的らしい</span>
+<span style=color:#6272a4># シンボリックリンクや別名などの設定</span>
+<span style=color:#ff79c6>[</span>Install<span style=color:#ff79c6>]</span>
+<span style=color:#8be9fd;font-style:italic>WantedBy</span> <span style=color:#ff79c6>=</span> multi-user.target <span style=color:#6272a4># どこのフォルダにシンボリックリンクを作るかを指定、これが一般的らしい</span>
 </code></pre></div><p>他にも様々なオプションがありますが、基礎的な情報はこのくらいかと。テストのために作成しておいたNode.jsでのWebサーバーはこれで動きました。(と言っても<code>Hello Node.js!</code>を出力するだけの簡単なものですが…)</p>
 <p>実際仕事で扱っていたJavaアプリケーションは、PID<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>を管理するスクリプトの指定や、止める時実行するシェルスクリプトの指定もありました。例えば<code>ExecStop</code>を使うとサービスを修理するために実行したいコマンドを、<code>ExecReload</code>を使うとリロードする時に実行したいコマンドを書くことができるらしいです。シェルスクリプトから実行する場合や状態が変わった時何かの措置が必要な場合に考えられるオプションですね。</p>
 <p>このようにserviceファイルを作成したら、次はプロセスをシステムサービスに登録して実行します。</p>
@@ -102,28 +102,28 @@ linux
 <p>先に<code>service</code>というコマンドを言及しましたが、CentOS7からは<code>systemctl</code>を使うらしいです。<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>実際、CentOS7では<code>service</code>だけではシステムサービスの登録は不可能なので<code>systemctl</code>を使うことになります。このコマンドでできることはサービスの登録や解除、実行と停止、再実行などがあります。まずサービスをシステムサービスに登録すると、システムが起動する時に実行されるようになります。</p>
 <p>Windowsに例えると、「スタートアップ」にプログラムを登録したり解除することと、タスクマネージャーによってプロセスを管理するような機能が一緒になっている感じですね。</p>
 <p>こちらはコマンドだけなので、簡単に紹介します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># システムサービスとして登録</span>
-$ systemctl <span class=nb>enable</span> NodeServer
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#6272a4># システムサービスとして登録</span>
+$ systemctl <span style=color:#8be9fd;font-style:italic>enable</span> NodeServer
 $ systemctl start NodeServer
 
-<span class=c1># 実行されているサービスの中で検索する</span>
-$ systemctl list-units <span class=p>|</span> grep NodeServer
-</code></pre></div><div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># serviceファイルを修正した場合はリロードする</span>
+<span style=color:#6272a4># 実行されているサービスの中で検索する</span>
+$ systemctl list-units | grep NodeServer
+</code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#6272a4># serviceファイルを修正した場合はリロードする</span>
 $ systemctl daemon-reload
 
-<span class=c1># 停止と再起動</span>
+<span style=color:#6272a4># 停止と再起動</span>
 $ systemctl stop NodeServer
 $ systemctl restart NodeServer
 
-<span class=c1># サービスの状態を確認する</span>
+<span style=color:#6272a4># サービスの状態を確認する</span>
 $ systemctl status NodeServer
-<span class=c1># システムサービスから解除</span>
-$ systemctl <span class=nb>enable</span> NodeServer
+<span style=color:#6272a4># システムサービスから解除</span>
+$ systemctl <span style=color:#8be9fd;font-style:italic>enable</span> NodeServer
 
-<span class=c1># 実行に問題があった場合は以下のコマンドでサービスのログを参照できる</span>
+<span style=color:#6272a4># 実行に問題があった場合は以下のコマンドでサービスのログを参照できる</span>
 $ journalctl -xe
 </code></pre></div><p>サービスの登録や解除はできなくても、<code>service</code>コマンドでの制御もできます。ただいずれは消えるかもしれないコマンドなので、なるべく<code>systemctl</code>に慣れた方が良いかも知れませんね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=c1># serviceでできること</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#6272a4># serviceでできること</span>
 $ service NodeServer start
 $ service NodeServer status
 $ service NodeServer stop

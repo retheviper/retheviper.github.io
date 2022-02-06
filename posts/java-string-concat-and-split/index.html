@@ -83,204 +83,204 @@ java
 </ul>
 <h3 id=stringbuffer--stringbuilder>StringBuffer || StringBuilder</h3>
 <p>純粋に、Collectionや配列になっている複数の文字列を連結する場合もあるとは思いますが、普通、文字列の連結が必要となる場合では、「とある規則によって」という条件がつくケースが多いかなと思います。例えば、ダッシュ(-)、アンダースコア(_)、カンマ(,)などで並ぶようにですね。そしてこのような規則がある場合、<code>StringBuffer</code>や<code>StringBuilder</code>を使った方法は他と比べて少し不利です。なぜなら、最後に区切り文字(delimiter)が付かないように制御するにはかなりコードの書き方に注意しなければならないからです。以下のコードが、そのようなケースです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// StringBufferを使う例
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>);</span>
-<span class=n>String</span> <span class=n>delimiter</span> <span class=o>=</span> <span class=s>&#34;, &#34;</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// StringBufferを使う例
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;C&#34;</span><span style=color:#ff79c6>);</span>
+String delimiter <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>;</span>
 
-<span class=n>StringBuffer</span> <span class=n>buffer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringBuffer</span><span class=o>();</span>
-<span class=c1>// Listの要素と区切り文字を足す
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>string</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>string</span><span class=o>);</span>
-    <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>delimiter</span><span class=o>);</span>
-<span class=o>}</span>
+StringBuffer buffer <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringBuffer<span style=color:#ff79c6>();</span>
+<span style=color:#6272a4>// Listの要素と区切り文字を足す
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String string <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>string<span style=color:#ff79c6>);</span>
+    buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=n>String</span> <span class=n>result</span> <span class=o>=</span> <span class=n>buffer</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span> <span class=c1>// A, B, C,
+String result <span style=color:#ff79c6>=</span> buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span> <span style=color:#6272a4>// A, B, C,
 </span></code></pre></div><p>あえて、文字列の末尾に区切り文字が付かないようにするとしたら、おそらくこういうコードを書く必要があるでしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>);</span>
-<span class=n>String</span> <span class=n>delimiter</span> <span class=o>=</span> <span class=s>&#34;, &#34;</span><span class=o>;</span>
-<span class=kt>int</span> <span class=n>limit</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>()</span> <span class=o>-</span> <span class=n>1</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;C&#34;</span><span style=color:#ff79c6>);</span>
+String delimiter <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#8be9fd>int</span> limit <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>;</span>
 
-<span class=n>StringBuffer</span> <span class=n>buffer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringBuffer</span><span class=o>();</span>
-<span class=c1>// Listの要素と区切り文字を足す(最後のインデックスの前まで)
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>limit</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-    <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-    <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>delimiter</span><span class=o>);</span>
-<span class=o>}</span>
-<span class=c1>// 最後の要素を足す
-</span><span class=c1></span><span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>limit</span><span class=o>));</span>
+StringBuffer buffer <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringBuffer<span style=color:#ff79c6>();</span>
+<span style=color:#6272a4>// Listの要素と区切り文字を足す(最後のインデックスの前まで)
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> limit<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+    buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+    buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
+<span style=color:#6272a4>// 最後の要素を足す
+</span><span style=color:#6272a4></span>buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>limit<span style=color:#ff79c6>));</span>
 
-<span class=n>String</span> <span class=n>result</span> <span class=o>=</span> <span class=n>buffer</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span> <span class=c1>// A, B, C
+String result <span style=color:#ff79c6>=</span> buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span> <span style=color:#6272a4>// A, B, C
 </span></code></pre></div><p>こういう問題があるのに比べて、他の方法(<code>String.join()</code>、<code>StringJoiner</code>、<code>Collectors.joining()</code>)は、区切り文字が最後の要素の後に付かないので、よりシンプルなコードで書けるというメリットがありますね。なので、結論として<code>StringBuffer</code>や<code>StringBuilder</code>は、少なくとも「とある規則によって」複数の文字列を連結する場合には可読性という観点からしてあまり良い選択肢ではないということがわかります。</p>
 <h3 id=stringjoiner>StringJoiner</h3>
 <p><code>StringBuffer</code>と<code>StringBuilder</code>ではループで文字列を連結して行くので、ループの中で条件分岐など他の処理も必要な場合に使えるのでは？と思われるかも知れません。しかし、そういう場合でも、<code>StringJoiner</code>を使ったほうが良いですね。なぜなら、使い方はほぼ変わらなく、特に操作をしなくても常に末尾に区切り文字が付かないからです。以下は、<code>StringJoiner</code>のもっともベーシックな使い方のコードとなります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>);</span>
-<span class=c1>// 区切り文字を指定してインスタンスを作る
-</span><span class=c1></span><span class=n>StringJoiner</span> <span class=n>joiner</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringJoiner</span><span class=o>(</span><span class=s>&#34;, &#34;</span><span class=o>);</span>
-<span class=c1>// あとは要素を足していく
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>string</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>joiner</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>string</span><span class=o>);</span>
-<span class=o>}</span>
-<span class=n>String</span> <span class=n>result</span> <span class=o>=</span> <span class=n>joiner</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span> <span class=c1>// A, B, C
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;C&#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// 区切り文字を指定してインスタンスを作る
+</span><span style=color:#6272a4></span>StringJoiner joiner <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringJoiner<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// あとは要素を足していく
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String string <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>string<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
+String result <span style=color:#ff79c6>=</span> joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span> <span style=color:#6272a4>// A, B, C
 </span></code></pre></div><p>また、<code>StringJoiner</code>を使った場合は、PrefixとSuffixの指定も可能です。これらを指定した場合、文字列の先頭と末尾に指定したPrefixとSuffixが付くようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>);</span>
-<span class=c1>// 区切り文字とPrefix、Suffixまで指定する
-</span><span class=c1></span><span class=n>StringJoiner</span> <span class=n>joiner</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringJoiner</span><span class=o>(</span><span class=s>&#34;, &#34;</span><span class=o>,</span> <span class=s>&#34;[&#34;</span><span class=o>,</span> <span class=s>&#34;]&#34;</span><span class=o>);</span>
-<span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>string</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>joiner</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>string</span><span class=o>);</span>
-<span class=o>}</span>
-<span class=n>String</span> <span class=n>result</span> <span class=o>=</span> <span class=n>joiner</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span> <span class=c1>// [A, B, C]
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;C&#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// 区切り文字とPrefix、Suffixまで指定する
+</span><span style=color:#6272a4></span>StringJoiner joiner <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringJoiner<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;[&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;]&#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String string <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>string<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
+String result <span style=color:#ff79c6>=</span> joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span> <span style=color:#6272a4>// [A, B, C]
 </span></code></pre></div><p>使い方だけ見ても、区切り文字を持って文字列を繋ぐ場合は<code>StringBuffer</code>や<code>StringBuilder</code>より<code>StringJoiner</code>の方がより簡単であるということが分かります。</p>
 <h4 id=番外stringjoinerの実装>番外：StringJoinerの実装</h4>
 <p>ついでに、StringJoinerはどんなコードで書かれているかを見ていきたいと思います。まずは<code>add()</code>ですが、これは面白くも、<code>ArrayList</code>の実装と似たような感じになっています。<code>StringJoiner</code>クラスはフィールドとして<code>String[]</code>を持っていて、<code>add()</code>がよばれる度にそれより大きいコピーを作っていく形です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>StringJoiner</span> <span class=nf>add</span><span class=o>(</span><span class=n>CharSequence</span> <span class=n>newElement</span><span class=o>)</span> <span class=o>{</span>
-    <span class=kd>final</span> <span class=n>String</span> <span class=n>elt</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>valueOf</span><span class=o>(</span><span class=n>newElement</span><span class=o>);</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>elts</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>elts</span> <span class=o>=</span> <span class=k>new</span> <span class=n>String</span><span class=o>[</span><span class=n>8</span><span class=o>];</span>
-    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>size</span> <span class=o>==</span> <span class=n>elts</span><span class=o>.</span><span class=na>length</span><span class=o>)</span>
-            <span class=n>elts</span> <span class=o>=</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>copyOf</span><span class=o>(</span><span class=n>elts</span><span class=o>,</span> <span class=n>2</span> <span class=o>*</span> <span class=n>size</span><span class=o>);</span>
-        <span class=n>len</span> <span class=o>+=</span> <span class=n>delimiter</span><span class=o>.</span><span class=na>length</span><span class=o>();</span>
-    <span class=o>}</span>
-    <span class=n>len</span> <span class=o>+=</span> <span class=n>elt</span><span class=o>.</span><span class=na>length</span><span class=o>();</span>
-    <span class=n>elts</span><span class=o>[</span><span class=n>size</span><span class=o>++]</span> <span class=o>=</span> <span class=n>elt</span><span class=o>;</span>
-    <span class=k>return</span> <span class=k>this</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> StringJoiner <span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>CharSequence newElement<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> String elt <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>valueOf</span><span style=color:#ff79c6>(</span>newElement<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>elts <span style=color:#ff79c6>==</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        elts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> String<span style=color:#ff79c6>[</span>8<span style=color:#ff79c6>];</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>size <span style=color:#ff79c6>==</span> elts<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>)</span>
+            elts <span style=color:#ff79c6>=</span> Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copyOf</span><span style=color:#ff79c6>(</span>elts<span style=color:#ff79c6>,</span> 2 <span style=color:#ff79c6>*</span> size<span style=color:#ff79c6>);</span>
+        len <span style=color:#ff79c6>+=</span> delimiter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+    len <span style=color:#ff79c6>+=</span> elt<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>();</span>
+    elts<span style=color:#ff79c6>[</span>size<span style=color:#ff79c6>++]</span> <span style=color:#ff79c6>=</span> elt<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そして<code>toString()</code>では、フィールドの<code>String[]</code>をループしながら、区切り文字とともに繋げて行くのが分かります。少し変わっているのは、性能を意識しているからか、<code>char[]</code>として文字列をつめた後から新しく<code>String</code>のインスタンスを作って返しているというところですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>String</span> <span class=nf>toString</span><span class=o>()</span> <span class=o>{</span>
-    <span class=kd>final</span> <span class=n>String</span><span class=o>[]</span> <span class=n>elts</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>elts</span><span class=o>;</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>elts</span> <span class=o>==</span> <span class=kc>null</span> <span class=o>&amp;&amp;</span> <span class=n>emptyValue</span> <span class=o>!=</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>emptyValue</span><span class=o>;</span>
-    <span class=o>}</span>
-    <span class=kd>final</span> <span class=kt>int</span> <span class=n>size</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>size</span><span class=o>;</span>
-    <span class=kd>final</span> <span class=kt>int</span> <span class=n>addLen</span> <span class=o>=</span> <span class=n>prefix</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>+</span> <span class=n>suffix</span><span class=o>.</span><span class=na>length</span><span class=o>();</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>addLen</span> <span class=o>==</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>compactElts</span><span class=o>();</span>
-        <span class=k>return</span> <span class=n>size</span> <span class=o>==</span> <span class=n>0</span> <span class=o>?</span> <span class=s>&#34;&#34;</span> <span class=o>:</span> <span class=n>elts</span><span class=o>[</span><span class=n>0</span><span class=o>];</span>
-    <span class=o>}</span>
-    <span class=kd>final</span> <span class=n>String</span> <span class=n>delimiter</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>delimiter</span><span class=o>;</span>
-    <span class=kd>final</span> <span class=kt>char</span><span class=o>[]</span> <span class=n>chars</span> <span class=o>=</span> <span class=k>new</span> <span class=kt>char</span><span class=o>[</span><span class=n>len</span> <span class=o>+</span> <span class=n>addLen</span><span class=o>];</span>
-    <span class=kt>int</span> <span class=n>k</span> <span class=o>=</span> <span class=n>getChars</span><span class=o>(</span><span class=n>prefix</span><span class=o>,</span> <span class=n>chars</span><span class=o>,</span> <span class=n>0</span><span class=o>);</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>size</span> <span class=o>&gt;</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>k</span> <span class=o>+=</span> <span class=n>getChars</span><span class=o>(</span><span class=n>elts</span><span class=o>[</span><span class=n>0</span><span class=o>],</span> <span class=n>chars</span><span class=o>,</span> <span class=n>k</span><span class=o>);</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>1</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>size</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=n>k</span> <span class=o>+=</span> <span class=n>getChars</span><span class=o>(</span><span class=n>delimiter</span><span class=o>,</span> <span class=n>chars</span><span class=o>,</span> <span class=n>k</span><span class=o>);</span>
-            <span class=n>k</span> <span class=o>+=</span> <span class=n>getChars</span><span class=o>(</span><span class=n>elts</span><span class=o>[</span><span class=n>i</span><span class=o>],</span> <span class=n>chars</span><span class=o>,</span> <span class=n>k</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>k</span> <span class=o>+=</span> <span class=n>getChars</span><span class=o>(</span><span class=n>suffix</span><span class=o>,</span> <span class=n>chars</span><span class=o>,</span> <span class=n>k</span><span class=o>);</span>
-    <span class=k>return</span> <span class=k>new</span> <span class=n>String</span><span class=o>(</span><span class=n>chars</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>toString</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> String<span style=color:#ff79c6>[]</span> elts <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>elts</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>elts <span style=color:#ff79c6>==</span> <span style=color:#ff79c6>null</span> <span style=color:#ff79c6>&amp;&amp;</span> emptyValue <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> emptyValue<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> size <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> addLen <span style=color:#ff79c6>=</span> prefix<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>+</span> suffix<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>addLen <span style=color:#ff79c6>==</span> 0<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        compactElts<span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>return</span> size <span style=color:#ff79c6>==</span> 0 <span style=color:#ff79c6>?</span> <span style=color:#f1fa8c>&#34;&#34;</span> <span style=color:#ff79c6>:</span> elts<span style=color:#ff79c6>[</span>0<span style=color:#ff79c6>];</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> String delimiter <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>delimiter</span><span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>char</span><span style=color:#ff79c6>[]</span> chars <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> <span style=color:#8be9fd>char</span><span style=color:#ff79c6>[</span>len <span style=color:#ff79c6>+</span> addLen<span style=color:#ff79c6>];</span>
+    <span style=color:#8be9fd>int</span> k <span style=color:#ff79c6>=</span> getChars<span style=color:#ff79c6>(</span>prefix<span style=color:#ff79c6>,</span> chars<span style=color:#ff79c6>,</span> 0<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>size <span style=color:#ff79c6>&gt;</span> 0<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        k <span style=color:#ff79c6>+=</span> getChars<span style=color:#ff79c6>(</span>elts<span style=color:#ff79c6>[</span>0<span style=color:#ff79c6>],</span> chars<span style=color:#ff79c6>,</span> k<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 1<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> size<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            k <span style=color:#ff79c6>+=</span> getChars<span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>,</span> chars<span style=color:#ff79c6>,</span> k<span style=color:#ff79c6>);</span>
+            k <span style=color:#ff79c6>+=</span> getChars<span style=color:#ff79c6>(</span>elts<span style=color:#ff79c6>[</span>i<span style=color:#ff79c6>],</span> chars<span style=color:#ff79c6>,</span> k<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    k <span style=color:#ff79c6>+=</span> getChars<span style=color:#ff79c6>(</span>suffix<span style=color:#ff79c6>,</span> chars<span style=color:#ff79c6>,</span> k<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> String<span style=color:#ff79c6>(</span>chars<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=stringjoin>String.join()</h3>
 <p><code>String.join()</code>は、<code>InputStream.transferTo()</code>のように、あくまでシンタックスシュガーとして存在するものだと言えます。以下は実際のコードです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>static</span> <span class=n>String</span> <span class=nf>join</span><span class=o>(</span><span class=n>CharSequence</span> <span class=n>delimiter</span><span class=o>,</span>
-        <span class=n>Iterable</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>CharSequence</span><span class=o>&gt;</span> <span class=n>elements</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>Objects</span><span class=o>.</span><span class=na>requireNonNull</span><span class=o>(</span><span class=n>delimiter</span><span class=o>);</span>
-    <span class=n>Objects</span><span class=o>.</span><span class=na>requireNonNull</span><span class=o>(</span><span class=n>elements</span><span class=o>);</span>
-    <span class=n>StringJoiner</span> <span class=n>joiner</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringJoiner</span><span class=o>(</span><span class=n>delimiter</span><span class=o>);</span>
-    <span class=k>for</span> <span class=o>(</span><span class=n>CharSequence</span> <span class=n>cs</span><span class=o>:</span> <span class=n>elements</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>joiner</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>cs</span><span class=o>);</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=n>joiner</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> String <span style=color:#50fa7b>join</span><span style=color:#ff79c6>(</span>CharSequence delimiter<span style=color:#ff79c6>,</span>
+        Iterable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> CharSequence<span style=color:#ff79c6>&gt;</span> elements<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    Objects<span style=color:#ff79c6>.</span><span style=color:#50fa7b>requireNonNull</span><span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>);</span>
+    Objects<span style=color:#ff79c6>.</span><span style=color:#50fa7b>requireNonNull</span><span style=color:#ff79c6>(</span>elements<span style=color:#ff79c6>);</span>
+    StringJoiner joiner <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringJoiner<span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>CharSequence cs<span style=color:#ff79c6>:</span> elements<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>cs<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> joiner<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>引数に対するNullチェック以外は、Prefix・Suffixなしの<code>StringJoiner</code>での連結になっているということを確認できます。なので、より短いコードを書きたい場合は<code>StringJoiner</code>を使うよりも、こちらの方が便利ではありますね。</p>
 <h3 id=collectorsjoining>Collectors.joining()</h3>
 <p>文字列の連結で<code>Stream</code>を利用する場合、他にも<code>filter()</code>、<code>map()</code>、<code>peek()</code>など、さまざまな処理をメソッドチェイニングで書けるというところが魅力的ですね。個人的には、処理の役割と目的・影響範囲が明確に見えるので、<code>Stream</code>による処理を好んで使っています。ただ、以前のポストでも書いたことがありますが、多くの場合に<code>Stream</code>は伝統的なループより性能面で不利ですので、時と場合によって適切に選ぶべきでしょう。</p>
 <p>さて、そんな<code>Stream</code>ですが、中の実装はどうなっているのでしょうか。<code>Collectors.joining()</code>の場合、以下のような実装となっています。結局は、<code>StringJoiner</code>を内部で使っているだけですので、<code>String.join()</code>・<code>StringJoiner</code>と比べては、<code>Stream</code>によるコードの変化や性能に影響されるだけと言えるでしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>static</span> <span class=n>Collector</span><span class=o>&lt;</span><span class=n>CharSequence</span><span class=o>,</span> <span class=o>?,</span> <span class=n>String</span><span class=o>&gt;</span> <span class=nf>joining</span><span class=o>(</span><span class=n>CharSequence</span> <span class=n>delimiter</span><span class=o>,</span>
-                                                            <span class=n>CharSequence</span> <span class=n>prefix</span><span class=o>,</span>
-                                                            <span class=n>CharSequence</span> <span class=n>suffix</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=k>new</span> <span class=n>CollectorImpl</span><span class=o>&lt;&gt;(</span>
-            <span class=o>()</span> <span class=o>-&gt;</span> <span class=k>new</span> <span class=n>StringJoiner</span><span class=o>(</span><span class=n>delimiter</span><span class=o>,</span> <span class=n>prefix</span><span class=o>,</span> <span class=n>suffix</span><span class=o>),</span>
-            <span class=n>StringJoiner</span><span class=o>::</span><span class=n>add</span><span class=o>,</span> <span class=n>StringJoiner</span><span class=o>::</span><span class=n>merge</span><span class=o>,</span>
-            <span class=n>StringJoiner</span><span class=o>::</span><span class=n>toString</span><span class=o>,</span> <span class=n>CH_NOID</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> Collector<span style=color:#ff79c6>&lt;</span>CharSequence<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>?,</span> String<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>joining</span><span style=color:#ff79c6>(</span>CharSequence delimiter<span style=color:#ff79c6>,</span>
+                                                            CharSequence prefix<span style=color:#ff79c6>,</span>
+                                                            CharSequence suffix<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> CollectorImpl<span style=color:#ff79c6>&lt;&gt;(</span>
+            <span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>new</span> StringJoiner<span style=color:#ff79c6>(</span>delimiter<span style=color:#ff79c6>,</span> prefix<span style=color:#ff79c6>,</span> suffix<span style=color:#ff79c6>),</span>
+            StringJoiner<span style=color:#ff79c6>::</span>add<span style=color:#ff79c6>,</span> StringJoiner<span style=color:#ff79c6>::</span>merge<span style=color:#ff79c6>,</span>
+            StringJoiner<span style=color:#ff79c6>::</span>toString<span style=color:#ff79c6>,</span> CH_NOID<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=tostring>toString()</h3>
 <p>実は、Collectionの場合(<code>List&lt;String></code>)は、もっと簡単に文字列を作る方法がありますね。<code>toString()</code>を呼ぶことで、簡単にカンマ区切りの文字列が出来上がります。ただ、そうして文字列を作った場合、先頭と末尾に<code>[]</code>が入ってしまうので、場合によってはそれらを取り消すか、<code>substring()</code>で抽出するかの追加的な処理が必要となりますね。以下は、<code>substring()</code>を利用して<code>[]</code>の中の文字列だけを切り取るサンプルとなります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;A&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;C&#34;</span><span class=o>);</span>
-<span class=n>String</span> <span class=n>toString</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span> <span class=c1>// [A, B, C]
-</span><span class=c1></span><span class=n>String</span> <span class=n>result</span> <span class=o>=</span> <span class=n>toString</span><span class=o>.</span><span class=na>substring</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>toString</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>-</span> <span class=n>1</span><span class=o>);</span> <span class=c1>// A, B, C
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;C&#34;</span><span style=color:#ff79c6>);</span>
+String toString <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span> <span style=color:#6272a4>// [A, B, C]
+</span><span style=color:#6272a4></span>String result <span style=color:#ff79c6>=</span> toString<span style=color:#ff79c6>.</span><span style=color:#50fa7b>substring</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>,</span> toString<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>);</span> <span style=color:#6272a4>// A, B, C
 </span></code></pre></div><p>また、もし区切り文字がカンマではない場合は、とりあえず<code>toString()</code>で文字列に変換した結果の文字列から、更に<code>replace()</code>を呼び出し、区切り文字だけを入れ替えるというやり方でも対応はできます。ただ、これは非常に非効率的なやり方ではあります。なぜなら、<code>replace()</code>のコードをみると、結局はループの中で<code>StrinbBuilder</code>を使って新しく作り出すような構造となっているからです。実際のコードは、以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>String</span> <span class=nf>replace</span><span class=o>(</span><span class=n>CharSequence</span> <span class=n>target</span><span class=o>,</span> <span class=n>CharSequence</span> <span class=n>replacement</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>String</span> <span class=n>tgtStr</span> <span class=o>=</span> <span class=n>target</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span>
-    <span class=n>String</span> <span class=n>replStr</span> <span class=o>=</span> <span class=n>replacement</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span>
-    <span class=kt>int</span> <span class=n>j</span> <span class=o>=</span> <span class=n>indexOf</span><span class=o>(</span><span class=n>tgtStr</span><span class=o>);</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>j</span> <span class=o>&lt;</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>;</span>
-    <span class=o>}</span>
-    <span class=kt>int</span> <span class=n>tgtLen</span> <span class=o>=</span> <span class=n>tgtStr</span><span class=o>.</span><span class=na>length</span><span class=o>();</span>
-    <span class=kt>int</span> <span class=n>tgtLen1</span> <span class=o>=</span> <span class=n>Math</span><span class=o>.</span><span class=na>max</span><span class=o>(</span><span class=n>tgtLen</span><span class=o>,</span> <span class=n>1</span><span class=o>);</span>
-    <span class=kt>int</span> <span class=n>thisLen</span> <span class=o>=</span> <span class=n>length</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>replace</span><span style=color:#ff79c6>(</span>CharSequence target<span style=color:#ff79c6>,</span> CharSequence replacement<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    String tgtStr <span style=color:#ff79c6>=</span> target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+    String replStr <span style=color:#ff79c6>=</span> replacement<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+    <span style=color:#8be9fd>int</span> j <span style=color:#ff79c6>=</span> indexOf<span style=color:#ff79c6>(</span>tgtStr<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>j <span style=color:#ff79c6>&lt;</span> 0<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#8be9fd>int</span> tgtLen <span style=color:#ff79c6>=</span> tgtStr<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>();</span>
+    <span style=color:#8be9fd>int</span> tgtLen1 <span style=color:#ff79c6>=</span> Math<span style=color:#ff79c6>.</span><span style=color:#50fa7b>max</span><span style=color:#ff79c6>(</span>tgtLen<span style=color:#ff79c6>,</span> 1<span style=color:#ff79c6>);</span>
+    <span style=color:#8be9fd>int</span> thisLen <span style=color:#ff79c6>=</span> length<span style=color:#ff79c6>();</span>
 
-    <span class=kt>int</span> <span class=n>newLenHint</span> <span class=o>=</span> <span class=n>thisLen</span> <span class=o>-</span> <span class=n>tgtLen</span> <span class=o>+</span> <span class=n>replStr</span><span class=o>.</span><span class=na>length</span><span class=o>();</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>newLenHint</span> <span class=o>&lt;</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>throw</span> <span class=k>new</span> <span class=n>OutOfMemoryError</span><span class=o>();</span>
-    <span class=o>}</span>
-    <span class=n>StringBuilder</span> <span class=n>sb</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringBuilder</span><span class=o>(</span><span class=n>newLenHint</span><span class=o>);</span>
-    <span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
-    <span class=k>do</span> <span class=o>{</span>
-        <span class=n>sb</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=n>i</span><span class=o>,</span> <span class=n>j</span><span class=o>).</span><span class=na>append</span><span class=o>(</span><span class=n>replStr</span><span class=o>);</span>
-        <span class=n>i</span> <span class=o>=</span> <span class=n>j</span> <span class=o>+</span> <span class=n>tgtLen</span><span class=o>;</span>
-    <span class=o>}</span> <span class=k>while</span> <span class=o>(</span><span class=n>j</span> <span class=o>&lt;</span> <span class=n>thisLen</span> <span class=o>&amp;&amp;</span> <span class=o>(</span><span class=n>j</span> <span class=o>=</span> <span class=n>indexOf</span><span class=o>(</span><span class=n>tgtStr</span><span class=o>,</span> <span class=n>j</span> <span class=o>+</span> <span class=n>tgtLen1</span><span class=o>))</span> <span class=o>&gt;</span> <span class=n>0</span><span class=o>);</span>
-    <span class=k>return</span> <span class=n>sb</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>,</span> <span class=n>i</span><span class=o>,</span> <span class=n>thisLen</span><span class=o>).</span><span class=na>toString</span><span class=o>();</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd>int</span> newLenHint <span style=color:#ff79c6>=</span> thisLen <span style=color:#ff79c6>-</span> tgtLen <span style=color:#ff79c6>+</span> replStr<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>newLenHint <span style=color:#ff79c6>&lt;</span> 0<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> OutOfMemoryError<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+    StringBuilder sb <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringBuilder<span style=color:#ff79c6>(</span>newLenHint<span style=color:#ff79c6>);</span>
+    <span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>do</span> <span style=color:#ff79c6>{</span>
+        sb<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>,</span> i<span style=color:#ff79c6>,</span> j<span style=color:#ff79c6>).</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>replStr<span style=color:#ff79c6>);</span>
+        i <span style=color:#ff79c6>=</span> j <span style=color:#ff79c6>+</span> tgtLen<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>while</span> <span style=color:#ff79c6>(</span>j <span style=color:#ff79c6>&lt;</span> thisLen <span style=color:#ff79c6>&amp;&amp;</span> <span style=color:#ff79c6>(</span>j <span style=color:#ff79c6>=</span> indexOf<span style=color:#ff79c6>(</span>tgtStr<span style=color:#ff79c6>,</span> j <span style=color:#ff79c6>+</span> tgtLen1<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>&gt;</span> 0<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>return</span> sb<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>,</span> i<span style=color:#ff79c6>,</span> thisLen<span style=color:#ff79c6>).</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>少なくとも区切り文字がカンマではない場合は、<code>toString()</code>と<code>replace()</code>での文字列の生成よりは、他の方法をとったほうが性能面では有利ではないか、という推測が可能です。もちろん、要素数という変数があるので、実際の性能は測ってみないとわからないものですが…</p>
 <h3 id=ベンチマークしてみる>ベンチマークしてみる</h3>
 <p>では、文字列を連結するために使える色々なAPIと、その特徴を簡単に把握できたので、次に確認したいのは、やはり性能です。特に気になるのは、<code>String.join()</code>や<code>Collectors.joining()</code>でも結局は内部で<code>StringJoiner</code>を使っているというところです。それはつまり、<code>StringBuffer</code>や<code>StringBuilder</code>よりも<code>StringJoiner</code>が性能で有利だから、でしょうか。</p>
 <p>これらのAPIを利用して、実際のアプリケーションに使われるビジネスロジックのコードを書く立場としては、それはコードを簡単に書ける方が良いのは当然ですが、そもそもこういうAPIの場合は、手間を省けるために性能は良くても複雑なコードで実装する可能性もあるのですので、疑問になります。しかも、多くの場合、文字列の操作では<code>StringBuilder</code>が早いと言われていますので、ますます性能差というのが気になってきます。なので、いつもの通りにベンチマークを実施してみました。</p>
 <p>ベンチマークは、カンマ区切りで文字列を連結する例として作成しています。以下がそのコードです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@State</span><span class=o>(</span><span class=n>Scope</span><span class=o>.</span><span class=na>Benchmark</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>StringConcatTest</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@State<span style=color:#ff79c6>(</span>Scope<span style=color:#ff79c6>.</span><span style=color:#50fa7b>Benchmark</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>StringConcatTest</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>DELIMITER</span> <span class=o>=</span> <span class=s>&#34;, &#34;</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String DELIMITER <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>;</span>
 
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>target</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> target<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Setup</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>init</span><span class=o>()</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>DecimalFormat</span> <span class=n>format</span> <span class=o>=</span> <span class=k>new</span> <span class=n>DecimalFormat</span><span class=o>(</span><span class=s>&#34;0000000&#34;</span><span class=o>);</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>target</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>0</span><span class=o>,</span> <span class=n>1000000</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>i</span> <span class=o>-&gt;</span> <span class=n>format</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=n>i</span><span class=o>)).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
-    <span class=o>}</span>
+    @Setup
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>init</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> DecimalFormat format <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> DecimalFormat<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;0000000&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span> <span style=color:#ff79c6>=</span> IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>rangeClosed</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>,</span> 1000000<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>i <span style=color:#ff79c6>-&gt;</span> format<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>)).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>toString</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>String</span> <span class=n>toString</span> <span class=o>=</span> <span class=n>target</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>toString</span><span class=o>.</span><span class=na>substring</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>toString</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>-</span> <span class=n>1</span><span class=o>));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>toString</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> String toString <span style=color:#ff79c6>=</span> target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>toString<span style=color:#ff79c6>.</span><span style=color:#50fa7b>substring</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>,</span> toString<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>stringJoin</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>String</span><span class=o>.</span><span class=na>join</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>,</span> <span class=n>target</span><span class=o>));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>stringJoin</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>join</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>,</span> target<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>collectorsJoining</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>target</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>joining</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>)));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>collectorsJoining</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>joining</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>)));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>stringBuffer</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>StringBuffer</span> <span class=n>buffer</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringBuffer</span><span class=o>();</span>
-        <span class=kd>final</span> <span class=kt>int</span> <span class=n>limit</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>size</span><span class=o>()</span> <span class=o>-</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>limit</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-            <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>);</span>
-        <span class=o>}</span>
-        <span class=n>buffer</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>limit</span><span class=o>));</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>buffer</span><span class=o>.</span><span class=na>toString</span><span class=o>());</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>stringBuffer</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> StringBuffer buffer <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringBuffer<span style=color:#ff79c6>();</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> limit <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> limit<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+            buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+        buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>limit<span style=color:#ff79c6>));</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>buffer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>stringBuilder</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>StringBuilder</span> <span class=n>builder</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StringBuilder</span><span class=o>();</span>
-        <span class=kd>final</span> <span class=kt>int</span> <span class=n>limit</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>size</span><span class=o>()</span> <span class=o>-</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>limit</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=n>builder</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-            <span class=n>builder</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>);</span>
-        <span class=o>}</span>
-        <span class=n>builder</span><span class=o>.</span><span class=na>append</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>target</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>limit</span><span class=o>));</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>builder</span><span class=o>.</span><span class=na>toString</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>stringBuilder</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> StringBuilder builder <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StringBuilder<span style=color:#ff79c6>();</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> limit <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> limit<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            builder<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+            builder<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+        builder<span style=color:#ff79c6>.</span><span style=color:#50fa7b>append</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>limit<span style=color:#ff79c6>));</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>builder<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そして、結果は以下の通りです。</p>
 <pre tabindex=0><code class=language-dos data-lang=dos>Benchmark                            Mode  Cnt   Score   Error  Units
 StringConcatTest.toString           thrpt   25  41.445 ± 0.461  ops/s
@@ -296,64 +296,64 @@ StringConcatTest.stringBuilder      thrpt   25  45.965 ± 1.736  ops/s
 <p>ただ、ここで注目したいのは分割した後のことです。<code>String.split()</code>の戻り値は<code>String[]</code>なので、場合によって<code>Collection</code>に変えたくなりますね。なので、どちらかというと「配列をListに」する方法の検証ということとなりますが…とりあえずListをStringに変えてみたので、その逆の場合を考えてみるということで受け止めてくださると幸いです。</p>
 <h3 id=arraysaslist>Arrays.asList()</h3>
 <p>配列をListに変えるもっとも簡単な方法は、<code>Arrays.asList()</code>だと思います。コードも簡単ですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>string</span> <span class=o>=</span> <span class=s>&#34;A, B, C&#34;</span><span class=o>;</span>
-<span class=c1>// まずは分割する
-</span><span class=c1></span><span class=n>String</span><span class=o>[]</span> <span class=n>array</span> <span class=o>=</span> <span class=n>string</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=s>&#34;, &#34;</span><span class=o>);</span>
-<span class=c1>// Listに変える
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>asList</span><span class=o>(</span><span class=n>array</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String string <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;A, B, C&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#6272a4>// まずは分割する
+</span><span style=color:#6272a4></span>String<span style=color:#ff79c6>[]</span> array <span style=color:#ff79c6>=</span> string<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// Listに変える
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>asList</span><span style=color:#ff79c6>(</span>array<span style=color:#ff79c6>);</span>
 </code></pre></div><p>ただ、こうやって生成したListのインスタンスは、<a class=link href=https://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%BF%E3%83%96%E3%83%AB target=_blank rel=noopener>Immutable</a>となってしまいます。中の要素を操作できないということですね。</p>
 <p>もちろん、これは新しいListのインスタンスに要素をコピーすることで解決できます。もっとも簡単なのは、コンストラクタの引数としてListを渡す方法ですね。なので、「配列をMutableなListにする」もっとも簡単な方法は、おそらく以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>string</span> <span class=o>=</span> <span class=s>&#34;A, B, C&#34;</span><span class=o>;</span>
-<span class=c1>// まずは分割する
-</span><span class=c1></span><span class=n>String</span><span class=o>[]</span> <span class=n>array</span> <span class=o>=</span> <span class=n>string</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=s>&#34;, &#34;</span><span class=o>);</span>
-<span class=c1>// Listに変える
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>asList</span><span class=o>(</span><span class=n>array</span><span class=o>);</span>
-<span class=c1>// MutableなListのインスタンスを作成する
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>mutableList</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;(</span><span class=n>list</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String string <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;A, B, C&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#6272a4>// まずは分割する
+</span><span style=color:#6272a4></span>String<span style=color:#ff79c6>[]</span> array <span style=color:#ff79c6>=</span> string<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// Listに変える
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>asList</span><span style=color:#ff79c6>(</span>array<span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// MutableなListのインスタンスを作成する
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> mutableList <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;(</span>list<span style=color:#ff79c6>);</span>
 </code></pre></div><h3 id=arraysstream>Arrays.stream()</h3>
 <p>配列をListにするまたの方法は、<code>Stream</code>を利用することです。文字列の連結でも言及したことなのですが、<code>Stream</code>の場合は、<code>map()</code>や<code>filter()</code>のような中間操作のメソッドを使えるというメリットがありますね。また、<code>Collectors</code>のどのメソッドを呼ぶかによって結果として生成されるListがImmutableか、Mutableかを決定できるという面もメリット(可読性という観点で)ではないのかと思います。コードは<code>Arrays.asList()</code>と比べて少し複雑になっているように見えるかも知れませんが。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>string</span> <span class=o>=</span> <span class=s>&#34;A, B, C&#34;</span><span class=o>;</span>
-<span class=c1>// まずは分割する
-</span><span class=c1></span><span class=n>String</span><span class=o>[]</span> <span class=n>array</span> <span class=o>=</span> <span class=n>string</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=s>&#34;, &#34;</span><span class=o>);</span>
-<span class=c1>// Listに変える(Mutable)
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>mutableList</span> <span class=o>=</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>stream</span><span class=o>(</span><span class=n>array</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
-<span class=c1>// Listに変える(Immutable)
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>mutableList</span> <span class=o>=</span> <span class=n>Stream</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>array</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toUnmodifiableList</span><span class=o>());</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String string <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;A, B, C&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#6272a4>// まずは分割する
+</span><span style=color:#6272a4></span>String<span style=color:#ff79c6>[]</span> array <span style=color:#ff79c6>=</span> string<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// Listに変える(Mutable)
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> mutableList <span style=color:#ff79c6>=</span> Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>(</span>array<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
+<span style=color:#6272a4>// Listに変える(Immutable)
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> mutableList <span style=color:#ff79c6>=</span> Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>array<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toUnmodifiableList</span><span style=color:#ff79c6>());</span>
 </code></pre></div><h3 id=ベンチマークしてみる-1>ベンチマークしてみる</h3>
 <p>では、次にまたベンチマークとなります。コード自体は明らかに<code>Arrays.toList()</code>の方が簡単だったのですが、MutableなListを作るためにはListを生成した後にさらにインスタンスを作成する必要があるということで、性能面で損する可能性もあるのかなという気がします。なので、以上で紹介した<code>Arrays.asList()</code>と<code>Stream</code>によるListのインスタンスの作成を、Immutable・Mutableという二つのケースに分けて検証してみました。以下がそのベンチマークのコードです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@State</span><span class=o>(</span><span class=n>Scope</span><span class=o>.</span><span class=na>Benchmark</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>StringSplitTest</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@State<span style=color:#ff79c6>(</span>Scope<span style=color:#ff79c6>.</span><span style=color:#50fa7b>Benchmark</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>StringSplitTest</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>DELIMITER</span> <span class=o>=</span> <span class=s>&#34;, &#34;</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String DELIMITER <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;, &#34;</span><span style=color:#ff79c6>;</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>target</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String target<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Setup</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>init</span><span class=o>()</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>DecimalFormat</span> <span class=n>format</span> <span class=o>=</span> <span class=k>new</span> <span class=n>DecimalFormat</span><span class=o>(</span><span class=s>&#34;0000000&#34;</span><span class=o>);</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>target</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>0</span><span class=o>,</span> <span class=n>1000000</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>i</span> <span class=o>-&gt;</span> <span class=n>format</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=n>i</span><span class=o>)).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>joining</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>));</span>
-    <span class=o>}</span>
+    @Setup
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>init</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> DecimalFormat format <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> DecimalFormat<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;0000000&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>target</span> <span style=color:#ff79c6>=</span> IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>rangeClosed</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>,</span> 1000000<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>i <span style=color:#ff79c6>-&gt;</span> format<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>)).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>joining</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>arraysAsListImmutable</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>Arrays</span><span class=o>.</span><span class=na>asList</span><span class=o>(</span><span class=n>target</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>)));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>arraysAsListImmutable</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>asList</span><span style=color:#ff79c6>(</span>target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>)));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>arraysAsListMutable</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;(</span><span class=n>Arrays</span><span class=o>.</span><span class=na>asList</span><span class=o>(</span><span class=n>target</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>))));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>arraysAsListMutable</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>asList</span><span style=color:#ff79c6>(</span>target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>))));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>streamCollectImmutable</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>Arrays</span><span class=o>.</span><span class=na>stream</span><span class=o>(</span><span class=n>target</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>)).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toUnmodifiableList</span><span class=o>()));</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>streamCollectImmutable</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>(</span>target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>)).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toUnmodifiableList</span><span style=color:#ff79c6>()));</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>streamCollectMutable</span><span class=o>(</span><span class=kd>final</span> <span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>Arrays</span><span class=o>.</span><span class=na>stream</span><span class=o>(</span><span class=n>target</span><span class=o>.</span><span class=na>split</span><span class=o>(</span><span class=n>DELIMITER</span><span class=o>)).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>()));</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>streamCollectMutable</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>(</span>target<span style=color:#ff79c6>.</span><span style=color:#50fa7b>split</span><span style=color:#ff79c6>(</span>DELIMITER<span style=color:#ff79c6>)).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>()));</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そして結果は以下の通りです。</p>
 <pre tabindex=0><code class=language-dos data-lang=dos>Benchmark                                Mode  Cnt  Score   Error  Units
 StringSplitTest.arraysAsListImmutable   thrpt   25  8.316 ± 1.085  ops/s

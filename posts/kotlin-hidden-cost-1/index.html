@@ -73,50 +73,50 @@ kotlin
 <p>また、今回紹介している記事は<code>Part 1</code>ですが、そのほかにも<code>Part 2</code>や<code>Part 3</code>の記事がありますので、今後も順次紹介させていただきたいと思います。では、まず<code>Lambda表現式とcompanion object</code>編を、どうぞ。</p>
 <h2 id=高階関数とlambda表現式>高階関数とLambda表現式</h2>
 <p>例えば以下のような関数を定義しておいたとしましょう。渡されたパラメータをDBのトランザクションの中で実行し、実行結果の行数を返すものです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>transaction</span><span class=p>(</span><span class=n>db</span><span class=p>:</span> <span class=n>Database</span><span class=p>,</span> <span class=n>body</span><span class=p>:</span> <span class=p>(</span><span class=n>Database</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Int</span><span class=p>):</span> <span class=n>Int</span> <span class=p>{</span>
-    <span class=n>db</span><span class=p>.</span><span class=n>beginTransaction</span><span class=p>()</span>
-    <span class=k>try</span> <span class=p>{</span>
-        <span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>body</span><span class=p>(</span><span class=n>db</span><span class=p>)</span>
-        <span class=n>db</span><span class=p>.</span><span class=n>setTransactionSuccessful</span><span class=p>()</span>
-        <span class=k>return</span> <span class=n>result</span>
-    <span class=p>}</span> <span class=k>finally</span> <span class=p>{</span>
-        <span class=n>db</span><span class=p>.</span><span class=n>endTransaction</span><span class=p>()</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>transaction</span>(db: Database, body: (Database) <span style=color:#ff79c6>-&gt;</span> Int): Int {
+    db.beginTransaction()
+    <span style=color:#ff79c6>try</span> {
+        <span style=color:#ff79c6>val</span> result = body(db)
+        db.setTransactionSuccessful()
+        <span style=color:#ff79c6>return</span> result
+    } <span style=color:#ff79c6>finally</span> {
+        db.endTransaction()
+    }
+}
 </code></pre></div><p>上記の関数は、Lambdaを渡して以下のように使えますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>deletedRows</span> <span class=p>=</span> <span class=n>transaction</span><span class=p>(</span><span class=n>db</span><span class=p>)</span> <span class=p>{</span>
-    <span class=k>it</span><span class=p>.</span><span class=n>delete</span><span class=p>(</span><span class=err>“</span><span class=n>Customers</span><span class=err>”</span><span class=p>,</span> <span class=k>null</span><span class=p>,</span> <span class=k>null</span><span class=p>)</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> deletedRows = transaction(db) {
+    <span style=color:#ff79c6>it</span>.delete(“Customers”, <span style=color:#ff79c6>null</span>, <span style=color:#ff79c6>null</span>)
+}
 </code></pre></div><p>KotlinはJava 1.6のJVMから使えますが、Java 1.6のJVMではLambdaに対応していないのです。なので、Kotlinはその互換性を維持するためにLambda（匿名関数も）を<code>Function</code>というオブジェクトを生成することで対応しています。</p>
 <h3 id=functionオブジェクト>Functionオブジェクト</h3>
 <p>では、実際コンパイルされたLambda（body）がJavaのコードとしてはどうなっているかをみていきましょう。（ここでは、Intellij/Android Studioの<code>Show Kotlin Bytecode</code>の<code>Decompile</code>機能を使っています）</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>MyClass$myMethod$1</span> <span class=kd>implements</span> <span class=n>Function1</span> <span class=o>{</span>
-   <span class=c1>// $FF: 生成されたメソッド
-</span><span class=c1></span>   <span class=c1>// $FF: ブリッジメソッド
-</span><span class=c1></span>   <span class=kd>public</span> <span class=n>Object</span> <span class=nf>invoke</span><span class=o>(</span><span class=n>Object</span> <span class=n>var1</span><span class=o>)</span> <span class=o>{</span>
-      <span class=k>return</span> <span class=n>Integer</span><span class=o>.</span><span class=na>valueOf</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>invoke</span><span class=o>((</span><span class=n>Database</span><span class=o>)</span><span class=n>var1</span><span class=o>));</span>
-   <span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MyClass$myMethod$1</span> <span style=color:#8be9fd;font-style:italic>implements</span> Function1 <span style=color:#ff79c6>{</span>
+   <span style=color:#6272a4>// $FF: 生成されたメソッド
+</span><span style=color:#6272a4></span>   <span style=color:#6272a4>// $FF: ブリッジメソッド
+</span><span style=color:#6272a4></span>   <span style=color:#8be9fd;font-style:italic>public</span> Object <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>Object var1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+      <span style=color:#ff79c6>return</span> Integer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>valueOf</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>((</span>Database<span style=color:#ff79c6>)</span>var1<span style=color:#ff79c6>));</span>
+   <span style=color:#ff79c6>}</span>
 
-   <span class=kd>public</span> <span class=kd>final</span> <span class=kt>int</span> <span class=nf>invoke</span><span class=o>(</span><span class=nd>@NotNull</span> <span class=n>Database</span> <span class=n>it</span><span class=o>)</span> <span class=o>{</span>
-      <span class=n>Intrinsics</span><span class=o>.</span><span class=na>checkParameterIsNotNull</span><span class=o>(</span><span class=n>it</span><span class=o>,</span> <span class=s>&#34;it&#34;</span><span class=o>);</span>
-      <span class=k>return</span> <span class=n>it</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=s>&#34;Customers&#34;</span><span class=o>,</span> <span class=kc>null</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
-   <span class=o>}</span>
-<span class=o>}</span>
+   <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>@NotNull Database it<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+      Intrinsics<span style=color:#ff79c6>.</span><span style=color:#50fa7b>checkParameterIsNotNull</span><span style=color:#ff79c6>(</span>it<span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;it&#34;</span><span style=color:#ff79c6>);</span>
+      <span style=color:#ff79c6>return</span> it<span style=color:#ff79c6>.</span><span style=color:#50fa7b>delete</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Customers&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>);</span>
+   <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これを見るとわかりますが、Lambda（匿名関数）を使う場合、コンパイルされた結果としては基本的に3、4個のメソッドが追加で生成されるということになります。ここで追加された<code>Function</code>オブジェクトのインスタンスは、必要な時にだけ生成されます。正確には、以下のような動作をします。</p>
 <ul>
 <li>value captureがある場合、毎回パラメータが渡されるたび<code>Function</code>のインスタンスが生成され、GCの対象になる</li>
 <li>value captureがない場合、<code>Function</code>はSingletonとしてインスタンスが生成され再利用できる</li>
 </ul>
 <p>先ほどのコードでは、value captureがないため、Lambdaの呼び出し元は以下のようなコードとしてコンパイルされます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>this</span><span class=o>.</span><span class=na>transaction</span><span class=o>(</span><span class=n>db</span><span class=o>,</span> <span class=o>(</span><span class=n>Function1</span><span class=o>)</span><span class=n>MyClass$myMethod$1</span><span class=o>.</span><span class=na>INSTANCE</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>transaction</span><span style=color:#ff79c6>(</span>db<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>(</span>Function1<span style=color:#ff79c6>)</span>MyClass$myMethod$1<span style=color:#ff79c6>.</span><span style=color:#50fa7b>INSTANCE</span><span style=color:#ff79c6>);</span>
 </code></pre></div><p>しかし、value captureのある高階関数を繰り返し呼び出す場合はGCによる性能の低下を考えれます。</p>
 <h3 id=boxingオーバーヘッド>Boxingオーバーヘッド</h3>
 <p>Lambdaに対応しているJava 1.8以降のバージョンでは、<code>Function</code>インタフェースを複数提供していることでなるべくboxing/unboxingを避けようとしています。しかし、Kotlinでコンパイルされた場合はgenericを利用しています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=cm>/** 引数を一つ受け取る関数 */</span>
-<span class=k>public</span> <span class=k>interface</span> <span class=nc>Function1</span><span class=p>&lt;</span><span class=k>in</span> <span class=n>P1</span><span class=p>,</span> <span class=k>out</span> <span class=n>R</span><span class=p>&gt;</span> <span class=p>:</span> <span class=n>Function</span><span class=p>&lt;</span><span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=cm>/** 引数を受け取り関数を実行する */</span>
-    <span class=k>public</span> <span class=k>operator</span> <span class=k>fun</span> <span class=nf>invoke</span><span class=p>(</span><span class=n>p1</span><span class=p>:</span> <span class=n>P1</span><span class=p>):</span> <span class=n>R</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>/** 引数を一つ受け取る関数 */</span>
+<span style=color:#ff79c6>public</span> <span style=color:#ff79c6>interface</span> <span style=color:#50fa7b>Function1</span>&lt;<span style=color:#ff79c6>in</span> P1, <span style=color:#ff79c6>out</span> R&gt; : Function&lt;R&gt; {
+    <span style=color:#6272a4>/** 引数を受け取り関数を実行する */</span>
+    <span style=color:#ff79c6>public</span> <span style=color:#ff79c6>operator</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>invoke</span>(p1: P1): R
+}
 </code></pre></div><p>これらをみてわかるのは、高階関数でパラメータとして渡された関数を呼び出す時に、その関数にprimitiveタイプの値が存在する場合（パラメータ、もしくは戻り値）boxing/unboxingが起こるということです。先ほどのコンパイルされたLambdaにおいて、戻り値が<code>Integer</code>としてboxingされたのを確認できましたね。</p>
 <p>primitiveタイプを使用するLambdaをパラメータとしてとる高階関数は、参照回数が少なければあまり意識しなくてもよいコストになりますが、そうでない場合は性能に影響があると推定できます。</p>
 <h3 id=inline関数>Inline関数</h3>
@@ -128,13 +128,13 @@ kotlin
 <li>関数の呼び出しが増えない（CPU依存が高く、呼び出される頻度の高いコードのパフォーマンスの改善を期待できる）</li>
 </ul>
 <p>インライン化された場合のコードを確認してみましょう。<code>transaction</code>関数が消え、<code>db.delete</code>を直接呼び出しているのがわかります。また、戻り値の<code>result</code>もWrapperクラスからprimitiveタイプになっているのがわかります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>db</span><span class=o>.</span><span class=na>beginTransaction</span><span class=o>();</span>
-<span class=k>try</span> <span class=o>{</span>
-   <span class=kt>int</span> <span class=n>result$iv</span> <span class=o>=</span> <span class=n>db</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=s>&#34;Customers&#34;</span><span class=o>,</span> <span class=kc>null</span><span class=o>,</span> <span class=kc>null</span><span class=o>);</span>
-   <span class=n>db</span><span class=o>.</span><span class=na>setTransactionSuccessful</span><span class=o>();</span>
-<span class=o>}</span> <span class=k>finally</span> <span class=o>{</span>
-   <span class=n>db</span><span class=o>.</span><span class=na>endTransaction</span><span class=o>();</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>db<span style=color:#ff79c6>.</span><span style=color:#50fa7b>beginTransaction</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>try</span> <span style=color:#ff79c6>{</span>
+   <span style=color:#8be9fd>int</span> result$iv <span style=color:#ff79c6>=</span> db<span style=color:#ff79c6>.</span><span style=color:#50fa7b>delete</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Customers&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>);</span>
+   db<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setTransactionSuccessful</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span> <span style=color:#ff79c6>finally</span> <span style=color:#ff79c6>{</span>
+   db<span style=color:#ff79c6>.</span><span style=color:#50fa7b>endTransaction</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただ、<code>inline</code>キーワードを使うときは以下のことを考慮しなければならないです。</p>
 <ul>
 <li>インライン関数は自分自身を直接呼び出したり、他のインライン関数から呼び出せない</li>
@@ -146,48 +146,48 @@ kotlin
 <p>Kotlinではクラスがstaticなフィールドやメソッドを定義できません。その代わりに<code>companion object</code>を使うことになっていますね。</p>
 <h3 id=クラスのprivateフィールドをcompanion-objectからアクセスする>クラスのprivateフィールドをcompanion objectからアクセスする</h3>
 <p>以下のような例があるとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=k>private</span> <span class=k>constructor</span><span class=p>()</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>MyClass</span> <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>constructor</span>() {
 
-    <span class=k>private</span> <span class=k>var</span> <span class=py>hello</span> <span class=p>=</span> <span class=m>0</span>
+    <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>var</span> hello = <span style=color:#bd93f9>0</span>
 
-    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
-        <span class=k>fun</span> <span class=nf>newInstance</span><span class=p>()</span> <span class=p>=</span> <span class=n>MyClass</span><span class=p>()</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>companion</span> <span style=color:#ff79c6>object</span> {
+        <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>newInstance</span>() = MyClass()
+    }
+}
 </code></pre></div><p>上記のコードがコンパイスされると、<code>companion object</code>はSingletonクラスになります。なので、クラスのprivateフィールドに外部クラスからアクセスできるようにする必要があり、コンパイラが<code>getter</code>、<code>setter</code>を追加で生成することになるということです。生成されたメソッドは<code>companion object</code>から参照されることになります。以下を見てください。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>ALOAD 1
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>ALOAD 1
 INVOKESTATIC be/myapplication/MyClass.access$getHello$p (Lbe/myapplication/MyClass;)I
 ISTORE 2
 </code></pre></div><p>Javaだとこれを避けるためにアクセス制限を<code>package</code>単位にすることができましたが、Kotlinではそのようなキーワードがないですね。<code>public</code>や<code>internal</code>を使う場合も<code>getter</code>と<code>setter</code>は基本的に生成されます。また、これらのメソッドはinstanceメソッドであり、staticメソッドよりもコストが高いですね。なので、最適化のためフィールドのアクセス制限を変えるということは避けた方が良いです。</p>
 <p>もし<code>companion object</code>からクラスのフィールドに頻繁なアクセスが発生するとしたら、この隠れているメソッドの呼び出しを避けるためにフィールドの値をキャッシュするという方法も考慮できます。</p>
 <h3 id=companion-objectの定数にアクセスする>Companion objectの定数にアクセスする</h3>
 <p>Kotlinでは、クラス内のstaticな定数は<code>companion object</code>の中に定義するのが一般的です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>MyClass</span> {
 
-    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
-        <span class=k>private</span> <span class=k>val</span> <span class=py>TAG</span> <span class=p>=</span> <span class=s2>&#34;TAG&#34;</span>
-    <span class=p>}</span>
+    <span style=color:#ff79c6>companion</span> <span style=color:#ff79c6>object</span> {
+        <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> TAG = <span style=color:#f1fa8c>&#34;TAG&#34;</span>
+    }
 
-    <span class=k>fun</span> <span class=nf>helloWorld</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>println</span><span class=p>(</span><span class=n>TAG</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>helloWorld</span>() {
+        println(TAG)
+    }
+}
 </code></pre></div><p>一見シンプルで良さげなコードですが、Kotlin 1.2.40以前の場合だとかなり裏のコードは汚くなっています。</p>
 <h4 id=kotlin-1240以前の場合>Kotlin 1.2.40以前の場合</h4>
 <p><code>companion object</code>に定義されたprivateな定数にアクセスする場合、上記のようなこと（<code>getter</code>を利用する）が起こります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.Companion : Lbe/myapplication/MyClass$Companion;
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.Companion : Lbe/myapplication/MyClass$Companion;
 INVOKESTATIC be/myapplication/MyClass$Companion.access$getTAG$p (Lbe/myapplication/MyClass$Companion;)Ljava/lang/String;
 ASTORE 1
 </code></pre></div><p>問題はこれだけではありません。生成されたメソッドは実際の値を返すわけでなく、instanceメソッドとして生成された<code>getter</code>を呼び出すことになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>ALOAD 0
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>ALOAD 0
 INVOKESPECIAL be/myapplication/MyClass$Companion.getTAG ()Ljava/lang/String;
 ARETURN
 </code></pre></div><p>定数が<code>public</code>になっている場合はダイレクトにアクセスできるようになりますが、依然として<code>getter</code>メソッドを通して値にアクセスことになります。</p>
 <p>そして定数の値を格納するために、Kotlinコンパイラは<code>companion object</code>ではなく、それを持つクラスの方に<code>private static final</code>フィールドを生成します。さらに<code>companion object</code>からこのフィールドにアクセスするため、またのメソッドを生成することとなります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>INVOKESTATIC be/myapplication/MyClass.access$getTAG$cp()Ljava/lang/String; 
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>INVOKESTATIC be/myapplication/MyClass.access$getTAG$cp()Ljava/lang/String; 
 ARETURN
 </code></pre></div><p>こういう長い道のりで、やっと値を読み込むことになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.TAG : Ljava/lang/String; 
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>GETSTATIC be/myapplication/MyClass.TAG : Ljava/lang/String; 
 ARETURN
 </code></pre></div><p>まとめると、Kotlin 1.2.40以前のバージョンを使っている場合は以下のようになります。</p>
 <ul>
@@ -206,71 +206,71 @@ ARETURN
 </li>
 </ul>
 <p>これをJavaのコードで表現すると以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>MyClass</span> <span class=o>{</span>
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TAG</span> <span class=o>=</span> <span class=s>&#34;TAG&#34;</span><span class=o>;</span>
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Companion</span> <span class=n>companion</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Companion</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MyClass</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String TAG <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;TAG&#34;</span><span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> Companion companion <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Companion<span style=color:#ff79c6>();</span>
 
-    <span class=c1>// 生成されるメソッド
-</span><span class=c1></span>    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>access$getTAG$cp</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>TAG</span><span class=o>;</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// 生成されるメソッド
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String <span style=color:#50fa7b>access$getTAG$cp</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> TAG<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>Companion</span> <span class=o>{</span>
-        <span class=kd>private</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>getTAG</span><span class=o>()</span> <span class=o>{</span>
-            <span class=k>return</span> <span class=n>MyClass</span><span class=o>.</span><span class=na>access$getTAG$cp</span><span class=o>();</span>
-        <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Companion</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> String <span style=color:#50fa7b>getTAG</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span> MyClass<span style=color:#ff79c6>.</span><span style=color:#50fa7b>access$getTAG$cp</span><span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>}</span>
 
-        <span class=c1>// 生成されるメソッド
-</span><span class=c1></span>        <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=nf>access$getTAG$p</span><span class=o>(</span><span class=n>Companion</span> <span class=n>c</span><span class=o>)</span> <span class=o>{</span>
-            <span class=k>return</span> <span class=n>c</span><span class=o>.</span><span class=na>getTAG</span><span class=o>();</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+        <span style=color:#6272a4>// 生成されるメソッド
+</span><span style=color:#6272a4></span>        <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String <span style=color:#50fa7b>access$getTAG$p</span><span style=color:#ff79c6>(</span>Companion c<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span> c<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getTAG</span><span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>helloWorld</span><span class=o>()</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>Companion</span><span class=o>.</span><span class=na>access$getTAG$p</span><span class=o>(</span><span class=n>companion</span><span class=o>));</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>helloWorld</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>Companion<span style=color:#ff79c6>.</span><span style=color:#50fa7b>access$getTAG$p</span><span style=color:#ff79c6>(</span>companion<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>よりコストの低いBytecodeを生成することも可能ですが、それは簡単ではないです。</p>
 <p>まず<code>const</code>キーワードを使ってコンパイルタイム定数を定義することでメソッドの呼び出しをなくすことができます。しかし、KotlinではprimitiveかStringに対してのみ可能な方法です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>MyClass</span> {
 
-    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
-        <span class=k>private</span> <span class=k>const</span> <span class=k>val</span> <span class=py>TAG</span> <span class=p>=</span> <span class=s2>&#34;TAG&#34;</span>
-    <span class=p>}</span>
+    <span style=color:#ff79c6>companion</span> <span style=color:#ff79c6>object</span> {
+        <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>const</span> <span style=color:#ff79c6>val</span> TAG = <span style=color:#f1fa8c>&#34;TAG&#34;</span>
+    }
 
-    <span class=k>fun</span> <span class=nf>helloWorld</span><span class=p>()</span> <span class=p>{</span>
-        <span class=n>println</span><span class=p>(</span><span class=n>TAG</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>helloWorld</span>() {
+        println(TAG)
+    }
+}
 </code></pre></div><p>または<code>@JvmField</code>を使ってJavaのアプローチを取る方法を考えられます。こうすることで<code>getter</code>や<code>setter</code>が生成されず、フィールドに直接アクセスができるようになります。ただ、<code>@Jvm</code>系のアノテーションはJavaとの互換性のためのものであるのでこれが果たして良い方法かどうかを考えた方が良いでしょう。そして<code>public</code>なフィールドのみ可能な方法です。</p>
 <p>Androidの開発の場合だと、<code>Parcelable</code>オブジェクトを自前で実装する場合のみ有効な方法に思われます。例えば以下のようにですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>MyClass</span><span class=p>()</span> <span class=p>:</span> <span class=n>Parcelable</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>MyClass</span>() : Parcelable {
 
-    <span class=k>companion</span> <span class=k>object</span> <span class=p>{</span>
-        <span class=nd>@JvmField</span>
-        <span class=k>val</span> <span class=py>CREATOR</span> <span class=p>=</span> <span class=n>creator</span> <span class=p>{</span> <span class=n>MyClass</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=p>}</span>
-    <span class=p>}</span>
+    <span style=color:#ff79c6>companion</span> <span style=color:#ff79c6>object</span> {
+        @JvmField
+        <span style=color:#ff79c6>val</span> CREATOR = creator { MyClass(<span style=color:#ff79c6>it</span>) }
+    }
 
-    <span class=k>private</span> <span class=k>constructor</span><span class=p>(</span><span class=n>parcel</span><span class=p>:</span> <span class=n>Parcel</span><span class=p>)</span> <span class=p>:</span> <span class=k>this</span><span class=p>()</span>
+    <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>constructor</span>(parcel: Parcel) : <span style=color:#ff79c6>this</span>()
 
-    <span class=k>override</span> <span class=k>fun</span> <span class=nf>writeToParcel</span><span class=p>(</span><span class=n>dest</span><span class=p>:</span> <span class=n>Parcel</span><span class=p>,</span> <span class=n>flags</span><span class=p>:</span> <span class=n>Int</span><span class=p>)</span> <span class=p>{}</span>
+    <span style=color:#ff79c6>override</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>writeToParcel</span>(dest: Parcel, flags: Int) {}
 
-    <span class=k>override</span> <span class=k>fun</span> <span class=nf>describeContents</span><span class=p>()</span> <span class=p>=</span> <span class=m>0</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>override</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>describeContents</span>() = <span style=color:#bd93f9>0</span>
+}
 </code></pre></div><p>最後の方法として、<a class=link href=https://developer.android.com/studio/build/shrink-code target=_blank rel=noopener>ProGuard</a>やR8のようなツールを使ってBytecodeの最適化を狙うという方法があるでしょう。</p>
 <h4 id=kotlin-1240以降の場合>Kotlin 1.2.40以降の場合</h4>
 <p>Kotlinn 1.2.40からは、<code>companion object</code>に定義された値はメインクラスの方に格納されるということには変わりがありませんが、メソッドの生成と呼び出しなしで直接アクセスができるようになりました。これをJavaのコードとして表現すると以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>MyClass</span> <span class=o>{</span>
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TAG</span> <span class=o>=</span> <span class=s>&#34;TAG&#34;</span><span class=o>;</span>
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>Companion</span> <span class=n>companion</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Companion</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MyClass</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String TAG <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;TAG&#34;</span><span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> Companion companion <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Companion<span style=color:#ff79c6>();</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kd>class</span> <span class=nc>Companion</span> <span class=o>{</span>
-    <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Companion</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>final</span> <span class=kt>void</span> <span class=nf>helloWorld</span><span class=o>()</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>TAG</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>helloWorld</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>TAG<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>また、上記のように<code>companion object</code>にメソッドが一つもない場合は、ProGuardやR8によるツールと使うとクラス自体が消えることで最適化されます。</p>
 <p>ただ、<code>companion object</code>に定義さえたメソッドの場合はコストが少しかかります。フィールドがメインクラスの方に格納されてあるため、<code>companion object</code>に定義されたprivateフィールドにアクセスするためには依然として生成されたメソッドを経由することになります。</p>
 <h2 id=最後に>最後に</h2>

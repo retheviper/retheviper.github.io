@@ -83,42 +83,42 @@ spring
 <h2 id=依存関係を追加>依存関係を追加</h2>
 <p>Spring bootを基準に、依存関係は以下のように追加します。</p>
 <p>Mavenの場合</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=nt>&lt;dependency&gt;</span>
-    <span class=nt>&lt;groupId&gt;</span>com.github.ulisesbocchio<span class=nt>&lt;/groupId&gt;</span>
-    <span class=nt>&lt;artifactId&gt;</span>jasypt-spring-boot-starter<span class=nt>&lt;/artifactId&gt;</span>
-    <span class=nt>&lt;version&gt;</span>3.0.2<span class=nt>&lt;/version&gt;</span>
-<span class=nt>&lt;/dependency&gt;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=color:#ff79c6>&lt;dependency&gt;</span>
+    <span style=color:#ff79c6>&lt;groupId&gt;</span>com.github.ulisesbocchio<span style=color:#ff79c6>&lt;/groupId&gt;</span>
+    <span style=color:#ff79c6>&lt;artifactId&gt;</span>jasypt-spring-boot-starter<span style=color:#ff79c6>&lt;/artifactId&gt;</span>
+    <span style=color:#ff79c6>&lt;version&gt;</span>3.0.2<span style=color:#ff79c6>&lt;/version&gt;</span>
+<span style=color:#ff79c6>&lt;/dependency&gt;</span>
 </code></pre></div><p>Gradleの場合</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>dependencies</span> <span class=o>{</span>
-    <span class=n>implementation</span> <span class=s1>&#39;com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.2&#39;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>dependencies <span style=color:#ff79c6>{</span>
+    implementation <span style=color:#f1fa8c>&#39;com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.2&#39;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Jasypt本体だけを普通のJavaアプリケーションで使うこともできますが、今回はSpring Bootアプリケーションを基準にしているので、設定が簡単な方を紹介しています。</p>
 <h2 id=カスタムencryptorを作る>カスタムEncryptorを作る</h2>
 <p>まずはSpringのBeanとしてEncrytorを登録します。Encryptorには様々なオプションが指定できますが、実際重要なのはパスワードとアルゴリズムです。パスワードとアルゴリズムが一致しない場合は複合ができないからです。ここではYAMLファイルにカスタム設定としてEncryptor用のパスワードを記載し、それを持ってEncryptorをBean登録する場合のコードを紹介します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>StringEncryptorConfig</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>StringEncryptorConfig</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// YAMLから読み込むパスワード
-</span><span class=c1></span>    <span class=nd>@Value</span><span class=o>(</span><span class=s>&#34;${settings.jasypt.password}&#34;</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>password</span><span class=o>;</span>
+    <span style=color:#6272a4>// YAMLから読み込むパスワード
+</span><span style=color:#6272a4></span>    @Value<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;${settings.jasypt.password}&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String password<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// encryptorBeanという名前でEncryptorをBean登録する
-</span><span class=c1></span>    <span class=nd>@Bean</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;encryptorBean&#34;</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>StringEncryptor</span> <span class=nf>stringEncryptor</span><span class=o>()</span> <span class=o>{</span>
-        <span class=n>PooledPBEStringEncryptor</span> <span class=n>encryptor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>PooledPBEStringEncryptor</span><span class=o>();</span>
-        <span class=n>SimpleStringPBEConfig</span> <span class=n>config</span> <span class=o>=</span> <span class=k>new</span> <span class=n>SimpleStringPBEConfig</span><span class=o>();</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setPassword</span><span class=o>(</span><span class=s>&#34;password&#34;</span><span class=o>);</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setAlgorithm</span><span class=o>(</span><span class=s>&#34;PBEWithMD5AndDES&#34;</span><span class=o>);</span>
-        <span class=c1>// 以下は必須項目ではない
-</span><span class=c1></span>        <span class=n>config</span><span class=o>.</span><span class=na>setKeyObtentionIterations</span><span class=o>(</span><span class=s>&#34;1000&#34;</span><span class=o>);</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setPoolSize</span><span class=o>(</span><span class=s>&#34;1&#34;</span><span class=o>);</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setProviderName</span><span class=o>(</span><span class=s>&#34;SunJCE&#34;</span><span class=o>);</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setSaltGeneratorClassName</span><span class=o>(</span><span class=s>&#34;org.jasypt.salt.RandomSaltGenerator&#34;</span><span class=o>);</span>
-        <span class=n>config</span><span class=o>.</span><span class=na>setStringOutputType</span><span class=o>(</span><span class=s>&#34;base64&#34;</span><span class=o>);</span>
-        <span class=n>encryptor</span><span class=o>.</span><span class=na>setConfig</span><span class=o>(</span><span class=n>config</span><span class=o>);</span>
-        <span class=k>return</span> <span class=n>encryptor</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// encryptorBeanという名前でEncryptorをBean登録する
+</span><span style=color:#6272a4></span>    @Bean<span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;encryptorBean&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> StringEncryptor <span style=color:#50fa7b>stringEncryptor</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        PooledPBEStringEncryptor encryptor <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> PooledPBEStringEncryptor<span style=color:#ff79c6>();</span>
+        SimpleStringPBEConfig config <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> SimpleStringPBEConfig<span style=color:#ff79c6>();</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setPassword</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;password&#34;</span><span style=color:#ff79c6>);</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAlgorithm</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;PBEWithMD5AndDES&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#6272a4>// 以下は必須項目ではない
+</span><span style=color:#6272a4></span>        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setKeyObtentionIterations</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;1000&#34;</span><span style=color:#ff79c6>);</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setPoolSize</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;1&#34;</span><span style=color:#ff79c6>);</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setProviderName</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;SunJCE&#34;</span><span style=color:#ff79c6>);</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setSaltGeneratorClassName</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;org.jasypt.salt.RandomSaltGenerator&#34;</span><span style=color:#ff79c6>);</span>
+        config<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setStringOutputType</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;base64&#34;</span><span style=color:#ff79c6>);</span>
+        encryptor<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setConfig</span><span style=color:#ff79c6>(</span>config<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>return</span> encryptor<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これでEncryptorのBean登録の設定は完了です。次は外部設定ファイルの設定ですね。</p>
 <h2 id=外部ファイルの設定>外部ファイルの設定</h2>
 <p>外部設定ファイルでは、Beanとして登録したEncryptorの名前を指定し、暗号化したプロパティを記載します。Encryptorの名前が一致しなかったり、記載されてない場合はアプリケーションの起動時のエラーとなるので注意しましょう。</p>
@@ -126,36 +126,36 @@ spring
 <pre tabindex=0><code class=language-properties data-lang=properties>jasypt.encryptor.bean=encryptorBean
 properties.password=ENC(askygdq8PHapYFnlX6WsTwZZOxWInq+i)
 </code></pre><p>application.ymlの場合</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yml data-lang=yml><span class=nt>jasypt</span><span class=p>:</span><span class=w>
-</span><span class=w>  </span><span class=nt>encryptor</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span><span class=nt>bean</span><span class=p>:</span><span class=w> </span><span class=l>encryptorBean</span><span class=w>
-</span><span class=w></span><span class=nt>properties</span><span class=p>:</span><span class=w>
-</span><span class=w>  </span><span class=nt>password</span><span class=p>:</span><span class=w> </span><span class=l>ENC(askygdq8PHapYFnlX6WsTwZZOxWInq+i)</span><span class=w>
-</span></code></pre></div><p>ここでお気づきの方もいらっしゃるだろうと思いますが、暗号化した項目は必ず<code>ENC()</code>で囲まなければなりません。そうしなかった場合は、JasyptのEncryptorは設定値をそのまま文字列として読み込みますので複合されません。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yml data-lang=yml><span style=color:#ff79c6>jasypt</span>:
+  <span style=color:#ff79c6>encryptor</span>:
+    <span style=color:#ff79c6>bean</span>: encryptorBean
+<span style=color:#ff79c6>properties</span>:
+  <span style=color:#ff79c6>password</span>: ENC(askygdq8PHapYFnlX6WsTwZZOxWInq+i)
+</code></pre></div><p>ここでお気づきの方もいらっしゃるだろうと思いますが、暗号化した項目は必ず<code>ENC()</code>で囲まなければなりません。そうしなかった場合は、JasyptのEncryptorは設定値をそのまま文字列として読み込みますので複合されません。</p>
 <h2 id=暗号化のアルゴリズム>暗号化のアルゴリズム</h2>
 <p>Jasyptのパッケージを辿ると、基本的にいくつかのEncryptorが定義されていることがわかります。文字列だけでなく、数字タイプやバイナリーも暗号化できるので必要に応じてはSpringではなく、普通のJavaアプリケーションでもインポートして使うことができます。</p>
 <p>今回は文字列の暗号化だけを紹介しますが、この文字列のEncryptorには以下のようなものが予め定義されています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// デフォルトとして使われるEncryptor
-</span><span class=c1></span><span class=kd>public</span> <span class=nf>BasicTextEncryptor</span><span class=o>()</span> <span class=o>{</span>
-    <span class=kd>super</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StandardPBEStringEncryptor</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span><span class=o>.</span><span class=na>setAlgorithm</span><span class=o>(</span><span class=s>&#34;PBEWithMD5AndDES&#34;</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// デフォルトとして使われるEncryptor
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>BasicTextEncryptor</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span> <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StandardPBEStringEncryptor<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAlgorithm</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;PBEWithMD5AndDES&#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// より強いアルゴリズムを使うEncryptor
-</span><span class=c1></span><span class=kd>public</span> <span class=nf>StrongTextEncryptor</span><span class=o>()</span> <span class=o>{</span>
-    <span class=kd>super</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StandardPBEStringEncryptor</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span><span class=o>.</span><span class=na>setAlgorithm</span><span class=o>(</span><span class=s>&#34;PBEWithMD5AndTripleDES&#34;</span><span class=o>);</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// より強いアルゴリズムを使うEncryptor
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>StrongTextEncryptor</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span> <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StandardPBEStringEncryptor<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAlgorithm</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;PBEWithMD5AndTripleDES&#34;</span><span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// AES256を使う最も強力なEncryptor
-</span><span class=c1></span><span class=kd>public</span> <span class=nf>AES256TextEncryptor</span><span class=o>()</span> <span class=o>{</span>
-    <span class=kd>super</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StandardPBEStringEncryptor</span><span class=o>();</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span><span class=o>.</span><span class=na>setAlgorithm</span><span class=o>(</span><span class=s>&#34;PBEWithHMACSHA512AndAES_256&#34;</span><span class=o>);</span>
-    <span class=k>this</span><span class=o>.</span><span class=na>encryptor</span><span class=o>.</span><span class=na>setIvGenerator</span><span class=o>(</span><span class=k>new</span> <span class=n>RandomIvGenerator</span><span class=o>());</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// AES256を使う最も強力なEncryptor
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>AES256TextEncryptor</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span> <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StandardPBEStringEncryptor<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAlgorithm</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;PBEWithHMACSHA512AndAES_256&#34;</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>encryptor</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>setIvGenerator</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>new</span> RandomIvGenerator<span style=color:#ff79c6>());</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ここに記載されているアルゴリズムは、そのままBeanとして定義するカスタムEncryptorにも使えます。ただし、アルゴリズムが複雑なものであるとそれだけ暗号化した結果は複合が難しくなるので安全ですが、アプリケーション起動が遅くなる可能性もあるので場合によって適切なものを選びましょう。また、AES256を使う場合はIvGeneratorも指定する必要があるということに注意しましょう。</p>
 <p>コード内で暗号化がしたい場合は、Bean登録したEncryptorを呼ぶか、新しいEncryptorのインスタンスを作成してencrypt()メソッドを呼び出すとできます。当然のことですが、同じパスワードを指定しないと正しく暗号化と複合ができないということに注意しましょう。</p>
 <h2 id=コマンドラインツール>コマンドラインツール</h2>
@@ -167,9 +167,9 @@ properties.password=ENC(askygdq8PHapYFnlX6WsTwZZOxWInq+i)
 <li>listAlgorithm.sh(bat): 暗号化に使えるアルゴリズムの種類を羅列する</li>
 </ol>
 <p>encryptとdecryptでは、パスワードと暗号化・複合したい文をコマンドライン引数として入力するとその結果が標準出力で画面に表示されます。また、オプションとしては使いたいアルゴリズムを指定することもできます。使い方は以下のコマンドになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>bin % ./encrypt.sh <span class=nv>password</span><span class=o>=</span>password <span class=nv>input</span><span class=o>=</span>this_is_input
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>bin % ./encrypt.sh <span style=color:#8be9fd;font-style:italic>password</span><span style=color:#ff79c6>=</span>password <span style=color:#8be9fd;font-style:italic>input</span><span style=color:#ff79c6>=</span>this_is_input
 </code></pre></div><p>このコマンドでの出力結果は以下です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>----ENVIRONMENT-----------------
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>----ENVIRONMENT-----------------
 
 Runtime: AdoptOpenJDK OpenJDK 64-Bit Server VM 11.0.6+10 
 
@@ -186,7 +186,7 @@ password: password
 
 2lgKlL4gECBBtjch4WZITWDBHWhIxvVz
 </code></pre></div><p>また、listAlgoritymを実行すると、以下のように現在のシステムで使えるアルゴリズムのリストが出力されます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>PBE ALGORITHMS:      <span class=o>[</span>PBEWITHHMACSHA1ANDAES_128, PBEWITHHMACSHA1ANDAES_256, PBEWITHHMACSHA224ANDAES_128, PBEWITHHMACSHA224ANDAES_256, PBEWITHHMACSHA256ANDAES_128, PBEWITHHMACSHA256ANDAES_256, PBEWITHHMACSHA384ANDAES_128, PBEWITHHMACSHA384ANDAES_256, PBEWITHHMACSHA512ANDAES_128, PBEWITHHMACSHA512ANDAES_256, PBEWITHMD5ANDDES, PBEWITHMD5ANDTRIPLEDES, PBEWITHSHA1ANDDESEDE, PBEWITHSHA1ANDRC2_128, PBEWITHSHA1ANDRC2_40, PBEWITHSHA1ANDRC4_128, PBEWITHSHA1ANDRC4_40<span class=o>]</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>PBE ALGORITHMS:      <span style=color:#ff79c6>[</span>PBEWITHHMACSHA1ANDAES_128, PBEWITHHMACSHA1ANDAES_256, PBEWITHHMACSHA224ANDAES_128, PBEWITHHMACSHA224ANDAES_256, PBEWITHHMACSHA256ANDAES_128, PBEWITHHMACSHA256ANDAES_256, PBEWITHHMACSHA384ANDAES_128, PBEWITHHMACSHA384ANDAES_256, PBEWITHHMACSHA512ANDAES_128, PBEWITHHMACSHA512ANDAES_256, PBEWITHMD5ANDDES, PBEWITHMD5ANDTRIPLEDES, PBEWITHSHA1ANDDESEDE, PBEWITHSHA1ANDRC2_128, PBEWITHSHA1ANDRC2_40, PBEWITHSHA1ANDRC4_128, PBEWITHSHA1ANDRC4_40<span style=color:#ff79c6>]</span>
 </code></pre></div><p>このリストの中のアルゴリズムはEncryptorをBean登録する時指定できるもののリストでもあるので、必要に応じて適切なものを選びましょう。強力なアルゴリズムを使うとアプリケーションの起動が遅くなる可能性もあります。(Spring BootアプリケーションのYAMLファイルは起動時に読み込まれますので)</p>
 <h2 id=最後に>最後に</h2>
 <p>アプリケーションの作りで、セキュリティの重要性はいうまでもなく高いものですね。先にも述べましたが、Springの設定ファイルでは特に、DBや外部システム連携のための接続情報などの敏感な情報が書かれることが少なくないため、外部設定ファイルがそのまま流出されたら困ることも起こり得ると思います。普段からそのようなことが怒らないように気を付けることももちろん大事ですが、こうやって暗号化によって情報を守るという手段もまた良い方法になるのでは、と思います。</p>

@@ -71,92 +71,92 @@ java
 <p>今回のポストでは、スキルといっても大したものはないですが、自分がコードを書きながらこれは便利だな(もしくは単に格好いいな)と思ったコーディングスキル的なものをいくつか集めました。</p>
 <h2 id=streamでlistの変換>StreamでListの変換</h2>
 <p>以下のような二つのクラスがあるとしましょう。コードの量を減らすためLombokを使っていると仮定します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Getter</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>Item</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Getter
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Item</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>value</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String value<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=nd>@Setter</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>Product</span> <span class=o>{</span>
+@Setter
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Product</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>value</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String value<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>業務的にこの二つのクラスのフィールドである<code>value</code>が同一なものと仮定します。そうすると、Itemクラスから<code>value</code>を取得してProductクラスに取り込むことが必要な状況もあるでしょう。このような場合、オブジェクトがそれぞれ一つだけだとあまり問題にならないですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>Product</span> <span class=nf>setProductValueFromItemValue</span><span class=o>(</span><span class=n>Item</span> <span class=n>item</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> Product <span style=color:#50fa7b>setProductValueFromItemValue</span><span style=color:#ff79c6>(</span>Item item<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>Product</span> <span class=n>product</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Product</span><span class=o>();</span>
-    <span class=n>product</span><span class=o>.</span><span class=na>setValue</span><span class=o>(</span><span class=n>item</span><span class=o>.</span><span class=na>getValue</span><span class=o>());</span>
-    <span class=k>return</span> <span class=n>product</span><span class=o>;</span>
-<span class=o>}</span>
+    Product product <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Product<span style=color:#ff79c6>();</span>
+    product<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setValue</span><span style=color:#ff79c6>(</span>item<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getValue</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>return</span> product<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>複数の項目をマッピングする必要があるなら、<a class=link href=http://modelmapper.org/ target=_blank rel=noopener>ModelMapper</a>のようなライブラリを使う方法もあります。同じような名前のGetter/Setterがあると自動でマッピングしてくれるので便利ですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>Product</span> <span class=nf>setProductValueFromItemValue</span><span class=o>(</span><span class=n>Item</span> <span class=n>item</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> Product <span style=color:#50fa7b>setProductValueFromItemValue</span><span style=color:#ff79c6>(</span>Item item<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>ModelMapper</span> <span class=n>mapper</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ModelMapper</span><span class=o>();</span>
-    <span class=n>Product</span> <span class=n>product</span> <span class=o>=</span> <span class=n>mapper</span><span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>item</span><span class=o>,</span> <span class=n>Product</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
-    <span class=k>return</span> <span class=n>product</span><span class=o>;</span>
-<span class=o>}</span>
+    ModelMapper mapper <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ModelMapper<span style=color:#ff79c6>();</span>
+    Product product <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>item<span style=color:#ff79c6>,</span> Product<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>return</span> product<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>しかし、これらがListやMapに入っているとどうするのでしょうか。普通にFor文のなかで同じくマッピングをさせる方法がありますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Product</span><span class=o>&gt;</span> <span class=nf>itemListToProductList</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=n>itemList</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>Product<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>itemListToProductList</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> itemList<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>List</span><span class=o>&lt;</span><span class=n>Product</span><span class=o>&gt;</span> <span class=n>productList</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
-    <span class=k>for</span> <span class=o>(</span><span class=n>Item</span> <span class=n>item</span> <span class=o>:</span> <span class=n>itemList</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>productList</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>mapper</span><span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>item</span><span class=o>,</span> <span class=n>Product</span><span class=o>.</span><span class=na>class</span><span class=o>));</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=n>productList</span><span class=o>;</span>
-<span class=o>}</span>
+    List<span style=color:#ff79c6>&lt;</span>Product<span style=color:#ff79c6>&gt;</span> productList <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Item item <span style=color:#ff79c6>:</span> itemList<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        productList<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>mapper<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>item<span style=color:#ff79c6>,</span> Product<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> productList<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これをStreamとLambdaを利用して、より簡単なコードにすることができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Product</span><span class=o>&gt;</span> <span class=nf>itemListToProductList</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=n>itemList</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>Product<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>itemListToProductList</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> itemList<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>List</span><span class=o>&lt;</span><span class=n>Product</span><span class=o>&gt;</span> <span class=n>productList</span> <span class=o>=</span> <span class=n>itemList</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>map</span><span class=o>(</span><span class=n>item</span> <span class=o>-&gt;</span> <span class=n>mapper</span><span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>item</span><span class=o>,</span> <span class=n>Product</span><span class=o>.</span><span class=na>class</span><span class=o>)).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
-    <span class=k>return</span> <span class=n>productList</span><span class=o>;</span>
-<span class=o>}</span>
+    List<span style=color:#ff79c6>&lt;</span>Product<span style=color:#ff79c6>&gt;</span> productList <span style=color:#ff79c6>=</span> itemList<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>item <span style=color:#ff79c6>-&gt;</span> mapper<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>item<span style=color:#ff79c6>,</span> Product<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>return</span> productList<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>やっていることはFor文とあまり変わりません。元のリストから要素を一つづつ取り出し、マッピングして新しいオブジェクトを作る。そしてそれを取り集めて新しいListを生成していますね。ただ、<code>map()</code>の引数はLambdaなのでただのマッピングだけでなく、より複雑な処理を入れることもできます。同じことをするとしてもより簡単で短いコードが完成されます。</p>
 <h2 id=collectionでimmutable>CollectionでImmutable</h2>
 <p>Immutable、すなわち不変クラスについては<a class=link href=../java-thoughts-of-immutable>前回のポスト</a>でも扱いました。今回はCollectionを使って、そのクラスのListやMapもImmutableにする方法について述べます。下のコードは、Listの例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=nf>returnAsUnmodifiableList</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>returnAsUnmodifiableList</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=k>return</span> <span class=n>Collentions</span><span class=o>.</span><span class=na>unmodifiableList</span><span class=o>(</span><span class=n>list</span><span class=o>);</span>
-<span class=o>}</span>
+    <span style=color:#ff79c6>return</span> Collentions<span style=color:#ff79c6>.</span><span style=color:#50fa7b>unmodifiableList</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>同じ方法で、<code>Collentions.unmodifiableMap()</code>でラッピングするとMapもImmutableにできます。こう変換されたListやMapは変更が不可能になるため設定系などのデータを持っている場合に有効活用できます。ただ、Nullが入るとNullPointerExceptionが発生するため注意しましょう。包みたいListがNullになる可能性がある場合は<code>Collection.emptyList()</code>を代わりに入れることができます。</p>
 <p>逆に、ImmutableになったListやMapを変更したい場合は新しいオブジェクトに複製します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=nf>returnAsModifiableList</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Item</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>returnAsModifiableList</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>Item<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=k>return</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;(</span><span class=n>list</span><span class=o>);</span>
-<span class=o>}</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;(</span>list<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただ、こうしてオブジェクトを複製してデータを変更する場合、元のImmutableなListにも反映されるので注意する必要があります。</p>
 <h2 id=カスタムクラスをiterableにする>カスタムクラスをIterableにする</h2>
 <p>とあるクラスの中に、子要素のクラスがListとして入っているとします。例えば、以下のようなイメージです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Container</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Container</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Baggage</span><span class=o>&gt;</span> <span class=n>baggages</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>Baggage<span style=color:#ff79c6>&gt;</span> baggages <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>場合によっては、このクラスの中の子要素を全部取り出してFor文を書きたい場合もあるはずです。そういう場合は普通、こんな形で使うのではないかと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>void</span> <span class=nf>printBaggageNames</span><span class=o>(</span><span class=n>Container</span> <span class=n>container</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>printBaggageNames</span><span style=color:#ff79c6>(</span>Container container<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=n>List</span><span class=o>&lt;</span><span class=n>Baggage</span><span class=o>&gt;</span> <span class=n>baggages</span> <span class=o>=</span> <span class=n>container</span><span class=o>.</span><span class=na>getBaggages</span><span class=o>();</span>
-    <span class=k>for</span> <span class=o>(</span><span class=n>Baggage</span> <span class=n>baggage</span> <span class=o>:</span> <span class=n>baggages</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>baggage</span><span class=o>.</span><span class=na>getName</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    List<span style=color:#ff79c6>&lt;</span>Baggage<span style=color:#ff79c6>&gt;</span> baggages <span style=color:#ff79c6>=</span> container<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getBaggages</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Baggage baggage <span style=color:#ff79c6>:</span> baggages<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>baggage<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getName</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>でも、このクラス自体を拡張For文のなかで使えるとしたら、より便利になりますね。つまり、以下のように使えるとしたいということです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kt>void</span> <span class=nf>printBaggageNames</span><span class=o>(</span><span class=n>Container</span> <span class=n>container</span><span class=o>)</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>printBaggageNames</span><span style=color:#ff79c6>(</span>Container container<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
 
-    <span class=k>for</span> <span class=o>(</span><span class=n>Baggage</span> <span class=n>baggage</span> <span class=o>:</span> <span class=n>container</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>baggage</span><span class=o>.</span><span class=na>getName</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Baggage baggage <span style=color:#ff79c6>:</span> container<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>baggage<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getName</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>もしこれができたら、Getterは要らなくなって、よりシンプルなコードがかけますね。また、Listそのものを取得させるわけではないので、Immutableにする必要もなくなります。</p>
 <p>これはIterableを使うことで具現化できます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Container</span> <span class=kd>implements</span> <span class=n>Iterable</span><span class=o>&lt;</span><span class=n>Baggage</span><span class=o>&gt;</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Container</span> <span style=color:#8be9fd;font-style:italic>implements</span> Iterable<span style=color:#ff79c6>&lt;</span>Baggage<span style=color:#ff79c6>&gt;</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=kd>final</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Baggage</span><span class=o>&gt;</span> <span class=n>baggages</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> List<span style=color:#ff79c6>&lt;</span>Baggage<span style=color:#ff79c6>&gt;</span> baggages <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>Iterator</span><span class=o>&lt;</span><span class=n>Baggage</span><span class=o>&gt;</span> <span class=nf>iterator</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>baggages</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> Iterator<span style=color:#ff79c6>&lt;</span>Baggage<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> baggages<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>こうすることで簡単に、親クラスから子要素を拡張For文の中で使えるようになります。簡単ですね！</p>
 <h2 id=最後に>最後に</h2>
 <p>そこまで高級スキル的なものはなかったのですが、覚えておくとどこかで必ず役に立ちそうなスキルをいくつか集めてみました。これらは実際の仕事でも使っているものであって、とりあえず「動けばいい」レベルを超えて行きたい時に有効活用できるようなものではないかと思いました。こういう細かいところでのスキルの差が、プログラマーとしての実力に繋がるものではないでしょうか。そう思って、今後からも何かわかったらまたポストとして作成したいと思います。</p>

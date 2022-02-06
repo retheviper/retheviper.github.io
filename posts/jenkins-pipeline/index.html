@@ -153,37 +153,37 @@ jenkins
 </figure></p>
 <h3 id=pipelineスクリプトの構造>Pipelineスクリプトの構造</h3>
 <p>では、簡単にPipelineスクリプトがどんな構造となっているかもみていきましょう。Pipelineスクリプトはまず以下のようなコードで定義します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>pipeline</span> <span class=o>{</span>
-  <span class=c1>// この中に実行するエージェントやステージを書く
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>pipeline <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// この中に実行するエージェントやステージを書く
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=実行エージェントの設定>実行エージェントの設定</h3>
 <p>pipelineブロックを書いたら、次はpipelineを実行する環境を設定します。単純にJenkinsが起動しているインスタンスの中での実行ならagent anyと書くだけですが、最近はジョブを実行するためだけのDockerコンテナを使うことも多いようです。その場合は実行環境としてDockerコンテナを指定する必要がありますね。以下のようなコードでコンテナを指定します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>pipeline</span> <span class=o>{</span>
-  <span class=n>agent</span> <span class=o>{</span>
-    <span class=n>docker</span> <span class=o>{</span>
-      <span class=n>image</span> <span class=s1>&#39;実行したいイメージ&#39;</span>
-      <span class=n>args</span> <span class=s1>&#39;イメージを実行する時に渡すコマンドライン変数&#39;</span> <span class=c1>// 省略可能
-</span><span class=c1></span>    <span class=o>}</span>
-  <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>pipeline <span style=color:#ff79c6>{</span>
+  agent <span style=color:#ff79c6>{</span>
+    docker <span style=color:#ff79c6>{</span>
+      image <span style=color:#f1fa8c>&#39;実行したいイメージ&#39;</span>
+      args <span style=color:#f1fa8c>&#39;イメージを実行する時に渡すコマンドライン変数&#39;</span> <span style=color:#6272a4>// 省略可能
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+  <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=ステージを作る>ステージを作る</h3>
 <p>環境まで設定できたら、次は実行したいタスクを書きます。ここで大事なのはステージという概念です。Jenkinsの公式サイトではステージブロックを「Pipeline全体で実行するタスクの明確なサブセット」として定義しています。つまり、ステージ一つが一つのタスクの段階という意味でしょう。ステージの中では一つのタスク単位であるステップを定義し、ステップの中で実行するコマンドを書きます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>pipeline</span> <span class=o>{</span>
-  <span class=n>agent</span> <span class=o>{</span>
-    <span class=c1>// Docker環境
-</span><span class=c1></span>  <span class=o>}</span>
-  <span class=n>stages</span> <span class=o>{</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;ステージ名1&#39;</span><span class=o>)</span> <span class=o>{</span>
-      <span class=n>steps</span> <span class=o>{</span>
-        <span class=c1>// 実行したいコマンド
-</span><span class=c1></span>      <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;ステージ名2&#39;</span><span class=o>)</span> <span class=o>{</span>
-      <span class=c1>// ...
-</span><span class=c1></span>    <span class=o>}</span>
-    <span class=c1>// ...
-</span><span class=c1></span>  <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>pipeline <span style=color:#ff79c6>{</span>
+  agent <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// Docker環境
+</span><span style=color:#6272a4></span>  <span style=color:#ff79c6>}</span>
+  stages <span style=color:#ff79c6>{</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;ステージ名1&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+      steps <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// 実行したいコマンド
+</span><span style=color:#6272a4></span>      <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;ステージ名2&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+      <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>  <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Pipelineそのものに対する説明は以上となります。では、次に実際のPipelineジョブを書いたらどんな形になるのかを紹介します。</p>
 <h3 id=pipelineスクリプト例題>Pipelineスクリプト例題</h3>
 <p>以下のジョブをPipelineで作ると仮定して、簡単な例題を作ってみました。</p>
@@ -194,40 +194,40 @@ jenkins
 <li>出来上がったwarファイルをAzure Blobにアップロード</li>
 </ol>
 <p>これを実際のコードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>pipeline</span> <span class=o>{</span>
-  <span class=n>agent</span> <span class=o>{</span>
-    <span class=n>docker</span> <span class=o>{</span>
-      <span class=n>image</span> <span class=s1>&#39;openjdk&#39;</span> <span class=c1>// openjdk公式イメージを使用
-</span><span class=c1></span>      <span class=n>args</span> <span class=s1>&#39;-u root&#39;</span> <span class=c1>// ユーザーをrootに指定
-</span><span class=c1></span>    <span class=o>}</span>
-  <span class=o>}</span>
-  <span class=n>stages</span> <span class=o>{</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;Checkout&#39;</span><span class=o>)</span> <span class=o>{</span> <span class=c1>// Gitチェックアウトステージ
-</span><span class=c1></span>      <span class=n>steps</span> <span class=o>{</span>
-        <span class=n>checkout</span><span class=o>([</span><span class=n>$class</span><span class=o>:</span> <span class=s1>&#39;GitSCM&#39;</span><span class=o>,</span> <span class=nl>branches:</span> <span class=o>[[</span><span class=nl>name:</span> <span class=s1>&#39;*/ブランチ&#39;</span><span class=o>]],</span> <span class=nl>doGenerateSubmoduleConfigurations:</span> <span class=kc>false</span><span class=o>,</span> <span class=nl>extensions:</span> <span class=o>[[</span><span class=n>$class</span><span class=o>:</span> <span class=s1>&#39;RelativeTargetDirectory&#39;</span><span class=o>,</span> <span class=nl>relativeTargetDir:</span> <span class=s1>&#39;保存するディレクトリ&#39;</span><span class=o>]],</span> <span class=nl>submoduleCfg:</span> <span class=o>[],</span> <span class=nl>userRemoteConfigs:</span> <span class=o>[[</span><span class=nl>credentialsId:</span> <span class=s1>&#39;GitクレデンシャルID&#39;</span><span class=o>,</span> <span class=nl>url:</span> <span class=s1>&#39;https://Gitレポジトリ&#39;</span><span class=o>]]])</span>
-      <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;Build&#39;</span><span class=o>)</span> <span class=o>{</span> <span class=c1>// ビルドステージ
-</span><span class=c1></span>      <span class=n>steps</span> <span class=o>{</span>
-        <span class=n>dir</span><span class=o>(</span><span class=nl>path:</span> <span class=s1>&#39;springbootapi&#39;</span><span class=o>)</span> <span class=o>{</span> <span class=c1>// 作業ディレクトリを指定
-</span><span class=c1></span>          <span class=n>sh</span> <span class=s1>&#39;./gradlew bootWar&#39;</span>
-        <span class=o>}</span>
-      <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;Upload&#39;</span><span class=o>)</span> <span class=o>{</span> <span class=c1>// ビルドしたwarファイルをAzure Blobにアップロードするステージ
-</span><span class=c1></span>      <span class=n>steps</span> <span class=o>{</span>
-        <span class=n>dir</span><span class=o>(</span><span class=s1>&#39;springbootapi/web/build/libs&#39;</span><span class=o>){</span>
-          <span class=n>azureUpload</span> <span class=nl>storageCredentialId:</span> <span class=s1>&#39;ストレージクレデンシャルID&#39;</span><span class=o>,</span> <span class=nl>storageType:</span> <span class=s1>&#39;blob&#39;</span><span class=o>,</span> <span class=nl>containerName:</span> <span class=s1>&#39;コンテナ名&#39;</span><span class=o>,</span> <span class=nl>filesPath:</span> <span class=s1>&#39;**/*.war&#39;</span>
-        <span class=o>}</span>
-      <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>stage</span><span class=o>(</span><span class=s1>&#39;Finalize&#39;</span><span class=o>)</span> <span class=o>{</span> <span class=c1>// 作業が終わるとワークスペースを削除するステージ
-</span><span class=c1></span>      <span class=n>steps</span> <span class=o>{</span>
-        <span class=n>cleanWs</span><span class=o>()</span>
-      <span class=o>}</span>
-    <span class=o>}</span>
-  <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>pipeline <span style=color:#ff79c6>{</span>
+  agent <span style=color:#ff79c6>{</span>
+    docker <span style=color:#ff79c6>{</span>
+      image <span style=color:#f1fa8c>&#39;openjdk&#39;</span> <span style=color:#6272a4>// openjdk公式イメージを使用
+</span><span style=color:#6272a4></span>      args <span style=color:#f1fa8c>&#39;-u root&#39;</span> <span style=color:#6272a4>// ユーザーをrootに指定
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+  <span style=color:#ff79c6>}</span>
+  stages <span style=color:#ff79c6>{</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;Checkout&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span> <span style=color:#6272a4>// Gitチェックアウトステージ
+</span><span style=color:#6272a4></span>      steps <span style=color:#ff79c6>{</span>
+        checkout<span style=color:#ff79c6>([</span>$class<span style=color:#ff79c6>:</span> <span style=color:#f1fa8c>&#39;GitSCM&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>branches:</span> <span style=color:#ff79c6>[[</span><span style=color:#8be9fd;font-style:italic>name:</span> <span style=color:#f1fa8c>&#39;*/ブランチ&#39;</span><span style=color:#ff79c6>]],</span> <span style=color:#8be9fd;font-style:italic>doGenerateSubmoduleConfigurations:</span> <span style=color:#ff79c6>false</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>extensions:</span> <span style=color:#ff79c6>[[</span>$class<span style=color:#ff79c6>:</span> <span style=color:#f1fa8c>&#39;RelativeTargetDirectory&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>relativeTargetDir:</span> <span style=color:#f1fa8c>&#39;保存するディレクトリ&#39;</span><span style=color:#ff79c6>]],</span> <span style=color:#8be9fd;font-style:italic>submoduleCfg:</span> <span style=color:#ff79c6>[],</span> <span style=color:#8be9fd;font-style:italic>userRemoteConfigs:</span> <span style=color:#ff79c6>[[</span><span style=color:#8be9fd;font-style:italic>credentialsId:</span> <span style=color:#f1fa8c>&#39;GitクレデンシャルID&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>url:</span> <span style=color:#f1fa8c>&#39;https://Gitレポジトリ&#39;</span><span style=color:#ff79c6>]]])</span>
+      <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;Build&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span> <span style=color:#6272a4>// ビルドステージ
+</span><span style=color:#6272a4></span>      steps <span style=color:#ff79c6>{</span>
+        dir<span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>path:</span> <span style=color:#f1fa8c>&#39;springbootapi&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span> <span style=color:#6272a4>// 作業ディレクトリを指定
+</span><span style=color:#6272a4></span>          sh <span style=color:#f1fa8c>&#39;./gradlew bootWar&#39;</span>
+        <span style=color:#ff79c6>}</span>
+      <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;Upload&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span> <span style=color:#6272a4>// ビルドしたwarファイルをAzure Blobにアップロードするステージ
+</span><span style=color:#6272a4></span>      steps <span style=color:#ff79c6>{</span>
+        dir<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;springbootapi/web/build/libs&#39;</span><span style=color:#ff79c6>){</span>
+          azureUpload <span style=color:#8be9fd;font-style:italic>storageCredentialId:</span> <span style=color:#f1fa8c>&#39;ストレージクレデンシャルID&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>storageType:</span> <span style=color:#f1fa8c>&#39;blob&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>containerName:</span> <span style=color:#f1fa8c>&#39;コンテナ名&#39;</span><span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>filesPath:</span> <span style=color:#f1fa8c>&#39;**/*.war&#39;</span>
+        <span style=color:#ff79c6>}</span>
+      <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    stage<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;Finalize&#39;</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span> <span style=color:#6272a4>// 作業が終わるとワークスペースを削除するステージ
+</span><span style=color:#6272a4></span>      steps <span style=color:#ff79c6>{</span>
+        cleanWs<span style=color:#ff79c6>()</span>
+      <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+  <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>まだPipelineのコードに慣れてないと難しいと思われるかもしれませんが、Pipeline Syntaxを活用するとすぐかけるものなので皆さんもぜひ挑戦してみてください。</p>
 <h2 id=最後に>最後に</h2>
 <p>最初Jenkinsに接した時もこんなに便利なツールがあるとは！と思いましたが、Pipelineの導入でさらに便利かつ明確にタスクがわかるようになっていて驚きました。最近はAzure Pipelinesを少し触る機会があったのですが、そちらのジョブ作成もこのJenkinsのPipelineを意識した感じです。これからのCI/CDツールは多分言語や文法は違っても、どれもこのような形になるのではないかと思うくらい良い変化です。皆さんもぜひJenkinsのPipelineに触れて、快適なビルド・デプロイを楽しんてみてください。</p>

@@ -109,219 +109,219 @@ java
 <p>以上の理由から、まず検証で使う4つのループの紹介と、そのベンチマークについて紹介したいと思います。</p>
 <h3 id=for文>For文</h3>
 <p>まずは伝統的な形のFor文です。一部では<code>c-style</code>とも呼ぶらしいですね。一番基本となるもので馴染みもありますが、やはり古い、という印象もあります。端的に、最近のいわゆる<code>モダン</code>な言語では、このような形のループは使えない場合もありますね。基本的に以下のような形です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>マイクロな最適化として、ループ対象のCollectionや配列の長さをあらかじめ宣言しておく場合もありますね。こうすると、ループ毎にループの対象となるCollectionや配列のサイズを毎回計算する必要がないため、少しは性能が有利になるという話があります。(コンパイラがこれぐらいの最適化は勝手にしてくれるという話もありますが)</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>size</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span>
-<span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>size</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-    <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd>int</span> size <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> size<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+    list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>この伝統的なFor文の良いところは、インデックスを基準にして処理をするため、インデックスが必要な場合はなんでもできるということです。例えば、以下のような場合があるでしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 偶数のインデックスのみ処理をしたい
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span> <span class=o>+=</span> <span class=n>2</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 偶数のインデックスのみ処理をしたい
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i <span style=color:#ff79c6>+=</span> 2<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// 条件と一致する要素のインデックスが知りたい
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>).</span><span class=na>length</span><span class=o>()</span> <span class=o>==</span> <span class=n>10</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// 条件と一致する要素のインデックスが知りたい
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>).</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>==</span> 10<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// 前後の要素と比較したい
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>1</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span> <span class=o>+=</span> <span class=n>2</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=s>&#34;インデックス&#34;</span> <span class=o>+</span> <span class=n>i</span> <span class=o>-</span> <span class=n>1</span> <span class=o>+</span> <span class=s>&#34;の長さ：&#34;</span> <span class=o>+</span> <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span> <span class=o>-</span> <span class=n>1</span><span class=o>).</span><span class=na>length</span><span class=o>()</span> <span class=o>+</span> <span class=s>&#34;、インデックス&#34;</span> <span class=o>+</span> <span class=n>i</span> <span class=o>+</span> <span class=s>&#34;の長さ：&#34;</span> <span class=o>+</span> <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>).</span><span class=na>length</span><span class=o>())</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// 前後の要素と比較したい
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 1<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i <span style=color:#ff79c6>+=</span> 2<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;インデックス&#34;</span> <span style=color:#ff79c6>+</span> i <span style=color:#ff79c6>-</span> 1 <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;の長さ：&#34;</span> <span style=color:#ff79c6>+</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>).</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;、インデックス&#34;</span> <span style=color:#ff79c6>+</span> i <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;の長さ：&#34;</span> <span style=color:#ff79c6>+</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>).</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>())</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただし、For文で指定されてあるインデックスが必ずループ対象の範囲内にあるかどうか、わからなくなる場合もあります。0から始まるインデックスで<code>i - 1</code>を指定してしまったり、iの範囲が対象のCollectionや配列よりも大きくなり例外を投げることになることもあるでしょう。また、インデックスを利用した場合、<a class=link href=https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B8%E3%83%83%E3%82%AF%E3%83%8A%E3%83%B3%E3%83%90%E3%83%BC_%28%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0%29 target=_blank rel=noopener>マジックナンバー</a>になってしまう可能性もあるので、バグが発生する可能性が上がったり、可読性が悪くなるなどの問題があります。なので、インデックスを基準に処理をしたい場合は慎重にコードを作成する必要がありますね。</p>
 <h2 id=拡張for文>拡張For文</h2>
 <p>いわゆる<code>for-each</code>文ですね。Colleciton/配列内の全要素を巡回しながら処理するには、これほど理解しやすく、安全なものはないかと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>element</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>element</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String element <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>最近は、Javaのみでなく他の言語でもこれが標準となっているようです(書き方は言語毎に少し違いますが)。それはつまり、インデックスによるループよりも、ループないで扱うオブジェクトを拡張For文で対象のCollection/配列内の要素に確実に制限した方が色々有利だということでしょう。実際、インデックスといいつつ、伝統的なForb文のものはCollection/配列のインデックスと同じものでもないですので、危険なコードでもありますから。</p>
 <p>伝統的なFor文と比べ、拡張For文の中ではインデックスを利用することができないという問題があります。ただ、全く方法がないわけではないです。どうしてもインデックスを拡張For文の中で使いたい場合は、ループの外に定数を宣言するか、Collectionなら利用できる<code>indexOf()</code>か、<code>Collections.binarySearch()</code>を使う方法があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 定数を利用する方法
-</span><span class=c1></span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
-<span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>element</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>element</span> <span class=o>+</span> <span class=s>&#34;のインデックス：&#34;</span> <span class=o>+</span> <span class=n>i</span><span class=o>);</span>
-    <span class=n>i</span><span class=o>++;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 定数を利用する方法
+</span><span style=color:#6272a4></span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String element <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>element <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;のインデックス：&#34;</span> <span style=color:#ff79c6>+</span> i<span style=color:#ff79c6>);</span>
+    i<span style=color:#ff79c6>++;</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// indexOf()を利用する場合
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>element</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>element</span> <span class=o>+</span> <span class=s>&#34;のインデックス：&#34;</span> <span class=o>+</span> <span class=n>list</span><span class=o>.</span><span class=na>indexOf</span><span class=o>(</span><span class=n>element</span><span class=o>));</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// indexOf()を利用する場合
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String element <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>element <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;のインデックス：&#34;</span> <span style=color:#ff79c6>+</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>indexOf</span><span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>));</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// Collections.binarySearch()を利用する場合
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>element</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>element</span> <span class=o>+</span> <span class=s>&#34;のインデックス：&#34;</span> <span class=o>+</span> <span class=n>Collections</span><span class=o>.</span><span class=na>binarySearch</span><span class=o>(</span><span class=n>values</span><span class=o>,</span> <span class=n>value</span><span class=o>));</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// Collections.binarySearch()を利用する場合
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String element <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>element <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;のインデックス：&#34;</span> <span style=color:#ff79c6>+</span> Collections<span style=color:#ff79c6>.</span><span style=color:#50fa7b>binarySearch</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>,</span> value<span style=color:#ff79c6>));</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただ、ループの中で<code>indexOf()</code>を使うのはあまり良い選択じゃないです。以下は<code>ArrayList.indexOf()</code>の実装になりますが、結局Collectionの中をループしながらインデックスを探すことになるので、実質的に二重ループになっちゃいます。なのでインデックスがどうしても必要な場合は、なるべく定数を使うか、伝統的なFor文を使うべきですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// ArrayList.indexOf()
-</span><span class=c1></span><span class=kd>public</span> <span class=kt>int</span> <span class=nf>indexOf</span><span class=o>(</span><span class=n>Object</span> <span class=n>o</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=n>indexOfRange</span><span class=o>(</span><span class=n>o</span><span class=o>,</span> <span class=n>0</span><span class=o>,</span> <span class=n>size</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// ArrayList.indexOf()
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>indexOf</span><span style=color:#ff79c6>(</span>Object o<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> indexOfRange<span style=color:#ff79c6>(</span>o<span style=color:#ff79c6>,</span> 0<span style=color:#ff79c6>,</span> size<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=kt>int</span> <span class=nf>indexOfRange</span><span class=o>(</span><span class=n>Object</span> <span class=n>o</span><span class=o>,</span> <span class=kt>int</span> <span class=n>start</span><span class=o>,</span> <span class=kt>int</span> <span class=n>end</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>Object</span><span class=o>[]</span> <span class=n>es</span> <span class=o>=</span> <span class=n>elementData</span><span class=o>;</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>start</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>end</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=k>if</span> <span class=o>(</span><span class=n>es</span><span class=o>[</span><span class=n>i</span><span class=o>]</span> <span class=o>==</span> <span class=kc>null</span><span class=o>)</span> <span class=o>{</span>
-                <span class=k>return</span> <span class=n>i</span><span class=o>;</span>
-            <span class=o>}</span>
-        <span class=o>}</span>
-    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>start</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>end</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=k>if</span> <span class=o>(</span><span class=n>o</span><span class=o>.</span><span class=na>equals</span><span class=o>(</span><span class=n>es</span><span class=o>[</span><span class=n>i</span><span class=o>]))</span> <span class=o>{</span>
-                <span class=k>return</span> <span class=n>i</span><span class=o>;</span>
-            <span class=o>}</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=o>-</span><span class=n>1</span><span class=o>;</span>
-<span class=o>}</span>
+<span style=color:#8be9fd>int</span> <span style=color:#50fa7b>indexOfRange</span><span style=color:#ff79c6>(</span>Object o<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> start<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> end<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    Object<span style=color:#ff79c6>[]</span> es <span style=color:#ff79c6>=</span> elementData<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>==</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> start<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> end<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>es<span style=color:#ff79c6>[</span>i<span style=color:#ff79c6>]</span> <span style=color:#ff79c6>==</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+                <span style=color:#ff79c6>return</span> i<span style=color:#ff79c6>;</span>
+            <span style=color:#ff79c6>}</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> start<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> end<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o<span style=color:#ff79c6>.</span><span style=color:#50fa7b>equals</span><span style=color:#ff79c6>(</span>es<span style=color:#ff79c6>[</span>i<span style=color:#ff79c6>]))</span> <span style=color:#ff79c6>{</span>
+                <span style=color:#ff79c6>return</span> i<span style=color:#ff79c6>;</span>
+            <span style=color:#ff79c6>}</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>-</span>1<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p><code>Collections</code>の<code>binarySearch()</code>を利用する場合も、結局ループしながらインデックスを探すというのは変わりませんので注意を。以下はその実装です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Collections.binarySearch()
-</span><span class=c1></span><span class=kd>public</span> <span class=kd>static</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>int</span> <span class=nf>binarySearch</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;&gt;</span> <span class=n>list</span><span class=o>,</span> <span class=n>T</span> <span class=n>key</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>list</span> <span class=k>instanceof</span> <span class=n>RandomAccess</span> <span class=o>||</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>()&lt;</span><span class=n>BINARYSEARCH_THRESHOLD</span><span class=o>)</span>
-        <span class=k>return</span> <span class=n>Collections</span><span class=o>.</span><span class=na>indexedBinarySearch</span><span class=o>(</span><span class=n>list</span><span class=o>,</span> <span class=n>key</span><span class=o>);</span>
-    <span class=k>else</span>
-        <span class=k>return</span> <span class=n>Collections</span><span class=o>.</span><span class=na>iteratorBinarySearch</span><span class=o>(</span><span class=n>list</span><span class=o>,</span> <span class=n>key</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Collections.binarySearch()
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>binarySearch</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;&gt;</span> list<span style=color:#ff79c6>,</span> T key<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>list <span style=color:#ff79c6>instanceof</span> RandomAccess <span style=color:#ff79c6>||</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()&lt;</span>BINARYSEARCH_THRESHOLD<span style=color:#ff79c6>)</span>
+        <span style=color:#ff79c6>return</span> Collections<span style=color:#ff79c6>.</span><span style=color:#50fa7b>indexedBinarySearch</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>,</span> key<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>else</span>
+        <span style=color:#ff79c6>return</span> Collections<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iteratorBinarySearch</span><span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>,</span> key<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=kd>private</span> <span class=kd>static</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>int</span> <span class=nf>indexedBinarySearch</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;&gt;</span> <span class=n>list</span><span class=o>,</span> <span class=n>T</span> <span class=n>key</span><span class=o>)</span> <span class=o>{</span>
-    <span class=kt>int</span> <span class=n>low</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
-    <span class=kt>int</span> <span class=n>high</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>()-</span><span class=n>1</span><span class=o>;</span>
+<span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>indexedBinarySearch</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;&gt;</span> list<span style=color:#ff79c6>,</span> T key<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd>int</span> low <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd>int</span> high <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()-</span>1<span style=color:#ff79c6>;</span>
 
-    <span class=k>while</span> <span class=o>(</span><span class=n>low</span> <span class=o>&lt;=</span> <span class=n>high</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kt>int</span> <span class=n>mid</span> <span class=o>=</span> <span class=o>(</span><span class=n>low</span> <span class=o>+</span> <span class=n>high</span><span class=o>)</span> <span class=o>&gt;&gt;&gt;</span> <span class=n>1</span><span class=o>;</span>
-        <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;</span> <span class=n>midVal</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>mid</span><span class=o>);</span>
-        <span class=kt>int</span> <span class=n>cmp</span> <span class=o>=</span> <span class=n>midVal</span><span class=o>.</span><span class=na>compareTo</span><span class=o>(</span><span class=n>key</span><span class=o>);</span>
+    <span style=color:#ff79c6>while</span> <span style=color:#ff79c6>(</span>low <span style=color:#ff79c6>&lt;=</span> high<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd>int</span> mid <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>(</span>low <span style=color:#ff79c6>+</span> high<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>&gt;&gt;&gt;</span> 1<span style=color:#ff79c6>;</span>
+        Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;</span> midVal <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>mid<span style=color:#ff79c6>);</span>
+        <span style=color:#8be9fd>int</span> cmp <span style=color:#ff79c6>=</span> midVal<span style=color:#ff79c6>.</span><span style=color:#50fa7b>compareTo</span><span style=color:#ff79c6>(</span>key<span style=color:#ff79c6>);</span>
 
-        <span class=k>if</span> <span class=o>(</span><span class=n>cmp</span> <span class=o>&lt;</span> <span class=n>0</span><span class=o>)</span>
-            <span class=n>low</span> <span class=o>=</span> <span class=n>mid</span> <span class=o>+</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>cmp</span> <span class=o>&gt;</span> <span class=n>0</span><span class=o>)</span>
-            <span class=n>high</span> <span class=o>=</span> <span class=n>mid</span> <span class=o>-</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>else</span>
-            <span class=k>return</span> <span class=n>mid</span><span class=o>;</span> <span class=c1>// key found
-</span><span class=c1></span>    <span class=o>}</span>
-    <span class=k>return</span> <span class=o>-(</span><span class=n>low</span> <span class=o>+</span> <span class=n>1</span><span class=o>);</span>  <span class=c1>// key not found
-</span><span class=c1></span><span class=o>}</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>cmp <span style=color:#ff79c6>&lt;</span> 0<span style=color:#ff79c6>)</span>
+            low <span style=color:#ff79c6>=</span> mid <span style=color:#ff79c6>+</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>cmp <span style=color:#ff79c6>&gt;</span> 0<span style=color:#ff79c6>)</span>
+            high <span style=color:#ff79c6>=</span> mid <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>else</span>
+            <span style=color:#ff79c6>return</span> mid<span style=color:#ff79c6>;</span> <span style=color:#6272a4>// key found
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>-(</span>low <span style=color:#ff79c6>+</span> 1<span style=color:#ff79c6>);</span>  <span style=color:#6272a4>// key not found
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 
-<span class=kd>private</span> <span class=kd>static</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=kt>int</span> <span class=nf>iteratorBinarySearch</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;&gt;</span> <span class=n>list</span><span class=o>,</span> <span class=n>T</span> <span class=n>key</span><span class=o>)</span> <span class=o>{</span>
-    <span class=kt>int</span> <span class=n>low</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
-    <span class=kt>int</span> <span class=n>high</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>()-</span><span class=n>1</span><span class=o>;</span>
-    <span class=n>ListIterator</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;&gt;</span> <span class=n>i</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>listIterator</span><span class=o>();</span>
+<span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>iteratorBinarySearch</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;&gt;</span> list<span style=color:#ff79c6>,</span> T key<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd>int</span> low <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd>int</span> high <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>()-</span>1<span style=color:#ff79c6>;</span>
+    ListIterator<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;&gt;</span> i <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>listIterator</span><span style=color:#ff79c6>();</span>
 
-    <span class=k>while</span> <span class=o>(</span><span class=n>low</span> <span class=o>&lt;=</span> <span class=n>high</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kt>int</span> <span class=n>mid</span> <span class=o>=</span> <span class=o>(</span><span class=n>low</span> <span class=o>+</span> <span class=n>high</span><span class=o>)</span> <span class=o>&gt;&gt;&gt;</span> <span class=n>1</span><span class=o>;</span>
-        <span class=n>Comparable</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;</span> <span class=n>midVal</span> <span class=o>=</span> <span class=n>get</span><span class=o>(</span><span class=n>i</span><span class=o>,</span> <span class=n>mid</span><span class=o>);</span>
-        <span class=kt>int</span> <span class=n>cmp</span> <span class=o>=</span> <span class=n>midVal</span><span class=o>.</span><span class=na>compareTo</span><span class=o>(</span><span class=n>key</span><span class=o>);</span>
+    <span style=color:#ff79c6>while</span> <span style=color:#ff79c6>(</span>low <span style=color:#ff79c6>&lt;=</span> high<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd>int</span> mid <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>(</span>low <span style=color:#ff79c6>+</span> high<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>&gt;&gt;&gt;</span> 1<span style=color:#ff79c6>;</span>
+        Comparable<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;</span> midVal <span style=color:#ff79c6>=</span> get<span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>,</span> mid<span style=color:#ff79c6>);</span>
+        <span style=color:#8be9fd>int</span> cmp <span style=color:#ff79c6>=</span> midVal<span style=color:#ff79c6>.</span><span style=color:#50fa7b>compareTo</span><span style=color:#ff79c6>(</span>key<span style=color:#ff79c6>);</span>
 
-        <span class=k>if</span> <span class=o>(</span><span class=n>cmp</span> <span class=o>&lt;</span> <span class=n>0</span><span class=o>)</span>
-            <span class=n>low</span> <span class=o>=</span> <span class=n>mid</span> <span class=o>+</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>cmp</span> <span class=o>&gt;</span> <span class=n>0</span><span class=o>)</span>
-            <span class=n>high</span> <span class=o>=</span> <span class=n>mid</span> <span class=o>-</span> <span class=n>1</span><span class=o>;</span>
-        <span class=k>else</span>
-            <span class=k>return</span> <span class=n>mid</span><span class=o>;</span> <span class=c1>// key found
-</span><span class=c1></span>    <span class=o>}</span>
-    <span class=k>return</span> <span class=o>-(</span><span class=n>low</span> <span class=o>+</span> <span class=n>1</span><span class=o>);</span>  <span class=c1>// key not found
-</span><span class=c1></span><span class=o>}</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>cmp <span style=color:#ff79c6>&lt;</span> 0<span style=color:#ff79c6>)</span>
+            low <span style=color:#ff79c6>=</span> mid <span style=color:#ff79c6>+</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>cmp <span style=color:#ff79c6>&gt;</span> 0<span style=color:#ff79c6>)</span>
+            high <span style=color:#ff79c6>=</span> mid <span style=color:#ff79c6>-</span> 1<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>else</span>
+            <span style=color:#ff79c6>return</span> mid<span style=color:#ff79c6>;</span> <span style=color:#6272a4>// key found
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>-(</span>low <span style=color:#ff79c6>+</span> 1<span style=color:#ff79c6>);</span>  <span style=color:#6272a4>// key not found
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=iterator>Iterator</h2>
 <p>Iteratorは、個人的にあまり馴染まない(使いたくない)ものです。どのCollectionでもIteratorとして抽出ができてしまうので、CollectionよりもIteratorが主体になってしまうような感覚であり、定型文な書き方を矯正しているからです。少なくとも拡張ForではどんなCollectionのどんな要素を抽出して使っているのか明確ですが、Iteratorだとそれがわからないですね。</p>
 <p>とにかく、そんなIteratorですが、ForでもWhileでもループをかけるという特徴があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Forを使う
-</span><span class=c1></span><span class=k>for</span> <span class=o>(</span><span class=n>Iterator</span> <span class=n>iterator</span> <span class=o>=</span> <span class=n>values</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span> <span class=n>iterator</span><span class=o>.</span><span class=na>hasNext</span><span class=o>();</span> <span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>());</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Forを使う
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Iterator iterator <span style=color:#ff79c6>=</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span> iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>hasNext</span><span style=color:#ff79c6>();</span> <span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>());</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// Whileを使う
-</span><span class=c1></span><span class=n>Iterator</span> <span class=n>iterator</span> <span class=o>=</span> <span class=n>values</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span>
-<span class=k>while</span> <span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>hasNext</span><span class=o>())</span> <span class=o>{</span>
-  <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>());</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// Whileを使う
+</span><span style=color:#6272a4></span>Iterator iterator <span style=color:#ff79c6>=</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>while</span> <span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>hasNext</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+  System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>());</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Iteratrorを使う場合の問題は、使い方がいまいち直感的ではないということです。例えば以下のような例をみましょう。<code>getFoo()</code>と<code>getBar()</code>は、同じオブジェクトから呼ばれているように勘違いしやすいのではないでしょうか。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=k>for</span> <span class=o>(</span><span class=n>Iterator</span> <span class=n>iterator</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span> <span class=n>iterator</span><span class=o>.</span><span class=na>hasNext</span><span class=o>();</span> <span class=o>)</span> <span class=o>{</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>().</span><span class=na>getFoo</span><span class=o>());</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>().</span><span class=na>getBar</span><span class=o>());</span> <span class=c1>// 注意！
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Iterator iterator <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span> iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>hasNext</span><span style=color:#ff79c6>();</span> <span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getFoo</span><span style=color:#ff79c6>());</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getBar</span><span style=color:#ff79c6>());</span> <span style=color:#6272a4>// 注意！
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><p>面白いことに、拡張For文のバイトコードは、Iteratorを使うコードになるということです。なので少なくとも拡張For文は、Iteratorよりは発展した形と言えるのかも知れません。</p>
 <h2 id=foreach>forEach()</h2>
 <p>モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかも知れません。何よりコードが短くなるのが好きですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>list</span><span class=o>.</span><span class=na>forEach</span><span class=o>(</span><span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>::</span><span class=n>println</span><span class=o>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>::</span>println<span style=color:#ff79c6>)</span>
 </code></pre></div><p>実装としても、拡張For文の中でLambdaを実行するという単純な構造になっています。なので単純に考えて、拡張For文よりは性能が劣る可能性がありますね。以下はIterableの実装です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// IterableのforEach()
-</span><span class=c1></span><span class=k>default</span> <span class=kt>void</span> <span class=nf>forEach</span><span class=o>(</span><span class=n>Consumer</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>T</span><span class=o>&gt;</span> <span class=n>action</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>Objects</span><span class=o>.</span><span class=na>requireNonNull</span><span class=o>(</span><span class=n>action</span><span class=o>);</span>
-    <span class=k>for</span> <span class=o>(</span><span class=n>T</span> <span class=n>t</span> <span class=o>:</span> <span class=k>this</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>action</span><span class=o>.</span><span class=na>accept</span><span class=o>(</span><span class=n>t</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// IterableのforEach()
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>default</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>Consumer<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> T<span style=color:#ff79c6>&gt;</span> action<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    Objects<span style=color:#ff79c6>.</span><span style=color:#50fa7b>requireNonNull</span><span style=color:#ff79c6>(</span>action<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>T t <span style=color:#ff79c6>:</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        action<span style=color:#ff79c6>.</span><span style=color:#50fa7b>accept</span><span style=color:#ff79c6>(</span>t<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただ、ArrayListの場合は実装が大きく違います。なので性能も大きく変わる可能性がありますね。以下はその実装です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// ArrayListのforEach()
-</span><span class=c1></span><span class=kd>public</span> <span class=kt>void</span> <span class=nf>forEach</span><span class=o>(</span><span class=n>Consumer</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>E</span><span class=o>&gt;</span> <span class=n>action</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>Objects</span><span class=o>.</span><span class=na>requireNonNull</span><span class=o>(</span><span class=n>action</span><span class=o>);</span>
-    <span class=kd>final</span> <span class=kt>int</span> <span class=n>expectedModCount</span> <span class=o>=</span> <span class=n>modCount</span><span class=o>;</span>
-    <span class=kd>final</span> <span class=n>Object</span><span class=o>[]</span> <span class=n>es</span> <span class=o>=</span> <span class=n>elementData</span><span class=o>;</span>
-    <span class=kd>final</span> <span class=kt>int</span> <span class=n>size</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>size</span><span class=o>;</span>
-    <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>modCount</span> <span class=o>==</span> <span class=n>expectedModCount</span> <span class=o>&amp;&amp;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>size</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span>
-        <span class=n>action</span><span class=o>.</span><span class=na>accept</span><span class=o>(</span><span class=n>elementAt</span><span class=o>(</span><span class=n>es</span><span class=o>,</span> <span class=n>i</span><span class=o>));</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>modCount</span> <span class=o>!=</span> <span class=n>expectedModCount</span><span class=o>)</span>
-        <span class=k>throw</span> <span class=k>new</span> <span class=n>ConcurrentModificationException</span><span class=o>();</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// ArrayListのforEach()
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>Consumer<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> E<span style=color:#ff79c6>&gt;</span> action<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    Objects<span style=color:#ff79c6>.</span><span style=color:#50fa7b>requireNonNull</span><span style=color:#ff79c6>(</span>action<span style=color:#ff79c6>);</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> expectedModCount <span style=color:#ff79c6>=</span> modCount<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> Object<span style=color:#ff79c6>[]</span> es <span style=color:#ff79c6>=</span> elementData<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> size <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> modCount <span style=color:#ff79c6>==</span> expectedModCount <span style=color:#ff79c6>&amp;&amp;</span> i <span style=color:#ff79c6>&lt;</span> size<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span>
+        action<span style=color:#ff79c6>.</span><span style=color:#50fa7b>accept</span><span style=color:#ff79c6>(</span>elementAt<span style=color:#ff79c6>(</span>es<span style=color:#ff79c6>,</span> i<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>modCount <span style=color:#ff79c6>!=</span> expectedModCount<span style=color:#ff79c6>)</span>
+        <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> ConcurrentModificationException<span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=kd>static</span> <span class=o>&lt;</span><span class=n>E</span><span class=o>&gt;</span> <span class=n>E</span> <span class=nf>elementAt</span><span class=o>(</span><span class=n>Object</span><span class=o>[]</span> <span class=n>es</span><span class=o>,</span> <span class=kt>int</span> <span class=n>index</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=o>(</span><span class=n>E</span><span class=o>)</span> <span class=n>es</span><span class=o>[</span><span class=n>index</span><span class=o>];</span>
-<span class=o>}</span>
+<span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#ff79c6>&lt;</span>E<span style=color:#ff79c6>&gt;</span> E <span style=color:#50fa7b>elementAt</span><span style=color:#ff79c6>(</span>Object<span style=color:#ff79c6>[]</span> es<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> index<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>(</span>E<span style=color:#ff79c6>)</span> es<span style=color:#ff79c6>[</span>index<span style=color:#ff79c6>];</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=ベンチマークで検証してみると>ベンチマークで検証してみると</h2>
 <p>この度も、JMHを使って簡単なベンチマークを作ってみました。実はstatic finalなフィールドとして宣言しておくとそのオブジェクトを全てのベンチマークで使い回してくれるのかな、と思っていましたが、どうやらそうではなかったみたいです。なので今回は、ちゃんと@Setupアノテーションを使ってフィールドの初期化をしてみました。実際のコードは以下のとおりです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@State</span><span class=o>(</span><span class=n>Scope</span><span class=o>.</span><span class=na>Thread</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>LoopTest</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@State<span style=color:#ff79c6>(</span>Scope<span style=color:#ff79c6>.</span><span style=color:#50fa7b>Thread</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>LoopTest</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>values</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> values<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Setup</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>init</span><span class=o>()</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>DecimalFormat</span> <span class=n>format</span> <span class=o>=</span> <span class=k>new</span> <span class=n>DecimalFormat</span><span class=o>(</span><span class=s>&#34;0000000&#34;</span><span class=o>);</span>
-        <span class=n>values</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>0</span><span class=o>,</span> <span class=n>9999999</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>format</span><span class=o>::</span><span class=n>format</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
-    <span class=o>}</span>
+    @Setup
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>init</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> DecimalFormat format <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> DecimalFormat<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;0000000&#34;</span><span style=color:#ff79c6>);</span>
+        values <span style=color:#ff79c6>=</span> IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>rangeClosed</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>,</span> 9999999<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>format<span style=color:#ff79c6>::</span>format<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>indexLoop</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=kt>int</span> <span class=n>length</span> <span class=o>=</span> <span class=n>values</span><span class=o>.</span><span class=na>size</span><span class=o>();</span>
-        <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>length</span><span class=o>;</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>values</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>));</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>indexLoop</span><span style=color:#ff79c6>(</span>Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> length <span style=color:#ff79c6>=</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> length<span style=color:#ff79c6>;</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+            bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>));</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>iteratorLoopFor</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=n>Iterator</span> <span class=n>iterator</span> <span class=o>=</span> <span class=n>values</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span> <span class=n>iterator</span><span class=o>.</span><span class=na>hasNext</span><span class=o>();</span> <span class=o>)</span> <span class=o>{</span>
-            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>());</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>iteratorLoopFor</span><span style=color:#ff79c6>(</span>Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>Iterator iterator <span style=color:#ff79c6>=</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span> iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>hasNext</span><span style=color:#ff79c6>();</span> <span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>());</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>iteratorLoopWhile</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>Iterator</span> <span class=n>iterator</span> <span class=o>=</span> <span class=n>values</span><span class=o>.</span><span class=na>iterator</span><span class=o>();</span>
-        <span class=k>while</span> <span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>hasNext</span><span class=o>())</span> <span class=o>{</span>
-            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>iterator</span><span class=o>.</span><span class=na>next</span><span class=o>());</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>iteratorLoopWhile</span><span style=color:#ff79c6>(</span>Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> Iterator iterator <span style=color:#ff79c6>=</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>iterator</span><span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>while</span> <span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>hasNext</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+            bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>iterator<span style=color:#ff79c6>.</span><span style=color:#50fa7b>next</span><span style=color:#ff79c6>());</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>extendedLoop</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>value</span> <span class=o>:</span> <span class=n>values</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>bh</span><span class=o>.</span><span class=na>consume</span><span class=o>(</span><span class=n>value</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>extendedLoop</span><span style=color:#ff79c6>(</span>Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String value <span style=color:#ff79c6>:</span> values<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            bh<span style=color:#ff79c6>.</span><span style=color:#50fa7b>consume</span><span style=color:#ff79c6>(</span>value<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Benchmark</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>forEachLoop</span><span class=o>(</span><span class=n>Blackhole</span> <span class=n>bh</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>values</span><span class=o>.</span><span class=na>forEach</span><span class=o>(</span><span class=n>bh</span><span class=o>::</span><span class=n>consume</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Benchmark
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>forEachLoop</span><span style=color:#ff79c6>(</span>Blackhole bh<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>bh<span style=color:#ff79c6>::</span>consume<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そしてベンチマークの結果は、以下のとおりです。</p>
 <pre tabindex=0><code class=language-dos data-lang=dos>Benchmark                    Mode  Cnt   Score   Error  Units
 LoopTest.indexLoop          thrpt   25  27.737 ± 0.475  ops/s
@@ -337,42 +337,42 @@ LoopTest.forEachLoop        thrpt   25  12.479 ± 0.104  ops/s
 <h3 id=可読性とエラー発生可能性の側面から考える>可読性とエラー発生可能性の側面から考える</h3>
 <p>拡張For文(forEach())では、Collectionそのものの要素をことができます。逆に、For文やIteratorでは可能ですね。ならば、Collectionや配列の中でとある条件と一致する要素だけのことしたい場合は、拡張For文よりもFor文やIteratorを使うべきであるようにも見えます。</p>
 <p>しかし、観点を変えてみると、元のオブジェクトそのものが変わることで起こり得るサイドエフェクトが発生する場合も考えられます。こういう場合、元のオブジェクトを直接操作できるということはメリットではなくデメリットになってしまいますね。なので、どちらかというと、与えられたCollection/配列から条件に一致する要素だけを抽出して新しいCollection/配列のインスタンスを生成するのが正解の可能性もあります。そしてそれをよりわかりやすいコードとして実現できるのは拡張For文(forEach())ですね。例えば、以下のようにです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 元のリストが変わってしまう
-</span><span class=c1></span><span class=kd>public</span> <span class=kt>void</span> <span class=nf>filterFor</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>).</span><span class=na>length</span><span class=o>()</span> <span class=o>&gt;</span> <span class=n>10</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>list</span><span class=o>.</span><span class=na>remove</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 元のリストが変わってしまう
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>filterFor</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>).</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>&gt;</span> 10<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>remove</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// 元のリストには影響がない - For文
-</span><span class=c1></span><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=nf>filterFor</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>result</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
-    <span class=k>for</span> <span class=o>(</span><span class=kt>int</span> <span class=n>i</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>list</span><span class=o>.</span><span class=na>size</span><span class=o>();</span> <span class=n>i</span><span class=o>++)</span> <span class=o>{</span>
-        <span class=n>String</span> <span class=n>element</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>element</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>&lt;=</span> <span class=n>10</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>result</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>element</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=n>result</span><span class=o>;</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// 元のリストには影響がない - For文
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>filterFor</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> result <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> i <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span> i <span style=color:#ff79c6>&lt;</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>();</span> i<span style=color:#ff79c6>++)</span> <span style=color:#ff79c6>{</span>
+        String element <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>&lt;=</span> 10<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            result<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> result<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// 元のリストには影響がない - 拡張For文
-</span><span class=c1></span><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=nf>filterForEach</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>result</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
-    <span class=k>for</span> <span class=o>(</span><span class=n>String</span> <span class=n>element</span> <span class=o>:</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>element</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>&lt;=</span> <span class=n>10</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>result</span><span class=o>.</span><span class=na>add</span><span class=o>(</span><span class=n>element</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=n>result</span><span class=o>;</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// 元のリストには影響がない - 拡張For文
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>filterForEach</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> result <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
+    <span style=color:#ff79c6>for</span> <span style=color:#ff79c6>(</span>String element <span style=color:#ff79c6>:</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>&lt;=</span> 10<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            result<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>element<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> result<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=c1>// 元のリストには影響がない - Stream.forEach()
-</span><span class=c1></span><span class=kd>public</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=nf>filterStream</span><span class=o>(</span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>filter</span><span class=o>(</span><span class=n>element</span> <span class=o>-&gt;</span> <span class=n>element</span><span class=o>.</span><span class=na>length</span><span class=o>()</span> <span class=o>&lt;=</span> <span class=n>10</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// 元のリストには影響がない - Stream.forEach()
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>public</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>filterStream</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>(</span>element <span style=color:#ff79c6>-&gt;</span> element<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>&lt;=</span> 10<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>良いコードは、短く、わかりやすいコードなのではないかと思っています。そしてわかり安いコードは、誰がメンテしてもバグを起こす可能性は低くなるはずでしょう。そういう観点からすると、伝統的なFor文とIteratorは、今は使うべきではないのかも知れません。</p>
 <h3 id=処理能力の側面から考える>処理能力の側面から考える</h3>
 <p>処理能力、というのはある程度性能ともつながるものですね。なので、性能という側面でもう一度考えてみます。互換性、汎用性などとも言える物かもしれません。ここで言いたいのは、Collection/配列がどんなものであれ、一定の性能を保証する実装を考える必要があるということです。</p>
@@ -380,22 +380,22 @@ LoopTest.forEachLoop        thrpt   25  12.479 ± 0.104  ops/s
 <p>引数としてListをまず宣言しておくと、言語の仕様としてはListの実装クラスはどれでも許容することになりますね。なので引数として入ってくるのは<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ArrayList.html target=_blank rel=noopener>ArrayList</a>になる可能性もあり、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedList.html target=_blank rel=noopener>LinkedList</a>にな可能性もあり、極端的には<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/AbstractList.html target=_blank rel=noopener>AbstractList</a>で個人がカスタマイズしたものが来る場合もあると予想できます。他にもJava 11を基準に、java.util.Listを継承しているCollectionの実装クラスの場合、例えば<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/AbstractSequentialList.html target=_blank rel=noopener>AbstractSequentialList</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.management/javax/management/AttributeList.html target=_blank rel=noopener>AttributeList</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/CopyOnWriteArrayList.html target=_blank rel=noopener>CopyOnWriteArrayList</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.management/javax/management/relation/RoleList.html target=_blank rel=noopener>RoleList</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.management/javax/management/relation/RoleUnresolvedList.html target=_blank rel=noopener>RoleUnresolvedList</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Stack.html target=_blank rel=noopener>Stack</a>、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Vector.html target=_blank rel=noopener>Vector</a>などがあって、これらが全部Listになりえるので、どの実装でも対応する必要があります。</p>
 <p>もちろん、Javaでとあるインタフェースを継承するということは、処理の前提条件と結果結果が明確であることと同じ意味なので、実装クラスが変わったって、処理の結果が大きく変わることはないです。ただ、Listの実装クラスが複数存在するのは、それらを使う目的によってどちらかに偏ったパフォーマンスを見せるためであることをまず理解する必要がありますね。これはつまり、同じ条件下でも実装クラスによって処理の性能が大きく変わる可能性があるということです。一般的に多く使われているListの実装クラスはArrayListですが、参照以外の性能が劣るという理由からLinkedListが使われる場面もあると予想できます。だとすると、ArrayListで性能がよかったものがLinkedListでもそうとは限らないものですね。</p>
 <p>上記で実施したベンチマークだけをみて、性能は絶対これが有利だ、と言いきれない理由がここにあります。なぜなら、テストようのデータを<code>Collectors.toList()</code>を使ってListとして作成していますが、以下のコードでわかるように、常にArrayListが生成されているからです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>static</span> <span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span> <span class=n>Collector</span><span class=o>&lt;</span><span class=n>T</span><span class=o>,</span> <span class=o>?,</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;&gt;</span> <span class=nf>toList</span><span class=o>()</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=k>new</span> <span class=n>CollectorImpl</span><span class=o>&lt;&gt;((</span><span class=n>Supplier</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;&gt;)</span> <span class=n>ArrayList</span><span class=o>::</span><span class=k>new</span><span class=o>,</span> <span class=n>List</span><span class=o>::</span><span class=n>add</span><span class=o>,</span>
-                                <span class=o>(</span><span class=n>left</span><span class=o>,</span> <span class=n>right</span><span class=o>)</span> <span class=o>-&gt;</span> <span class=o>{</span> <span class=n>left</span><span class=o>.</span><span class=na>addAll</span><span class=o>(</span><span class=n>right</span><span class=o>);</span> <span class=k>return</span> <span class=n>left</span><span class=o>;</span> <span class=o>},</span>
-                                <span class=n>CH_ID</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;</span> Collector<span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>?,</span> List<span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;&gt;</span> <span style=color:#50fa7b>toList</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> CollectorImpl<span style=color:#ff79c6>&lt;&gt;((</span>Supplier<span style=color:#ff79c6>&lt;</span>List<span style=color:#ff79c6>&lt;</span>T<span style=color:#ff79c6>&gt;&gt;)</span> ArrayList<span style=color:#ff79c6>::</span><span style=color:#ff79c6>new</span><span style=color:#ff79c6>,</span> List<span style=color:#ff79c6>::</span>add<span style=color:#ff79c6>,</span>
+                                <span style=color:#ff79c6>(</span>left<span style=color:#ff79c6>,</span> right<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>{</span> left<span style=color:#ff79c6>.</span><span style=color:#50fa7b>addAll</span><span style=color:#ff79c6>(</span>right<span style=color:#ff79c6>);</span> <span style=color:#ff79c6>return</span> left<span style=color:#ff79c6>;</span> <span style=color:#ff79c6>},</span>
+                                CH_ID<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>なので、ついでに他の実装クラスのベンチマークもしてみることにしました。ただ、Listの実装クラスを全部テストするのは無理があるので(特に、AbstractListやAbstractSequentialListは別途実装が必要ですし、CopyOnWriteArrayListはマルチスレッドでないと意味がないし、RoleListやVectorはほとんど使われてなく、Stackをループで利用するとは思わないので)、LinkedListの場合はどうかだけ確認してみました。まあ、ArrayListと違う反例は一つだけあったら十分ですしね。</p>
 <p>幸い、Collectorsには<code>toCollection()</code>でCollectionの実装を指定できます。なので、上記のベンチマークのコードから、以下のような修正を入れるだけでListの実装を変えることができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// LinkedListの場合
-</span><span class=c1></span><span class=n>values</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>0</span><span class=o>,</span> <span class=n>9999999</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>format</span><span class=o>::</span><span class=n>format</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toCollection</span><span class=o>(</span><span class=n>LinkedList</span><span class=o>::</span><span class=k>new</span><span class=o>));</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// LinkedListの場合
+</span><span style=color:#6272a4></span>values <span style=color:#ff79c6>=</span> IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>rangeClosed</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>,</span> 9999999<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>format<span style=color:#ff79c6>::</span>format<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toCollection</span><span style=color:#ff79c6>(</span>LinkedList<span style=color:#ff79c6>::</span><span style=color:#ff79c6>new</span><span style=color:#ff79c6>));</span>
 </code></pre></div><p>LinkedListの場合、要素数が増えると急激に性能が低下する傾向があります。なので、ArrayListの時よりも要素数は2桁ほど減らしてベンチマークを実施しました。結果は以下です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>Benchmark                    Mode  Cnt    Score    Error  Units
-LoopTest.indexLoop          thrpt   <span class=m>25</span>    0.084 ±  0.005  ops/s
-LoopTest.iteratorLoopFor    thrpt   <span class=m>25</span>  854.459 ± 36.771  ops/s
-LoopTest.iteratorLoopWhile  thrpt   <span class=m>25</span>  839.233 ± 18.142  ops/s
-LoopTest.extendedLoop       thrpt   <span class=m>25</span>  659.999 ± 47.702  ops/s
-LoopTest.forEachLoop        thrpt   <span class=m>25</span>  780.463 ± 78.591  ops/s
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>Benchmark                    Mode  Cnt    Score    Error  Units
+LoopTest.indexLoop          thrpt   <span style=color:#bd93f9>25</span>    0.084 ±  0.005  ops/s
+LoopTest.iteratorLoopFor    thrpt   <span style=color:#bd93f9>25</span>  854.459 ± 36.771  ops/s
+LoopTest.iteratorLoopWhile  thrpt   <span style=color:#bd93f9>25</span>  839.233 ± 18.142  ops/s
+LoopTest.extendedLoop       thrpt   <span style=color:#bd93f9>25</span>  659.999 ± 47.702  ops/s
+LoopTest.forEachLoop        thrpt   <span style=color:#bd93f9>25</span>  780.463 ± 78.591  ops/s
 </code></pre></div><p>ArrayListとは真逆の結果になったのがわかります。特に、インデックスによるループは使えるものにならないほど性能が低く、拡張For文よりも<code>forEach()</code>の性能が高いという、意外の結果となっています。このベンチマークでの数値が絶対的なものとは言えませんが、結果から推論できるのは、やはりArrayListのインデックスを利用する伝統的なFor文でのループが一番早かったからという理由だけで、全てのListをFor文で処理するというのは危ないということです。なので「どの実装クラスでも、平均的に良い性能を出してくれる」方式を選ぶ必要があるという結論を出せるでしょう。(それがおそらく拡張For文な気がします)</p>
 <h2 id=最後に>最後に</h2>
 <p>全ての場面で最適なコードを書くのは難しいことで、過去に書いたコードはいずれ改善しなければならないものとなりますね。あまりエンジニアとしての歴の長くない自分でも、たまに入社前のコードをみるとびっくりするくらいです。なんとか動くようなものは作ったものの、重複するコードや無駄なインスタンス作りなど、至る所に自分のミスが散らかっています。</p>

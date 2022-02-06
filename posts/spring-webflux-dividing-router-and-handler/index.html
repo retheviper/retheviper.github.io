@@ -77,67 +77,67 @@ spring
 <p>しかし、実際のアプリを<code>Functional Endpoint</code>を持って書くとしたら、いくつか考えなければならないことがあると思います。例えば、そもそも<code>Router</code>と<code>Handler</code>はそれぞれ<code>Controller</code>と<code>Service</code>に一対一の対応関係であるという前提は確かであるか？もしそうでなければ、あえてMVCのパターンに合わせる必要があるのか？実装においてはどう影響するのか？などがあるかと思います。なので、今回はこれらの観点から<code>Functional Endpoint</code>について述べていきます。</p>
 <h2 id=対応関係について>対応関係について</h2>
 <p>Springの<a class=link href=https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-fn-overview target=_blank rel=noopener>公式ドキュメント</a>では、WebFluxの<code>Functional Endpoint</code>の紹介において以下のようなサンプルコードを提示しています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>repository</span><span class=p>:</span> <span class=n>PersonRepository</span> <span class=p>=</span> <span class=o>..</span><span class=p>.</span>
-<span class=k>val</span> <span class=py>handler</span> <span class=p>=</span> <span class=n>PersonHandler</span><span class=p>(</span><span class=n>repository</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> repository: PersonRepository = <span style=color:#ff79c6>..</span>.
+<span style=color:#ff79c6>val</span> handler = PersonHandler(repository)
 
-<span class=k>val</span> <span class=py>route</span> <span class=p>=</span> <span class=n>coRouter</span> <span class=p>{</span> 
-    <span class=n>accept</span><span class=p>(</span><span class=n>APPLICATION_JSON</span><span class=p>).</span><span class=n>nest</span> <span class=p>{</span>
-        <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person/{id}&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>getPerson</span><span class=p>)</span>
-        <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>listPeople</span><span class=p>)</span>
-    <span class=p>}</span>
-    <span class=n>POST</span><span class=p>(</span><span class=s2>&#34;/person&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>createPerson</span><span class=p>)</span>
-<span class=p>}</span>
+<span style=color:#ff79c6>val</span> route = coRouter { 
+    accept(APPLICATION_JSON).nest {
+        GET(<span style=color:#f1fa8c>&#34;/person/{id}&#34;</span>, handler<span style=color:#ff79c6>::</span>getPerson)
+        GET(<span style=color:#f1fa8c>&#34;/person&#34;</span>, handler<span style=color:#ff79c6>::</span>listPeople)
+    }
+    POST(<span style=color:#f1fa8c>&#34;/person&#34;</span>, handler<span style=color:#ff79c6>::</span>createPerson)
+}
 
-<span class=k>class</span> <span class=nc>PersonHandler</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>repository</span><span class=p>:</span> <span class=n>PersonRepository</span><span class=p>)</span> <span class=p>{</span>
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonHandler</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 
-    <span class=c1>// ...
-</span><span class=c1></span>
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>listPeople</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>listPeople</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
 
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>createPerson</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createPerson</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
 
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>getPerson</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
+}
 </code></pre></div><p>公式のサンプルとして<code>Handler</code>が別のクラスになっているのを見ると、やはり<code>Controller ≒ Router, Service ≒ Handler</code>という対応関係が成立するようにも見えます。<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html target=_blank rel=noopener>@RestController</a>や<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html target=_blank rel=noopener>@Service</a>と違って、<code>@Router</code>や<code>@Handler</code>というアノテーションは存在しないことに注目する必要があります。これはつまり、Springというフレームワークの思想としては<code>Router</code>と<code>Handler</code>を必ず分ける必要はない、ということを意味しているのではないでしょうか。</p>
 <p>なので、少なくともアプリケーションのアーキテクチャという観点からして<code>Controller ≒ Router, Service ≒ Handler</code>という対応関係が成立する、という結論を出すのは難しいのではないかと思います。</p>
 <p>では、実際<code>Router</code>と<code>Handler</code>をあえてアノテーションを使ってDIをするとしたら、どうなるのでしょうか。サンプルとしては、以下のような形が一般的かなと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=nd>@Configuration</span>
-<span class=k>class</span> <span class=nc>PersonRouter</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>handler</span><span class=p>:</span> <span class=n>PersonHandler</span><span class=p>)</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>@Configuration
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonRouter</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> handler: PersonHandler) {
 
-    <span class=nd>@Bean</span>
-    <span class=k>fun</span> <span class=nf>route</span><span class=p>():</span> <span class=n>RouterFunction</span><span class=p>&lt;</span><span class=n>ServerResponse</span><span class=p>&gt;</span> <span class=p>=</span>
-        <span class=n>coRouter</span> <span class=p>{</span>
-            <span class=n>accept</span><span class=p>(</span><span class=n>APPLICATION_JSON</span><span class=p>).</span><span class=n>nest</span> <span class=p>{</span>
-                <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person/{id}&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>getPerson</span><span class=p>)</span>
-                <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>listPeople</span><span class=p>)</span>
-            <span class=p>}</span>
-            <span class=n>POST</span><span class=p>(</span><span class=s2>&#34;/person&#34;</span><span class=p>,</span> <span class=n>handler</span><span class=o>::</span><span class=n>createPerson</span><span class=p>)</span>
-        <span class=p>}</span>
-<span class=p>}</span>    
+    @Bean
+    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>route</span>(): RouterFunction&lt;ServerResponse&gt; =
+        coRouter {
+            accept(APPLICATION_JSON).nest {
+                GET(<span style=color:#f1fa8c>&#34;/person/{id}&#34;</span>, handler<span style=color:#ff79c6>::</span>getPerson)
+                GET(<span style=color:#f1fa8c>&#34;/person&#34;</span>, handler<span style=color:#ff79c6>::</span>listPeople)
+            }
+            POST(<span style=color:#f1fa8c>&#34;/person&#34;</span>, handler<span style=color:#ff79c6>::</span>createPerson)
+        }
+}    
 
-<span class=nd>@Component</span>
-<span class=k>class</span> <span class=nc>PersonHandler</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>repository</span><span class=p>:</span> <span class=n>PersonRepository</span><span class=p>)</span> <span class=p>{</span>
+@Component
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonHandler</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 
-    <span class=c1>// ...
-</span><span class=c1></span>
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>listPeople</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>listPeople</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
 
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>createPerson</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>createPerson</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
 
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>getPerson</span><span class=p>(</span><span class=n>request</span><span class=p>:</span> <span class=n>ServerRequest</span><span class=p>):</span> <span class=n>ServerResponse</span> <span class=p>{</span>
-        <span class=c1>// ...
-</span><span class=c1></span>    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(request: ServerRequest): ServerResponse {
+        <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>    }
+}
 </code></pre></div><p>クラスそのものを<code>@Component</code>として登録する必要がある<code>Contoller</code>に対して、<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html target=_blank rel=noopener>RouterFunction</a>は<code>Functional Interface</code>なのでそれを実装したメソッドを<code>@Bean</code>として登録する必要があります。そしてSpringで<code>@Bean</code>をアプリケーションに登録するのは一般的に<code>@Congifuration</code>が担当するので自然にRouterのアノテーションもそうなります。<code>Handler</code>は普通に<code>@Component</code>として登録することになりますね。</p>
 <p>こうなった場合、クラスやその実装を見て<code>Router</code>と<code>Handler</code>を分離しているのはわかりますが、アノテーションだけだと違和感を感じられますね。実装は簡単なのでそれぞれに対応するアノテーションを作るのが難しいわけでもないようですが、なぜこのような構造になっているのでしょうか。<a class=link href=https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-programming-models target=_blank rel=noopener>公式のドキュメント</a>では、以下のような説明があります。</p>
 <blockquote>
@@ -146,17 +146,17 @@ spring
 <p>つまり、「アノテーションをつけたContoller」と「Functional Endpoint」の違いは、前者が「アノテーションでコールバックと意図を表す」に対して、後者は「リクエストのハンドリングを開始から終了まで担当する」ということです。プログラミングモデルとしてこのような観点の差があるので、アノテーションがないのは当たり前なのかもしれません。そして結果的に、<code>Controller ≒ Router, Service ≒ Handler</code>という対応関係は、少なくともプログラミングモデルという観点では当てはならないと考えられます。</p>
 <h2 id=責任の分散という側面で>責任の分散という側面で</h2>
 <p>アノテーションの実装を見ると、<code>@Controller</code>と<code>@Service</code>を分けているのがフレームワークのアーキテクチャや思想によるものであることがより明確になります。それぞれのアノテーションの実装は、以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Target</span><span class=o>(</span><span class=n>value</span><span class=o>=</span><span class=n>TYPE</span><span class=o>)</span>
-<span class=nd>@Retention</span><span class=o>(</span><span class=n>value</span><span class=o>=</span><span class=n>RUNTIME</span><span class=o>)</span>
-<span class=nd>@Documented</span>
-<span class=nd>@Component</span>
-<span class=kd>public</span> <span class=nd>@interface</span> <span class=n>Controller</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Target<span style=color:#ff79c6>(</span>value<span style=color:#ff79c6>=</span>TYPE<span style=color:#ff79c6>)</span>
+@Retention<span style=color:#ff79c6>(</span>value<span style=color:#ff79c6>=</span>RUNTIME<span style=color:#ff79c6>)</span>
+@Documented
+@Component
+<span style=color:#8be9fd;font-style:italic>public</span> @interface Controller
 
-<span class=nd>@Target</span><span class=o>(</span><span class=n>value</span><span class=o>=</span><span class=n>TYPE</span><span class=o>)</span>
-<span class=nd>@Retention</span><span class=o>(</span><span class=n>value</span><span class=o>=</span><span class=n>RUNTIME</span><span class=o>)</span>
-<span class=nd>@Documented</span>
-<span class=nd>@Component</span>
-<span class=kd>public</span> <span class=nd>@interface</span> <span class=n>Service</span>
+@Target<span style=color:#ff79c6>(</span>value<span style=color:#ff79c6>=</span>TYPE<span style=color:#ff79c6>)</span>
+@Retention<span style=color:#ff79c6>(</span>value<span style=color:#ff79c6>=</span>RUNTIME<span style=color:#ff79c6>)</span>
+@Documented
+@Component
+<span style=color:#8be9fd;font-style:italic>public</span> @interface Service
 </code></pre></div><p>両方とも実装が同じであるので、極端的にいうと<code>Controller</code>に<code>@Service</code>をつけても機能的には同一ということになります。そして<code>@Service</code>では、以下のようなコメントでこのアノテーションが存在する理由をあくまで「デザインパターンに基盤を置いている」ことを明示しています。</p>
 <blockquote>
 <p>Indicates that an annotated class is a &ldquo;Service&rdquo;, originally defined by Domain-Driven Design (Evans, 2003) as &ldquo;an operation offered as an interface that stands alone in the model, with no encapsulated state.&rdquo;
@@ -165,29 +165,29 @@ May also indicate that a class is a &ldquo;Business Service Facade&rdquo; (in th
 <p>なので、アプリケーションデザインの観点からすると<code>Controller</code>はリクエストを受信、レスポンスを返す、エンドポイントを<code>Service</code>につなぐという義務だけを持ち、<code>Service</code>はビジネスロジックを処理する義務を持つと考えられます。同じ観点から考えると、アノテーションはないものの、<code>Router</code>と<code>Handler</code>もまた同じ義務を持つように書くこともできるでしょう。</p>
 <p>ただ、問題は「リクエストのハンドリングを開始から終了まで担当する」という定義です。先程のサンプルコードをよく見ると、Handlerのメソッドはどれも<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerRequest.html target=_blank rel=noopener>ServerRequest</a>を引数として、戻り値は<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerResponse.html target=_blank rel=noopener>ServerResponse</a>になっています。これはつまり、<code>Router</code>と<code>Handler</code>をあえて別のクラスとして分割するとしても、リクエストとレスポンスまでを<code>Handler</code>で処理することを意味します。</p>
 <p>ここで「<code>Controller</code>/<code>Service</code>の場合と同じく、<code>Handler</code>の引数と戻り値だけを変えて良いのでは？」と考えられます。しかし、それこそフレームワークの思想に反することです。<code>ServerRequest</code>と<code>ServerResponse</code>のJavaDocでは、以下の通り「<code>ServerRequest</code>と<code>ServerResponse</code>は<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/HandlerFunction.html target=_blank rel=noopener>HandlerFunction</a>でハンドリングする」ことを明示しています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=cm>/**
-</span><span class=cm> * Represents a server-side HTTP request, as handled by a {@code HandlerFunction}.
-</span><span class=cm> *
-</span><span class=cm> * &lt;p&gt;Access to headers and body is offered by {@link Headers} and
-</span><span class=cm> * {@link #body(BodyExtractor)}, respectively.
-</span><span class=cm> *
-</span><span class=cm> * @author Arjen Poutsma
-</span><span class=cm> * @author Sebastien Deleuze
-</span><span class=cm> * @since 5.0
-</span><span class=cm> */</span>
-<span class=k>public</span> <span class=k>interface</span> <span class=nc>ServerRequest</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>/**
+</span><span style=color:#6272a4> * Represents a server-side HTTP request, as handled by a {@code HandlerFunction}.
+</span><span style=color:#6272a4> *
+</span><span style=color:#6272a4> * &lt;p&gt;Access to headers and body is offered by {@link Headers} and
+</span><span style=color:#6272a4> * {@link #body(BodyExtractor)}, respectively.
+</span><span style=color:#6272a4> *
+</span><span style=color:#6272a4> * @author Arjen Poutsma
+</span><span style=color:#6272a4> * @author Sebastien Deleuze
+</span><span style=color:#6272a4> * @since 5.0
+</span><span style=color:#6272a4> */</span>
+<span style=color:#ff79c6>public</span> <span style=color:#ff79c6>interface</span> <span style=color:#50fa7b>ServerRequest</span> {
 
-<span class=cm>/**
-</span><span class=cm> * Represents a typed server-side HTTP response, as returned
-</span><span class=cm> * by a {@linkplain HandlerFunction handler function} or
-</span><span class=cm> * {@linkplain HandlerFilterFunction filter function}.
-</span><span class=cm> *
-</span><span class=cm> * @author Arjen Poutsma
-</span><span class=cm> * @author Juergen Hoeller
-</span><span class=cm> * @author Sebastien Deleuze
-</span><span class=cm> * @since 5.0
-</span><span class=cm> */</span>
-<span class=k>public</span> <span class=k>interface</span> <span class=nc>ServerResponse</span> <span class=p>{</span>
+<span style=color:#6272a4>/**
+</span><span style=color:#6272a4> * Represents a typed server-side HTTP response, as returned
+</span><span style=color:#6272a4> * by a {@linkplain HandlerFunction handler function} or
+</span><span style=color:#6272a4> * {@linkplain HandlerFilterFunction filter function}.
+</span><span style=color:#6272a4> *
+</span><span style=color:#6272a4> * @author Arjen Poutsma
+</span><span style=color:#6272a4> * @author Juergen Hoeller
+</span><span style=color:#6272a4> * @author Sebastien Deleuze
+</span><span style=color:#6272a4> * @since 5.0
+</span><span style=color:#6272a4> */</span>
+<span style=color:#ff79c6>public</span> <span style=color:#ff79c6>interface</span> <span style=color:#50fa7b>ServerResponse</span> {
 </code></pre></div><p>以上のことでわかるように、WebFluxでは<code>ServerRequest</code>と<code>ServerResponse</code>は<code>HandlerFunction</code>で扱うようにデザインされています。なので、既存の<code>Service</code>のように、<code>Handler</code>がビジネスロジック「のみ」を扱うというのはそれが実装として可能かどうか以前の問題になるのです。</p>
 <p>ただ、「責任の分散」という観点からして、責任によってクラスを分けるという発想は間違っているわけではないですね。なのでビジネスロジックを担当するクラスを<code>Handler</code>と分離して運用するケースは考えられますが、必ずしもクラスを分ける基準が<code>Router</code>と<code>Handler</code>である必要はないのではないかと思われます。</p>
 <h2 id=テストの観点で>テストの観点で</h2>
@@ -196,47 +196,47 @@ May also indicate that a class is a &ldquo;Business Service Facade&rdquo; (in th
 <p>なぜ<code>ServerRequest</code>を受信して<code>ServerResponse</code>を発するのが問題になるかというと、<code>ServerRequest</code>のインスタンスを生成するのが難しく、<code>ServerResponse</code>の場合でもレスポンスボディーを抽出するのが難しいからです。なので、<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/reactive/server/WebTestClient.html target=_blank rel=noopener>WebTestClient</a>で行うことになるかと思いますが、<code>WebTestClient</code>を使う場合はエンドポイントとHTTPメソッドなどを利用して実際のAPIを呼び出すことになるので、結果的に<code>Handler</code>のテストをするつもりが<code>Router</code>のテストまでふくむしかないということになります。こうするとクラス単位でテストケースをまとめることが難しいだけでなく、<code>Router</code>のみのテストも実質的には意味をなくすということになります。</p>
 <h2 id=ではどうすればいいか>ではどうすればいいか</h2>
 <p>今まで論じた3つの観点からすると、<code>Router</code>と<code>Handler</code>は別のクラスにする理由もあまりなく、むしろ別クラスに色々と問題が生じるように見えます。しかし、これが必ずしもエンドポイントに対するルーティングとビジネスロジックを分離する必要はない、ということではないかと思います。先に述べた通り、クラスを分ける基準を<code>Router</code>と<code>Handler</code>にしないだけで良いかなと思います。例えば、以下のようなコードがあるとします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=nd>@Configuration</span>
-<span class=k>class</span> <span class=nc>PersonRouter</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>repository</span><span class=p>:</span> <span class=n>PersonRepository</span><span class=p>)</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>@Configuration
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonRouter</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 
-    <span class=nd>@Bean</span>
-    <span class=k>fun</span> <span class=nf>route</span><span class=p>():</span> <span class=n>RouterFunction</span><span class=p>&lt;</span><span class=n>ServerResponse</span><span class=p>&gt;</span> <span class=p>=</span>
-        <span class=n>coRouter</span> <span class=p>{</span>
-            <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person/{id}&#34;</span><span class=p>)</span> <span class=p>{</span>
-                <span class=n>ServerResponse</span><span class=p>.</span><span class=n>ok</span><span class=p>()</span>
-                    <span class=p>.</span><span class=n>contentType</span><span class=p>(</span><span class=n>MediaType</span><span class=p>.</span><span class=n>APPLICATION_JSON</span><span class=p>)</span>
-                    <span class=p>.</span><span class=n>body</span><span class=p>(</span>
-                        <span class=n>repository</span><span class=p>.</span><span class=n>findById</span><span class=p>(</span><span class=k>it</span><span class=p>.</span><span class=n>pathVariable</span><span class=p>(</span><span class=s2>&#34;id&#34;</span><span class=p>).</span><span class=n>toLong</span><span class=p>())</span>
-                            <span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=n>record</span> <span class=o>-&gt;</span>
-                                <span class=n>PersonDto</span><span class=p>(</span><span class=n>record</span><span class=p>.</span><span class=n>id</span><span class=p>,</span> <span class=n>record</span><span class=p>.</span><span class=n>name</span><span class=p>)</span>
-                            <span class=p>}</span>
-                    <span class=p>).</span><span class=n>awaitSingle</span><span class=p>()</span>
-                <span class=p>}</span>
-        <span class=p>}</span>
-<span class=p>}</span>
+    @Bean
+    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>route</span>(): RouterFunction&lt;ServerResponse&gt; =
+        coRouter {
+            GET(<span style=color:#f1fa8c>&#34;/person/{id}&#34;</span>) {
+                ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(
+                        repository.findById(<span style=color:#ff79c6>it</span>.pathVariable(<span style=color:#f1fa8c>&#34;id&#34;</span>).toLong())
+                            .map { record <span style=color:#ff79c6>-&gt;</span>
+                                PersonDto(record.id, record.name)
+                            }
+                    ).awaitSingle()
+                }
+        }
+}
 </code></pre></div><p><code>Handler</code>で、<code>Body</code>を作る箇所以外はビジネスロジックと言えるものがあまりありません。なので、ここでは<code>Body</code>だけを分離して別のクラス（<code>Service</code>）に一任しても良さそうです。例えば以下のようにです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=nd>@Configuration</span>
-<span class=k>class</span> <span class=nc>PersonRouter</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>service</span><span class=p>:</span> <span class=n>PersonService</span><span class=p>)</span> <span class=p>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>@Configuration
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonRouter</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> service: PersonService) {
 
-    <span class=nd>@Bean</span>
-    <span class=k>fun</span> <span class=nf>route</span><span class=p>():</span> <span class=n>RouterFunction</span><span class=p>&lt;</span><span class=n>ServerResponse</span><span class=p>&gt;</span> <span class=p>=</span>
-        <span class=n>coRouter</span> <span class=p>{</span>
-            <span class=n>GET</span><span class=p>(</span><span class=s2>&#34;/person/{id}&#34;</span><span class=p>)</span> <span class=p>{</span>
-                <span class=n>ServerResponse</span><span class=p>.</span><span class=n>ok</span><span class=p>()</span>
-                    <span class=p>.</span><span class=n>contentType</span><span class=p>(</span><span class=n>MediaType</span><span class=p>.</span><span class=n>APPLICATION_JSON</span><span class=p>)</span>
-                    <span class=p>.</span><span class=n>body</span><span class=p>(</span><span class=n>service</span><span class=p>.</span><span class=n>getPersonById</span><span class=p>(</span><span class=k>it</span><span class=p>.</span><span class=n>pathVariable</span><span class=p>(</span><span class=s2>&#34;id&#34;</span><span class=p>).</span><span class=n>toLong</span><span class=p>()))</span>
-                    <span class=p>.</span><span class=n>awaitSingle</span><span class=p>()</span>
-                <span class=p>}</span>
-        <span class=p>}</span>
-<span class=p>}</span>
+    @Bean
+    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>route</span>(): RouterFunction&lt;ServerResponse&gt; =
+        coRouter {
+            GET(<span style=color:#f1fa8c>&#34;/person/{id}&#34;</span>) {
+                ServerResponse.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(service.getPersonById(<span style=color:#ff79c6>it</span>.pathVariable(<span style=color:#f1fa8c>&#34;id&#34;</span>).toLong()))
+                    .awaitSingle()
+                }
+        }
+}
 
-<span class=nd>@Service</span>
-<span class=k>class</span> <span class=nc>PersonService</span><span class=p>(</span><span class=k>private</span> <span class=k>val</span> <span class=py>repository</span><span class=p>:</span> <span class=n>PersonRepository</span><span class=p>)</span> <span class=p>{</span>
+@Service
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonService</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 
-    <span class=k>suspend</span> <span class=k>fun</span> <span class=nf>getPersonById</span><span class=p>(</span><span class=n>id</span><span class=p>:</span> <span class=n>Long</span><span class=p>):</span> <span class=n>Mono</span><span class=p>&lt;</span><span class=n>PersonDto</span><span class=p>&gt;</span> <span class=p>=</span>
-        <span class=n>repository</span><span class=p>.</span><span class=n>findById</span><span class=p>(</span><span class=n>id</span><span class=p>)</span>
-                  <span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=n>PersonDto</span><span class=p>(</span><span class=k>it</span><span class=p>.</span><span class=n>id</span><span class=p>,</span> <span class=k>it</span><span class=p>.</span><span class=n>name</span><span class=p>)</span> <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPersonById</span>(id: Long): Mono&lt;PersonDto&gt; =
+        repository.findById(id)
+                  .map { PersonDto(<span style=color:#ff79c6>it</span>.id, <span style=color:#ff79c6>it</span>.name) }
+}
 </code></pre></div><p>こうすると、<code>Router</code>から直接<code>Repository</code>にアクセスこともなくなり、今まで挙げていたさまざまな問題も解消できるようになりますね。</p>
 <h2 id=最後に>最後に</h2>
 <p>ここで提示した方法でビジネスロジックを分けるのは可能だとして、その方法をとった場合に残る疑問はあります。これは果たして<code>Functional</code>なのか？<code>Functional Endpoint</code>は<code>Lambda-based</code>と説明されてあるが、<code>Lambda</code>が使われないので設計意図とは違う形になってないか？そもそもSpring MVCとは違うコンセプトのフレームワークなので既存とは違うアプローチが必要なのでは？などなど。</p>

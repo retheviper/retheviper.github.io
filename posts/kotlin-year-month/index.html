@@ -76,104 +76,104 @@ kotlin
 <h3 id=yearmonthとして>YearMonthとして</h3>
 <p><code>LocalDate</code>や<code>LocalDateTime</code>では、基本的に<a class=link href=https://www.iso.org/iso-8601-date-and-time-format.html target=_blank rel=noopener>ISO-8601</a>形式で日付を扱うことができます。もちろん、<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/format/DateTimeFormatter.html target=_blank rel=noopener>DateTimeFormatter</a>を使って他の形式を指定することもできますが、扱うデータの形が違うだけで、本質的には「年月日」が基本となりますね。</p>
 <p><code>ISO-8601</code>の「年月日」形式で日付を扱っているということは、つまり、SpringでREST APIを作っている場合、リクエストの値が<code>ISO-8601</code>の形式を守っていれば<code>LocalDateTime</code>や<code>LocalDate</code>形式に自動変換されるということでもあります。例えば以下のようなリクエストのJSONがあるとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=p>{</span>
-    <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;1&#34;</span><span class=p>,</span>
-    <span class=nt>&#34;date&#34;</span><span class=p>:</span> <span class=s2>&#34;2021-04-01&#34;</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>{
+    <span style=color:#ff79c6>&#34;id&#34;</span>: <span style=color:#f1fa8c>&#34;1&#34;</span>,
+    <span style=color:#ff79c6>&#34;date&#34;</span>: <span style=color:#f1fa8c>&#34;2021-04-01&#34;</span>
+}
 </code></pre></div><p>Spring側では以下のようなコードで、リクエストのdateを<code>LocalDate</code>に変換することができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// リクエストボディ
-</span><span class=c1></span><span class=k>data</span> <span class=k>class</span> <span class=nc>DateRequest</span><span class=p>(</span><span class=k>val</span> <span class=py>id</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=k>val</span> <span class=py>date</span><span class=p>:</span> <span class=n>LocalDate</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// リクエストボディ
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>DateRequest</span>(<span style=color:#ff79c6>val</span> id: Int, <span style=color:#ff79c6>val</span> date: LocalDate)
 
-<span class=c1>// コントローラ
-</span><span class=c1></span><span class=nd>@PostMapping</span><span class=p>(</span><span class=s2>&#34;/date&#34;</span><span class=p>)</span>
-<span class=k>fun</span> <span class=nf>date</span><span class=p>(</span><span class=nd>@RequestBody</span> <span class=n>request</span><span class=p>:</span> <span class=n>DateRequest</span><span class=p>)</span> <span class=p>{</span>
-    <span class=c1>// ...
-</span><span class=c1></span><span class=p>}</span>
+<span style=color:#6272a4>// コントローラ
+</span><span style=color:#6272a4></span>@PostMapping(<span style=color:#f1fa8c>&#34;/date&#34;</span>)
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>date</span>(@RequestBody request: DateRequest) {
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>}
 </code></pre></div><p>そして全く同じやり方で、<code>LocalDate</code>を<a class=link href=https://docs.oracle.com/javase/jp/8/docs/api/java/time/YearMonth.html target=_blank rel=noopener>YearMonth</a>に変えることで年月に対応することができます。例えば以下のようなリクエストがあるとします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=p>{</span>
-    <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;1&#34;</span><span class=p>,</span>
-    <span class=nt>&#34;yearMonth&#34;</span><span class=p>:</span> <span class=s2>&#34;2021-04&#34;</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>{
+    <span style=color:#ff79c6>&#34;id&#34;</span>: <span style=color:#f1fa8c>&#34;1&#34;</span>,
+    <span style=color:#ff79c6>&#34;yearMonth&#34;</span>: <span style=color:#f1fa8c>&#34;2021-04&#34;</span>
+}
 </code></pre></div><p>ここで<code>yearMonth</code>を<code>YearMonth</code>に変えるだけです。以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// リクエストボディ
-</span><span class=c1></span><span class=k>data</span> <span class=k>class</span> <span class=nc>YearMonthRequest</span><span class=p>(</span><span class=k>val</span> <span class=py>id</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=k>val</span> <span class=py>yearMonth</span><span class=p>:</span> <span class=n>YearMonth</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// リクエストボディ
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>YearMonthRequest</span>(<span style=color:#ff79c6>val</span> id: Int, <span style=color:#ff79c6>val</span> yearMonth: YearMonth)
 
-<span class=c1>// コントローラ
-</span><span class=c1></span><span class=nd>@PostMapping</span><span class=p>(</span><span class=s2>&#34;/year-month&#34;</span><span class=p>)</span>
-<span class=k>fun</span> <span class=nf>yearMonth</span><span class=p>(</span><span class=nd>@RequestBody</span> <span class=n>request</span><span class=p>:</span> <span class=n>YearMonthRequest</span><span class=p>)</span> <span class=p>{</span>
-    <span class=c1>// ...
-</span><span class=c1></span><span class=p>}</span>
+<span style=color:#6272a4>// コントローラ
+</span><span style=color:#6272a4></span>@PostMapping(<span style=color:#f1fa8c>&#34;/year-month&#34;</span>)
+<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>yearMonth</span>(@RequestBody request: YearMonthRequest) {
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span>}
 </code></pre></div><p><code>YearMonth</code>を使うことのメリットは、<code>LocalDateTime</code>や<code>LocalDate</code>と同じく<code>java.time</code>パッケージに属するオブジェクトなので、それらと互換性があり、相互変換が自由ということでもあります。例えば以下のように使えます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>&gt;&gt;&gt;</span> <span class=k>val</span> <span class=py>yearMonth</span> <span class=p>=</span> <span class=n>YearMonth</span><span class=p>.</span><span class=n>now</span><span class=p>()</span> <span class=c1>// 現在の年月を取得
-</span><span class=c1></span><span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>)</span>
-<span class=m>2021</span><span class=p>-</span><span class=m>04</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=k>val</span> <span class=py>localDate</span> <span class=p>=</span> <span class=n>yearMonth</span><span class=p>.</span><span class=n>atDay</span><span class=p>(</span><span class=m>1</span><span class=p>)</span> <span class=c1>// 年月に日を指定してLocalDateにする
-</span><span class=c1></span><span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>localDate</span><span class=p>)</span>
-<span class=m>2021</span><span class=p>-</span><span class=m>04</span><span class=p>-</span><span class=m>01</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>&gt;&gt;&gt; <span style=color:#ff79c6>val</span> yearMonth = YearMonth.now() <span style=color:#6272a4>// 現在の年月を取得
+</span><span style=color:#6272a4></span>&gt;&gt;&gt; println(yearMonth)
+<span style=color:#bd93f9>2021</span>-<span style=color:#bd93f9>04</span>
+&gt;&gt;&gt; <span style=color:#ff79c6>val</span> localDate = yearMonth.atDay(<span style=color:#bd93f9>1</span>) <span style=color:#6272a4>// 年月に日を指定してLocalDateにする
+</span><span style=color:#6272a4></span>&gt;&gt;&gt; println(localDate)
+<span style=color:#bd93f9>2021</span>-<span style=color:#bd93f9>04</span>-<span style=color:#bd93f9>01</span>
 </code></pre></div><p>また、<code>YearMonth</code>は時間に関する便利なメソッドを多く提供しているので、単純に数値としての年月を扱うだけでなく、色々な要件に合わせて日付関連の処理が必要な場合に便利かも知れません。例えば以下のような機能が提供されます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>&gt;&gt;&gt;</span> <span class=k>val</span> <span class=py>yearMonth</span> <span class=p>=</span> <span class=n>YearMonth</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>5</span><span class=p>)</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>)</span>
-<span class=m>2021</span><span class=p>-</span><span class=m>05</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>getYear</span><span class=p>())</span> <span class=c1>// 年を取得
-</span><span class=c1></span><span class=m>2021</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>getMonth</span><span class=p>())</span> <span class=c1>// 月(Enum)を取得
-</span><span class=c1></span><span class=n>MAY</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>getMonthValue</span><span class=p>())</span> <span class=c1>// 月(数字)を取得
-</span><span class=c1></span><span class=m>5</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>isLeapYear</span><span class=p>())</span> <span class=c1>// うるう年であるかどうか
-</span><span class=c1></span><span class=k>false</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>atEndOfMonth</span><span class=p>())</span> <span class=c1>// 月の最後の日(LocalDate)
-</span><span class=c1></span><span class=m>2021</span><span class=p>-</span><span class=m>05</span><span class=p>-</span><span class=m>31</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>&gt;&gt;&gt; <span style=color:#ff79c6>val</span> yearMonth = YearMonth.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>5</span>)
+&gt;&gt;&gt; println(yearMonth)
+<span style=color:#bd93f9>2021</span>-<span style=color:#bd93f9>05</span>
+&gt;&gt;&gt; println(yearMonth.getYear()) <span style=color:#6272a4>// 年を取得
+</span><span style=color:#6272a4></span><span style=color:#bd93f9>2021</span>
+&gt;&gt;&gt; println(yearMonth.getMonth()) <span style=color:#6272a4>// 月(Enum)を取得
+</span><span style=color:#6272a4></span>MAY
+&gt;&gt;&gt; println(yearMonth.getMonthValue()) <span style=color:#6272a4>// 月(数字)を取得
+</span><span style=color:#6272a4></span><span style=color:#bd93f9>5</span>
+&gt;&gt;&gt; println(yearMonth.isLeapYear()) <span style=color:#6272a4>// うるう年であるかどうか
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>false</span>
+&gt;&gt;&gt; println(yearMonth.atEndOfMonth()) <span style=color:#6272a4>// 月の最後の日(LocalDate)
+</span><span style=color:#6272a4></span><span style=color:#bd93f9>2021</span>-<span style=color:#bd93f9>05</span>-<span style=color:#bd93f9>31</span>
 </code></pre></div><h3 id=数字として>数字として</h3>
 <p><code>YearMonth</code>で受け取って処理した方がもっとも綺麗な方法に見えますが、状況によっては素直に<code>Int</code>型で受け取った方が良い(もしくはそうするしかない)ケースもあるはずです。例えば以下のようなリクエストが送らられて来るようなケースですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-json data-lang=json><span class=p>{</span>
-    <span class=nt>&#34;id&#34;</span><span class=p>:</span> <span class=s2>&#34;1&#34;</span><span class=p>,</span>
-    <span class=nt>&#34;yearMonth&#34;</span><span class=p>:</span> <span class=mi>202104</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-json data-lang=json>{
+    <span style=color:#ff79c6>&#34;id&#34;</span>: <span style=color:#f1fa8c>&#34;1&#34;</span>,
+    <span style=color:#ff79c6>&#34;yearMonth&#34;</span>: <span style=color:#bd93f9>202104</span>
+}
 </code></pre></div><p>そもそも<code>year</code>と<code>month</code>のように別の項目になっていたとしたらもっとやりやすいのですが、このように年月が一つの<code>Int</code>型のデータとして送られてくる場合は自分で年と月を抽出する処理を作るしかないですね。例えば以下のようなextension functionを書くことができるでしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// 年を抽出する
-</span><span class=c1></span><span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>extractYear</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> <span class=k>this</span> <span class=p>/</span> <span class=m>100</span>
-<span class=c1>// 月を抽出する
-</span><span class=c1></span><span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>extractMonth</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> <span class=k>this</span> <span class=p>%</span> <span class=m>100</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// 年を抽出する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.extractYear(): Int = <span style=color:#ff79c6>this</span> / <span style=color:#bd93f9>100</span>
+<span style=color:#6272a4>// 月を抽出する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.extractMonth(): Int = <span style=color:#ff79c6>this</span> % <span style=color:#bd93f9>100</span>
 </code></pre></div><p>実際のコードを動かしてみると、ちゃんと意図通り動くのを確認できます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>&gt;&gt;&gt;</span> <span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>extractYear</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> <span class=k>this</span> <span class=p>/</span> <span class=m>100</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=m>202104.</span><span class=n>extractYear</span><span class=p>()</span>
-<span class=n>res4</span><span class=p>:</span> <span class=n>kotlin</span><span class=p>.</span><span class=n>Int</span> <span class=p>=</span> <span class=m>2021</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>extractMonth</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> <span class=k>this</span> <span class=p>%</span> <span class=m>100</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=m>202104.</span><span class=n>extractMonth</span><span class=p>()</span>
-<span class=n>res6</span><span class=p>:</span> <span class=n>kotlin</span><span class=p>.</span><span class=n>Int</span> <span class=p>=</span> <span class=m>4</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>&gt;&gt;&gt; <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.extractYear(): Int = <span style=color:#ff79c6>this</span> / <span style=color:#bd93f9>100</span>
+&gt;&gt;&gt; <span style=color:#bd93f9>202104.</span>extractYear()
+res4: kotlin.Int = <span style=color:#bd93f9>2021</span>
+&gt;&gt;&gt; <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.extractMonth(): Int = <span style=color:#ff79c6>this</span> % <span style=color:#bd93f9>100</span>
+&gt;&gt;&gt; <span style=color:#bd93f9>202104.</span>extractMonth()
+res6: kotlin.Int = <span style=color:#bd93f9>4</span>
 </code></pre></div><p>しかし、パラメータとして渡されたものはただの<code>Int</code>型なので、期待した通りの値ではない可能性もあるという問題があります。常に<code>YYYYMM</code>という形でデータが送られてくるかどうかをチェックする必要がありますね。</p>
 <p>そういう場合に、上記のコードだとリクエストの<code>yearMonth</code>が正しい年月の形式になっているかどうかがわかりません。なので、正規式を用いたバリデーションチェックを挟むことにしたらより安全になるでしょう。例えば、以下のようなコードを使えます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>toYearMonth</span><span class=p>():</span> <span class=n>Pair</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>Int</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>Regex</span><span class=p>(</span><span class=s2>&#34;^(19|20)</span><span class=se>\\</span><span class=s2>d{2}(0[1-9]|1[012])&#34;</span><span class=p>).</span><span class=n>matches</span><span class=p>(</span><span class=k>this</span><span class=p>.</span><span class=n>toString</span><span class=p>()))</span>
-        <span class=k>this</span> <span class=p>/</span> <span class=m>100</span> <span class=n>to</span> <span class=k>this</span> <span class=p>%</span> <span class=m>100</span>
-    <span class=k>else</span>
-        <span class=k>throw</span> <span class=n>IllegalArgumentException</span><span class=p>(</span><span class=s2>&#34;cannot convert&#34;</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.toYearMonth(): Pair&lt;Int, Int&gt; =
+    <span style=color:#ff79c6>if</span> (Regex(<span style=color:#f1fa8c>&#34;^(19|20)</span><span style=color:#f1fa8c>\\</span><span style=color:#f1fa8c>d{2}(0[1-9]|1[012])&#34;</span>).matches(<span style=color:#ff79c6>this</span>.toString()))
+        <span style=color:#ff79c6>this</span> / <span style=color:#bd93f9>100</span> to <span style=color:#ff79c6>this</span> % <span style=color:#bd93f9>100</span>
+    <span style=color:#ff79c6>else</span>
+        <span style=color:#ff79c6>throw</span> IllegalArgumentException(<span style=color:#f1fa8c>&#34;cannot convert&#34;</span>)
 </code></pre></div><p>上記の関数は、以下のような使い方ができます。簡単に使えるのでいい感じですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>&gt;&gt;&gt;</span> <span class=k>val</span> <span class=err>(</span><span class=py>year</span><span class=p>,</span> <span class=n>month</span><span class=p>)</span> <span class=p>=</span> <span class=m>202104.</span><span class=n>toYearMonth</span><span class=p>()</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>year</span><span class=p>)</span>
-<span class=m>2021</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=n>println</span><span class=p>(</span><span class=n>month</span><span class=p>)</span>
-<span class=m>4</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>&gt;&gt;&gt; <span style=color:#ff79c6>val</span> (year, month) = <span style=color:#bd93f9>202104.</span>toYearMonth()
+&gt;&gt;&gt; println(year)
+<span style=color:#bd93f9>2021</span>
+&gt;&gt;&gt; println(month)
+<span style=color:#bd93f9>4</span>
 </code></pre></div><p>元の値を二つの<code>Int</code>に分けるために戻り値として<code>Pair</code>を使いましたが、場合によっては<code>YearMonth</code>の方が良いかも知れません。そういう場合は、以下のようなコードが使えます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>toYearMonth</span><span class=p>():</span> <span class=n>YearMonth</span> <span class=p>=</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>Regex</span><span class=p>(</span><span class=s2>&#34;^(19|20)</span><span class=se>\\</span><span class=s2>d{2}(0[1-9]|1[012])&#34;</span><span class=p>).</span><span class=n>matches</span><span class=p>(</span><span class=k>this</span><span class=p>.</span><span class=n>toString</span><span class=p>()))</span>
-        <span class=n>YearMonth</span><span class=p>(</span><span class=k>this</span> <span class=p>/</span> <span class=m>100</span><span class=p>,</span> <span class=k>this</span> <span class=p>%</span> <span class=m>100</span><span class=p>)</span>
-    <span class=k>else</span>
-        <span class=k>throw</span> <span class=n>IllegalArgumentException</span><span class=p>(</span><span class=s2>&#34;cannot convert&#34;</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.toYearMonth(): YearMonth =
+    <span style=color:#ff79c6>if</span> (Regex(<span style=color:#f1fa8c>&#34;^(19|20)</span><span style=color:#f1fa8c>\\</span><span style=color:#f1fa8c>d{2}(0[1-9]|1[012])&#34;</span>).matches(<span style=color:#ff79c6>this</span>.toString()))
+        YearMonth(<span style=color:#ff79c6>this</span> / <span style=color:#bd93f9>100</span>, <span style=color:#ff79c6>this</span> % <span style=color:#bd93f9>100</span>)
+    <span style=color:#ff79c6>else</span>
+        <span style=color:#ff79c6>throw</span> IllegalArgumentException(<span style=color:#f1fa8c>&#34;cannot convert&#34;</span>)
 </code></pre></div><h2 id=年と月を年月に>年と月を年月に</h2>
 <p>さて、今回は逆に「年」と「月」を繋げて「年月」にする場合の処理を考えてみましょう。二つの<code>Int</code>を合わせて、一つの<code>Int</code>(YYYYMM)にする形です。ここでまず考えられる方法は二つです。<code>YearMonth</code>を使った方法と、文字列に変換してから処理するという方法です。</p>
 <h3 id=yearmonthで>YearMonthで</h3>
 <p>まず<code>YearMonth</code>を利用する場合は、年と月をそのまま引数として渡した後、<code>Int</code>に変換すれば良いですね。ただ、<code>YearMonth</code>は基本的に<code>ISO-8601</code>形式なので、2021年4月だと<code>2021-04</code>となるので<code>Int</code>へ変換ができません。なので、まず<code>String</code>に変えてから、<code>-</code>を消して<code>Int</code>に変換することにします。以上の処理は、以下のようなコードになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>toYearMonth</span><span class=p>(</span><span class=n>year</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=n>month</span><span class=p>:</span> <span class=n>Int</span><span class=p>):</span> <span class=n>Int</span> <span class=p>=</span> 
-    <span class=n>YearMonth</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=n>year</span><span class=p>,</span> <span class=n>month</span><span class=p>).</span><span class=n>toString</span><span class=p>().</span><span class=n>replace</span><span class=p>(</span><span class=s2>&#34;-&#34;</span><span class=p>,</span> <span class=s2>&#34;&#34;</span><span class=p>).</span><span class=n>toInt</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>toYearMonth</span>(year: Int, month: Int): Int = 
+    YearMonth.of(year, month).toString().replace(<span style=color:#f1fa8c>&#34;-&#34;</span>, <span style=color:#f1fa8c>&#34;&#34;</span>).toInt()
 </code></pre></div><h3 id=文字列で>文字列で</h3>
 <p>文字列で処理する場合は、単純に<a class=link href=https://kotlinlang.org/docs/basic-types.html#string-templates target=_blank rel=noopener>String templates</a>を使うことでも可能ですが、注意したいのは、月は1~12という範囲を持つので、単純にtemplateで年と月を繋げると<code>20214</code>のような形になり得る可能性もあるということですね。なので、<code>padStart()</code>を利用して、月が1~9の場合は先頭に<code>0</code>をつけるようにします。そのあとは<code>Int</code>に変換するだけですね。これは以下のようなコードになリます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>toYearMonth</span><span class=p>(</span><span class=n>year</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=n>month</span><span class=p>:</span> <span class=n>Int</span><span class=p>):</span> <span class=n>Int</span> <span class=p>=</span> <span class=s2>&#34;</span><span class=si>${year}${month.toString().padStart(2, &#39;0&#39;)}</span><span class=s2>&#34;</span><span class=p>.</span><span class=n>toInt</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>toYearMonth</span>(year: Int, month: Int): Int = <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${year}${month.toString().padStart(2, &#39;0&#39;)}</span><span style=color:#f1fa8c>&#34;</span>.toInt()
 </code></pre></div><p>これらの方法は、引数が二つなので、<code>infix</code>として定義することもできます(好みの問題かと思いますが)。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=p>&gt;&gt;&gt;</span> <span class=k>infix</span> <span class=k>fun</span> <span class=nf>Int</span><span class=p>.</span><span class=n>toYearMonthWith</span><span class=p>(</span><span class=n>month</span><span class=p>:</span> <span class=n>Int</span><span class=p>):</span> <span class=n>Int</span> <span class=p>=</span> <span class=s2>&#34;</span><span class=si>${this}${month.toString().padStart(2, &#39;0&#39;)}</span><span class=s2>&#34;</span><span class=p>.</span><span class=n>toInt</span><span class=p>()</span>
-<span class=p>&gt;&gt;&gt;</span> <span class=m>2021</span> <span class=n>toYearMonthWith</span> <span class=m>5</span>
-<span class=n>res10</span><span class=p>:</span> <span class=n>kotlin</span><span class=p>.</span><span class=n>Int</span> <span class=p>=</span> <span class=m>202105</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>&gt;&gt;&gt; <span style=color:#ff79c6>infix</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Int</span>.toYearMonthWith(month: Int): Int = <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${this}${month.toString().padStart(2, &#39;0&#39;)}</span><span style=color:#f1fa8c>&#34;</span>.toInt()
+&gt;&gt;&gt; <span style=color:#bd93f9>2021</span> toYearMonthWith <span style=color:#bd93f9>5</span>
+res10: kotlin.Int = <span style=color:#bd93f9>202105</span>
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>いかがだったでしょうか。あまり難しいコードではなかったので、あえて記事にまでする必要があったのか、という気もしましたが、個人的には<code>YearMonth</code>というクラスの存在を初めて知ったのもあり、Kotlinならではのコード(extension function)を書いてみたく試したことを共有したいと思った次第です。もしKotlinやJavaで年月を扱う必要がある方には、少しでも役に立てるといいですね。</p>
 <p>では、また！</p>

@@ -84,101 +84,101 @@ spring
 <h4 id=entityクラス>Entityクラス</h4>
 <p>まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。</p>
 <p>以下のコードは、UserDetailsクラスをSpring Data JPA基準のエンティティとして作成した例です。ここからユーザ名(username)とロール(roles)をJWTに載せて認証と認可に使うことにします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
-<span class=nd>@Entity</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>User</span> <span class=kd>implements</span> <span class=n>UserDetails</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Data
+@Entity
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>User</span> <span style=color:#8be9fd;font-style:italic>implements</span> UserDetails <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Id</span>
-    <span class=nd>@GeneratedValue</span><span class=o>(</span><span class=n>strategy</span> <span class=o>=</span> <span class=n>GenerationType</span><span class=o>.</span><span class=na>IDENTITY</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+    @Id
+    @GeneratedValue<span style=color:#ff79c6>(</span>strategy <span style=color:#ff79c6>=</span> GenerationType<span style=color:#ff79c6>.</span><span style=color:#50fa7b>IDENTITY</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>long</span> id<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザ名(一般的にID)
-</span><span class=c1></span>    <span class=kd>private</span> <span class=n>String</span> <span class=n>username</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザ名(一般的にID)
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> String username<span style=color:#ff79c6>;</span>
     
-    <span class=c1>// ユーザアカウントが満了されているかの設定    
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>accountNonExpired</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザアカウントが満了されているかの設定    
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> accountNonExpired<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザアカウントがロックされているかの設定
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>accountNonLocked</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザアカウントがロックされているかの設定
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> accountNonLocked<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザアカウントのクレデンシャルが満了されているかの設定
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>credentialsNonExpired</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザアカウントのクレデンシャルが満了されているかの設定
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> credentialsNonExpired<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザアカウントが活性化されているかの設定
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>enabled</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザアカウントが活性化されているかの設定
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> enabled<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// 認可のためのユーザのロール
-</span><span class=c1></span>    <span class=nd>@ElementCollection</span><span class=o>(</span><span class=n>fetch</span> <span class=o>=</span> <span class=n>FetchType</span><span class=o>.</span><span class=na>EAGER</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>roles</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ArrayList</span><span class=o>&lt;&gt;();</span>
+    <span style=color:#6272a4>// 認可のためのユーザのロール
+</span><span style=color:#6272a4></span>    @ElementCollection<span style=color:#ff79c6>(</span>fetch <span style=color:#ff79c6>=</span> FetchType<span style=color:#ff79c6>.</span><span style=color:#50fa7b>EAGER</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> roles <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
 
-    <span class=c1>// ユーザの認可情報を取得する
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>Collection</span><span class=o>&lt;?</span> <span class=kd>extends</span> <span class=n>GrantedAuthority</span><span class=o>&gt;</span> <span class=nf>getAuthorities</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>roles</span><span class=o>.</span><span class=na>stream</span><span class=o>()</span>
-                    <span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>SimpleGrantedAuthority</span><span class=o>::</span><span class=k>new</span><span class=o>)</span>
-                    <span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toUnmodifiableList</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// ユーザの認可情報を取得する
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> Collection<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>extends</span> GrantedAuthority<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>getAuthorities</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>roles</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>()</span>
+                    <span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>SimpleGrantedAuthority<span style=color:#ff79c6>::</span><span style=color:#ff79c6>new</span><span style=color:#ff79c6>)</span>
+                    <span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toUnmodifiableList</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h4 id=serviceクラス>Serviceクラス</h4>
 <p>UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための<code>loadUserByUsername</code>しかないので、これを適切にRepositoryから取得できるように実装します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Service</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>UserServiceImpl</span> <span class=kd>implements</span> <span class=n>UserDetailsService</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>UserServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> UserDetailsService <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// UserDetailsを取得できるRepository
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserRepository</span> <span class=n>repository</span><span class=o>;</span>
+    <span style=color:#6272a4>// UserDetailsを取得できるRepository
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> UserRepository repository<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>UserServiceImpl</span><span class=o>(</span><span class=n>UserRepository</span> <span class=n>repository</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>repository</span> <span class=o>=</span> <span class=n>repository</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>UserServiceImpl</span><span style=color:#ff79c6>(</span>UserRepository repository<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>repository</span> <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
     
-    <span class=c1>// 認証後にユーザ情報を取得するためのメソッド
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>UserDetails</span> <span class=nf>loadUserByUsername</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>username</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>UsernameNotFoundException</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>repository</span><span class=o>.</span><span class=na>findByUsername</span><span class=o>(</span><span class=n>username</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// 認証後にユーザ情報を取得するためのメソッド
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> UserDetails <span style=color:#50fa7b>loadUserByUsername</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> String username<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> UsernameNotFoundException <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>repository</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>findByUsername</span><span style=color:#ff79c6>(</span>username<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h4 id=configurationクラス>Configurationクラス</h4>
 <p>認可のためのConfigurationクラスです。ここでは<code>USER</code>というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを<code>ROLE_USER</code>として保存するようにしておくと良いです。</p>
 <p>また、今回作るのはREST APIであり、JWTによる認証と認可を行うことになるので、いくつかのデフォルト設定を変えておきます。例えば<a class=link href=https://ja.wikipedia.org/wiki/Basic%E8%AA%8D%E8%A8%BC target=_blank rel=noopener>Basic Auth</a>と<a class=link href=https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%95%E3%82%A9%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%AA target=_blank rel=noopener>CSRF</a>の設定や、セッション設定などがあります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SecurityConfig</span> <span style=color:#8be9fd;font-style:italic>extends</span> WebSecurityConfigurerAdapter <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Bean</span>
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
-    <span class=o>}</span>
+    @Bean
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> AuthenticationManager <span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=n>httpSecurity</span>
-                <span class=c1>// Basic認証を使わない
-</span><span class=c1></span>                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=c1>// CSRF設定を使わない
-</span><span class=c1></span>                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=c1>// セッションはStatelessなので使わない
-</span><span class=c1></span>                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// USERではないとどのURLでもアクセスできない
-</span><span class=c1></span>                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;USER&#34;</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>configure</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> HttpSecurity httpSecurity<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        httpSecurity
+                <span style=color:#6272a4>// Basic認証を使わない
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>httpBasic</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// CSRF設定を使わない
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>csrf</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// セッションはStatelessなので使わない
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>sessionManagement</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>sessionCreationPolicy</span><span style=color:#ff79c6>(</span>SessionCreationPolicy<span style=color:#ff79c6>.</span><span style=color:#50fa7b>STATELESS</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// USERではないとどのURLでもアクセスできない
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>authorizeRequests</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyRequest</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>hasRole</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;USER&#34;</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これでSpring Securityを使うための必要最低限の準備は終わりました。他にユーザのCRUDのためのServiceやRepositoryは適宜作成してあるという前提として、次に進めましょう。</p>
 <h3 id=jwtの依存関係の追加>JWTの依存関係の追加</h3>
 <p>次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。</p>
 <p>Spring(Java)で使えるJWTのライブラリはいくつかありますが、JWT自体が標準なのでどちらを選んでも基本は同じです。ただ、ライブラリ毎にJWTの仕様にどこまで対応しているのかは違う場合があるので、公式サイトから<a class=link href=https://jwt.io/#libraries-io target=_blank rel=noopener>対応しているライブラリのリスト</a>を確認してどれを使うかを選びましょう。このポストでは<code>JSON Web Token Support For The JVM</code>を使った場合での実装方法を紹介します。</p>
 <p>Mavenの場合は以下のように依存関係を追加します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=nt>&lt;dependency&gt;</span>
-    <span class=nt>&lt;groupId&gt;</span>io.jsonwebtoken<span class=nt>&lt;/groupId&gt;</span>
-    <span class=nt>&lt;artifactId&gt;</span>jjwt<span class=nt>&lt;/artifactId&gt;</span>
-    <span class=nt>&lt;version&gt;</span>0.9.1<span class=nt>&lt;/version&gt;</span>
-<span class=nt>&lt;/dependency&gt;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-xml data-lang=xml><span style=color:#ff79c6>&lt;dependency&gt;</span>
+    <span style=color:#ff79c6>&lt;groupId&gt;</span>io.jsonwebtoken<span style=color:#ff79c6>&lt;/groupId&gt;</span>
+    <span style=color:#ff79c6>&lt;artifactId&gt;</span>jjwt<span style=color:#ff79c6>&lt;/artifactId&gt;</span>
+    <span style=color:#ff79c6>&lt;version&gt;</span>0.9.1<span style=color:#ff79c6>&lt;/version&gt;</span>
+<span style=color:#ff79c6>&lt;/dependency&gt;</span>
 </code></pre></div><p>Gradleの場合の場合は以下となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>dependencies</span> <span class=o>{</span>
-    <span class=n>implementation</span> <span class=s1>&#39;io.jsonwebtoken:jjwt:0.9.1&#39;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>dependencies <span style=color:#ff79c6>{</span>
+    implementation <span style=color:#f1fa8c>&#39;io.jsonwebtoken:jjwt:0.9.1&#39;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=jwtを提供するクラスを作る>JWTを提供するクラスを作る</h3>
 <p>依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。</p>
 <h4 id=jwtの仕様>JWTの仕様</h4>
@@ -267,91 +267,91 @@ spring
 <p>では、JWTがどんな情報により構成されているかがわかったので、必要な情報を載せて実際のJWTを作成するクラスを作りましょう。ここでHeader、Payload、Signatureの全部を埋める必要はなく、最低限の情報だけ使うことにします。</p>
 <p>まずトークンを作成するメソッドを作ります。ここで作成されるJWTのPayloadに載せるClaimは、ユーザ名とロールに限定します。また、JWTが発行された時間と満了時間を設定して、期間外では使えないようにします。そして最後にカスタムシークレットキーを設定してSignatureを作成することにします。</p>
 <p>他には、トークンを読み込んでDBのユーザ情報を取得するメソッド、リクエストのHeaderからトークンを取得するメソッド、トークンの有効期間を検証するメソッド、トークンにのせたユーザ名(ID)を取得するメソッドなども作っておきます。(こちらは別途クラスで切っても良さそうな気はします)</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTProvider</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Component
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>JWTProvider</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// Signatureのエンコードに使うシークレットキー
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>TOKEN_SECRET_KEY</span> <span class=o>=</span> <span class=s>&#34;This is secrect!&#34;</span><span class=o>;</span>
+    <span style=color:#6272a4>// Signatureのエンコードに使うシークレットキー
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String TOKEN_SECRET_KEY <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;This is secrect!&#34;</span><span style=color:#ff79c6>;</span>
 
-    <span class=c1>// トークンの有効期間(1時間)
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>long</span> <span class=n>TOKEN_VAILD_DURATION</span> <span class=o>=</span> <span class=n>1000L</span> <span class=o>*</span> <span class=n>60L</span> <span class=o>*</span> <span class=n>60L</span><span class=o>;</span>
+    <span style=color:#6272a4>// トークンの有効期間(1時間)
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>long</span> TOKEN_VAILD_DURATION <span style=color:#ff79c6>=</span> 1000L <span style=color:#ff79c6>*</span> 60L <span style=color:#ff79c6>*</span> 60L<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザ情報を取得するためのサービスクラス
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserDetailsService</span> <span class=n>service</span><span class=o>;</span>
+    <span style=color:#6272a4>// ユーザ情報を取得するためのサービスクラス
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> UserDetailsService service<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>JWTProvider</span><span class=o>(</span><span class=n>UserDetailService</span> <span class=n>service</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>service</span> <span class=o>=</span> <span class=n>service</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>JWTProvider</span><span style=color:#ff79c6>(</span>UserDetailService service<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>service</span> <span style=color:#ff79c6>=</span> service<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// UserオブジェクトからJWTを作成する
-</span><span class=c1></span>    <span class=kd>public</span> <span class=n>String</span> <span class=nf>createToken</span><span class=o>(</span><span class=n>User</span> <span class=n>user</span><span class=o>)</span> <span class=o>{</span>
-        <span class=c1>// Claimとしてユーザ名とロールを載せる
-</span><span class=c1></span>        <span class=n>Claims</span> <span class=n>claims</span> <span class=o>=</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>claims</span><span class=o>().</span><span class=na>setSubject</span><span class=o>(</span><span class=n>user</span><span class=o>.</span><span class=na>getId</span><span class=o>());</span>
-        <span class=n>claims</span><span class=o>.</span><span class=na>put</span><span class=o>(</span><span class=s>&#34;roles&#34;</span><span class=o>,</span> <span class=n>user</span><span class=o>.</span><span class=na>getRoles</span><span class=o>());</span>
-        <span class=c1>// トークンの開始時間と満了時間を決める
-</span><span class=c1></span>        <span class=n>Date</span> <span class=n>iat</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Date</span><span class=o>();</span>
-        <span class=n>Date</span> <span class=n>exp</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Date</span><span class=o>(</span><span class=n>start</span><span class=o>.</span><span class=na>getTime</span><span class=o>()</span> <span class=o>+</span> <span class=n>TOKEN_VAILD_DURATION</span><span class=o>);</span>
-        <span class=c1>// JWTの作成
-</span><span class=c1></span>        <span class=k>return</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>builder</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>setClaims</span><span class=o>(</span><span class=n>claims</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>setIssuedAt</span><span class=o>(</span><span class=n>iat</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>setExpiration</span><span class=o>(</span><span class=n>exp</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>signWith</span><span class=o>(</span><span class=n>SignatureAlgorithm</span><span class=o>.</span><span class=na>HS256</span><span class=o>,</span> <span class=n>TOKEN_SECRET_KEY</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>compact</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// UserオブジェクトからJWTを作成する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>createToken</span><span style=color:#ff79c6>(</span>User user<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// Claimとしてユーザ名とロールを載せる
+</span><span style=color:#6272a4></span>        Claims claims <span style=color:#ff79c6>=</span> Jwts<span style=color:#ff79c6>.</span><span style=color:#50fa7b>claims</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>setSubject</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>());</span>
+        claims<span style=color:#ff79c6>.</span><span style=color:#50fa7b>put</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;roles&#34;</span><span style=color:#ff79c6>,</span> user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getRoles</span><span style=color:#ff79c6>());</span>
+        <span style=color:#6272a4>// トークンの開始時間と満了時間を決める
+</span><span style=color:#6272a4></span>        Date iat <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Date<span style=color:#ff79c6>();</span>
+        Date exp <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Date<span style=color:#ff79c6>(</span>start<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getTime</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>+</span> TOKEN_VAILD_DURATION<span style=color:#ff79c6>);</span>
+        <span style=color:#6272a4>// JWTの作成
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>return</span> Jwts<span style=color:#ff79c6>.</span><span style=color:#50fa7b>builder</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>setClaims</span><span style=color:#ff79c6>(</span>claims<span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>setIssuedAt</span><span style=color:#ff79c6>(</span>iat<span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>setExpiration</span><span style=color:#ff79c6>(</span>exp<span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>signWith</span><span style=color:#ff79c6>(</span>SignatureAlgorithm<span style=color:#ff79c6>.</span><span style=color:#50fa7b>HS256</span><span style=color:#ff79c6>,</span> TOKEN_SECRET_KEY<span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>compact</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// トークンからユーザ情報を取得する
-</span><span class=c1></span>    <span class=kd>public</span> <span class=n>Authentication</span> <span class=nf>getAuthentication</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>UserDetails</span> <span class=n>userDetails</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>service</span><span class=o>.</span><span class=na>loadUserByUsername</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>getSubject</span><span class=o>(</span><span class=n>token</span><span class=o>));</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>UsernamePasswordAuthenticationToken</span><span class=o>(</span><span class=n>userDetails</span><span class=o>,</span> <span class=s>&#34;&#34;</span><span class=o>,</span> <span class=n>userDetails</span><span class=o>.</span><span class=na>getAuthorities</span><span class=o>());</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// トークンからユーザ情報を取得する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> Authentication <span style=color:#50fa7b>getAuthentication</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> String token<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> UserDetails userDetails <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>service</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>loadUserByUsername</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>getSubject</span><span style=color:#ff79c6>(</span>token<span style=color:#ff79c6>));</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> UsernamePasswordAuthenticationToken<span style=color:#ff79c6>(</span>userDetails<span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;&#34;</span><span style=color:#ff79c6>,</span> userDetails<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getAuthorities</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// リクエストのHeaderからトークンを取得する
-</span><span class=c1></span>    <span class=kd>public</span> <span class=n>String</span> <span class=nf>resolveToken</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>);</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// リクエストのHeaderからトークンを取得する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>resolveToken</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeader</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;X-AUTH-TOKEN&#34;</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// トークンの有効期間を検証する
-</span><span class=c1></span>    <span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>validateToken</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>try</span> <span class=o>{</span>
-            <span class=kd>final</span> <span class=n>Jws</span><span class=o>&lt;</span><span class=n>Claims</span><span class=o>&gt;</span> <span class=n>claims</span> <span class=o>=</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>parser</span><span class=o>().</span><span class=na>setSigningKey</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>secretKey</span><span class=o>).</span><span class=na>parseClaimsJws</span><span class=o>(</span><span class=n>token</span><span class=o>);</span>
-            <span class=k>return</span> <span class=o>!</span><span class=n>claims</span><span class=o>.</span><span class=na>getBody</span><span class=o>().</span><span class=na>getExpiration</span><span class=o>().</span><span class=na>before</span><span class=o>(</span><span class=k>new</span> <span class=n>Date</span><span class=o>());</span>
-        <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-            <span class=k>return</span> <span class=kc>false</span><span class=o>;</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// トークンの有効期間を検証する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>validateToken</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> String token<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#8be9fd;font-style:italic>final</span> Jws<span style=color:#ff79c6>&lt;</span>Claims<span style=color:#ff79c6>&gt;</span> claims <span style=color:#ff79c6>=</span> Jwts<span style=color:#ff79c6>.</span><span style=color:#50fa7b>parser</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>setSigningKey</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>secretKey</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>parseClaimsJws</span><span style=color:#ff79c6>(</span>token<span style=color:#ff79c6>);</span>
+            <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>!</span>claims<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getBody</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getExpiration</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>before</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>new</span> Date<span style=color:#ff79c6>());</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>catch</span> <span style=color:#ff79c6>(</span>Exception e<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>false</span><span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// トークンからユーザ名を取得する
-</span><span class=c1></span>    <span class=n>pubic</span> <span class=n>String</span> <span class=nf>getSubject</span><span class=o>(</span><span class=kd>final</span> <span class=n>String</span> <span class=n>token</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>Jwts</span><span class=o>.</span><span class=na>parser</span><span class=o>().</span><span class=na>setSigningKey</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>secretKey</span><span class=o>).</span><span class=na>parseClaimsJws</span><span class=o>(</span><span class=n>token</span><span class=o>).</span><span class=na>getBody</span><span class=o>().</span><span class=na>getSubject</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// トークンからユーザ名を取得する
+</span><span style=color:#6272a4></span>    pubic String <span style=color:#50fa7b>getSubject</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> String token<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> Jwts<span style=color:#ff79c6>.</span><span style=color:#50fa7b>parser</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>setSigningKey</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>secretKey</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>parseClaimsJws</span><span style=color:#ff79c6>(</span>token<span style=color:#ff79c6>).</span><span style=color:#50fa7b>getBody</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getSubject</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=カスタムfilterクラスの実装>カスタムFilterクラスの実装</h3>
 <p>次に、ログインするときにリクエストを検証するためのFilterクラスを作成します。最初ユーザがログインすると、このクラスでは先に作成したJWTProviderを使って、Headerからトークンを取得、有効期間の検証を行った後、問題なければDBからユーザ情報を取得してSpring Securityの認証情報(Authentication)としてセットするようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTAuthenticationFilter</span> <span class=kd>extends</span> <span class=n>GenericFilterBean</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Component
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>JWTAuthenticationFilter</span> <span style=color:#8be9fd;font-style:italic>extends</span> GenericFilterBean <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// トークンを検証するためのProvider
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+    <span style=color:#6272a4>// トークンを検証するためのProvider
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTProvider provider<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>JWTAuthenticationFilter</span><span class=o>(</span><span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>JWTAuthenticationFilter</span><span style=color:#ff79c6>(</span>JWTProvider provider<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span> <span style=color:#ff79c6>=</span> provider<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// ログインに対するフィルタリングを行う
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>doFilter</span><span class=o>(</span><span class=kd>final</span> <span class=n>ServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=kd>final</span> <span class=n>ServletResponse</span> <span class=n>response</span><span class=o>,</span> <span class=kd>final</span> <span class=n>FilterChain</span> <span class=n>filterChain</span><span class=o>)</span>
-            <span class=kd>throws</span> <span class=n>IOException</span><span class=o>,</span> <span class=n>ServletException</span> <span class=o>{</span>
-        <span class=kd>final</span> <span class=n>String</span> <span class=n>token</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>resolveToken</span><span class=o>((</span><span class=n>HttpServletRequest</span><span class=o>)</span> <span class=n>request</span><span class=o>);</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>token</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>&amp;&amp;</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>validateToken</span><span class=o>(</span><span class=n>token</span><span class=o>))</span> <span class=o>{</span>
-            <span class=kd>final</span> <span class=n>Authentication</span> <span class=n>auth</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>getAuthentication</span><span class=o>(</span><span class=n>token</span><span class=o>);</span>
-            <span class=n>SecurityContextHolder</span><span class=o>.</span><span class=na>getContext</span><span class=o>().</span><span class=na>setAuthentication</span><span class=o>(</span><span class=n>auth</span><span class=o>);</span>
-        <span class=o>}</span>
-        <span class=n>filterChain</span><span class=o>.</span><span class=na>doFilter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>response</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// ログインに対するフィルタリングを行う
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>doFilter</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> ServletRequest request<span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>final</span> ServletResponse response<span style=color:#ff79c6>,</span> <span style=color:#8be9fd;font-style:italic>final</span> FilterChain filterChain<span style=color:#ff79c6>)</span>
+            <span style=color:#8be9fd;font-style:italic>throws</span> IOException<span style=color:#ff79c6>,</span> ServletException <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>final</span> String token <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>resolveToken</span><span style=color:#ff79c6>((</span>HttpServletRequest<span style=color:#ff79c6>)</span> request<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>token <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>null</span> <span style=color:#ff79c6>&amp;&amp;</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>validateToken</span><span style=color:#ff79c6>(</span>token<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#8be9fd;font-style:italic>final</span> Authentication auth <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>getAuthentication</span><span style=color:#ff79c6>(</span>token<span style=color:#ff79c6>);</span>
+            SecurityContextHolder<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getContext</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>setAuthentication</span><span style=color:#ff79c6>(</span>auth<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+        filterChain<span style=color:#ff79c6>.</span><span style=color:#50fa7b>doFilter</span><span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>,</span> response<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=spring-securityにjwtでのログイン設定を追加する>Spring SecurityにJWTでのログイン設定を追加する</h3>
 <p>では、JWTを作成して検証するための準備が終わったので、これからはSpring Securityでこのクラスたちを使って認証と認可を行うための設定をする版ですね。どれが定番だとかという訳ではないですが、どちらも好みに合わせて(もしくは要件に合わせて)使えるのではないかと思い、三つの方法を用意しました。</p>
 <h4 id=formloginを使う場合>FormLoginを使う場合</h4>
@@ -359,276 +359,276 @@ spring
 <p>ここではログインを処理するためのURLとクレデンシャルのためのパラメータなどを設定して、ログインに成功したらトークンを作成して返すための<code>AuthenticationSuccessHandler</code>を設定することになります。</p>
 <h5 id=authenticationsuccesshandlerの作成>AuthenticationSuccessHandlerの作成</h5>
 <p>まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JWTAuthenticationSuccessHandler</span> <span class=kd>implements</span> <span class=n>AuthenticationSuccessHandler</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Component
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>JWTAuthenticationSuccessHandler</span> <span style=color:#8be9fd;font-style:italic>implements</span> AuthenticationSuccessHandler <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// トークンを作成するためのProvider
-</span><span class=c1></span>    <span class=kd>final</span> <span class=kd>private</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+    <span style=color:#6272a4>// トークンを作成するためのProvider
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd;font-style:italic>private</span> JWTProvider provider<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>JWTAuthenticationSuccessHandler</span><span class=o>(</span><span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>JWTAuthenticationSuccessHandler</span><span style=color:#ff79c6>(</span>JWTProvider provider<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span> <span style=color:#ff79c6>=</span> provider<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>onAuthenticationSuccess</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span>
-                                        <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>,</span>
-                                        <span class=n>Authentication</span> <span class=n>auth</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span><span class=o>,</span> <span class=n>ServletException</span> <span class=o>{</span>
-        <span class=c1>// すでにレスポンスで情報を返した場合は何もしない
-</span><span class=c1></span>        <span class=k>if</span> <span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>isCommitted</span><span class=o>())</span> <span class=o>{</span>
-            <span class=k>return</span><span class=o>;</span>
-        <span class=o>}</span>
-        <span class=c1>// ログインに成功したユーザ情報を取得する
-</span><span class=c1></span>        <span class=n>User</span> <span class=n>user</span> <span class=o>=</span> <span class=o>(</span><span class=n>User</span><span class=o>)</span> <span class=n>auth</span><span class=o>.</span><span class=na>getPrincipal</span><span class=o>();</span>
-        <span class=c1>// Headerにトークンを作成して載せる
-</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>,</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>));</span>
-        <span class=c1>// HTTP Statusは200 OK
-</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setStatus</span><span class=o>(</span><span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>.</span><span class=na>value</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>onAuthenticationSuccess</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>,</span>
+                                        HttpServletResponse response<span style=color:#ff79c6>,</span>
+                                        Authentication auth<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException<span style=color:#ff79c6>,</span> ServletException <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// すでにレスポンスで情報を返した場合は何もしない
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>isCommitted</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span><span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>}</span>
+        <span style=color:#6272a4>// ログインに成功したユーザ情報を取得する
+</span><span style=color:#6272a4></span>        User user <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>(</span>User<span style=color:#ff79c6>)</span> auth<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getPrincipal</span><span style=color:#ff79c6>();</span>
+        <span style=color:#6272a4>// Headerにトークンを作成して載せる
+</span><span style=color:#6272a4></span>        response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setHeader</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;X-AUTH-TOKEN&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>createToken</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>));</span>
+        <span style=color:#6272a4>// HTTP Statusは200 OK
+</span><span style=color:#6272a4></span>        response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setStatus</span><span style=color:#ff79c6>(</span>HttpStatus<span style=color:#ff79c6>.</span><span style=color:#50fa7b>OK</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>value</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h5 id=spring-securityの設定>Spring Securityの設定</h5>
 <p>では、ログインに成功したときのHandlerクラスを作成したので、Spring Securityの設定を変えていきます。必要なのは<code>loginProcessingUrl()</code>(ログインの処理をするためのPOST通信が行われるURLとHanlderの設定で、ユーザ名のパラメータ名やパスワードのパラメタ名はデフォルトと違う場合にだけ必要となります。そしてFilterはデフォルト設定だと<code>UsernamePasswordAuthenticationFilter</code>が先に実行されるので、先ほど作成した<code>JWTAuthenticationFilter</code>を使うための設定をします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SecurityConfig</span> <span style=color:#8be9fd;font-style:italic>extends</span> WebSecurityConfigurerAdapter <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// ログインが成功した場合の処理のためのHandler
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>;</span>
+    <span style=color:#6272a4>// ログインが成功した場合の処理のためのHandler
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTAuthenticationSuccessHandler successHandler<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ログイン以降の認証認可のためのFilter
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+    <span style=color:#6272a4>// ログイン以降の認証認可のためのFilter
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTAuthenticationFilter filter<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>,</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>successHandler</span> <span class=o>=</span> <span class=n>successHandler</span><span class=o>;</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>filter</span> <span class=o>=</span> <span class=n>filter</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>SecurityConfig</span><span style=color:#ff79c6>(</span>JWTAuthenticationSuccessHandler successHandler<span style=color:#ff79c6>,</span> JWTAuthenticationFilter filter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>successHandler</span> <span style=color:#ff79c6>=</span> successHandler<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span> <span style=color:#ff79c6>=</span> filter<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Bean</span>
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
-    <span class=o>}</span>
+    @Bean
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> AuthenticationManager <span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=n>httpSecurity</span>
-                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// formLoginを使う
-</span><span class=c1></span>                <span class=o>.</span><span class=na>formLogin</span><span class=o>()</span>
-                <span class=c1>// POSTでクレデンシャルをもらい、ログイン処理を行うURL(UserDetailsServiceを使うことになる)
-</span><span class=c1></span>                <span class=o>.</span><span class=na>loginProcessingUrl</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login&#34;</span><span class=o>)</span>
-                <span class=c1>// ログイン処理ようのURLには認証認可なしでアクセスできる
-</span><span class=c1></span>                <span class=o>.</span><span class=na>permitAll</span><span class=o>()</span>
-                <span class=c1>// ユーザ名のパラメータ(デフォルトはusername)
-</span><span class=c1></span>                <span class=o>.</span><span class=na>usernameParameter</span><span class=o>(</span><span class=s>&#34;id&#34;</span><span class=o>)</span>
-                <span class=c1>// ユーザパスワードのパラメータ(デフォルトはpassword)
-</span><span class=c1></span>                <span class=o>.</span><span class=na>passwordParameter</span><span class=o>(</span><span class=s>&#34;pass&#34;</span><span class=o>)</span>
-                <span class=c1>// ログインに成功したら実行されるsuccessHandlerの指定
-</span><span class=c1></span>                <span class=o>.</span><span class=na>successHandler</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>successHandler</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// デフォルトのFilter設定を変える
-</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>configure</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> HttpSecurity httpSecurity<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        httpSecurity
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>httpBasic</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>csrf</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>sessionManagement</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>sessionCreationPolicy</span><span style=color:#ff79c6>(</span>SessionCreationPolicy<span style=color:#ff79c6>.</span><span style=color:#50fa7b>STATELESS</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// formLoginを使う
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>formLogin</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// POSTでクレデンシャルをもらい、ログイン処理を行うURL(UserDetailsServiceを使うことになる)
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>loginProcessingUrl</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/api/v1/web/login&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#6272a4>// ログイン処理ようのURLには認証認可なしでアクセスできる
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>permitAll</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// ユーザ名のパラメータ(デフォルトはusername)
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>usernameParameter</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;id&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#6272a4>// ユーザパスワードのパラメータ(デフォルトはpassword)
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>passwordParameter</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;pass&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#6272a4>// ログインに成功したら実行されるsuccessHandlerの指定
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>successHandler</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>successHandler</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>authorizeRequests</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyRequest</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>hasRole</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;ROLE_USER&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// デフォルトのFilter設定を変える
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>addFilterBefore</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>,</span> UsernamePasswordAuthenticationFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h4 id=jsonを使えるfilterを使う場合>JSONを使えるFilterを使う場合</h4>
 <p>Spring SecurityのFormLoginを使う場合、ログインのためのクレデンシャルはFormデータである必要があります。しかし、REST APIならばデータのやりとりはJSONが基本ですね。なのでクレデンシャルもJSONで送るようにしたいのですが、Spring Securityではそのようなメソッドを提供していません。</p>
 <p>こういう場合は、カスタムUsernamePasswordAuthenticationFilterクラスを作ってJSONをパースする必要があります。FormLoginを使う場合に比べて少し複雑になりますが、REST APIらしくやってみましょう。FromLoginでの実装ができると、こちらはFilterをもう一つ追加するだけの感覚で実装ができます。</p>
 <h5 id=jsonusernamepasswordauthenticationfilterの作成>JsonUsernamePasswordAuthenticationFilterの作成</h5>
 <p>クレデンシャルを確認するSpringのデフォルトのFilterクラスはUsernamePasswordAuthenticationFilterというもので、これを継承したカスタムクラスを作り、そこからJSONをパースして使うようにします。以下の実装は、FormデータとJSONの両方に対応している例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>JsonUsernamePasswordAuthenticationFilter</span> <span class=kd>extends</span> <span class=n>UsernamePasswordAuthenticationFilter</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>JsonUsernamePasswordAuthenticationFilter</span> <span style=color:#8be9fd;font-style:italic>extends</span> UsernamePasswordAuthenticationFilter <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// Headerからコンテントタイプを取得するための定数
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>String</span> <span class=n>CONTENT_TYPE</span> <span class=o>=</span> <span class=s>&#34;Content-Type&#34;</span><span class=o>;</span>
+    <span style=color:#6272a4>// Headerからコンテントタイプを取得するための定数
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> String CONTENT_TYPE <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;Content-Type&#34;</span><span style=color:#ff79c6>;</span>
     
-    <span class=c1>// JSONデータを保存するためのMap
-</span><span class=c1></span>    <span class=kd>private</span> <span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=o>,</span> <span class=n>String</span><span class=o>&gt;</span> <span class=n>jsonRequest</span><span class=o>;</span>
+    <span style=color:#6272a4>// JSONデータを保存するためのMap
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> Map<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>,</span> String<span style=color:#ff79c6>&gt;</span> jsonRequest<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ユーザ名を取得する
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=n>String</span> <span class=nf>obtainUsername</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>getParameter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>getUsernameParameter</span><span class=o>());</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// ユーザ名を取得する
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> String <span style=color:#50fa7b>obtainUsername</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> getParameter<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>,</span> getUsernameParameter<span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// パスワードを取得する
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=n>String</span> <span class=nf>obtainPassword</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>getParameter</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>getPasswordParameter</span><span class=o>());</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// パスワードを取得する
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> String <span style=color:#50fa7b>obtainPassword</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> getParameter<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>,</span> getPasswordParameter<span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
     
-    <span class=c1>// JSONもしくはFormデータのクレデンシャルを取得し、Authenticationとして載せる
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>Authentication</span> <span class=nf>attemptAuthentication</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>AuthenticationException</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>headerContentTypeIsJson</span><span class=o>(</span><span class=n>request</span><span class=o>))</span> <span class=o>{</span>
-            <span class=n>ObjectMapper</span> <span class=n>mapper</span> <span class=o>=</span> <span class=k>new</span> <span class=n>ObjectMapper</span><span class=o>();</span>
-            <span class=k>try</span> <span class=o>{</span>
-                <span class=k>this</span><span class=o>.</span><span class=na>jsonRequest</span> <span class=o>=</span> <span class=n>mapper</span><span class=o>.</span><span class=na>readValue</span><span class=o>(</span><span class=n>request</span><span class=o>.</span><span class=na>getReader</span><span class=o>().</span><span class=na>lines</span><span class=o>().</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>joining</span><span class=o>()),</span>
-                        <span class=k>new</span> <span class=n>TypeReference</span><span class=o>&lt;</span><span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=o>,</span> <span class=n>String</span><span class=o>&gt;&gt;()</span> <span class=o>{</span>
-                        <span class=o>});</span>
-            <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>IOException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-                <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=n>e</span><span class=o>);</span>
-            <span class=o>}</span>
-        <span class=o>}</span>
-        <span class=n>String</span> <span class=n>username</span> <span class=o>=</span> <span class=n>obtainUsername</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>?</span> <span class=n>obtainUsername</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>:</span> <span class=s>&#34;&#34;</span><span class=o>;</span>
-        <span class=n>String</span> <span class=n>password</span> <span class=o>=</span> <span class=n>obtainPassword</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>!=</span> <span class=kc>null</span> <span class=o>?</span> <span class=n>obtainPassword</span><span class=o>(</span><span class=n>request</span><span class=o>)</span> <span class=o>:</span> <span class=s>&#34;&#34;</span><span class=o>;</span>
-        <span class=n>UsernamePasswordAuthenticationToken</span> <span class=n>authRequest</span> <span class=o>=</span> <span class=k>new</span> <span class=n>UsernamePasswordAuthenticationToken</span><span class=o>(</span><span class=n>username</span><span class=o>,</span> <span class=n>password</span><span class=o>);</span>
-        <span class=n>setDetails</span><span class=o>(</span><span class=n>request</span><span class=o>,</span> <span class=n>authRequest</span><span class=o>);</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>getAuthenticationManager</span><span class=o>().</span><span class=na>authenticate</span><span class=o>(</span><span class=n>authRequest</span><span class=o>);</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// JSONもしくはFormデータのクレデンシャルを取得し、Authenticationとして載せる
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> Authentication <span style=color:#50fa7b>attemptAuthentication</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>,</span> HttpServletResponse response<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> AuthenticationException <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>headerContentTypeIsJson<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+            ObjectMapper mapper <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ObjectMapper<span style=color:#ff79c6>();</span>
+            <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>{</span>
+                <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>jsonRequest</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>.</span><span style=color:#50fa7b>readValue</span><span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getReader</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>lines</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>joining</span><span style=color:#ff79c6>()),</span>
+                        <span style=color:#ff79c6>new</span> TypeReference<span style=color:#ff79c6>&lt;</span>Map<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>,</span> String<span style=color:#ff79c6>&gt;&gt;()</span> <span style=color:#ff79c6>{</span>
+                        <span style=color:#ff79c6>});</span>
+            <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>catch</span> <span style=color:#ff79c6>(</span>IOException e<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+                <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> RuntimeException<span style=color:#ff79c6>(</span>e<span style=color:#ff79c6>);</span>
+            <span style=color:#ff79c6>}</span>
+        <span style=color:#ff79c6>}</span>
+        String username <span style=color:#ff79c6>=</span> obtainUsername<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>null</span> <span style=color:#ff79c6>?</span> obtainUsername<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>:</span> <span style=color:#f1fa8c>&#34;&#34;</span><span style=color:#ff79c6>;</span>
+        String password <span style=color:#ff79c6>=</span> obtainPassword<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>null</span> <span style=color:#ff79c6>?</span> obtainPassword<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>:</span> <span style=color:#f1fa8c>&#34;&#34;</span><span style=color:#ff79c6>;</span>
+        UsernamePasswordAuthenticationToken authRequest <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> UsernamePasswordAuthenticationToken<span style=color:#ff79c6>(</span>username<span style=color:#ff79c6>,</span> password<span style=color:#ff79c6>);</span>
+        setDetails<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>,</span> authRequest<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>getAuthenticationManager</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>authenticate</span><span style=color:#ff79c6>(</span>authRequest<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// リクエストからパラメータ(ユーザ名とパスワード)を取得する
-</span><span class=c1></span>    <span class=kd>private</span> <span class=n>String</span> <span class=nf>getParameter</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>,</span> <span class=n>String</span> <span class=n>parameter</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>headerContentTypeIsJson</span><span class=o>(</span><span class=n>request</span><span class=o>))</span> <span class=o>{</span>
-            <span class=k>return</span> <span class=n>jsonRequest</span><span class=o>.</span><span class=na>get</span><span class=o>(</span><span class=n>parameter</span><span class=o>);</span>
-        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
-            <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getParameter</span><span class=o>(</span><span class=n>parameter</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// リクエストからパラメータ(ユーザ名とパスワード)を取得する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> String <span style=color:#50fa7b>getParameter</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>,</span> String parameter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>headerContentTypeIsJson<span style=color:#ff79c6>(</span>request<span style=color:#ff79c6>))</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span> jsonRequest<span style=color:#ff79c6>.</span><span style=color:#50fa7b>get</span><span style=color:#ff79c6>(</span>parameter<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>return</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getParameter</span><span style=color:#ff79c6>(</span>parameter<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// HeaderからコンテントタイプがJSONかどうかを判定する
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kt>boolean</span> <span class=nf>headerContentTypeIsJson</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=n>CONTENT_TYPE</span><span class=o>).</span><span class=na>equals</span><span class=o>(</span><span class=n>MediaType</span><span class=o>.</span><span class=na>APPLICATION_JSON_VALUE</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// HeaderからコンテントタイプがJSONかどうかを判定する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>headerContentTypeIsJson</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeader</span><span style=color:#ff79c6>(</span>CONTENT_TYPE<span style=color:#ff79c6>).</span><span style=color:#50fa7b>equals</span><span style=color:#ff79c6>(</span>MediaType<span style=color:#ff79c6>.</span><span style=color:#50fa7b>APPLICATION_JSON_VALUE</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h5 id=authenticationsuccesshandlerの作成-1>AuthenticationSuccessHandlerの作成</h5>
 <p>ここはFormLoginの場合と同じです。詳細については<a class=link href=#AuthenticationSuccessHandler%e3%81%ae%e4%bd%9c%e6%88%90>こちらを</a>参考にしてください。</p>
 <h5 id=spring-securityの設定-1>Spring Securityの設定</h5>
 <p>ここでは、作成したカスタムUsernamePasswordAuthenticationFilterにFilterProcessUrlと、AuthenticationManager、AuthenticationSuccessHandlerを設定して、デフォルトのフィルタ設定を変えるようになります。この設定ではFormLoginが要らなくなリます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SecurityConfig</span> <span style=color:#8be9fd;font-style:italic>extends</span> WebSecurityConfigurerAdapter <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// ログインが成功した場合の処理のためのHandler
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>;</span>
+    <span style=color:#6272a4>// ログインが成功した場合の処理のためのHandler
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTAuthenticationSuccessHandler successHandler<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// ログイン以降の認証認可のためのFilter
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+    <span style=color:#6272a4>// ログイン以降の認証認可のためのFilter
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTAuthenticationFilter filter<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationSuccessHandler</span> <span class=n>successHandler</span><span class=o>,</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>successHandler</span> <span class=o>=</span> <span class=n>successHandler</span><span class=o>;</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>filter</span> <span class=o>=</span> <span class=n>filter</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>SecurityConfig</span><span style=color:#ff79c6>(</span>JWTAuthenticationSuccessHandler successHandler<span style=color:#ff79c6>,</span> JWTAuthenticationFilter filter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>successHandler</span> <span style=color:#ff79c6>=</span> successHandler<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span> <span style=color:#ff79c6>=</span> filter<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Bean</span>
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
-    <span class=o>}</span>
+    @Bean
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> AuthenticationManager <span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=n>httpSecurity</span>
-                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// FormLoginは使わない
-</span><span class=c1></span>                <span class=o>.</span><span class=na>formLogin</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// 認証前にJWTのFilterを設定
-</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-                <span class=c1>// UsernamePasswordAuthenticationFilterはカスタムクラスに代替
-</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterAt</span><span class=o>(</span><span class=n>getJsonUsernamePasswordAuthenticationFilter</span><span class=o>(),</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
-    <span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>configure</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> HttpSecurity httpSecurity<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        httpSecurity
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>httpBasic</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>csrf</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>sessionManagement</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>sessionCreationPolicy</span><span style=color:#ff79c6>(</span>SessionCreationPolicy<span style=color:#ff79c6>.</span><span style=color:#50fa7b>STATELESS</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// FormLoginは使わない
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>formLogin</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>authorizeRequests</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyRequest</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>hasRole</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;ROLE_USER&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// 認証前にJWTのFilterを設定
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>addFilterBefore</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>,</span> UsernamePasswordAuthenticationFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+                <span style=color:#6272a4>// UsernamePasswordAuthenticationFilterはカスタムクラスに代替
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>addFilterAt</span><span style=color:#ff79c6>(</span>getJsonUsernamePasswordAuthenticationFilter<span style=color:#ff79c6>(),</span> UsernamePasswordAuthenticationFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// カスタムUsernamePasswordAuthenticationFilterの設定
-</span><span class=c1></span>    <span class=kd>private</span> <span class=n>JsonUsernamePasswordAuthenticationFilter</span> <span class=nf>getJsonUsernamePasswordAuthenticationFilter</span><span class=o>()</span> <span class=o>{</span>
-        <span class=n>JsonUsernamePasswordAuthenticationFilter</span> <span class=n>jsonFilter</span> <span class=o>=</span> <span class=k>new</span> <span class=n>JsonUsernamePasswordAuthenticationFilter</span><span class=o>();</span>
-        <span class=k>try</span> <span class=o>{</span>
-            <span class=c1>// ログインを処理するURLの設定
-</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setFilterProcessesUrl</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login&#34;</span><span class=o>);</span>
-            <span class=c1>// AuthenticationManagerの設定
-</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setAuthenticationManager</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>());</span>
-            <span class=c1>// AuthenticationSuccessHandlerの設定
-</span><span class=c1></span>            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setAuthenticationSuccessHandler</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>successHandler</span><span class=o>);</span>
-            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setUsernameParameter</span><span class=o>(</span><span class=s>&#34;id&#34;</span><span class=o>);</span>
-            <span class=n>jsonFilter</span><span class=o>.</span><span class=na>setPasswordParameter</span><span class=o>(</span><span class=s>&#34;pass&#34;</span><span class=o>);</span>
-        <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-            <span class=k>throw</span> <span class=k>new</span> <span class=n>RuntimeException</span><span class=o>(</span><span class=n>e</span><span class=o>);</span>
-        <span class=o>}</span>
-        <span class=k>return</span> <span class=n>jsonFilter</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// カスタムUsernamePasswordAuthenticationFilterの設定
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> JsonUsernamePasswordAuthenticationFilter <span style=color:#50fa7b>getJsonUsernamePasswordAuthenticationFilter</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        JsonUsernamePasswordAuthenticationFilter jsonFilter <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> JsonUsernamePasswordAuthenticationFilter<span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#6272a4>// ログインを処理するURLの設定
+</span><span style=color:#6272a4></span>            jsonFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setFilterProcessesUrl</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/api/v1/web/login&#34;</span><span style=color:#ff79c6>);</span>
+            <span style=color:#6272a4>// AuthenticationManagerの設定
+</span><span style=color:#6272a4></span>            jsonFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAuthenticationManager</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>());</span>
+            <span style=color:#6272a4>// AuthenticationSuccessHandlerの設定
+</span><span style=color:#6272a4></span>            jsonFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAuthenticationSuccessHandler</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>successHandler</span><span style=color:#ff79c6>);</span>
+            jsonFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setUsernameParameter</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;id&#34;</span><span style=color:#ff79c6>);</span>
+            jsonFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setPasswordParameter</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;pass&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>catch</span> <span style=color:#ff79c6>(</span>Exception e<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> RuntimeException<span style=color:#ff79c6>(</span>e<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+        <span style=color:#ff79c6>return</span> jsonFilter<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h4 id=ログイン用のcontrollerを使う場合>ログイン用のControllerを使う場合</h4>
 <p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。</p>
 <p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかも知れません。</p>
 <h5 id=controllerの作成>Controllerの作成</h5>
 <p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@RestController</span>
-<span class=nd>@RequestMapping</span><span class=o>(</span><span class=s>&#34;api/v1/web&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SignApiController</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@RestController
+@RequestMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;api/v1/web&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SignApiController</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// クレデンシャルを検証するためのサービスクラス
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>UserService</span> <span class=n>service</span><span class=o>;</span>
+    <span style=color:#6272a4>// クレデンシャルを検証するためのサービスクラス
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> UserService service<span style=color:#ff79c6>;</span>
     
-    <span class=c1>// トークンを作成するためのProvider
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>;</span>
+    <span style=color:#6272a4>// トークンを作成するためのProvider
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTProvider provider<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>SignApiController</span><span class=o>(</span><span class=n>MemberService</span> <span class=n>service</span><span class=o>,</span> <span class=n>JWTProvider</span> <span class=n>provider</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>service</span> <span class=o>=</span> <span class=n>service</span><span class=o>;</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>SignApiController</span><span style=color:#ff79c6>(</span>MemberService service<span style=color:#ff79c6>,</span> JWTProvider provider<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>service</span> <span style=color:#ff79c6>=</span> service<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span> <span style=color:#ff79c6>=</span> provider<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// Formデータでクレデンシャルをもらい、認証を行う
-</span><span class=c1></span>    <span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/login&#34;</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>login</span><span class=o>(</span><span class=nd>@Validated</span> <span class=nd>@RequestBody</span> <span class=n>LoginMemberForm</span> <span class=n>form</span><span class=o>,</span> <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>)</span> <span class=o>{</span>
-        <span class=c1>// クレデンシャルからユーザ情報を取得
-</span><span class=c1></span>        <span class=n>User</span> <span class=n>user</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>service</span><span class=o>.</span><span class=na>getUser</span><span class=o>(</span><span class=n>form</span><span class=o>.</span><span class=na>getId</span><span class=o>(),</span> <span class=n>form</span><span class=o>.</span><span class=na>getPassword</span><span class=o>());</span>
-        <span class=c1>// 取得した情報でトークンを作成
-</span><span class=c1></span>        <span class=n>String</span> <span class=n>token</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>);</span>
-        <span class=c1>// Headerにトークンを作成して載せる
-</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setHeader</span><span class=o>(</span><span class=s>&#34;X-AUTH-TOKEN&#34;</span><span class=o>,</span> <span class=k>this</span><span class=o>.</span><span class=na>provider</span><span class=o>.</span><span class=na>createToken</span><span class=o>(</span><span class=n>user</span><span class=o>));</span>
-        <span class=c1>// HTTP Statusは200 OK
-</span><span class=c1></span>        <span class=n>response</span><span class=o>.</span><span class=na>setStatus</span><span class=o>(</span><span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>.</span><span class=na>value</span><span class=o>());</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// Formデータでクレデンシャルをもらい、認証を行う
+</span><span style=color:#6272a4></span>    @PostMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/login&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>login</span><span style=color:#ff79c6>(</span>@Validated @RequestBody LoginMemberForm form<span style=color:#ff79c6>,</span> HttpServletResponse response<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// クレデンシャルからユーザ情報を取得
+</span><span style=color:#6272a4></span>        User user <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>service</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>getUser</span><span style=color:#ff79c6>(</span>form<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>(),</span> form<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getPassword</span><span style=color:#ff79c6>());</span>
+        <span style=color:#6272a4>// 取得した情報でトークンを作成
+</span><span style=color:#6272a4></span>        String token <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>createToken</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>);</span>
+        <span style=color:#6272a4>// Headerにトークンを作成して載せる
+</span><span style=color:#6272a4></span>        response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setHeader</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;X-AUTH-TOKEN&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>createToken</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>));</span>
+        <span style=color:#6272a4>// HTTP Statusは200 OK
+</span><span style=color:#6272a4></span>        response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setStatus</span><span style=color:#ff79c6>(</span>HttpStatus<span style=color:#ff79c6>.</span><span style=color:#50fa7b>OK</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>value</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h5 id=spring-securityの設定-2>Spring Securityの設定</h5>
 <p>Controllerを使った場合は、認可認可なしでもログイン用のURLにアクセスできる設定と、Filterを使うための設定を追加します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SecurityConfig</span> <span class=kd>extends</span> <span class=n>WebSecurityConfigurerAdapter</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SecurityConfig</span> <span style=color:#8be9fd;font-style:italic>extends</span> WebSecurityConfigurerAdapter <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// ログイン以降の認証認可のためのFilter
-</span><span class=c1></span>    <span class=kd>private</span> <span class=kd>final</span> <span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>;</span>
+    <span style=color:#6272a4>// ログイン以降の認証認可のためのFilter
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>final</span> JWTAuthenticationFilter filter<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>SecurityConfig</span><span class=o>(</span><span class=n>JWTAuthenticationFilter</span> <span class=n>filter</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>provider</span> <span class=o>=</span> <span class=n>provider</span><span class=o>;</span>
-    <span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>SecurityConfig</span><span style=color:#ff79c6>(</span>JWTAuthenticationFilter filter<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>provider</span> <span style=color:#ff79c6>=</span> provider<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Bean</span>
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>AuthenticationManager</span> <span class=nf>authenticationManagerBean</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=kd>super</span><span class=o>.</span><span class=na>authenticationManagerBean</span><span class=o>();</span>
-    <span class=o>}</span>
+    @Bean
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> AuthenticationManager <span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>authenticationManagerBean</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>protected</span> <span class=kt>void</span> <span class=nf>configure</span><span class=o>(</span><span class=kd>final</span> <span class=n>HttpSecurity</span> <span class=n>httpSecurity</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>Exception</span> <span class=o>{</span>
-        <span class=n>httpSecurity</span>
-                <span class=o>.</span><span class=na>httpBasic</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>csrf</span><span class=o>().</span><span class=na>disable</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>sessionManagement</span><span class=o>().</span><span class=na>sessionCreationPolicy</span><span class=o>(</span><span class=n>SessionCreationPolicy</span><span class=o>.</span><span class=na>STATELESS</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>authorizeRequests</span><span class=o>()</span>
-                <span class=c1>// ログイン処理ようのURLには認証認可なしでアクセスできる
-</span><span class=c1></span>                <span class=o>.</span><span class=na>antMatchers</span><span class=o>(</span><span class=s>&#34;/api/v1/web/login/&#34;</span><span class=o>).</span><span class=na>permitAll</span><span class=o>()</span>
-                <span class=o>.</span><span class=na>anyRequest</span><span class=o>().</span><span class=na>hasRole</span><span class=o>(</span><span class=s>&#34;ROLE_USER&#34;</span><span class=o>)</span>
-                <span class=o>.</span><span class=na>and</span><span class=o>()</span>
-                <span class=c1>// デフォルトのFilter設定を変える
-</span><span class=c1></span>                <span class=o>.</span><span class=na>addFilterBefore</span><span class=o>(</span><span class=k>this</span><span class=o>.</span><span class=na>filter</span><span class=o>,</span> <span class=n>UsernamePasswordAuthenticationFilter</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>protected</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>configure</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> HttpSecurity httpSecurity<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> Exception <span style=color:#ff79c6>{</span>
+        httpSecurity
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>httpBasic</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>csrf</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>disable</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>sessionManagement</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>sessionCreationPolicy</span><span style=color:#ff79c6>(</span>SessionCreationPolicy<span style=color:#ff79c6>.</span><span style=color:#50fa7b>STATELESS</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>authorizeRequests</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// ログイン処理ようのURLには認証認可なしでアクセスできる
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>antMatchers</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/api/v1/web/login/&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>permitAll</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyRequest</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>hasRole</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;ROLE_USER&#34;</span><span style=color:#ff79c6>)</span>
+                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>and</span><span style=color:#ff79c6>()</span>
+                <span style=color:#6272a4>// デフォルトのFilter設定を変える
+</span><span style=color:#6272a4></span>                <span style=color:#ff79c6>.</span><span style=color:#50fa7b>addFilterBefore</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>,</span> UsernamePasswordAuthenticationFilter<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=テスト>テスト</h3>
 <p>今まで実装したログインのテストは、CURLもしくは<a class=link href=https://www.postman.com target=_blank rel=noopener>Postman</a>などのツールで簡単にできます。</p>
 <p>例えば、FormLoginを使った場合のログインはこちらになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>curl -i -X POST <span class=s2>&#34;http://localhost:8080/api/v1/web/login&#34;</span> -d <span class=s2>&#34;id=user&#34;</span> -d <span class=s2>&#34;pass=1234&#34;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>curl -i -X POST <span style=color:#f1fa8c>&#34;http://localhost:8080/api/v1/web/login&#34;</span> -d <span style=color:#f1fa8c>&#34;id=user&#34;</span> -d <span style=color:#f1fa8c>&#34;pass=1234&#34;</span>
 </code></pre></div><p>Postmanを使ったJSONでのログインテストはこちらになります。(X-AUTH-TOKENでJWTが帰ってきたのを確認できます!)</p>
 <p><figure class=gallery-image style=flex-grow:253;flex-basis:608px>
 <a href=/posts/spring-rest-api-login-with-jwt/jwt_postman_login.png data-size=1926x760>

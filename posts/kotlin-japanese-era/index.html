@@ -71,17 +71,17 @@ kotlin
 <p>帳票などで、たまに和暦を処理する必要な時がありますね。例えば元号を表記するとか、和暦の年度を表記するなどの場合があるかと思います。Kotlin(JVM)の場合、西暦だとJavaのAPIの<code>Date</code>や<code>LocalDate</code>などのAPIを使うと簡単ですが、和暦が必要となるのはごく一部のケースなので方法がなかなか分かりづらいかと思います。なので、今回はKotlinで和暦を扱う方法について少しまとめてみました。</p>
 <h2 id=japanseera--japanesedate>JapanseEra / JapaneseDate</h2>
 <p>Javaでは、1.8から和暦で日付を扱える<a class=link href=https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/time/chrono/JapaneseDate.html target=_blank rel=noopener>JapaneseDate</a>及び元号を扱える<a class=link href=https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/time/chrono/JapaneseEra.html target=_blank rel=noopener>JapaneseEra</a>というAPIを提供しています。なので<code>JapaneseDate</code>のインスタンスを作り、そこから<code>JapaneseEra</code>を取得することで簡単に元号の情報を取得できるようになります。実際の使い方は以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// 現在日付のJapaneseDateを取得
-</span><span class=c1></span><span class=k>val</span> <span class=py>japaneseDate</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// 現在日付のJapaneseDateを取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> japaneseDate = JapaneseDate.now()
 
-<span class=c1>// JapaneseEraの取得
-</span><span class=c1></span><span class=k>val</span> <span class=py>japaneseEra</span> <span class=p>=</span> <span class=n>japaneseDate</span><span class=p>.</span><span class=n>era</span>
+<span style=color:#6272a4>// JapaneseEraの取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> japaneseEra = japaneseDate.era
 </code></pre></div><p><code>JapaneseDate</code>の場合、<code>LocalDate</code>と同じく<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/chrono/ChronoLocalDate.html target=_blank rel=noopener>ChronoLocalDate</a>を継承しているのでインスタンスを作成する方法はそう変わりません。なので、以下のようなこともできます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// LocalDateをJapaneseDateに変換
-</span><span class=c1></span><span class=k>val</span> <span class=py>japaneseDateFromLocalDate</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>from</span><span class=p>(</span><span class=n>LocalDate</span><span class=p>.</span><span class=n>now</span><span class=p>())</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// LocalDateをJapaneseDateに変換
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> japaneseDateFromLocalDate = JapaneseDate.from(LocalDate.now())
 
-<span class=c1>// 特定の日付を指定してJapaneseDate
-</span><span class=c1></span><span class=k>val</span> <span class=py>japaneseDateFromSpecificDate</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2000</span><span class=p>,</span> <span class=m>12</span><span class=p>,</span> <span class=m>31</span><span class=p>)</span>
+<span style=color:#6272a4>// 特定の日付を指定してJapaneseDate
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> japaneseDateFromSpecificDate = JapaneseDate.of(<span style=color:#bd93f9>2000</span>, <span style=color:#bd93f9>12</span>, <span style=color:#bd93f9>31</span>)
 </code></pre></div><h2 id=元号を日本語で表記する>元号を日本語で表記する</h2>
 <p>和暦を扱う場合にやりたいことは大きく二つかと思います。一つは、元号を文字列として扱うこと、そしてもう一つは、和暦での年度を数字として扱うことです。まずは、元号を文字列として取得できる方法について説明します。</p>
 <p>まず上記で紹介した通り、<code>JapaneseDate</code>のインスタンスを取得した上で、さらにそのオブジェクトが保持している<code>JapaneseEra</code>を取得する必要があります。その後、<code>JapaneseEra.getDisplayName()</code>という関数に<a class=link href=https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/TextStyle.html target=_blank rel=noopener>TextStyle</a>と<a class=link href=https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/util/Locale.html target=_blank rel=noopener>Locale</a>を指定して文字列を取得することができます。前者は文字の出力型を指定する列挙型定数で、後者は言語の指定と思ってください。</p>
@@ -140,33 +140,33 @@ kotlin
 </tbody>
 </table></div>
 <p>以下はこれらの定数を渡して元号を文字列として取得する例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>today</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>()</span>
-<span class=k>val</span> <span class=py>era</span> <span class=p>=</span> <span class=n>today</span><span class=p>.</span><span class=n>era</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> today = JapaneseDate.now()
+<span style=color:#ff79c6>val</span> era = today.era
 
-<span class=c1>// 元号を漢字で取得
-</span><span class=c1></span><span class=k>val</span> <span class=py>eraName</span> <span class=p>=</span> <span class=n>era</span><span class=p>.</span><span class=n>getDisplayName</span><span class=p>(</span><span class=n>TextStyle</span><span class=p>.</span><span class=n>FULL</span><span class=p>,</span> <span class=n>Locale</span><span class=p>.</span><span class=n>JAPAN</span><span class=p>)</span> <span class=c1>// 令和
+<span style=color:#6272a4>// 元号を漢字で取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> eraName = era.getDisplayName(TextStyle.FULL, Locale.JAPAN) <span style=color:#6272a4>// 令和
 </span></code></pre></div><p>元号だけでなく、年度までも合わせて表記したい場合もあるかと思います。その場合に使えるものは<a class=link href=https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/time/format/DateTimeFormatter.html target=_blank rel=noopener>DateTimeFormatter</a>です。これも<code>JapaneseDate</code>が実質<code>LocalDate</code>と同じく<code>ChronoLocalDate</code>を継承しているから可能なことですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// 日付を日本語で表記する
-</span><span class=c1></span><span class=k>val</span> <span class=py>formatter</span> <span class=p>=</span> <span class=n>DateTimeFormatter</span><span class=p>.</span><span class=n>ofPattern</span><span class=p>(</span><span class=s2>&#34;Gy年&#34;</span><span class=p>,</span> <span class=n>Locale</span><span class=p>.</span><span class=n>JAPAN</span><span class=p>)</span>
-<span class=k>val</span> <span class=py>todayString</span> <span class=p>=</span> <span class=n>formatter</span><span class=p>.</span><span class=n>format</span><span class=p>(</span><span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>())</span> <span class=c1>// 令和3年
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// 日付を日本語で表記する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> formatter = DateTimeFormatter.ofPattern(<span style=color:#f1fa8c>&#34;Gy年&#34;</span>, Locale.JAPAN)
+<span style=color:#ff79c6>val</span> todayString = formatter.format(JapaneseDate.now()) <span style=color:#6272a4>// 令和3年
 </span></code></pre></div><p>もしJava 1.8以前のバージョンを使うなどで<code>LocalDate</code>や<code>JapaneseDate</code>が使えなく、<code>java.util.Date</code>の方を使うしかない場合は、以下のような方法で年号と年度の取得が可能です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>format</span> <span class=p>=</span> <span class=n>SimpleDateFormat</span><span class=p>(</span><span class=s2>&#34;Gy年&#34;</span><span class=p>,</span> <span class=n>Locale</span><span class=p>(</span><span class=s2>&#34;Ja&#34;</span><span class=p>,</span> <span class=s2>&#34;JP&#34;</span><span class=p>,</span> <span class=s2>&#34;JP&#34;</span><span class=p>))</span>
-<span class=k>val</span> <span class=py>year</span> <span class=p>=</span> <span class=n>format</span><span class=p>.</span><span class=n>format</span><span class=p>(</span><span class=n>Date</span><span class=p>())</span> <span class=c1>// 令和3年
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> format = SimpleDateFormat(<span style=color:#f1fa8c>&#34;Gy年&#34;</span>, Locale(<span style=color:#f1fa8c>&#34;Ja&#34;</span>, <span style=color:#f1fa8c>&#34;JP&#34;</span>, <span style=color:#f1fa8c>&#34;JP&#34;</span>))
+<span style=color:#ff79c6>val</span> year = format.format(Date()) <span style=color:#6272a4>// 令和3年
 </span></code></pre></div><p><code>java.util.Date</code>を使う場合は、<code>Locale</code>に第3引数の<code>variant</code>まで指定する必要があるので、既存の列挙型として定義されたものは使えません。</p>
 <p>また、<code>Locale.ENGLISH</code>などに設定すると、<code>JapaenseDate</code>を使っている場合でも取得した結果は<code>AD2021年12月5日</code>になります。</p>
 <h3 id=合字で表記する>合字で表記する</h3>
 <p>年号については、Unicodeで合字を取得して使いたい場合もあるかと思います。その場合は、以下のようにUnicodeのMapなどを定義しておいて取得するのが良いかと思います。拡張関数などを定義するのも良いでしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>eraUnicodeMap</span> <span class=p>=</span> <span class=n>mapOf</span><span class=p>(</span>
-    <span class=n>JapaneseEra</span><span class=p>.</span><span class=n>MEIJI</span> <span class=n>to</span> <span class=s2>&#34;</span><span class=se>\u337e</span><span class=s2>&#34;</span><span class=p>,</span> <span class=c1>// ㍾
-</span><span class=c1></span>    <span class=n>JapaneseEra</span><span class=p>.</span><span class=n>TAISHO</span> <span class=n>to</span> <span class=s2>&#34;</span><span class=se>\u337d</span><span class=s2>&#34;</span><span class=p>,</span> <span class=c1>// ㍽
-</span><span class=c1></span>    <span class=n>JapaneseEra</span><span class=p>.</span><span class=n>SHOWA</span> <span class=n>to</span> <span class=s2>&#34;</span><span class=se>\u337c</span><span class=s2>&#34;</span><span class=p>,</span> <span class=c1>// ㍼
-</span><span class=c1></span>    <span class=n>JapaneseEra</span><span class=p>.</span><span class=n>HEISEI</span> <span class=n>to</span> <span class=s2>&#34;</span><span class=se>\u337b</span><span class=s2>&#34;</span><span class=p>,</span> <span class=c1>// ㍻
-</span><span class=c1></span>    <span class=n>JapaneseEra</span><span class=p>.</span><span class=n>REIWA</span> <span class=n>to</span> <span class=s2>&#34;</span><span class=se>\u32ff</span><span class=s2>&#34;</span> <span class=c1>// ㋿
-</span><span class=c1></span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> eraUnicodeMap = mapOf(
+    JapaneseEra.MEIJI to <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>\u337e</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#6272a4>// ㍾
+</span><span style=color:#6272a4></span>    JapaneseEra.TAISHO to <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>\u337d</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#6272a4>// ㍽
+</span><span style=color:#6272a4></span>    JapaneseEra.SHOWA to <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>\u337c</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#6272a4>// ㍼
+</span><span style=color:#6272a4></span>    JapaneseEra.HEISEI to <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>\u337b</span><span style=color:#f1fa8c>&#34;</span>, <span style=color:#6272a4>// ㍻
+</span><span style=color:#6272a4></span>    JapaneseEra.REIWA to <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>\u32ff</span><span style=color:#f1fa8c>&#34;</span> <span style=color:#6272a4>// ㋿
+</span><span style=color:#6272a4></span>)
 
-<span class=k>val</span> <span class=py>era</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>().</span><span class=n>era</span>
-<span class=c1>// 元号を合字で取得する
-</span><span class=c1></span><span class=k>val</span> <span class=py>eraUnicode</span> <span class=p>=</span> <span class=n>eraUnicodeMap</span><span class=p>[</span><span class=n>era</span><span class=p>]</span> <span class=c1>// ㋿
+<span style=color:#ff79c6>val</span> era = JapaneseDate.now().era
+<span style=color:#6272a4>// 元号を合字で取得する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> eraUnicode = eraUnicodeMap[era] <span style=color:#6272a4>// ㋿
 </span></code></pre></div><p>上記のサンプルでは<code>JapaneseEra</code>が列挙型なのでそのままキーとしていますが、<code>JapaneseEra</code>は数値としての情報も持っているのでそちらを使う方法もあるでしょう。それぞれの値に対する数値は以下の通りです。</p>
 <div class=table-wrapper><table>
 <thead>
@@ -202,28 +202,28 @@ kotlin
 <h2 id=年度を数字で表示する>年度を数字で表示する</h2>
 <p><code>JapaneseEra</code>は元号を得るために使う列挙型定数のクラスなので、これ自体は<code>JapaneseDate</code>の日付情報を持っていません。なので参照できる情報は、あくまでも元となる<code>JapaneseDate</code>が属した元号の情報のみです。</p>
 <p>なので数値としての年度は、列挙型の<a class=link href=https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/temporal/ChronoField.html target=_blank rel=noopener>ChronoField</a>を<code>JapaneseDate.get()</code>に渡して取得する必要があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>today</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2010</span><span class=p>,</span> <span class=m>12</span><span class=p>,</span> <span class=m>31</span><span class=p>)</span> <span class=c1>// 平成22年
-</span><span class=c1></span>
-<span class=c1>// 年度をIntとして取得する
-</span><span class=c1></span><span class=k>val</span> <span class=py>year</span> <span class=p>=</span> <span class=n>today</span><span class=p>.</span><span class=k>get</span><span class=p>(</span><span class=n>ChronoField</span><span class=p>.</span><span class=n>YEAR</span><span class=p>)</span> <span class=c1>// 2010
-</span><span class=c1></span><span class=k>val</span> <span class=py>yearOfHeisei</span> <span class=p>=</span> <span class=n>today</span><span class=p>.</span><span class=k>get</span><span class=p>(</span><span class=n>ChronoField</span><span class=p>.</span><span class=n>YEAR_OF_ERA</span><span class=p>)</span> <span class=c1>// 22
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> today = JapaneseDate.of(<span style=color:#bd93f9>2010</span>, <span style=color:#bd93f9>12</span>, <span style=color:#bd93f9>31</span>) <span style=color:#6272a4>// 平成22年
+</span><span style=color:#6272a4></span>
+<span style=color:#6272a4>// 年度をIntとして取得する
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> year = today.<span style=color:#ff79c6>get</span>(ChronoField.YEAR) <span style=color:#6272a4>// 2010
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> yearOfHeisei = today.<span style=color:#ff79c6>get</span>(ChronoField.YEAR_OF_ERA) <span style=color:#6272a4>// 22
 </span></code></pre></div><p>これは<code>JapaneseDate</code>が<code>LocalDate</code>と違って、直接<code>year</code>をgetterで取得できないからです。実際オブジェクトの中を覗いてみると、<code>LocalDate</code>は年月日をintとshortのフィールドとして保持していることに対して、<code>JapaneseDate</code>は<code>LocalDate</code>とint型の<code>yearOfEra</code>を持っていて、<code>get(ChronoField.YEAR_OF_ERA)</code>を通じてはじめて<code>yearOfEra</code>を取得できることになります。getterを用意していないのはおそらく<code>LocalDate</code>と<code>yearOfEra</code>という二つの概念があるからなのではないかと思います。もちろん、Kotlinなのでこれは簡単に拡張関数を書くことでgetterを作ることはできますね。</p>
 <p>また、日付のオブジェクトとして<code>LocalDate</code>を使っている場合は場合は<code>ChronoField.YEAR_OF_ERA</code>を渡しても西暦の年度が返ってくるので、和暦を使うために<code>JapaneseDate</code>を使っているかどうかをまず確認しましょう。</p>
 <h3 id=年度を2桁の文字で表示する>年度を2桁の文字で表示する</h3>
 <p>厳密に言って和暦とは関係のないことですが、年度を取得して使う場合、一貫して先端に「0」のついた2桁の文字列として扱いたい場合もあるかと思います。<code>JapaneseDate</code>を通じて年度を取得した場合は<code>Int</code>型になるので、1〜9の間は1桁の数字となるわけですが、これを01〜09に表示したい場合は以下の方法が使えます。</p>
 <h4 id=decimalformatを利用する>DecimalFormatを利用する</h4>
 <p>一つは、JavaのAPIである<a class=link href=https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/text/DecimalFormat.html target=_blank rel=noopener>DecimalFormat</a>を使うことです。小数点の範囲などをわかりやすく指定できるので個人的には好むやり方です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>today</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>()</span> <span class=c1>// 令和3年
-</span><span class=c1></span>
-<span class=c1>// 数字を表示するためのフォーマットを指定
-</span><span class=c1></span><span class=k>val</span> <span class=py>decimalFormat</span> <span class=p>=</span> <span class=n>DecimalFormat</span><span class=p>(</span><span class=s2>&#34;00&#34;</span><span class=p>)</span>
-<span class=k>val</span> <span class=py>year</span> <span class=p>=</span> <span class=n>decimalFormat</span><span class=p>.</span><span class=n>format</span><span class=p>(</span><span class=n>today</span><span class=p>)</span> <span class=c1>// 03
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> today = JapaneseDate.now() <span style=color:#6272a4>// 令和3年
+</span><span style=color:#6272a4></span>
+<span style=color:#6272a4>// 数字を表示するためのフォーマットを指定
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> decimalFormat = DecimalFormat(<span style=color:#f1fa8c>&#34;00&#34;</span>)
+<span style=color:#ff79c6>val</span> year = decimalFormat.format(today) <span style=color:#6272a4>// 03
 </span></code></pre></div><h4 id=stringformatを利用する>String.formatを利用する</h4>
 <p>もう一つの方法は、Kotlinのスタンダードライブラリの機能である<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/format.html target=_blank rel=noopener>String.format()</a>を使うことです。性能注視なら、こちらの方法が良いかなと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>today</span> <span class=p>=</span> <span class=n>JapaneseDate</span><span class=p>.</span><span class=n>now</span><span class=p>()</span> <span class=c1>// 令和3年
-</span><span class=c1></span>
-<span class=c1>// 数字を表示するためのフォーマットを指定
-</span><span class=c1></span><span class=k>val</span> <span class=py>year</span> <span class=p>=</span> <span class=s2>&#34;%02d&#34;</span><span class=p>.</span><span class=n>format</span><span class=p>(</span><span class=n>today</span><span class=p>)</span> <span class=c1>// 03
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> today = JapaneseDate.now() <span style=color:#6272a4>// 令和3年
+</span><span style=color:#6272a4></span>
+<span style=color:#6272a4>// 数字を表示するためのフォーマットを指定
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> year = <span style=color:#f1fa8c>&#34;%02d&#34;</span>.format(today) <span style=color:#6272a4>// 03
 </span></code></pre></div><h2 id=番外kotlinx-datetime>番外：kotlinx-datetime</h2>
 <p>Kotlinには元々日付や時間を扱うAPIがなかったのですが、2020年から<a class=link href=https://github.com/Kotlin/kotlinx-datetime target=_blank rel=noopener>kotlinx-datetime</a>を提供しています。なのでKotlin/JSやKotlin/Nativeなど、JVM上で動かない場合でも日付を扱える公式のAPIができたわけですが、いくつかの懸念があるのでこれを導入するには検討が必要かと思います。</p>
 <h3 id=pre-releaseの段階>Pre-releaseの段階</h3>
@@ -233,9 +233,9 @@ kotlin
 <p>また、プラットフォームごとに実装が違うということはどこかで予期せぬ例外が発生したり、期待した結果にならないケースも発生しえる、ということにもなるかと思います。</p>
 <h2 id=javatimeの懸念>java.timeの懸念</h2>
 <p><code>JapaneseEra</code>では明治以前（慶応など）の元号は使えませんが、おそらくその理由は和暦でグレゴリウス暦が使われたのは明治からだったという歴史的な背景があるのではないかと思います。また、<code>JapaneseDate</code>でも明治6年(西暦1873年1月1日)以前の日付を指定すると以下のように例外が発生します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-shell data-lang=shell>Exception in thread <span class=s2>&#34;main&#34;</span> java.time.DateTimeException: JapaneseDate before Meiji <span class=m>6</span> is not supported
-	at java.base/java.time.chrono.JapaneseDate.&lt;init&gt;<span class=o>(</span>JapaneseDate.java:333<span class=o>)</span>
-	at java.base/java.time.chrono.JapaneseDate.of<span class=o>(</span>JapaneseDate.java:257<span class=o>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-shell data-lang=shell>Exception in thread <span style=color:#f1fa8c>&#34;main&#34;</span> java.time.DateTimeException: JapaneseDate before Meiji <span style=color:#bd93f9>6</span> is not supported
+	at java.base/java.time.chrono.JapaneseDate.&lt;init&gt;<span style=color:#ff79c6>(</span>JapaneseDate.java:333<span style=color:#ff79c6>)</span>
+	at java.base/java.time.chrono.JapaneseDate.of<span style=color:#ff79c6>(</span>JapaneseDate.java:257<span style=color:#ff79c6>)</span>
 </code></pre></div><p>なので、単純に帳票を作るなどのケースでなく、歴史的な研究のための日付計算ではここで紹介した方法は使えないケースもあるかと思います。</p>
 <p>また、JDKのバージョンなどの問題があるためか、<code>JapaneseEra.REIWA</code>の取得ができなく、エラーとなるケースがあるので注意する必要があります。この場合でも<code>value</code>の値の取得は問題ないので、少し可読性は低下しながら分岐などの判定に定数をそのまま使うのは避けたほうが良さそうです。（正確な理由はわかりませんが…）</p>
 <h2 id=最後に>最後に</h2>

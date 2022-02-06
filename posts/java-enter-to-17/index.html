@@ -80,25 +80,25 @@ java
 <p>17からはM1など、<a class=link href=https://openjdk.java.net/jeps/391 target=_blank rel=noopener>Apple Siliconを搭載した新しいMacに対応</a>しました。<a class=link href=https://www.azul.com/downloads/ target=_blank rel=noopener>Zulu</a>などの他のJDKでは独自に対応してるケースもありましたが、OpenJDK(OracleJDK)で対応したことで、これをベースとする<a class=link href=https://adoptium.net/ target=_blank rel=noopener>Eclipse Temurin</a>や<a class=link href=https://www.microsoft.com/openjdk target=_blank rel=noopener>Microsoft Build of OpenJDK</a>のような他のJDKでも自然にARMベースMacでネイティブとして使えるということになると思います。</p>
 <h3 id=record-17>Record (17)</h3>
 <p>14からPreviewとして導入された<code>Record</code>が、17ではstableになり正式に導入されました。指定したフィールドを<code>private final</code>にして、コンストラクタ、<code>getter</code>、<code>toString</code>、<code>hashcode</code>、<code>equals</code>などを自動生成してくれるものです。最初は<code>Lombok</code>の<a class=link href=https://projectlombok.org/features/Data target=_blank rel=noopener>@Data</a>のようなものかと思いきや、実際は<a class=link href=https://projectlombok.org/features/Value target=_blank rel=noopener>@Value</a>に近いものになっていますね。値はコンストラクタでしか渡せなくて、後から変更はできなくなります。こういうところは、フィールドを<code>val</code>として指定したKotlinの<code>data class</code>に近い感覚でもあります。なので、実際の使用例を見ると、以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Recordの定義
-</span><span class=c1></span><span class=n>record</span> <span class=nf>MyRecord</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>,</span> <span class=kt>int</span> <span class=n>number</span><span class=o>)</span> <span class=o>{}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Recordの定義
+</span><span style=color:#6272a4></span>record <span style=color:#50fa7b>MyRecord</span><span style=color:#ff79c6>(</span>String name<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> number<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{}</span>
 
-<span class=c1>// インスタンスの作成
-</span><span class=c1></span><span class=n>MyRecord</span> <span class=n>myRecord</span> <span class=o>=</span> <span class=k>new</span> <span class=n>MyRecord</span><span class=o>(</span><span class=s>&#34;my record&#34;</span><span class=o>,</span> <span class=n>1</span><span class=o>);</span>
+<span style=color:#6272a4>// インスタンスの作成
+</span><span style=color:#6272a4></span>MyRecord myRecord <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> MyRecord<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;my record&#34;</span><span style=color:#ff79c6>,</span> 1<span style=color:#ff79c6>);</span>
 
-<span class=c1>// フィールドの取得
-</span><span class=c1></span><span class=n>String</span> <span class=n>myRecordsName</span> <span class=o>=</span> <span class=n>myRecord</span><span class=o>.</span><span class=na>name</span><span class=o>();</span>
-<span class=kt>int</span> <span class=n>myRecordsNumber</span> <span class=o>=</span> <span class=n>myRecord</span><span class=o>.</span><span class=na>number</span><span class=o>();</span>
+<span style=color:#6272a4>// フィールドの取得
+</span><span style=color:#6272a4></span>String myRecordsName <span style=color:#ff79c6>=</span> myRecord<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span><span style=color:#ff79c6>();</span>
+<span style=color:#8be9fd>int</span> myRecordsNumber <span style=color:#ff79c6>=</span> myRecord<span style=color:#ff79c6>.</span><span style=color:#50fa7b>number</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>Kotlinでは<a class=link href=https://kotlinlang.org/docs/functions.html#named-arguments target=_blank rel=noopener>Named Arguments</a>に対応しているのですが、Javaではまだそのような機能がないので、<code>Record</code>だとフィールドが多くなるとどれがどれだかわからなくなりそうな気はします。これに対してKotlin側で<code>Record</code>を使う場合、何らかのラッパークラスを作って対応するなどの方法は考えられますね。もしくは普通に<code>setter</code>をもつDTOを定義するか、builderパターンを利用する方が良いでしょう。</p>
 <p>また、<code>Record</code>では<code>getter</code>名もフィールド名そのままになるという特徴もありますが、自動生成されるコンストラクタをカスタマイズするときも少し書き方が違うという特徴があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>record</span> <span class=nf>MyRecord</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>,</span> <span class=kt>int</span> <span class=n>number</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// コンストラクタにバリデーションをつける例
-</span><span class=c1></span>    <span class=kd>public</span> <span class=n>MyRecord</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>name</span><span class=o>.</span><span class=na>isBlank</span><span class=o>())</span> <span class=o>{</span>
-            <span class=k>throw</span> <span class=k>new</span> <span class=n>IllegalArgumentException</span><span class=o>();</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>record <span style=color:#50fa7b>MyRecord</span><span style=color:#ff79c6>(</span>String name<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> number<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// コンストラクタにバリデーションをつける例
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> MyRecord <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>name<span style=color:#ff79c6>.</span><span style=color:#50fa7b>isBlank</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> IllegalArgumentException<span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>他に、<code>Record</code>として定義しても実際は<code>Class</code>が作られることになるので、以下のようなこともできます。</p>
 <ul>
 <li>コンストラクタを追加する</li>
@@ -109,42 +109,42 @@ java
 <p>また、<code>Reflection</code>でもクラスが<code>Record</code>であるかどうかを判定する<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html#isRecord%28%29 target=_blank rel=noopener>isRecord</a>も追加されています。</p>
 <h3 id=text-blocks-15>Text Blocks (15)</h3>
 <p>Javaでは長い間、HTMLやJSON、SQLなどをリテラルとして使うためにはエスケープや文字列の結合などを使う必要がありました。これはあまり可読性という面でよくなく、コードの修正も難しくなる問題がありましたね。例えば、HTMLを表現するとしたら以下のようなことをしていたかと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>html</span> <span class=o>=</span> <span class=s>&#34;&lt;html&gt;\n&#34;</span> <span class=o>+</span>
-              <span class=s>&#34;    &lt;body&gt;\n&#34;</span> <span class=o>+</span>
-              <span class=s>&#34;        &lt;h1&gt;This is Java&#39;s new Text block!&lt;/h1&gt;\n&#34;</span> <span class=o>+</span>
-              <span class=s>&#34;    &lt;/body&gt;\n&#34;</span> <span class=o>+</span>
-              <span class=s>&#34;&lt;/html&gt;\n&#34;</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String html <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;&lt;html&gt;\n&#34;</span> <span style=color:#ff79c6>+</span>
+              <span style=color:#f1fa8c>&#34;    &lt;body&gt;\n&#34;</span> <span style=color:#ff79c6>+</span>
+              <span style=color:#f1fa8c>&#34;        &lt;h1&gt;This is Java&#39;s new Text block!&lt;/h1&gt;\n&#34;</span> <span style=color:#ff79c6>+</span>
+              <span style=color:#f1fa8c>&#34;    &lt;/body&gt;\n&#34;</span> <span style=color:#ff79c6>+</span>
+              <span style=color:#f1fa8c>&#34;&lt;/html&gt;\n&#34;</span><span style=color:#ff79c6>;</span>
 
-<span class=n>String</span> <span class=n>query</span> <span class=o>=</span> <span class=s>&#34;SELECT \&#34;EMP_ID\&#34;, \&#34;LAST_NAME\&#34; FROM \&#34;EMPLOYEE_TB\&#34;\n&#34;</span> <span class=o>+</span>
-               <span class=s>&#34;WHERE \&#34;CITY\&#34; = &#39;INDIANAPOLIS&#39;\n&#34;</span> <span class=o>+</span>
-               <span class=s>&#34;ORDER BY \&#34;EMP_ID\&#34;, \&#34;LAST_NAME\&#34;;\n&#34;</span><span class=o>;</span>
+String query <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;SELECT \&#34;EMP_ID\&#34;, \&#34;LAST_NAME\&#34; FROM \&#34;EMPLOYEE_TB\&#34;\n&#34;</span> <span style=color:#ff79c6>+</span>
+               <span style=color:#f1fa8c>&#34;WHERE \&#34;CITY\&#34; = &#39;INDIANAPOLIS&#39;\n&#34;</span> <span style=color:#ff79c6>+</span>
+               <span style=color:#f1fa8c>&#34;ORDER BY \&#34;EMP_ID\&#34;, \&#34;LAST_NAME\&#34;;\n&#34;</span><span style=color:#ff79c6>;</span>
 </code></pre></div><p>幸い、15から<a class=link href=https://openjdk.java.net/jeps/378 target=_blank rel=noopener>Text Blocks</a>が導入され、他の言語のように簡単かつ可読性の高い文字列を定義することができるようになりました。これを使うとエスケープを意識しなくて良いので、複数行でなくても色々な分野で有効活用できそうですね。<code>Text Blocks</code>を使って上記のコードを変えると、以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>html</span> <span class=o>=</span> <span class=s>&#34;&#34;&#34;
-</span><span class=s>              &lt;html&gt;
-</span><span class=s>                  &lt;body&gt;
-</span><span class=s>                      &lt;h1&gt;This is Java&#39;s new Text block!&lt;/h1&gt;
-</span><span class=s>                  &lt;/body&gt;
-</span><span class=s>              &lt;/html&gt;
-</span><span class=s>              &#34;&#34;&#34;</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String html <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;&#34;&#34;
+</span><span style=color:#f1fa8c>              &lt;html&gt;
+</span><span style=color:#f1fa8c>                  &lt;body&gt;
+</span><span style=color:#f1fa8c>                      &lt;h1&gt;This is Java&#39;s new Text block!&lt;/h1&gt;
+</span><span style=color:#f1fa8c>                  &lt;/body&gt;
+</span><span style=color:#f1fa8c>              &lt;/html&gt;
+</span><span style=color:#f1fa8c>              &#34;&#34;&#34;</span><span style=color:#ff79c6>;</span>
 
-<span class=n>String</span> <span class=n>query</span> <span class=o>=</span> <span class=s>&#34;&#34;&#34;
-</span><span class=s>               SELECT &#34;</span><span class=n>EMP_ID</span><span class=s>&#34;, &#34;</span><span class=n>LAST_NAME</span><span class=s>&#34; FROM &#34;</span><span class=n>EMPLOYEE_TB</span><span class=s>&#34;
-</span><span class=s>               WHERE &#34;</span><span class=n>CITY</span><span class=s>&#34; = &#39;INDIANAPOLIS&#39;
-</span><span class=s>               ORDER BY &#34;</span><span class=n>EMP_ID</span><span class=s>&#34;, &#34;</span><span class=n>LAST_NAME</span><span class=s>&#34;;
-</span><span class=s>               &#34;&#34;&#34;</span><span class=o>;</span>
+String query <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;&#34;&#34;
+</span><span style=color:#f1fa8c>               SELECT &#34;</span>EMP_ID<span style=color:#f1fa8c>&#34;, &#34;</span>LAST_NAME<span style=color:#f1fa8c>&#34; FROM &#34;</span>EMPLOYEE_TB<span style=color:#f1fa8c>&#34;
+</span><span style=color:#f1fa8c>               WHERE &#34;</span>CITY<span style=color:#f1fa8c>&#34; = &#39;INDIANAPOLIS&#39;
+</span><span style=color:#f1fa8c>               ORDER BY &#34;</span>EMP_ID<span style=color:#f1fa8c>&#34;, &#34;</span>LAST_NAME<span style=color:#f1fa8c>&#34;;
+</span><span style=color:#f1fa8c>               &#34;&#34;&#34;</span><span style=color:#ff79c6>;</span>
 </code></pre></div><p>Kotlinでは全く同じ書き方で同じことができるので、ここでは割愛します。</p>
 <h3 id=sealed-class-17>Sealed Class (17)</h3>
 <p>JDK 15からPreviewで導入された<a class=link href=https://openjdk.java.net/jeps/409 target=_blank rel=noopener>sealed classes</a>が、Stableとなりました。<code>class</code>や<code>interface</code>を<code>sealed</code>にすれば、それを拡張・実装できるクラスやインターフェイスを限定できるようになります。こうすることで、ライブラリなどで勝手に拡張して欲しくないクラスやインターフェイスを守ることができますね。また、将来的には<code>sealed</code>として定義されてあるクラスの子クラスを<code>switch</code>の<code>case</code>に指定するときは全部のケースが指定されているかどうかをコンパイラがチェックするようにするとかの話もあるようです。以下は、<code>sealed</code>クラスが<code>permits</code>キーワードを使って継承できるクラスを指定する例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>abstract</span> <span class=n>sealed</span> <span class=kd>class</span> <span class=nc>Shape</span> <span class=n>permits</span> <span class=n>Circle</span><span class=o>,</span> <span class=n>Rectangle</span><span class=o>,</span> <span class=n>Square</span><span class=o>,</span> <span class=n>WeirdShape</span> <span class=o>{</span> <span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>abstract</span> sealed <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Shape</span> permits Circle<span style=color:#ff79c6>,</span> Rectangle<span style=color:#ff79c6>,</span> Square<span style=color:#ff79c6>,</span> WeirdShape <span style=color:#ff79c6>{</span> <span style=color:#ff79c6>}</span>
 </code></pre></div><p>Kotlinでも<a class=link href=https://kotlinlang.org/docs/sealed-classes.html target=_blank rel=noopener>Sealed Classes</a>は存在していますが、<code>interface</code>を<code>sealed</code>にするためには1.5以降を使う必要があって、拡張・実装できるクラスやインターフェイスを指定するわけではなく、コンパイルされたモジュール以外で<code>sealed</code>として定義されているクラスやインターフェイスを拡張・実装できない仕様となっています。なので書き方的には、以下のようになります。より簡単ですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>sealed</span> <span class=k>interface</span> <span class=nc>Error</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>sealed</span> <span style=color:#ff79c6>interface</span> <span style=color:#50fa7b>Error</span>
 
-<span class=k>sealed</span> <span class=k>class</span> <span class=nc>IOError</span><span class=p>():</span> <span class=n>Error</span>
+<span style=color:#ff79c6>sealed</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>IOError</span>(): Error
 
-<span class=k>class</span> <span class=nc>FileReadError</span><span class=p>(</span><span class=k>val</span> <span class=py>f</span><span class=p>:</span> <span class=n>File</span><span class=p>):</span> <span class=n>IOError</span><span class=p>()</span>
-<span class=k>class</span> <span class=nc>DatabaseError</span><span class=p>(</span><span class=k>val</span> <span class=py>source</span><span class=p>:</span> <span class=n>DataSource</span><span class=p>):</span> <span class=n>IOError</span><span class=p>()</span>
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>FileReadError</span>(<span style=color:#ff79c6>val</span> f: File): IOError()
+<span style=color:#ff79c6>class</span> <span style=color:#50fa7b>DatabaseError</span>(<span style=color:#ff79c6>val</span> source: DataSource): IOError()
 
-<span class=k>object</span> <span class=nc>RuntimeError</span> <span class=p>:</span> <span class=n>Error</span>
+<span style=color:#ff79c6>object</span> <span style=color:#50fa7b>RuntimeError</span> : Error
 </code></pre></div><p>また、Javaの場合は<code>Record</code>と同じく、このクラスが<code>sealed</code>であるかどうかを判定する<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Class.html#isSealed%28%29 target=_blank rel=noopener>isSealed</a>が追加されています。</p>
 <h3 id=switch-expressions-14>Switch Expressions (14)</h3>
 <p>Java 12からPreviewで<a class=link href=https://openjdk.java.net/jeps/361 target=_blank rel=noopener>Switch Expressions</a>が導入され、14からはStableになっています。従来の<code>switch</code>を改善したもので、以下のようなことができるようになりました。</p>
@@ -154,74 +154,74 @@ java
 <li><code>case</code>の処理を戻り値にして、<code>switch</code>を式として使える</li>
 </ul>
 <p>例えば、<code>day</code>というenumの値を見て、int値を返すメソッドを実装するとしましょう。従来の方法では以下のようになるはずです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>numLetters</span><span class=o>;</span>
-<span class=k>switch</span> <span class=o>(</span><span class=n>day</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>case</span> <span class=n>MONDAY</span><span class=o>:</span>
-    <span class=k>case</span> <span class=n>FRIDAY</span><span class=o>:</span>
-    <span class=k>case</span> <span class=n>SUNDAY</span><span class=o>:</span>
-        <span class=n>numLetters</span> <span class=o>=</span> <span class=n>6</span><span class=o>;</span>
-        <span class=k>break</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>TUESDAY</span><span class=o>:</span>
-        <span class=n>numLetters</span> <span class=o>=</span> <span class=n>7</span><span class=o>;</span>
-        <span class=k>break</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>THURSDAY</span><span class=o>:</span>
-    <span class=k>case</span> <span class=n>SATURDAY</span><span class=o>:</span>
-        <span class=n>numLetters</span> <span class=o>=</span> <span class=n>8</span><span class=o>;</span>
-        <span class=k>break</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>WEDNESDAY</span><span class=o>:</span>
-        <span class=n>numLetters</span> <span class=o>=</span> <span class=n>9</span><span class=o>;</span>
-        <span class=k>break</span><span class=o>;</span>
-    <span class=k>default</span><span class=o>:</span>
-        <span class=k>throw</span> <span class=k>new</span> <span class=n>IllegalStateException</span><span class=o>(</span><span class=s>&#34;Wat: &#34;</span> <span class=o>+</span> <span class=n>day</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd>int</span> numLetters<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>switch</span> <span style=color:#ff79c6>(</span>day<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>case</span> MONDAY<span style=color:#ff79c6>:</span>
+    <span style=color:#ff79c6>case</span> FRIDAY<span style=color:#ff79c6>:</span>
+    <span style=color:#ff79c6>case</span> SUNDAY<span style=color:#ff79c6>:</span>
+        numLetters <span style=color:#ff79c6>=</span> 6<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>break</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> TUESDAY<span style=color:#ff79c6>:</span>
+        numLetters <span style=color:#ff79c6>=</span> 7<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>break</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> THURSDAY<span style=color:#ff79c6>:</span>
+    <span style=color:#ff79c6>case</span> SATURDAY<span style=color:#ff79c6>:</span>
+        numLetters <span style=color:#ff79c6>=</span> 8<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>break</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> WEDNESDAY<span style=color:#ff79c6>:</span>
+        numLetters <span style=color:#ff79c6>=</span> 9<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>break</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>default</span><span style=color:#ff79c6>:</span>
+        <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> IllegalStateException<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Wat: &#34;</span> <span style=color:#ff79c6>+</span> day<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>上記の処理は新しい<code>switch</code>では以下のように書くことができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kt>int</span> <span class=n>numLetters</span> <span class=o>=</span> <span class=k>switch</span> <span class=o>(</span><span class=n>day</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>case</span> <span class=n>MONDAY</span><span class=o>,</span> <span class=n>FRIDAY</span><span class=o>,</span> <span class=n>SUNDAY</span> <span class=o>-&gt;</span> <span class=n>6</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>TUESDAY</span>                <span class=o>-&gt;</span> <span class=n>7</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>THURSDAY</span><span class=o>,</span> <span class=n>SATURDAY</span>     <span class=o>-&gt;</span> <span class=n>8</span><span class=o>;</span>
-    <span class=k>case</span> <span class=n>WEDNESDAY</span>              <span class=o>-&gt;</span> <span class=n>9</span><span class=o>;</span>
-<span class=o>};</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd>int</span> numLetters <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>switch</span> <span style=color:#ff79c6>(</span>day<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>case</span> MONDAY<span style=color:#ff79c6>,</span> FRIDAY<span style=color:#ff79c6>,</span> SUNDAY <span style=color:#ff79c6>-&gt;</span> 6<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> TUESDAY                <span style=color:#ff79c6>-&gt;</span> 7<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> THURSDAY<span style=color:#ff79c6>,</span> SATURDAY     <span style=color:#ff79c6>-&gt;</span> 8<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>case</span> WEDNESDAY              <span style=color:#ff79c6>-&gt;</span> 9<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>};</span>
 </code></pre></div><p>Kotlinだと以下のようになるはずですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>numLetters</span> <span class=p>=</span> <span class=k>when</span> <span class=p>(</span><span class=n>day</span><span class=p>)</span> <span class=p>{</span>
-    <span class=n>Day</span><span class=p>.</span><span class=n>MONDAY</span><span class=p>,</span> <span class=n>Day</span><span class=p>.</span><span class=n>FRIDAY</span><span class=p>,</span> <span class=n>Day</span><span class=p>.</span><span class=n>SUNDAY</span> <span class=o>-&gt;</span> <span class=m>6</span>
-    <span class=n>Day</span><span class=p>.</span><span class=n>TUESDAY</span> <span class=o>-&gt;</span> <span class=m>7</span>
-    <span class=n>Day</span><span class=p>.</span><span class=n>THURSDAY</span><span class=p>,</span> <span class=n>Day</span><span class=p>.</span><span class=n>SATURDAY</span> <span class=o>-&gt;</span> <span class=m>8</span>
-    <span class=n>Day</span><span class=p>.</span><span class=n>WEDNESDAY</span> <span class=o>-&gt;</span> <span class=m>9</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> numLetters = <span style=color:#ff79c6>when</span> (day) {
+    Day.MONDAY, Day.FRIDAY, Day.SUNDAY <span style=color:#ff79c6>-&gt;</span> <span style=color:#bd93f9>6</span>
+    Day.TUESDAY <span style=color:#ff79c6>-&gt;</span> <span style=color:#bd93f9>7</span>
+    Day.THURSDAY, Day.SATURDAY <span style=color:#ff79c6>-&gt;</span> <span style=color:#bd93f9>8</span>
+    Day.WEDNESDAY <span style=color:#ff79c6>-&gt;</span> <span style=color:#bd93f9>9</span>
+}
 </code></pre></div><p>また、<code>when</code>だとargumentなしでも使えて分岐を条件文によるものにすることもできるなどの特徴もあるので、使い勝手はJavaの<code>switch</code>よりいいかなと思います。ただ、Javaでもバージョンアップと共に後述する機能も追加されてあるので、今後Kotlinのように色々と改良が行われる可能性はあるかと思いますね。</p>
 <h3 id=pattern-matching-for-instanceof-16--switch-17>Pattern Matching for instanceof (16) / switch (17)</h3>
 <p>Java 14からは、<a class=link href=https://openjdk.java.net/jeps/394 target=_blank rel=noopener>Pattern Matching for instanceof</a>が導入され、16ではStableになりましt。今までは<code>instanceof</code>を使ってオブジェクトのインスタンスの種類を判定した後、そのインスタンスの種類にあった処理を行うには以下のようにキャストが必要でしたね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>static</span> <span class=n>String</span> <span class=nf>formatter</span><span class=o>(</span><span class=n>Object</span> <span class=n>o</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>String</span> <span class=n>formatted</span> <span class=o>=</span> <span class=s>&#34;unknown&#34;</span><span class=o>;</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=k>instanceof</span> <span class=n>Integer</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>formatted</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;int %d&#34;</span><span class=o>,</span> <span class=o>(</span><span class=n>Integer</span><span class=o>)</span> <span class=n>i</span><span class=o>);</span>
-    <span class=o>}</span>
-    <span class=c1>// ...
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>static</span> String <span style=color:#50fa7b>formatter</span><span style=color:#ff79c6>(</span>Object o<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    String formatted <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;unknown&#34;</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>instanceof</span> Integer<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        formatted <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;int %d&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#ff79c6>(</span>Integer<span style=color:#ff79c6>)</span> i<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#6272a4>// ...
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><p>一度どれのインスタンスかわかった上でさらにキャストをする必要はあるのはだるいし、ミスをしたら例外の原因にもなり得る問題がありますね。なので、<code>Pattern Matching</code>を利用して、キャストをなくすことができるようになりました。<code>instanceof</code>を使った条件文の中に、キャストする変数名を指定しておくと、<code>if</code>分の中でそのまま自動にキャストされた変数を使えるようになります。なので、以下のようなことができるようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>static</span> <span class=n>String</span> <span class=nf>formatter</span><span class=o>(</span><span class=n>Object</span> <span class=n>o</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>String</span> <span class=n>formatted</span> <span class=o>=</span> <span class=s>&#34;unknown&#34;</span><span class=o>;</span>
-    <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=k>instanceof</span> <span class=n>Integer</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>formatted</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;int %d&#34;</span><span class=o>,</span> <span class=n>i</span><span class=o>);</span>
-    <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=k>instanceof</span> <span class=n>Long</span> <span class=n>l</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>formatted</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;long %d&#34;</span><span class=o>,</span> <span class=n>l</span><span class=o>);</span>
-    <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=k>instanceof</span> <span class=n>Double</span> <span class=n>d</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>formatted</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;double %f&#34;</span><span class=o>,</span> <span class=n>d</span><span class=o>);</span>
-    <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>o</span> <span class=k>instanceof</span> <span class=n>String</span> <span class=n>s</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>formatted</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;String %s&#34;</span><span class=o>,</span> <span class=n>s</span><span class=o>);</span>
-    <span class=o>}</span>
-    <span class=k>return</span> <span class=n>formatted</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>static</span> String <span style=color:#50fa7b>formatter</span><span style=color:#ff79c6>(</span>Object o<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    String formatted <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;unknown&#34;</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>instanceof</span> Integer i<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        formatted <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;int %d&#34;</span><span style=color:#ff79c6>,</span> i<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>instanceof</span> Long l<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        formatted <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;long %d&#34;</span><span style=color:#ff79c6>,</span> l<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>instanceof</span> Double d<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        formatted <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;double %f&#34;</span><span style=color:#ff79c6>,</span> d<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>o <span style=color:#ff79c6>instanceof</span> String s<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        formatted <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;String %s&#34;</span><span style=color:#ff79c6>,</span> s<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>return</span> formatted<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>さらに、17からはPreviewとして<a class=link href=https://openjdk.java.net/jeps/406 target=_blank rel=noopener>Pattern Matching for switch</a>が導入されています。これを使うと、<code>instanceof</code>なしで、<code>switch</code>文を使ったよりシンプルな処理を書けるようになります。これを先に紹介した<code>Switch Expressions</code>と組み合わせることで、上記の処理は以下に変えることが可能になります。かなりシンプルになったのがわかりますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>static</span> <span class=n>String</span> <span class=nf>formatterPatternSwitch</span><span class=o>(</span><span class=n>Object</span> <span class=n>o</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=k>switch</span> <span class=o>(</span><span class=n>o</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>case</span> <span class=n>Integer</span> <span class=n>i</span> <span class=o>-&gt;</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;int %d&#34;</span><span class=o>,</span> <span class=n>i</span><span class=o>);</span>
-        <span class=k>case</span> <span class=n>Long</span> <span class=n>l</span>    <span class=o>-&gt;</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;long %d&#34;</span><span class=o>,</span> <span class=n>l</span><span class=o>);</span>
-        <span class=k>case</span> <span class=n>Double</span> <span class=n>d</span>  <span class=o>-&gt;</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;double %f&#34;</span><span class=o>,</span> <span class=n>d</span><span class=o>);</span>
-        <span class=k>case</span> <span class=n>String</span> <span class=n>s</span>  <span class=o>-&gt;</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;String %s&#34;</span><span class=o>,</span> <span class=n>s</span><span class=o>);</span>
-        <span class=k>default</span>        <span class=o>-&gt;</span> <span class=n>o</span><span class=o>.</span><span class=na>toString</span><span class=o>();</span>
-    <span class=o>};</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>static</span> String <span style=color:#50fa7b>formatterPatternSwitch</span><span style=color:#ff79c6>(</span>Object o<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>switch</span> <span style=color:#ff79c6>(</span>o<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>case</span> Integer i <span style=color:#ff79c6>-&gt;</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;int %d&#34;</span><span style=color:#ff79c6>,</span> i<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>case</span> Long l    <span style=color:#ff79c6>-&gt;</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;long %d&#34;</span><span style=color:#ff79c6>,</span> l<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>case</span> Double d  <span style=color:#ff79c6>-&gt;</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;double %f&#34;</span><span style=color:#ff79c6>,</span> d<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>case</span> String s  <span style=color:#ff79c6>-&gt;</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;String %s&#34;</span><span style=color:#ff79c6>,</span> s<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>default</span>        <span style=color:#ff79c6>-&gt;</span> o<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>};</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=packaging-tool-16>Packaging Tool (16)</h3>
 <p>実行できるバイナリを生成する<a class=link href=https://openjdk.java.net/jeps/392 target=_blank rel=noopener>Packaging Tool</a>が導入されています。これを使うと、Java runtimeとライブラリ、それぞれのOSにあった実行ファイルが一つのパッケージになる機能です。Java runtimeが含まれるということはOSのJavaのバージョンに関係なく実行できるものになるという意味なので、Javaのバージョンを固定したり、複数のアプリでそれぞれ違うバージョンのJavaを使って起動したい場合は役立つ機能かも知れません。</p>
 <h2 id=api>API</h2>
@@ -229,29 +229,29 @@ java
 <p>ここで全てのAPIの詳細まで探るのは難しいと思いますので、個人的に興味深いと思ったのを一部紹介したいと思います。</p>
 <h3 id=serial-14>@Serial (14)</h3>
 <p><code>java.io</code>パッケージに、<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serial.html target=_blank rel=noopener>Serial</a>というアノテーションが追加されました。これは<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html target=_blank rel=noopener>Serializable</a>を実装したクラスで、そのシリアライズのメカニズムを<code>@Override</code>するような機能のようです。例えば以下のようなことができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>SerializableClass</span> <span class=kd>implements</span> <span class=n>Serializable</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SerializableClass</span> <span style=color:#8be9fd;font-style:italic>implements</span> Serializable <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Serial</span>
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=n>ObjectStreamField</span><span class=o>[]</span> <span class=n>serialPersistentFields</span><span class=o>;</span>
+    @Serial
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> ObjectStreamField<span style=color:#ff79c6>[]</span> serialPersistentFields<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Serial</span>
-    <span class=kd>private</span> <span class=kd>static</span> <span class=kd>final</span> <span class=kt>long</span> <span class=n>serialVersionUID</span><span class=o>;</span>
+    @Serial
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>long</span> serialVersionUID<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Serial</span>
-    <span class=kd>private</span> <span class=kt>void</span> <span class=nf>writeObject</span><span class=o>(</span><span class=n>ObjectOutputStream</span> <span class=n>stream</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{}</span>
+    @Serial
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>writeObject</span><span style=color:#ff79c6>(</span>ObjectOutputStream stream<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException <span style=color:#ff79c6>{}</span>
 
-    <span class=nd>@Serial</span>
-    <span class=kd>private</span> <span class=kt>void</span> <span class=nf>readObject</span><span class=o>(</span><span class=n>ObjectInputStream</span> <span class=n>stream</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span><span class=o>,</span> <span class=n>ClassNotFoundException</span> <span class=o>{}</span>
+    @Serial
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>readObject</span><span style=color:#ff79c6>(</span>ObjectInputStream stream<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException<span style=color:#ff79c6>,</span> ClassNotFoundException <span style=color:#ff79c6>{}</span>
 
-    <span class=nd>@Serial</span>
-    <span class=kd>private</span> <span class=kt>void</span> <span class=nf>readObjectNoData</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>ObjectStreamException</span> <span class=o>{}</span>
+    @Serial
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>readObjectNoData</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> ObjectStreamException <span style=color:#ff79c6>{}</span>
     
-    <span class=nd>@Serial</span>
-    <span class=n>Object</span> <span class=nf>writeReplace</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>ObjectStreamException</span> <span class=o>{}</span>
+    @Serial
+    Object <span style=color:#50fa7b>writeReplace</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> ObjectStreamException <span style=color:#ff79c6>{}</span>
 
-    <span class=nd>@Serial</span>
-    <span class=n>Object</span> <span class=nf>readResolve</span><span class=o>()</span> <span class=kd>throws</span> <span class=n>ObjectStreamException</span> <span class=o>{}</span>
-<span class=o>}</span>
+    @Serial
+    Object <span style=color:#50fa7b>readResolve</span><span style=color:#ff79c6>()</span> <span style=color:#8be9fd;font-style:italic>throws</span> ObjectStreamException <span style=color:#ff79c6>{}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>このアノテーションをつけることで、コンパイルタイムでエラーをキャッチできるのも特徴的です。例えば、このアノテーションを以下のようなクラスのメンバに使う場合はコンパイルエラーとなります。</p>
 <ul>
 <li>Serializableを実装してないクラス</li>
@@ -263,48 +263,48 @@ java
 <p>同じ文字列だとしても、Javaでは<code>java.lang.String</code>、Kotlinでは<code>kotlin.text.String</code>を使うことになるので、Kotlinを使う場合はあまりJavaのAPIを使うことはないかと思います（また、JavaでのString関連のAPIは、Kotlinだと<code>deprecated</code>になるケースが多いです）。なので、ここでは新しいAPIと、Kotlinで同じような処理をするために使える方法を中心に紹介します。</p>
 <h4 id=formatted-15>formatted (15)</h4>
 <p>Javaでは<code>String.format()</code>をで文字列をフォーマットとして使うことができました。多くの場合、文字列は<code>+</code>を使うよりフォーマットを使った方が性能が良いと言われていて、よく使っていたものです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>name</span> <span class=o>=</span> <span class=s>&#34;formatted string&#34;</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;formatted string&#34;</span><span style=color:#ff79c6>;</span>
 
-<span class=c1>// 15以前
-</span><span class=c1></span><span class=n>String</span> <span class=n>formattedString</span> <span class=o>=</span> <span class=n>String</span><span class=o>.</span><span class=na>format</span><span class=o>(</span><span class=s>&#34;this is %s&#34;</span><span class=o>,</span> <span class=n>name</span><span class=o>);</span>
+<span style=color:#6272a4>// 15以前
+</span><span style=color:#6272a4></span>String formattedString <span style=color:#ff79c6>=</span> String<span style=color:#ff79c6>.</span><span style=color:#50fa7b>format</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;this is %s&#34;</span><span style=color:#ff79c6>,</span> name<span style=color:#ff79c6>);</span>
 
-<span class=c1>// 15以降
-</span><span class=c1></span><span class=n>String</span> <span class=n>newFormattedString</span> <span class=o>=</span> <span class=s>&#34;this is %s&#34;</span><span class=o>.</span><span class=na>formatted</span><span class=o>(</span><span class=n>name</span><span class=o>);</span>
+<span style=color:#6272a4>// 15以降
+</span><span style=color:#6272a4></span>String newFormattedString <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;this is %s&#34;</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>formatted</span><span style=color:#ff79c6>(</span>name<span style=color:#ff79c6>);</span>
 </code></pre></div><p>Koltinだと<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/format.html target=_blank rel=noopener>String.format</a>と<a class=link href=https://kotlinlang.org/docs/basic-syntax.html#string-templates target=_blank rel=noopener>String Templates</a>が使えます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>name</span> <span class=p>=</span> <span class=s2>&#34;formatted string&#34;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> name = <span style=color:#f1fa8c>&#34;formatted string&#34;</span>
 
-<span class=c1>// Format
-</span><span class=c1></span><span class=k>val</span> <span class=py>formattedString</span> <span class=p>=</span> <span class=s2>&#34;this is %s&#34;</span><span class=p>.</span><span class=n>format</span><span class=p>(</span><span class=n>name</span><span class=p>)</span>
+<span style=color:#6272a4>// Format
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> formattedString = <span style=color:#f1fa8c>&#34;this is %s&#34;</span>.format(name)
 
-<span class=c1>// String Template
-</span><span class=c1></span><span class=k>val</span> <span class=py>templateString</span> <span class=p>=</span> <span class=s2>&#34;this is </span><span class=si>$name</span><span class=s2>&#34;</span>
+<span style=color:#6272a4>// String Template
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> templateString = <span style=color:#f1fa8c>&#34;this is </span><span style=color:#f1fa8c>$name</span><span style=color:#f1fa8c>&#34;</span>
 </code></pre></div><h4 id=indent-12>indent (12)</h4>
 <p><a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#indent%28int%29 target=_blank rel=noopener>indent</a>では、対象の文字列に引数で指定した分のwhite spaceを入れます。引数が<code>int</code>型なので、負数を渡すことでwhite spaceを減らすこともできます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>nonIndent</span> <span class=o>=</span> <span class=s>&#34;A&#34;</span><span class=o>;</span>
-<span class=c1>// インデントを追加
-</span><span class=c1></span><span class=n>String</span> <span class=n>indented10</span> <span class=o>=</span> <span class=n>nonIndent</span><span class=o>.</span><span class=na>indent</span><span class=o>(</span><span class=n>10</span><span class=o>);</span> <span class=c1>// &#34;          A&#34;
-</span><span class=c1>// インデントを削除
-</span><span class=c1></span><span class=n>String</span> <span class=n>indented5</span> <span class=o>=</span> <span class=n>indented10</span><span class=o>.</span><span class=na>indent</span><span class=o>(-</span><span class=n>5</span><span class=o>);</span> <span class=c1>// &#34;     A&#34;
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String nonIndent <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;A&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#6272a4>// インデントを追加
+</span><span style=color:#6272a4></span>String indented10 <span style=color:#ff79c6>=</span> nonIndent<span style=color:#ff79c6>.</span><span style=color:#50fa7b>indent</span><span style=color:#ff79c6>(</span>10<span style=color:#ff79c6>);</span> <span style=color:#6272a4>// &#34;          A&#34;
+</span><span style=color:#6272a4>// インデントを削除
+</span><span style=color:#6272a4></span>String indented5 <span style=color:#ff79c6>=</span> indented10<span style=color:#ff79c6>.</span><span style=color:#50fa7b>indent</span><span style=color:#ff79c6>(-</span>5<span style=color:#ff79c6>);</span> <span style=color:#6272a4>// &#34;     A&#34;
 </span></code></pre></div><p>Kotlinの場合は、インデントを追加するための<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/prepend-indent.html target=_blank rel=noopener>prependIndent</a>や代替するするための<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/replace-indent.html target=_blank rel=noopener>replaceIndent</a>などがあり、渡すパラメータも文字列となるのでJavaのものとは少し使い方が違います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>nonIndent</span> <span class=p>=</span> <span class=s2>&#34;A&#34;</span>
-<span class=c1>// インデントを追加
-</span><span class=c1></span><span class=k>val</span> <span class=py>prepended</span> <span class=p>=</span> <span class=n>nonIndent</span><span class=p>.</span><span class=n>prependIndent</span><span class=p>(</span><span class=s2>&#34;     &#34;</span><span class=p>)</span> <span class=c1>// &#34;     A&#34;
-</span><span class=c1>// インデントを代替（なかった場合は追加）
-</span><span class=c1></span><span class=k>val</span> <span class=py>replaced</span> <span class=p>=</span> <span class=n>prepended</span><span class=p>.</span><span class=n>replaceIndent</span><span class=p>(</span><span class=s2>&#34;|||||&#34;</span><span class=p>)</span> <span class=c1>// &#34;|||||A&#34;
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> nonIndent = <span style=color:#f1fa8c>&#34;A&#34;</span>
+<span style=color:#6272a4>// インデントを追加
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> prepended = nonIndent.prependIndent(<span style=color:#f1fa8c>&#34;     &#34;</span>) <span style=color:#6272a4>// &#34;     A&#34;
+</span><span style=color:#6272a4>// インデントを代替（なかった場合は追加）
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> replaced = prepended.replaceIndent(<span style=color:#f1fa8c>&#34;|||||&#34;</span>) <span style=color:#6272a4>// &#34;|||||A&#34;
 </span></code></pre></div><h4 id=stripindent-15>stripIndent (15)</h4>
 <p><code>Text Block</code>で複数行の文字列を扱う場合、ソースコード上の可読性の都合で任意のインデントを入れたら実際のデータとしては扱いづらい場合もあるはずです。ここでインデントを削除するためののものが<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#stripIndent%28%29 target=_blank rel=noopener>stringIndent</a>です。</p>
 <p>Kotlinでは<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/trim-indent.html target=_blank rel=noopener>trimIndent</a>が同じ役割をしています。</p>
 <h4 id=transform-12>transform (12)</h4>
 <p>文字列に対して<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/function/Function.html target=_blank rel=noopener>Function</a>を実行するという単純なAPIです。<code>replace</code>では不可能な、条件による処理などが必要なときに使えそうです。実装を見ると極めて単純です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=o>&lt;</span><span class=n>R</span><span class=o>&gt;</span> <span class=n>R</span> <span class=nf>transform</span><span class=o>(</span><span class=n>Function</span><span class=o>&lt;?</span> <span class=kd>super</span> <span class=n>String</span><span class=o>,</span> <span class=o>?</span> <span class=kd>extends</span> <span class=n>R</span><span class=o>&gt;</span> <span class=n>f</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=n>f</span><span class=o>.</span><span class=na>apply</span><span class=o>(</span><span class=k>this</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#ff79c6>&lt;</span>R<span style=color:#ff79c6>&gt;</span> R <span style=color:#50fa7b>transform</span><span style=color:#ff79c6>(</span>Function<span style=color:#ff79c6>&lt;?</span> <span style=color:#8be9fd;font-style:italic>super</span> String<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>?</span> <span style=color:#8be9fd;font-style:italic>extends</span> R<span style=color:#ff79c6>&gt;</span> f<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> f<span style=color:#ff79c6>.</span><span style=color:#50fa7b>apply</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Kotlinでは文字列でも<code>map</code>・<code>filter</code>・<code>reduce</code>のような高階関数が使えるのでこれらを使うこともできますね。もしくは以下のような拡張関数を定義することで同じことができるかと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=p>&lt;</span><span class=nc>R</span><span class=p>&gt;</span> <span class=nf>String</span><span class=p>.</span><span class=n>transform</span><span class=p>(</span><span class=n>f</span><span class=p>:</span> <span class=p>(</span><span class=n>String</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>R</span><span class=p>):</span> <span class=n>R</span> <span class=p>=</span> <span class=n>f</span><span class=p>(</span><span class=k>this</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>R</span>&gt; <span style=color:#50fa7b>String</span>.transform(f: (String) <span style=color:#ff79c6>-&gt;</span> R): R = f(<span style=color:#ff79c6>this</span>)
 </code></pre></div><h4 id=translateescapes-15>translateEscapes (15)</h4>
 <p>エスケープになっている一部の文字をリテラルに変えてくれる機能です。こちらはコードを見た方が理解が早いかなと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>String</span> <span class=n>string</span> <span class=o>=</span> <span class=s>&#34;this\\nis\\nmutli\\nline&#34;</span><span class=o>;</span>
-<span class=n>String</span> <span class=n>escapeTranslated</span> <span class=o>=</span> <span class=n>string</span><span class=o>.</span><span class=na>translateEscapes</span><span class=o>()</span> <span class=c1>// &#34;this\nis\nmutli\nline&#34;
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>String string <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;this\\nis\\nmutli\\nline&#34;</span><span style=color:#ff79c6>;</span>
+String escapeTranslated <span style=color:#ff79c6>=</span> string<span style=color:#ff79c6>.</span><span style=color:#50fa7b>translateEscapes</span><span style=color:#ff79c6>()</span> <span style=color:#6272a4>// &#34;this\nis\nmutli\nline&#34;
 </span></code></pre></div><p>以前は<code>Matcher</code>と正規式を組み合わせるなど独自の処理を書くか、ライブラリに依存していたと思いますので、こういうのができると嬉しいですね。変換されるエスケープ文字は以下の通りです。</p>
 <div class=table-wrapper><table>
 <thead>
@@ -375,17 +375,17 @@ java
 <p>Kotlinでは似たようなAPIがないので、必要なら独自の処理を書いた方が良さそうです。（ライブラリは知らず…）</p>
 <h3 id=mapentrycopyof-17>Map.Entry.copyOf (17)</h3>
 <p><code>Map.Entry</code>のコピーを作成します。コピーしたエントリは元のMapとは何の関係もないデータとなります。以下のようなサンプルコードを<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Map.Entry.html target=_blank rel=noopener>公式ドキュメント</a>から提示していますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>var</span> <span class=n>entries</span> <span class=o>=</span> <span class=n>map</span><span class=o>.</span><span class=na>entrySet</span><span class=o>().</span><span class=na>stream</span><span class=o>().</span><span class=na>map</span><span class=o>(</span><span class=n>Map</span><span class=o>.</span><span class=na>Entry</span><span class=o>::</span><span class=n>copyOf</span><span class=o>).</span><span class=na>toList</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>var entries <span style=color:#ff79c6>=</span> map<span style=color:#ff79c6>.</span><span style=color:#50fa7b>entrySet</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>Map<span style=color:#ff79c6>.</span><span style=color:#50fa7b>Entry</span><span style=color:#ff79c6>::</span>copyOf<span style=color:#ff79c6>).</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>ちなみに<code>Map</code>そのもののコピーは、10から追加された<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Map.html#copyOf%28java.util.Map%29 target=_blank rel=noopener>copyOf</a>でできます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>var</span> <span class=n>copiedMap</span> <span class=o>=</span> <span class=n>Map</span><span class=o>.</span><span class=na>copyOf</span><span class=o>(</span><span class=n>map</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>var copiedMap <span style=color:#ff79c6>=</span> Map<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copyOf</span><span style=color:#ff79c6>(</span>map<span style=color:#ff79c6>);</span>
 </code></pre></div><p>Kotlinだと、<code>Entry</code>のコピーは以下のようにできます。型は<code>List&lt;MutableMap.MutableEntry&lt;K, V>></code>となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// Map.Entryを使う場合
-</span><span class=c1></span><span class=k>val</span> <span class=py>entriesJava</span> <span class=p>=</span> <span class=n>map</span><span class=p>.</span><span class=n>entries</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=n>Map</span><span class=p>.</span><span class=n>Entry</span><span class=p>.</span><span class=n>copyOf</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// Map.Entryを使う場合
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> entriesJava = map.entries.map { Map.Entry.copyOf(<span style=color:#ff79c6>it</span>) }
 
-<span class=c1>// KotlinのMap.Entryを使う場合
-</span><span class=c1></span><span class=k>val</span> <span class=py>entriesKotlin</span> <span class=p>=</span> <span class=n>map</span><span class=p>.</span><span class=n>entries</span><span class=p>.</span><span class=n>toSet</span><span class=p>()</span>
+<span style=color:#6272a4>// KotlinのMap.Entryを使う場合
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> entriesKotlin = map.entries.toSet()
 </code></pre></div><p>また、Kotlinでの<code>Map</code>のコピー方法は以下のようにできます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>copiedMap</span> <span class=p>=</span> <span class=n>map</span><span class=p>.</span><span class=n>toMap</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> copiedMap = map.toMap()
 </code></pre></div><h3 id=stream>Stream</h3>
 <h4 id=mapmulti-16>mapMulti (16)</h4>
 <p>16からStreamに<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/stream/Stream.html#mapMulti%28java.util.function.BiConsumer%29 target=_blank rel=noopener>mapMulti</a>というメソッドが追加されました。基本的には「Streamの要素に1:Nの変換を適用して結果をStreamを返す」という処理なので、<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/stream/Stream.html#flatMap%28java.util.function.Function%29 target=_blank rel=noopener>flatMap</a>に似ていますが、以下のケースでは<code>flatMap</code>を使う場合より良いと言われています。</p>
@@ -395,116 +395,116 @@ java
 </ul>
 <p>まずはオブジェクトがネストされているCollectionに対して<code>flatMap</code>を使う場合を考えてみましょう。要素を減らすケースでは、<code>flatMap</code>でまず全ての要素を展開し、<code>filter</code>を使って条件に合う要素だけを取る必要があります。ここで要素を展開するには、全ての要素を<code>Stream</code>に変換しなければならないので、全ての要素のグループに対して<code>Stream</code>のインスタンスを作ることになります。また、オブジェクトがネストしている場合は、その個別の要素に対してどうやって<code>Stream</code>に変換するか、処理の中で定義する必要があります。</p>
 <p>問題は<code>Stream</code>のインスタンスを毎回作るためオーバヘッドが発生することにもなるし、要素がさまざまな型のオブジェクトである場合は<code>Stream</code>に変換する処理を書くのも大変ということです。例えば以下のようなListがあるとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>Object</span><span class=o>&gt;</span> <span class=n>numbers</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>2L</span><span class=o>),</span> <span class=n>3</span><span class=o>,</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>4</span><span class=o>,</span> <span class=n>5L</span><span class=o>,</span> <span class=n>6</span><span class=o>),</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>7L</span><span class=o>),</span> <span class=n>8L</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>Object<span style=color:#ff79c6>&gt;</span> numbers <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>,</span> 2L<span style=color:#ff79c6>),</span> 3<span style=color:#ff79c6>,</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>4<span style=color:#ff79c6>,</span> 5L<span style=color:#ff79c6>,</span> 6<span style=color:#ff79c6>),</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>7L<span style=color:#ff79c6>),</span> 8L<span style=color:#ff79c6>);</span>
 </code></pre></div><p>このListから、<code>Integer</code>のみを抽出して別のListにしたい場合はどうしたら良いでしょうか。まず<code>flatMap</code>を使うとしたら、以下のような処理を書くことになるかと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>Integer</span><span class=o>&gt;</span> <span class=n>integers</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>()</span>
-        <span class=o>.</span><span class=na>flatMap</span><span class=o>(</span> <span class=c1>// 要素をStreamに変換する
-</span><span class=c1></span>                <span class=n>it</span> <span class=o>-&gt;</span> <span class=o>{</span>
-                    <span class=k>if</span> <span class=o>(</span><span class=n>it</span> <span class=k>instanceof</span> <span class=n>Iterable</span><span class=o>&lt;?&gt;</span> <span class=n>l</span><span class=o>)</span> <span class=o>{</span>
-                        <span class=k>return</span> <span class=n>StreamSupport</span><span class=o>.</span><span class=na>stream</span><span class=o>(</span><span class=n>l</span><span class=o>.</span><span class=na>spliterator</span><span class=o>(),</span> <span class=kc>false</span><span class=o>);</span>
-                    <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
-                        <span class=k>return</span> <span class=n>Stream</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>it</span><span class=o>);</span>
-                    <span class=o>}</span>
-                <span class=o>})</span>
-        <span class=o>.</span><span class=na>filter</span><span class=o>(</span><span class=n>it</span> <span class=o>-&gt;</span> <span class=n>it</span> <span class=k>instanceof</span> <span class=n>Integer</span><span class=o>)</span> <span class=c1>// Integerのみを取る
-</span><span class=c1></span>        <span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>it</span> <span class=o>-&gt;</span> <span class=o>(</span><span class=n>Integer</span><span class=o>)</span> <span class=n>it</span><span class=o>)</span> <span class=c1>// ObjectからIntegerへキャスト
-</span><span class=c1></span>        <span class=o>.</span><span class=na>toList</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>Integer<span style=color:#ff79c6>&gt;</span> integers <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>()</span>
+        <span style=color:#ff79c6>.</span><span style=color:#50fa7b>flatMap</span><span style=color:#ff79c6>(</span> <span style=color:#6272a4>// 要素をStreamに変換する
+</span><span style=color:#6272a4></span>                it <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>{</span>
+                    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>it <span style=color:#ff79c6>instanceof</span> Iterable<span style=color:#ff79c6>&lt;?&gt;</span> l<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+                        <span style=color:#ff79c6>return</span> StreamSupport<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>(</span>l<span style=color:#ff79c6>.</span><span style=color:#50fa7b>spliterator</span><span style=color:#ff79c6>(),</span> <span style=color:#ff79c6>false</span><span style=color:#ff79c6>);</span>
+                    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>{</span>
+                        <span style=color:#ff79c6>return</span> Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>it<span style=color:#ff79c6>);</span>
+                    <span style=color:#ff79c6>}</span>
+                <span style=color:#ff79c6>})</span>
+        <span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>(</span>it <span style=color:#ff79c6>-&gt;</span> it <span style=color:#ff79c6>instanceof</span> Integer<span style=color:#ff79c6>)</span> <span style=color:#6272a4>// Integerのみを取る
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>it <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>(</span>Integer<span style=color:#ff79c6>)</span> it<span style=color:#ff79c6>)</span> <span style=color:#6272a4>// ObjectからIntegerへキャスト
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>これを<code>mapMulti</code>を使って処理する場合は以下のようになります。よりシンプルになりましたね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>MultiMapper</span> <span class=o>{</span>
-    <span class=kd>static</span> <span class=kt>void</span> <span class=nf>expandIterable</span><span class=o>(</span><span class=n>Object</span> <span class=n>e</span><span class=o>,</span> <span class=n>Consumer</span><span class=o>&lt;</span><span class=n>Integer</span><span class=o>&gt;</span> <span class=n>c</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>e</span> <span class=k>instanceof</span> <span class=n>Iterable</span><span class=o>&lt;?&gt;</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>i</span><span class=o>.</span><span class=na>forEach</span><span class=o>(</span><span class=n>ie</span> <span class=o>-&gt;</span> <span class=n>expandIterable</span><span class=o>(</span><span class=n>ie</span><span class=o>,</span> <span class=n>c</span><span class=o>));</span>
-        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>e</span> <span class=k>instanceof</span> <span class=n>Integer</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>c</span><span class=o>.</span><span class=na>accept</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MultiMapper</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>expandIterable</span><span style=color:#ff79c6>(</span>Object e<span style=color:#ff79c6>,</span> Consumer<span style=color:#ff79c6>&lt;</span>Integer<span style=color:#ff79c6>&gt;</span> c<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>e <span style=color:#ff79c6>instanceof</span> Iterable<span style=color:#ff79c6>&lt;?&gt;</span> i<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            i<span style=color:#ff79c6>.</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>ie <span style=color:#ff79c6>-&gt;</span> expandIterable<span style=color:#ff79c6>(</span>ie<span style=color:#ff79c6>,</span> c<span style=color:#ff79c6>));</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>e <span style=color:#ff79c6>instanceof</span> Integer i<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            c<span style=color:#ff79c6>.</span><span style=color:#50fa7b>accept</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=n>List</span><span class=o>&lt;</span><span class=n>Integer</span><span class=o>&gt;</span> <span class=n>integers</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>mapMulti</span><span class=o>(</span><span class=n>MultiMapper</span><span class=o>::</span><span class=n>expandIterable</span><span class=o>).</span><span class=na>toList</span><span class=o>();</span>
+List<span style=color:#ff79c6>&lt;</span>Integer<span style=color:#ff79c6>&gt;</span> integers <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>mapMulti</span><span style=color:#ff79c6>(</span>MultiMapper<span style=color:#ff79c6>::</span>expandIterable<span style=color:#ff79c6>).</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>他にも<a class=link href="https://docs.oracle.com/en/java/javase/17/docs/api/new-list.html#:~:text=java.util.stream.Stream.mapMultiToInt%28BiConsumer%3C%3F%20super%20T%2C%20%3F%20super%20IntConsumer%3E%29" target=_blank rel=noopener>mapMultiToInt</a>、<a class=link href="https://docs.oracle.com/en/java/javase/17/docs/api/new-list.html#:~:text=java.util.stream.Stream.mapMultiToLong%28BiConsumer%3C%3F%20super%20T%2C%20%3F%20super%20LongConsumer%3E%29" target=_blank rel=noopener>mapMultiToLong</a>、<a class=link href="https://docs.oracle.com/en/java/javase/17/docs/api/new-list.html#:~:text=java.util.stream.Stream.mapMultiToDouble%28BiConsumer%3C%3F%20super%20T%2C%20%3F%20super%20DoubleConsumer%3E%29" target=_blank rel=noopener>mapMultiToDouble</a>などのメソッドも追加されていますので、数字を扱う場合はこちらを使った方が便利でしょう。例えば、上記の<code>mapMulti</code>を<code>mapMultiToInt</code>で書く場合は以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>MultiMapper</span> <span class=o>{</span>
-    <span class=kd>static</span> <span class=kt>void</span> <span class=nf>expandIterable</span><span class=o>(</span><span class=n>Object</span> <span class=n>e</span><span class=o>,</span> <span class=n>IntConsumer</span> <span class=n>c</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>e</span> <span class=k>instanceof</span> <span class=n>Iterable</span><span class=o>&lt;?&gt;</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>i</span><span class=o>.</span><span class=na>forEach</span><span class=o>(</span><span class=n>ie</span> <span class=o>-&gt;</span> <span class=n>expandIterable</span><span class=o>(</span><span class=n>ie</span><span class=o>,</span> <span class=n>c</span><span class=o>));</span>
-        <span class=o>}</span> <span class=k>else</span> <span class=k>if</span> <span class=o>(</span><span class=n>e</span> <span class=k>instanceof</span> <span class=n>Integer</span> <span class=n>i</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>c</span><span class=o>.</span><span class=na>accept</span><span class=o>(</span><span class=n>i</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MultiMapper</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>expandIterable</span><span style=color:#ff79c6>(</span>Object e<span style=color:#ff79c6>,</span> IntConsumer c<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>e <span style=color:#ff79c6>instanceof</span> Iterable<span style=color:#ff79c6>&lt;?&gt;</span> i<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            i<span style=color:#ff79c6>.</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>(</span>ie <span style=color:#ff79c6>-&gt;</span> expandIterable<span style=color:#ff79c6>(</span>ie<span style=color:#ff79c6>,</span> c<span style=color:#ff79c6>));</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>e <span style=color:#ff79c6>instanceof</span> Integer i<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            c<span style=color:#ff79c6>.</span><span style=color:#50fa7b>accept</span><span style=color:#ff79c6>(</span>i<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=n>List</span><span class=o>&lt;</span><span class=n>Integer</span><span class=o>&gt;</span> <span class=n>integers</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>mapMultiToInt</span><span class=o>(</span><span class=n>MultiMapper</span><span class=o>::</span><span class=n>expandIterable</span><span class=o>).</span><span class=na>boxed</span><span class=o>().</span><span class=na>toList</span><span class=o>();</span>
+List<span style=color:#ff79c6>&lt;</span>Integer<span style=color:#ff79c6>&gt;</span> integers <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>mapMultiToInt</span><span style=color:#ff79c6>(</span>MultiMapper<span style=color:#ff79c6>::</span>expandIterable<span style=color:#ff79c6>).</span><span style=color:#50fa7b>boxed</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p><code>mapMultiToInt</code>の戻り値は<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/stream/IntStream.html target=_blank rel=noopener>IntStream</a>なので、<code>Stream&lt;Integer></code>に変換するために<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/stream/IntStream.html#boxed%28%29 target=_blank rel=noopener>boxed</a>を呼び出し、<code>Consumer</code>が<code>IntConsumer</code>に変わり、<code>mapMulti</code>の型指定が変わるなど少しの違いがあります。</p>
 <p>Kotlinではそもそも<code>flatMap</code>を<code>Stream</code>として扱わないので、そもそもの処理を違う観点から考える必要があります。幸い、KotlinのCollectionには色々なAPIがあるので、そこまで難しくはないです。例えば、オブジェクトのインスタンスを基準に要素を集約したい場合は以下のようなコードを書くことができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=n>listOf</span><span class=p>(</span><span class=s2>&#34;A&#34;</span><span class=p>,</span> <span class=sc>&#39;B&#39;</span><span class=p>),</span> <span class=s2>&#34;C&#34;</span><span class=p>,</span> <span class=n>setOf</span><span class=p>(</span><span class=s2>&#34;D&#34;</span><span class=p>,</span> <span class=sc>&#39;E&#39;</span><span class=p>,</span> <span class=s2>&#34;F&#34;</span><span class=p>),</span> <span class=n>listOf</span><span class=p>(</span><span class=sc>&#39;G&#39;</span><span class=p>),</span> <span class=sc>&#39;H&#39;</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> list = listOf(listOf(<span style=color:#f1fa8c>&#34;A&#34;</span>, <span style=color:#f1fa8c>&#39;B&#39;</span>), <span style=color:#f1fa8c>&#34;C&#34;</span>, setOf(<span style=color:#f1fa8c>&#34;D&#34;</span>, <span style=color:#f1fa8c>&#39;E&#39;</span>, <span style=color:#f1fa8c>&#34;F&#34;</span>), listOf(<span style=color:#f1fa8c>&#39;G&#39;</span>), <span style=color:#f1fa8c>&#39;H&#39;</span>)
 
-<span class=k>val</span> <span class=py>result</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;</span> <span class=p>=</span> <span class=n>list</span><span class=p>.</span><span class=n>flatMap</span> <span class=p>{</span>
-    <span class=k>if</span> <span class=p>(</span><span class=k>it</span> <span class=k>is</span> <span class=n>Iterable</span><span class=p>&lt;*&gt;)</span> <span class=p>{</span>
-        <span class=k>it</span><span class=p>.</span><span class=n>filterIsInstance</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;()</span>
-    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=n>listOf</span><span class=p>(</span><span class=k>it</span><span class=p>).</span><span class=n>filterIsInstance</span><span class=p>&lt;</span><span class=n>String</span><span class=p>&gt;()</span>
-    <span class=p>}</span>
-<span class=p>}</span> <span class=c1>// [A, C, D, F]
+<span style=color:#ff79c6>val</span> result: List&lt;String&gt; = list.flatMap {
+    <span style=color:#ff79c6>if</span> (<span style=color:#ff79c6>it</span> <span style=color:#ff79c6>is</span> Iterable&lt;*&gt;) {
+        <span style=color:#ff79c6>it</span>.filterIsInstance&lt;String&gt;()
+    } <span style=color:#ff79c6>else</span> {
+        listOf(<span style=color:#ff79c6>it</span>).filterIsInstance&lt;String&gt;()
+    }
+} <span style=color:#6272a4>// [A, C, D, F]
 </span></code></pre></div><p>ただ、Javaでは<code>List.of(1, 2L)</code>でListを作成した場合、1はint、2LはLongとして扱われますが、Kotlinでは<code>listOf(1, 2L)</code>が<code>List&lt;Long></code>となってしまうので、そもそもの型に注意する必要があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=n>listOf</span><span class=p>(</span><span class=m>1</span><span class=p>,</span> <span class=m>2L</span><span class=p>),</span> <span class=m>3</span><span class=p>,</span> <span class=n>setOf</span><span class=p>(</span><span class=m>4</span><span class=p>,</span> <span class=m>5L</span><span class=p>,</span> <span class=m>6</span><span class=p>),</span> <span class=n>listOf</span><span class=p>(</span><span class=m>7L</span><span class=p>),</span> <span class=m>8L</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> list = listOf(listOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2L</span>), <span style=color:#bd93f9>3</span>, setOf(<span style=color:#bd93f9>4</span>, <span style=color:#bd93f9>5L</span>, <span style=color:#bd93f9>6</span>), listOf(<span style=color:#bd93f9>7L</span>), <span style=color:#bd93f9>8L</span>)
 
-<span class=k>val</span> <span class=py>result</span> <span class=p>=</span> <span class=n>list</span><span class=p>.</span><span class=n>flatMap</span> <span class=p>{</span>
-    <span class=k>if</span> <span class=p>(</span><span class=k>it</span> <span class=k>is</span> <span class=n>Iterable</span><span class=p>&lt;*&gt;)</span> <span class=p>{</span>
-        <span class=k>it</span><span class=p>.</span><span class=n>filterIsInstance</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>&gt;()</span>
-    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=n>listOf</span><span class=p>(</span><span class=k>it</span><span class=p>).</span><span class=n>filterIsInstance</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>&gt;()</span>
-    <span class=p>}</span>
-<span class=p>}</span> <span class=c1>// [3]
+<span style=color:#ff79c6>val</span> result = list.flatMap {
+    <span style=color:#ff79c6>if</span> (<span style=color:#ff79c6>it</span> <span style=color:#ff79c6>is</span> Iterable&lt;*&gt;) {
+        <span style=color:#ff79c6>it</span>.filterIsInstance&lt;Int&gt;()
+    } <span style=color:#ff79c6>else</span> {
+        listOf(<span style=color:#ff79c6>it</span>).filterIsInstance&lt;Int&gt;()
+    }
+} <span style=color:#6272a4>// [3]
 </span></code></pre></div><h4 id=tolist16>toList(16)</h4>
 <p>Streamの終端処理として使用頻度の高い「Listに集計する」をシンタックス・シュガーとして作ったような感覚のメソッドです。ここはKotlinの機能をJavaが受け入れたような気もしますね。処理の結果として生成されるListは<code>Unmodifiable</code>です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>list</span> <span class=o>=</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;a&#34;</span><span class=o>,</span> <span class=s>&#34;B&#34;</span><span class=o>,</span> <span class=s>&#34;c&#34;</span><span class=o>,</span> <span class=s>&#34;D&#34;</span><span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> list <span style=color:#ff79c6>=</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;a&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;B&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;c&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;D&#34;</span><span style=color:#ff79c6>);</span>
 
-<span class=c1>// 旧
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>upper</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>map</span><span class=o>(</span><span class=n>String</span><span class=o>::</span><span class=n>toUpperCase</span><span class=o>).</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toUnmodifiableList</span><span class=o>());</span>
+<span style=color:#6272a4>// 旧
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> upper <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>String<span style=color:#ff79c6>::</span>toUpperCase<span style=color:#ff79c6>).</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toUnmodifiableList</span><span style=color:#ff79c6>());</span>
 
-<span class=c1>// 新
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>lower</span> <span class=o>=</span> <span class=n>list</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>map</span><span class=o>(</span><span class=n>String</span><span class=o>::</span><span class=n>toLowerCase</span><span class=o>).</span><span class=na>toList</span><span class=o>();</span>
+<span style=color:#6272a4>// 新
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> lower <span style=color:#ff79c6>=</span> list<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>String<span style=color:#ff79c6>::</span>toLowerCase<span style=color:#ff79c6>).</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>Kotlinでは基本的にCollectionで高階関数を呼び出した結果が<code>Unmodifiable</code>なListになるのですが、<code>stream</code>に変換して使うこともできるので、場合によっては便利なのかも知れませんね。</p>
 <h3 id=collectorsteeing-12>Collectors.teeing (12)</h3>
 <p>Collectorsに、二つの<code>Collector</code>を結合する<a class=link href=https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/stream/Collectors.html#teeing%28java.util.stream.Collector,java.util.stream.Collector,java.util.function.BiFunction%29 target=_blank rel=noopener>teeing</a>というメソッドが追加されました。ちなみに<code>Tee</code>は二つの水道管を接続して一つにしてくれる「T字継手」の意味を持つらしいです。引数に二つの<code>Collector</code>と、それを結合する処理の<code>BiFunction</code>を指定する形となっています。</p>
 <p>例えば以下のような<code>Stream</code>があるとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=n>record</span> <span class=nf>Member</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>,</span> <span class=kt>boolean</span> <span class=n>enabled</span><span class=o>)</span> <span class=o>{}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>record <span style=color:#50fa7b>Member</span><span style=color:#ff79c6>(</span>String name<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>boolean</span> enabled<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{}</span>
 
-<span class=cm>/**
-</span><span class=cm>* [
-</span><span class=cm>*    Member[name=Member1, enabled=false],
-</span><span class=cm>*    Member[name=Member2, enabled=true],
-</span><span class=cm>*    Member[name=Member3, enabled=false],
-</span><span class=cm>*    Member[name=Member4, enabled=true],
-</span><span class=cm>* ]
-</span><span class=cm>*/</span>
-<span class=n>Stream</span><span class=o>&lt;</span><span class=n>Member</span><span class=o>&gt;</span> <span class=n>members</span> <span class=o>=</span> <span class=n>IntStream</span><span class=o>.</span><span class=na>rangeClosed</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>4</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>it</span> <span class=o>-&gt;</span> <span class=k>new</span> <span class=n>Member</span><span class=o>(</span><span class=s>&#34;Member&#34;</span> <span class=o>+</span> <span class=n>it</span><span class=o>,</span> <span class=n>it</span> <span class=o>%</span> <span class=n>2</span> <span class=o>==</span> <span class=n>0</span><span class=o>));</span>
+<span style=color:#6272a4>/**
+</span><span style=color:#6272a4>* [
+</span><span style=color:#6272a4>*    Member[name=Member1, enabled=false],
+</span><span style=color:#6272a4>*    Member[name=Member2, enabled=true],
+</span><span style=color:#6272a4>*    Member[name=Member3, enabled=false],
+</span><span style=color:#6272a4>*    Member[name=Member4, enabled=true],
+</span><span style=color:#6272a4>* ]
+</span><span style=color:#6272a4>*/</span>
+Stream<span style=color:#ff79c6>&lt;</span>Member<span style=color:#ff79c6>&gt;</span> members <span style=color:#ff79c6>=</span> IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>rangeClosed</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>,</span> 4<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>it <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>new</span> Member<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Member&#34;</span> <span style=color:#ff79c6>+</span> it<span style=color:#ff79c6>,</span> it <span style=color:#ff79c6>%</span> 2 <span style=color:#ff79c6>==</span> 0<span style=color:#ff79c6>));</span>
 </code></pre></div><p>これを<code>teeing</code>を使って、<code>Member</code>の<code>enabled</code>を基準に二つのListに分けるとしたら以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=cm>/**
-</span><span class=cm>* [
-</span><span class=cm>*    [
-</span><span class=cm>*       Member[name=Member2, enabled=true],
-</span><span class=cm>*       Member[name=Member4, enabled=true]
-</span><span class=cm>*    ],
-</span><span class=cm>*
-</span><span class=cm>*    [
-</span><span class=cm>*       Member[name=Member1, enabled=false],
-</span><span class=cm>*       Member[name=Member3, enabled=false]
-</span><span class=cm>*    ]
-</span><span class=cm>* ]
-</span><span class=cm>*/</span>
-<span class=n>List</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Member</span><span class=o>&gt;&gt;</span> <span class=n>result</span> <span class=o>=</span> <span class=n>members</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span>
-        <span class=n>Collectors</span><span class=o>.</span><span class=na>teeing</span><span class=o>(</span>
-                <span class=n>Collectors</span><span class=o>.</span><span class=na>filtering</span><span class=o>(</span>
-                        <span class=n>Member</span><span class=o>::</span><span class=n>enabled</span><span class=o>,</span>
-                        <span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>()</span>
-                <span class=o>),</span>
-                <span class=n>Collectors</span><span class=o>.</span><span class=na>filtering</span><span class=o>(</span>
-                        <span class=n>Predicate</span><span class=o>.</span><span class=na>not</span><span class=o>(</span><span class=n>Member</span><span class=o>::</span><span class=n>enabled</span><span class=o>),</span>
-                        <span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>()</span>
-                <span class=o>),</span>
-                <span class=o>(</span><span class=n>list1</span><span class=o>,</span> <span class=n>list2</span><span class=o>)</span> <span class=o>-&gt;</span> <span class=n>List</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=n>list1</span><span class=o>,</span> <span class=n>list2</span><span class=o>)</span>
-        <span class=o>)</span>
-<span class=o>);</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>/**
+</span><span style=color:#6272a4>* [
+</span><span style=color:#6272a4>*    [
+</span><span style=color:#6272a4>*       Member[name=Member2, enabled=true],
+</span><span style=color:#6272a4>*       Member[name=Member4, enabled=true]
+</span><span style=color:#6272a4>*    ],
+</span><span style=color:#6272a4>*
+</span><span style=color:#6272a4>*    [
+</span><span style=color:#6272a4>*       Member[name=Member1, enabled=false],
+</span><span style=color:#6272a4>*       Member[name=Member3, enabled=false]
+</span><span style=color:#6272a4>*    ]
+</span><span style=color:#6272a4>* ]
+</span><span style=color:#6272a4>*/</span>
+List<span style=color:#ff79c6>&lt;</span>List<span style=color:#ff79c6>&lt;</span>Member<span style=color:#ff79c6>&gt;&gt;</span> result <span style=color:#ff79c6>=</span> members<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>
+        Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>teeing</span><span style=color:#ff79c6>(</span>
+                Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>filtering</span><span style=color:#ff79c6>(</span>
+                        Member<span style=color:#ff79c6>::</span>enabled<span style=color:#ff79c6>,</span>
+                        Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>),</span>
+                Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>filtering</span><span style=color:#ff79c6>(</span>
+                        Predicate<span style=color:#ff79c6>.</span><span style=color:#50fa7b>not</span><span style=color:#ff79c6>(</span>Member<span style=color:#ff79c6>::</span>enabled<span style=color:#ff79c6>),</span>
+                        Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>()</span>
+                <span style=color:#ff79c6>),</span>
+                <span style=color:#ff79c6>(</span>list1<span style=color:#ff79c6>,</span> list2<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>-&gt;</span> List<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span>list1<span style=color:#ff79c6>,</span> list2<span style=color:#ff79c6>)</span>
+        <span style=color:#ff79c6>)</span>
+<span style=color:#ff79c6>);</span>
 </code></pre></div><p>Kotlinではそもそも<code>collect</code>する必要がないので、<code>Collection</code>の高階関数を使った処理をした方が良いでしょう。（Javaでもそうした方がわかりやすいような…）</p>
 <h2 id=最後に>最後に</h2>
 <p>いかがだったでしょうか。さすがに全ての変更事項を整理するのは難しかったので、目立っている変化だけをいくつか取り上げてみましたが、それでもかなりの量ですね。ただ確かなのは、Java 17が11よりもさらにモダンな言語になったバージョンであるので、Javaを使っている案件なら十分導入する価値がありそうです。また、Java 15からは11に比べてG1GCの改良による<a class=link href=https://www.optaplanner.org/blog/2021/01/26/HowMuchFasterIsJava15.html target=_blank rel=noopener>性能向上もあった</a>ようですので、性能という面でも良いですね。</p>

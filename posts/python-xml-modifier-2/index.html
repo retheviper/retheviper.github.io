@@ -78,54 +78,54 @@ python
 <p>目標に合わせてコードを修正すると同時に、些細な問題も改善することにします。前回のスクリプトではフォルダー内のファイルをリストとして取得するために<code>glob</code>のモジュールを使いました。わずかのコードで再帰的に下位フォルダー内のファイルまで収集してくれるので便利だったのですが、globのrecursiveオプションはPython3.5以上でしか使えないという問題があります。普段からPython3を使っていたなら問題はあまりないはずですが、他に使っているPythonのスクリプトは全てPython2を基準に作成されています。なのでこれをPython2でも使えるオプションに変えることにします。</p>
 <p>そしてメインとなる改善点としては、<code>find</code>を<code>findall</code>に変えることにします。まずDBコネクションのエレメントを全部取得し、ここで<code>if</code>文を使えばDBのコネクション名によって分岐処理ができるはずです。また、今回変えたいDBコネクション名は<code>From_PostgreSQL_01</code>のようにアンダースコアで連番が付いているものを<code>From_PostgreSQL</code>のように連番だけ外すということなので、その仕組みも考えておきます。<code>replace</code>を使う方法もありますが、これなら全てのケースに対して条件を書かなければならないですし、条件指定の例によっては重複の可能性もあります。なので<code>rsplit</code><sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>を使い、アンダースコアを基準に元の文字列を分割した後元のテキストを代替することにします。</p>
 <p>これらの要件定義から変わったことは以下となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># -*- coding: UTF-8 -*-</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># -*- coding: UTF-8 -*-</span>
 
-<span class=kn>import</span> <span class=nn>xml.etree.ElementTree</span> <span class=k>as</span> <span class=nn>ET</span>
-<span class=kn>import</span> <span class=nn>os</span>
+<span style=color:#ff79c6>import</span> xml.etree.ElementTree <span style=color:#ff79c6>as</span> ET
+<span style=color:#ff79c6>import</span> os
 
-<span class=c1># 名前空間（prefix）をマップで宣言</span>
-<span class=n>ns</span> <span class=o>=</span> <span class=p>{</span><span class=s1>&#39;fb&#39;</span><span class=p>:</span> <span class=s1>&#39;http://builder&#39;</span><span class=p>,</span>
-      <span class=s1>&#39;fe&#39;</span><span class=p>:</span> <span class=s1>&#39;http://engine&#39;</span><span class=p>,</span>
-      <span class=s1>&#39;mp&#39;</span><span class=p>:</span> <span class=s1>&#39;http://mapper&#39;</span><span class=p>}</span>
+<span style=color:#6272a4># 名前空間（prefix）をマップで宣言</span>
+ns <span style=color:#ff79c6>=</span> {<span style=color:#f1fa8c>&#39;fb&#39;</span>: <span style=color:#f1fa8c>&#39;http://builder&#39;</span>,
+      <span style=color:#f1fa8c>&#39;fe&#39;</span>: <span style=color:#f1fa8c>&#39;http://engine&#39;</span>,
+      <span style=color:#f1fa8c>&#39;mp&#39;</span>: <span style=color:#f1fa8c>&#39;http://mapper&#39;</span>}
 
-<span class=c1># xmlファイル名を再帰的に取得(Python2向け)</span>
-<span class=n>fileList</span> <span class=o>=</span> <span class=p>[]</span>
-<span class=n>base_dir</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>normpath</span><span class=p>(</span><span class=s1>&#39;./baseFolder&#39;</span><span class=p>)</span> <span class=c1># 検索するディレクトリの起点を設定</span>
+<span style=color:#6272a4># xmlファイル名を再帰的に取得(Python2向け)</span>
+fileList <span style=color:#ff79c6>=</span> []
+base_dir <span style=color:#ff79c6>=</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>normpath(<span style=color:#f1fa8c>&#39;./baseFolder&#39;</span>) <span style=color:#6272a4># 検索するディレクトリの起点を設定</span>
 
-<span class=k>for</span> <span class=p>(</span><span class=n>path</span><span class=p>,</span> <span class=nb>dir</span><span class=p>,</span> <span class=n>files</span><span class=p>)</span> <span class=ow>in</span> <span class=n>os</span><span class=o>.</span><span class=n>walk</span><span class=p>(</span><span class=n>base_dir</span><span class=p>):</span>
-    <span class=c1># xml2というファイルは消し、xmlファイルだけ書き換えしたいので分岐をかけ、xmlファイルだけをリスト化する</span>
-    <span class=k>for</span> <span class=n>fname</span> <span class=ow>in</span> <span class=n>files</span><span class=p>:</span>
-        <span class=k>if</span> <span class=p>(</span><span class=s1>&#39;.xml2&#39;</span> <span class=ow>in</span> <span class=n>fname</span><span class=p>):</span>
-            <span class=n>fullfname</span> <span class=o>=</span> <span class=n>path</span> <span class=o>+</span> <span class=s2>&#34;/&#34;</span> <span class=o>+</span> <span class=n>fname</span>
-            <span class=n>os</span><span class=o>.</span><span class=n>remove</span><span class=p>(</span><span class=n>fullfname</span><span class=p>)</span>
-        <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;.xml&#39;</span> <span class=ow>in</span> <span class=n>fname</span> <span class=ow>and</span> <span class=ow>not</span> <span class=s1>&#39;.xml2&#39;</span> <span class=ow>in</span> <span class=n>fname</span><span class=p>):</span>
-            <span class=n>fullfname</span> <span class=o>=</span> <span class=n>path</span> <span class=o>+</span> <span class=s2>&#34;/&#34;</span> <span class=o>+</span> <span class=n>fname</span>
-            <span class=n>fileList</span><span class=o>.</span><span class=n>append</span><span class=p>(</span><span class=n>fullfname</span><span class=p>)</span>
+<span style=color:#ff79c6>for</span> (path, <span style=color:#8be9fd;font-style:italic>dir</span>, files) <span style=color:#ff79c6>in</span> os<span style=color:#ff79c6>.</span>walk(base_dir):
+    <span style=color:#6272a4># xml2というファイルは消し、xmlファイルだけ書き換えしたいので分岐をかけ、xmlファイルだけをリスト化する</span>
+    <span style=color:#ff79c6>for</span> fname <span style=color:#ff79c6>in</span> files:
+        <span style=color:#ff79c6>if</span> (<span style=color:#f1fa8c>&#39;.xml2&#39;</span> <span style=color:#ff79c6>in</span> fname):
+            fullfname <span style=color:#ff79c6>=</span> path <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> fname
+            os<span style=color:#ff79c6>.</span>remove(fullfname)
+        <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;.xml&#39;</span> <span style=color:#ff79c6>in</span> fname <span style=color:#ff79c6>and</span> <span style=color:#ff79c6>not</span> <span style=color:#f1fa8c>&#39;.xml2&#39;</span> <span style=color:#ff79c6>in</span> fname):
+            fullfname <span style=color:#ff79c6>=</span> path <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;/&#34;</span> <span style=color:#ff79c6>+</span> fname
+            fileList<span style=color:#ff79c6>.</span>append(fullfname)
 
-<span class=c1># 取得したファイルを巡回しながらコネクション名の書き換え処理</span>
-<span class=k>for</span> <span class=n>fileName</span> <span class=ow>in</span> <span class=n>fileList</span><span class=p>:</span>
-    <span class=c1># ファイルをパーシング開始</span>
-    <span class=n>tree</span> <span class=o>=</span> <span class=n>ET</span><span class=o>.</span><span class=n>parse</span><span class=p>(</span><span class=n>fileName</span><span class=p>)</span>
+<span style=color:#6272a4># 取得したファイルを巡回しながらコネクション名の書き換え処理</span>
+<span style=color:#ff79c6>for</span> fileName <span style=color:#ff79c6>in</span> fileList:
+    <span style=color:#6272a4># ファイルをパーシング開始</span>
+    tree <span style=color:#ff79c6>=</span> ET<span style=color:#ff79c6>.</span>parse(fileName)
 
-    <span class=c1># INSERTのコンポーネントのコネクション名に&#39;_01&#39;などの文字がついていると取る</span>
-    <span class=n>PutConnections</span> <span class=o>=</span> <span class=n>tree</span><span class=o>.</span><span class=n>findall</span><span class=p>(</span><span class=s2>&#34;fe:Flow/fe:Component[@type=&#39;RDB(Put)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span><span class=p>,</span> <span class=n>ns</span><span class=p>)</span>
-    <span class=k>for</span> <span class=n>PutConnection</span> <span class=ow>in</span> <span class=n>PutConnections</span><span class=p>:</span>
-        <span class=k>if</span> <span class=p>(</span><span class=s1>&#39;_0&#39;</span> <span class=ow>in</span> <span class=n>PutConnection</span><span class=o>.</span><span class=n>text</span><span class=p>):</span>
-            <span class=n>PutConnection</span><span class=o>.</span><span class=n>text</span> <span class=o>=</span> <span class=n>PutConnection</span><span class=o>.</span><span class=n>text</span><span class=o>.</span><span class=n>rsplit</span><span class=p>(</span><span class=s1>&#39;_&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>)[</span><span class=mi>0</span><span class=p>]</span> <span class=c1># rsplitで分割し、その結果物を元のテキストに入れる</span>
+    <span style=color:#6272a4># INSERTのコンポーネントのコネクション名に&#39;_01&#39;などの文字がついていると取る</span>
+    PutConnections <span style=color:#ff79c6>=</span> tree<span style=color:#ff79c6>.</span>findall(<span style=color:#f1fa8c>&#34;fe:Flow/fe:Component[@type=&#39;RDB(Put)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span>, ns)
+    <span style=color:#ff79c6>for</span> PutConnection <span style=color:#ff79c6>in</span> PutConnections:
+        <span style=color:#ff79c6>if</span> (<span style=color:#f1fa8c>&#39;_0&#39;</span> <span style=color:#ff79c6>in</span> PutConnection<span style=color:#ff79c6>.</span>text):
+            PutConnection<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>=</span> PutConnection<span style=color:#ff79c6>.</span>text<span style=color:#ff79c6>.</span>rsplit(<span style=color:#f1fa8c>&#39;_&#39;</span>, <span style=color:#bd93f9>1</span>)[<span style=color:#bd93f9>0</span>] <span style=color:#6272a4># rsplitで分割し、その結果物を元のテキストに入れる</span>
 
-    <span class=c1># SELECTのコンポーネントのコネクション名に&#39;_01&#39;などの文字がついていると取る</span>
-    <span class=n>GetConnections</span> <span class=o>=</span> <span class=n>tree</span><span class=o>.</span><span class=n>findall</span><span class=p>(</span><span class=s2>&#34;fe:Flow/fe:Component[@type=&#39;RDB(Get)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span><span class=p>,</span> <span class=n>ns</span><span class=p>)</span>
-    <span class=k>for</span> <span class=n>GetConnection</span> <span class=ow>in</span> <span class=n>GetConnections</span><span class=p>:</span>
-        <span class=k>if</span> <span class=p>(</span><span class=s1>&#39;_0&#39;</span> <span class=ow>in</span> <span class=n>GetConnection</span><span class=o>.</span><span class=n>text</span><span class=p>):</span>
-            <span class=n>GetConnection</span><span class=o>.</span><span class=n>text</span> <span class=o>=</span> <span class=n>GetConnection</span><span class=o>.</span><span class=n>text</span><span class=o>.</span><span class=n>rsplit</span><span class=p>(</span><span class=s1>&#39;_&#39;</span><span class=p>,</span> <span class=mi>1</span><span class=p>)[</span><span class=mi>0</span><span class=p>]</span> <span class=c1># rsplitで分割し、その結果物を元のテキストに入れる</span>
+    <span style=color:#6272a4># SELECTのコンポーネントのコネクション名に&#39;_01&#39;などの文字がついていると取る</span>
+    GetConnections <span style=color:#ff79c6>=</span> tree<span style=color:#ff79c6>.</span>findall(<span style=color:#f1fa8c>&#34;fe:Flow/fe:Component[@type=&#39;RDB(Get)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span>, ns)
+    <span style=color:#ff79c6>for</span> GetConnection <span style=color:#ff79c6>in</span> GetConnections:
+        <span style=color:#ff79c6>if</span> (<span style=color:#f1fa8c>&#39;_0&#39;</span> <span style=color:#ff79c6>in</span> GetConnection<span style=color:#ff79c6>.</span>text):
+            GetConnection<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>=</span> GetConnection<span style=color:#ff79c6>.</span>text<span style=color:#ff79c6>.</span>rsplit(<span style=color:#f1fa8c>&#39;_&#39;</span>, <span style=color:#bd93f9>1</span>)[<span style=color:#bd93f9>0</span>] <span style=color:#6272a4># rsplitで分割し、その結果物を元のテキストに入れる</span>
 
-    <span class=c1># prefixが変わることを防止</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;fb&#39;</span><span class=p>,</span> <span class=s1>&#39;http://builder&#39;</span><span class=p>)</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;fe&#39;</span><span class=p>,</span> <span class=s1>&#39;http://engine&#39;</span><span class=p>)</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;mp&#39;</span><span class=p>,</span> <span class=s1>&#39;http://mapper&#39;</span><span class=p>)</span>
+    <span style=color:#6272a4># prefixが変わることを防止</span>
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;fb&#39;</span>, <span style=color:#f1fa8c>&#39;http://builder&#39;</span>)
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;fe&#39;</span>, <span style=color:#f1fa8c>&#39;http://engine&#39;</span>)
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;mp&#39;</span>, <span style=color:#f1fa8c>&#39;http://mapper&#39;</span>)
 
-    <span class=c1># 書き換え処理</span>
-    <span class=n>tree</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>fileName</span><span class=p>,</span> <span class=s1>&#39;UTF-8&#39;</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+    <span style=color:#6272a4># 書き換え処理</span>
+    tree<span style=color:#ff79c6>.</span>write(fileName, <span style=color:#f1fa8c>&#39;UTF-8&#39;</span>, <span style=color:#ff79c6>True</span>)
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>ファイル取得部は<code>glob</code>オプションで簡単にできたことに比べ少し複雑になっています。<code>os.walk()</code>で起点のディレクトリを指定してパスとファイル名を取得します。ただ<code>os.walk()</code>だとファイル名とパスは分離されるのでそれをつなぐ作業が必要ですね。そこで処理するファイルのリストに入れたり消したりする処理を加えます。これで以前の<code>glob</code>と似たような挙動ができます。</p>
 <p>そして<code>rsplit('_', 1)</code>で、まず<code>From_PostgreSQL_01</code>という文字列は<code>From_PostgreSQL</code>と<code>01</code>に1回だけ分割されます。そして分割された文字列は配列になるので[0]を指定すると意図通り<code>From_PostgreSQL_01</code>が<code>From_PostgreSQL</code>に代替されます。また<code>find</code>を<code>findall</code>に変えただけで条件に一致する全エレメントをファイル内で探してリストにしてくれます。その中でループ処理するだけですね。これがわからなかった時は以前のコードにさらにループをかけたりして失敗していましたが、意外と簡単な解決策があったものです。</p>

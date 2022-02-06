@@ -87,280 +87,280 @@ python
 <p>PostgreSQLの場合は、<code>psycopg2</code>を使います。接続に必要となる情報はホスト名、ポート、DB名、ユーザー名、パスワードです。ただし、モジュールは両方<code>pip</code>からインストールできますが、psycopg2の場合はライブラリー依存性があるのでAmazon Linuxを基準に<code>postgresql-develop</code>をyumからインストールする必要があります。他は触れたことがないのでよくわかりませんが、CentOSも同様かと。psycopg2のインストールに問題が生じたらエラーメッセージを確認して、必要なPosgreSQLのライブラリーをインストールしましょう。</p>
 <p>二つのDBに接続するための手順には少し違いがありますが、接続した後の処理は同じです(本当はSQL文の文法も少し違うようですが…)。それではOracleとPostgreSQLの接続方法と接続以後の処理を分けて説明しましょう。</p>
 <h3 id=接続oracleの場合>接続(Oracleの場合)</h3>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=kn>import</span> <span class=nn>cx_Oracle</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#ff79c6>import</span> cx_Oracle
 
-<span class=n>tns</span> <span class=o>=</span> <span class=n>cx_Oracle</span><span class=o>.</span><span class=n>makedsn</span><span class=p>(</span><span class=s1>&#39;ホスト名&#39;</span><span class=p>,</span> <span class=s1>&#39;ポート&#39;</span><span class=p>,</span> <span class=s1>&#39;サービス名&#39;</span><span class=p>)</span>
-<span class=n>connect</span> <span class=o>=</span> <span class=n>cx_Oracle</span><span class=o>.</span><span class=n>connect</span><span class=p>(</span><span class=s1>&#39;ユーザー名&#39;</span><span class=p>,</span> <span class=s1>&#39;パスワード&#39;</span><span class=p>,</span> <span class=n>tns</span><span class=p>)</span>
+tns <span style=color:#ff79c6>=</span> cx_Oracle<span style=color:#ff79c6>.</span>makedsn(<span style=color:#f1fa8c>&#39;ホスト名&#39;</span>, <span style=color:#f1fa8c>&#39;ポート&#39;</span>, <span style=color:#f1fa8c>&#39;サービス名&#39;</span>)
+connect <span style=color:#ff79c6>=</span> cx_Oracle<span style=color:#ff79c6>.</span>connect(<span style=color:#f1fa8c>&#39;ユーザー名&#39;</span>, <span style=color:#f1fa8c>&#39;パスワード&#39;</span>, tns)
 </code></pre></div><p>cx_Oracleの<code>makedsn</code>にホスト名、ポート、サービス名を入れます。そしてその情報を<code>connect</code>を使う際にユーザー名、パスワードと共に入れます。これでOracleの接続設定は終わりです。</p>
 <h3 id=接続postgresqlの場合>接続(PostgreSQLの場合)</h3>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=kn>import</span> <span class=nn>psycopg2</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#ff79c6>import</span> psycopg2
 
-<span class=n>connect</span> <span class=o>=</span> <span class=n>psycopg2</span><span class=o>.</span><span class=n>connect</span><span class=p>(</span><span class=s1>&#39;host=&#39;</span> <span class=o>+</span> <span class=s1>&#39;ホスト名&#39;</span> <span class=o>+</span> <span class=s1>&#39; port=&#39;</span> <span class=o>+</span> <span class=s1>&#39;ポート&#39;</span> <span class=o>+</span> <span class=s1>&#39; dbname=&#39;</span> <span class=o>+</span> <span class=s1>&#39;DB名&#39;</span> <span class=o>+</span> <span class=s1>&#39; user=&#39;</span> <span class=o>+</span> <span class=s1>&#39;ユーザー名&#39;</span> <span class=o>+</span> <span class=s1>&#39; password=&#39;</span> <span class=o>+</span> <span class=s1>&#39;パスワード&#39;</span><span class=p>)</span>
+connect <span style=color:#ff79c6>=</span> psycopg2<span style=color:#ff79c6>.</span>connect(<span style=color:#f1fa8c>&#39;host=&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;ホスト名&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; port=&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;ポート&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; dbname=&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;DB名&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; user=&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;ユーザー名&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; password=&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;パスワード&#39;</span>)
 </code></pre></div><p>PostgreSQLの場合はより簡単です。Linuxで使うコマンドラインツールの<code>psql</code>みたいに、接続に必要な情報を文字列として並び<code>connect</code>すれば終了です。</p>
 <h3 id=db処理の共通部分>DB処理の共通部分</h3>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># 実際DBに接続してカーソルを取得</span>
-<span class=n>cursor</span> <span class=o>=</span> <span class=n>connect</span><span class=o>.</span><span class=n>cursor</span><span class=p>()</span>
-<span class=c1># カーソルからSQL文の実行</span>
-<span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=s1>&#39;発行したいSQL文&#39;</span><span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># 実際DBに接続してカーソルを取得</span>
+cursor <span style=color:#ff79c6>=</span> connect<span style=color:#ff79c6>.</span>cursor()
+<span style=color:#6272a4># カーソルからSQL文の実行</span>
+cursor<span style=color:#ff79c6>.</span>execute(<span style=color:#f1fa8c>&#39;発行したいSQL文&#39;</span>)
 
-<span class=c1># SQL文を実行した結果を取得</span>
-<span class=c1># 一件だけの結果が必要な時</span>
-<span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchone</span><span class=p>()</span>
-<span class=c1># 結果を1000件づつフィッチして処理したい場合</span>
-<span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchmany</span><span class=p>(</span><span class=mi>1000</span><span class=p>)</span>
-<span class=c1># 結果を全部フェッチしたい場合</span>
-<span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchall</span><span class=p>()</span>
+<span style=color:#6272a4># SQL文を実行した結果を取得</span>
+<span style=color:#6272a4># 一件だけの結果が必要な時</span>
+result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchone()
+<span style=color:#6272a4># 結果を1000件づつフィッチして処理したい場合</span>
+result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchmany(<span style=color:#bd93f9>1000</span>)
+<span style=color:#6272a4># 結果を全部フェッチしたい場合</span>
+result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchall()
 
-<span class=c1># カーソルをクローズする</span>
-<span class=n>cursor</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-<span class=c1># SQL文をコミットする(INSERT/UPDATEなどの変動)</span>
-<span class=n>connect</span><span class=o>.</span><span class=n>commit</span><span class=p>()</span>
-<span class=c1># コネクションを切る</span>
-<span class=n>connect</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+<span style=color:#6272a4># カーソルをクローズする</span>
+cursor<span style=color:#ff79c6>.</span>close()
+<span style=color:#6272a4># SQL文をコミットする(INSERT/UPDATEなどの変動)</span>
+connect<span style=color:#ff79c6>.</span>commit()
+<span style=color:#6272a4># コネクションを切る</span>
+connect<span style=color:#ff79c6>.</span>close()
 </code></pre></div><p>接続したあとはカーソルを取得し、そのカーソルでSQL文を発行します。SQL文の実行結果を取得するには<code>fecth</code>を使いますが、処理したい結果の規模によって三つの選択肢があります。あと、大量のデータを処理したい場合はなるべく<code>fetchall</code>よりは<code>fetchmany</code>でフェッチサイズを指定して使う方が良いらしいです。データが多すぎると性能に影響が出ますので。フェッチまで終わって取得した結果は、Pythonでは一つのレコードを配列にして、それらを集めたリストになります。コードで言いますと以下のような形となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># &#39;SELECT column_1, column2 FROM TABLE&#39;の場合</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># &#39;SELECT column_1, column2 FROM TABLE&#39;の場合</span>
 
-<span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchmany</span><span class=p>(</span><span class=mi>1000</span><span class=p>)</span>
+result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchmany(<span style=color:#bd93f9>1000</span>)
 
-<span class=k>for</span> <span class=n>row</span> <span class=ow>in</span> <span class=n>result</span><span class=p>:</span> <span class=c1># 結果は1000件のリストとなる</span>
-    <span class=nb>print</span> <span class=n>row</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=c1># column_1の内容が出力される</span>
-    <span class=nb>print</span> <span class=n>row</span> <span class=c1># column_2の内容が出力される</span>
+<span style=color:#ff79c6>for</span> row <span style=color:#ff79c6>in</span> result: <span style=color:#6272a4># 結果は1000件のリストとなる</span>
+    <span style=color:#8be9fd;font-style:italic>print</span> row[<span style=color:#bd93f9>0</span>] <span style=color:#6272a4># column_1の内容が出力される</span>
+    <span style=color:#8be9fd;font-style:italic>print</span> row <span style=color:#6272a4># column_2の内容が出力される</span>
 
 </code></pre></div><p>これでDBの連動の基礎は終わりです。それでは早速、スクリプトのコードをいかに公開します。</p>
 <h2 id=画像ファイルをs3へアップロードするコード>画像ファイルをS3へアップロードするコード</h2>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># -*- coding: UTF-8 -*-</span>
-<span class=kn>import</span> <span class=nn>os</span><span class=o>,</span> <span class=nn>sys</span><span class=o>,</span> <span class=nn>cx_Oracle</span><span class=o>,</span> <span class=nn>psycopg2</span><span class=o>,</span> <span class=nn>json</span><span class=o>,</span> <span class=nn>boto3</span><span class=o>,</span> <span class=nn>datetime</span><span class=o>,</span> <span class=nn>shutil</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># -*- coding: UTF-8 -*-</span>
+<span style=color:#ff79c6>import</span> os<span style=color:#ff79c6>,</span> sys<span style=color:#ff79c6>,</span> cx_Oracle<span style=color:#ff79c6>,</span> psycopg2<span style=color:#ff79c6>,</span> json<span style=color:#ff79c6>,</span> boto3<span style=color:#ff79c6>,</span> datetime<span style=color:#ff79c6>,</span> shutil
 
-<span class=n>function_code</span> <span class=o>=</span> <span class=s1>&#39;引数で受け取る&#39;</span>
+function_code <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;引数で受け取る&#39;</span>
 
-<span class=c1># 以下、DB環境情報(DBConnection.confから読み込む)</span>
-<span class=n>HOST_POST</span> <span class=o>=</span> <span class=s1>&#39;PostgreSQLの接続ホスト名&#39;</span>
-<span class=n>PORT_POST</span> <span class=o>=</span> <span class=s1>&#39;PostgreSQLの接続ポート&#39;</span>
-<span class=n>DB_NAME_POST</span> <span class=o>=</span> <span class=s1>&#39;PostgreSQLのDM名&#39;</span>
-<span class=n>USER_POST</span> <span class=o>=</span> <span class=s1>&#39;PostgreSQLのユーザ名&#39;</span>
-<span class=n>PWD_POST</span> <span class=o>=</span> <span class=s1>&#39;PostgreSQLのパスワード&#39;</span>
-<span class=n>HOST_ORAC</span> <span class=o>=</span> <span class=s1>&#39;Oracleの接続ホスト名&#39;</span>
-<span class=n>PORT_ORAC</span> <span class=o>=</span> <span class=s1>&#39;Oracleの接続ポート&#39;</span>
-<span class=n>SERVICE_NAME</span> <span class=o>=</span> <span class=s1>&#39;Oracleのサービス名&#39;</span>
-<span class=n>USER_ORAC</span> <span class=o>=</span> <span class=s1>&#39;Oracleのスキーマ名&#39;</span>
-<span class=n>PWD_ORAC</span> <span class=o>=</span> <span class=s1>&#39;Oracleのパスワード&#39;</span>
+<span style=color:#6272a4># 以下、DB環境情報(DBConnection.confから読み込む)</span>
+HOST_POST <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;PostgreSQLの接続ホスト名&#39;</span>
+PORT_POST <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;PostgreSQLの接続ポート&#39;</span>
+DB_NAME_POST <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;PostgreSQLのDM名&#39;</span>
+USER_POST <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;PostgreSQLのユーザ名&#39;</span>
+PWD_POST <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;PostgreSQLのパスワード&#39;</span>
+HOST_ORAC <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Oracleの接続ホスト名&#39;</span>
+PORT_ORAC <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Oracleの接続ポート&#39;</span>
+SERVICE_NAME <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Oracleのサービス名&#39;</span>
+USER_ORAC <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Oracleのスキーマ名&#39;</span>
+PWD_ORAC <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Oracleのパスワード&#39;</span>
 
-<span class=c1># コマンドライン引数</span>
-<span class=n>args</span> <span class=o>=</span> <span class=n>sys</span><span class=o>.</span><span class=n>argv</span>
+<span style=color:#6272a4># コマンドライン引数</span>
+args <span style=color:#ff79c6>=</span> sys<span style=color:#ff79c6>.</span>argv
 
-<span class=c1># 環境関連変数</span>
-<span class=n>imageFolder</span> <span class=o>=</span> <span class=s1>&#39;/tmp/images&#39;</span>
+<span style=color:#6272a4># 環境関連変数</span>
+imageFolder <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;/tmp/images&#39;</span>
 
-<span class=c1># 差分連携のための前処理</span>
-<span class=k>def</span> <span class=nf>GetProcdate</span><span class=p>(</span><span class=n>args</span><span class=p>):</span>
-    <span class=k>global</span> <span class=n>function_code</span>
-    <span class=n>function_code</span> <span class=o>=</span> <span class=n>args</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
+<span style=color:#6272a4># 差分連携のための前処理</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>GetProcdate</span>(args):
+    <span style=color:#ff79c6>global</span> function_code
+    function_code <span style=color:#ff79c6>=</span> args[<span style=color:#bd93f9>1</span>]
  
-    <span class=k>try</span><span class=p>:</span>
-        <span class=c1># PostgreSQL接続</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Starting Job. The function Code is: &#39;</span> <span class=o>+</span> <span class=n>function_code</span><span class=p>)</span>
-        <span class=n>connect</span> <span class=o>=</span> <span class=n>psycopg2</span><span class=o>.</span><span class=n>connect</span><span class=p>(</span><span class=s1>&#39;host=&#39;</span> <span class=o>+</span> <span class=n>HOST_POST</span> <span class=o>+</span> <span class=s1>&#39; port=&#39;</span> <span class=o>+</span> <span class=n>PORT_POST</span> <span class=o>+</span> <span class=s1>&#39; dbname=&#39;</span> <span class=o>+</span> <span class=n>DB_NAME_POST</span> <span class=o>+</span> <span class=s1>&#39; user=&#39;</span> <span class=o>+</span> <span class=n>USER_POST</span> <span class=o>+</span> <span class=s1>&#39; password=&#39;</span> <span class=o>+</span> <span class=n>PWD_POST</span><span class=p>)</span>
-        <span class=n>cursor</span> <span class=o>=</span> <span class=n>connect</span><span class=o>.</span><span class=n>cursor</span><span class=p>()</span>
-    <span class=k>except</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Unable to connect PostgreSQL. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+    <span style=color:#ff79c6>try</span>:
+        <span style=color:#6272a4># PostgreSQL接続</span>
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Starting Job. The function Code is: &#39;</span> <span style=color:#ff79c6>+</span> function_code)
+        connect <span style=color:#ff79c6>=</span> psycopg2<span style=color:#ff79c6>.</span>connect(<span style=color:#f1fa8c>&#39;host=&#39;</span> <span style=color:#ff79c6>+</span> HOST_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; port=&#39;</span> <span style=color:#ff79c6>+</span> PORT_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; dbname=&#39;</span> <span style=color:#ff79c6>+</span> DB_NAME_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; user=&#39;</span> <span style=color:#ff79c6>+</span> USER_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; password=&#39;</span> <span style=color:#ff79c6>+</span> PWD_POST)
+        cursor <span style=color:#ff79c6>=</span> connect<span style=color:#ff79c6>.</span>cursor()
+    <span style=color:#ff79c6>except</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Unable to connect PostgreSQL. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-    <span class=n>selectSQL</span> <span class=o>=</span> <span class=s2>&#34;SELECT last_date FROM date_table WHERE function_code=&#39;</span><span class=si>%s</span><span class=s2>&#39;&#34;</span> <span class=o>%</span> <span class=p>(</span><span class=n>function_code</span><span class=p>,)</span>
-    <span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>selectSQL</span><span class=p>)</span>
-    <span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchone</span><span class=p>()</span>
+    selectSQL <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;SELECT last_date FROM date_table WHERE function_code=&#39;</span><span style=color:#f1fa8c>%s</span><span style=color:#f1fa8c>&#39;&#34;</span> <span style=color:#ff79c6>%</span> (function_code,)
+    cursor<span style=color:#ff79c6>.</span>execute(selectSQL)
+    result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchone()
 
-    <span class=c1># 結果があった場合最終更新日を変数として保存</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>result</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>):</span>
-        <span class=n>last_date</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
-    <span class=k>else</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; No data matches with &#39;</span> <span class=o>+</span> <span class=n>function_code</span> <span class=o>+</span> <span class=s1>&#39;. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
+    <span style=color:#6272a4># 結果があった場合最終更新日を変数として保存</span>
+    <span style=color:#ff79c6>if</span> (result <span style=color:#ff79c6>is</span> <span style=color:#ff79c6>not</span> <span style=color:#ff79c6>None</span>):
+        last_date <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>0</span>]
+    <span style=color:#ff79c6>else</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; No data matches with &#39;</span> <span style=color:#ff79c6>+</span> function_code <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>1</span>)
 
-    <span class=n>cursor</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-    <span class=n>connect</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
+    cursor<span style=color:#ff79c6>.</span>close()
+    connect<span style=color:#ff79c6>.</span>close()
 
-    <span class=c1># 次の処理へ移行</span>
-    <span class=n>GetImageFromTable</span><span class=p>(</span><span class=n>last_date</span><span class=p>)</span>
+    <span style=color:#6272a4># 次の処理へ移行</span>
+    GetImageFromTable(last_date)
 
-<span class=c1># OracleにSQL文を発行してファイルを読み込み保存</span>
-<span class=k>def</span> <span class=nf>GetImageFromTable</span><span class=p>(</span><span class=n>last_date</span><span class=p>):</span>
-    <span class=k>global</span> <span class=n>imageFolder</span>
-    <span class=k>try</span><span class=p>:</span>
-        <span class=c1># Oracle接続開始</span>
-        <span class=n>tns</span> <span class=o>=</span> <span class=n>cx_Oracle</span><span class=o>.</span><span class=n>makedsn</span><span class=p>(</span><span class=n>HOST_ORAC</span><span class=p>,</span> <span class=n>PORT_ORAC</span><span class=p>,</span> <span class=n>SERVICE_NAME</span><span class=p>)</span>
-        <span class=n>connect</span> <span class=o>=</span> <span class=n>cx_Oracle</span><span class=o>.</span><span class=n>connect</span><span class=p>(</span><span class=n>USER_ORAC</span><span class=p>,</span> <span class=n>PWD_ORAC</span><span class=p>,</span> <span class=n>tns</span><span class=p>)</span>
-        <span class=n>cursor</span> <span class=o>=</span> <span class=n>connect</span><span class=o>.</span><span class=n>cursor</span><span class=p>()</span>
-    <span class=k>except</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Unable to connect Oracle DB. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+<span style=color:#6272a4># OracleにSQL文を発行してファイルを読み込み保存</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>GetImageFromTable</span>(last_date):
+    <span style=color:#ff79c6>global</span> imageFolder
+    <span style=color:#ff79c6>try</span>:
+        <span style=color:#6272a4># Oracle接続開始</span>
+        tns <span style=color:#ff79c6>=</span> cx_Oracle<span style=color:#ff79c6>.</span>makedsn(HOST_ORAC, PORT_ORAC, SERVICE_NAME)
+        connect <span style=color:#ff79c6>=</span> cx_Oracle<span style=color:#ff79c6>.</span>connect(USER_ORAC, PWD_ORAC, tns)
+        cursor <span style=color:#ff79c6>=</span> connect<span style=color:#ff79c6>.</span>cursor()
+    <span style=color:#ff79c6>except</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Unable to connect Oracle DB. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-    <span class=c1># Oracleのテーブルから商品画像ファイル取得</span>
-    <span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=s2>&#34;SELECT image_data, image_name FROM WHERE &gt;=(:last_date)&#34;</span><span class=p>,</span> <span class=p>{</span><span class=s1>&#39;last_date&#39;</span><span class=p>:</span> <span class=n>last_date</span><span class=p>})</span>
+    <span style=color:#6272a4># Oracleのテーブルから商品画像ファイル取得</span>
+    cursor<span style=color:#ff79c6>.</span>execute(<span style=color:#f1fa8c>&#34;SELECT image_data, image_name FROM WHERE &gt;=(:last_date)&#34;</span>, {<span style=color:#f1fa8c>&#39;last_date&#39;</span>: last_date})
 
-    <span class=c1># フォルダがなかったら作成・あったら削除</span>
-    <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>):</span>
-        <span class=n>shutil</span><span class=o>.</span><span class=n>rmtree</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>)</span>
-    <span class=k>else</span><span class=p>:</span>
-        <span class=n>os</span><span class=o>.</span><span class=n>mkdir</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>)</span>
+    <span style=color:#6272a4># フォルダがなかったら作成・あったら削除</span>
+    <span style=color:#ff79c6>if</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>exists(imageFolder):
+        shutil<span style=color:#ff79c6>.</span>rmtree(imageFolder)
+    <span style=color:#ff79c6>else</span>:
+        os<span style=color:#ff79c6>.</span>mkdir(imageFolder)
 
-    <span class=c1># 1000件づつ取り出し</span>
-    <span class=k>while</span> <span class=kc>True</span><span class=p>:</span>
-        <span class=n>rows</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchmany</span><span class=p>(</span><span class=mi>1000</span><span class=p>)</span>
+    <span style=color:#6272a4># 1000件づつ取り出し</span>
+    <span style=color:#ff79c6>while</span> <span style=color:#ff79c6>True</span>:
+        rows <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchmany(<span style=color:#bd93f9>1000</span>)
         
-        <span class=c1># 結果がない場合はループから出る</span>
-        <span class=k>if</span> <span class=nb>len</span><span class=p>(</span><span class=n>rows</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>:</span>
-            <span class=k>break</span>
+        <span style=color:#6272a4># 結果がない場合はループから出る</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#8be9fd;font-style:italic>len</span>(rows) <span style=color:#ff79c6>==</span> <span style=color:#bd93f9>0</span>:
+            <span style=color:#ff79c6>break</span>
 
-        <span class=c1># 画像ファイル置き場に画像ファイル保存(イメージネーム.jpg)</span>
-        <span class=k>for</span> <span class=n>image</span> <span class=ow>in</span> <span class=n>rows</span><span class=p>:</span>
-            <span class=n>fileNameS</span> <span class=o>=</span> <span class=n>imageFolder</span> <span class=o>+</span> <span class=s1>&#39;/&#39;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>image</span><span class=p>[</span><span class=mi>1</span><span class=p>])</span> <span class=o>+</span> <span class=s1>&#39;.jpg&#39;</span>
-            <span class=n>imageFile</span> <span class=o>=</span> <span class=nb>open</span><span class=p>(</span><span class=n>fileNameS</span><span class=p>,</span> <span class=s1>&#39;wb+&#39;</span><span class=p>)</span>
-            <span class=n>imageFile</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>image</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span><span class=o>.</span><span class=n>read</span><span class=p>())</span>
-            <span class=n>imageFile</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-            <span class=n>counter</span> <span class=o>=</span> <span class=n>counter</span> <span class=o>+</span> <span class=mi>1</span>
+        <span style=color:#6272a4># 画像ファイル置き場に画像ファイル保存(イメージネーム.jpg)</span>
+        <span style=color:#ff79c6>for</span> image <span style=color:#ff79c6>in</span> rows:
+            fileNameS <span style=color:#ff79c6>=</span> imageFolder <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#8be9fd;font-style:italic>str</span>(image[<span style=color:#bd93f9>1</span>]) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;.jpg&#39;</span>
+            imageFile <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>open</span>(fileNameS, <span style=color:#f1fa8c>&#39;wb+&#39;</span>)
+            imageFile<span style=color:#ff79c6>.</span>write(image[<span style=color:#bd93f9>0</span>]<span style=color:#ff79c6>.</span>read())
+            imageFile<span style=color:#ff79c6>.</span>close()
+            counter <span style=color:#ff79c6>=</span> counter <span style=color:#ff79c6>+</span> <span style=color:#bd93f9>1</span>
 
-    <span class=c1># 保存されたファイルの数をカウント</span>
-    <span class=n>fileCount</span> <span class=o>=</span> <span class=nb>len</span><span class=p>([</span><span class=n>name</span> <span class=k>for</span> <span class=n>name</span> <span class=ow>in</span> <span class=n>os</span><span class=o>.</span><span class=n>listdir</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>)</span> <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>,</span> <span class=n>name</span><span class=p>))])</span>
-    <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; As result: &#39;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>fileCount</span><span class=p>)</span> <span class=o>+</span> <span class=s1>&#39; files were written.&#39;</span><span class=p>)</span>
-    <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Finished job. Closing connection.&#39;</span><span class=p>)</span>
-    <span class=n>cursor</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-    <span class=n>connect</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-    <span class=n>FileUploadToS3</span><span class=p>()</span>
+    <span style=color:#6272a4># 保存されたファイルの数をカウント</span>
+    fileCount <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>len</span>([name <span style=color:#ff79c6>for</span> name <span style=color:#ff79c6>in</span> os<span style=color:#ff79c6>.</span>listdir(imageFolder) <span style=color:#ff79c6>if</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>isfile(os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>join(imageFolder, name))])
+    <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; As result: &#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#8be9fd;font-style:italic>str</span>(fileCount) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; files were written.&#39;</span>)
+    <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Finished job. Closing connection.&#39;</span>)
+    cursor<span style=color:#ff79c6>.</span>close()
+    connect<span style=color:#ff79c6>.</span>close()
+    FileUploadToS3()
 
-<span class=c1># S3へ画像ファイルを格納</span>
-<span class=k>def</span> <span class=nf>FileUploadToS3</span><span class=p>():</span>
-    <span class=c1># グローバル変数取得</span>
-    <span class=k>global</span> <span class=n>imageFolder</span>
-    <span class=k>global</span> <span class=n>function_code</span>
+<span style=color:#6272a4># S3へ画像ファイルを格納</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>FileUploadToS3</span>():
+    <span style=color:#6272a4># グローバル変数取得</span>
+    <span style=color:#ff79c6>global</span> imageFolder
+    <span style=color:#ff79c6>global</span> function_code
 
-    <span class=c1># ファイル名リスト(イメージネーム)取得</span>
-    <span class=n>files</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>listdir</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>)</span>
-    <span class=n>item_cd_list</span> <span class=o>=</span> <span class=p>[</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>splitext</span><span class=p>(</span><span class=n>f</span><span class=p>)[</span><span class=mi>0</span><span class=p>]</span> <span class=k>for</span> <span class=n>f</span> <span class=ow>in</span> <span class=n>files</span> <span class=k>if</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>isfile</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>imageFolder</span><span class=p>,</span> <span class=n>f</span><span class=p>))]</span>
+    <span style=color:#6272a4># ファイル名リスト(イメージネーム)取得</span>
+    files <span style=color:#ff79c6>=</span> os<span style=color:#ff79c6>.</span>listdir(imageFolder)
+    item_cd_list <span style=color:#ff79c6>=</span> [os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>splitext(f)[<span style=color:#bd93f9>0</span>] <span style=color:#ff79c6>for</span> f <span style=color:#ff79c6>in</span> files <span style=color:#ff79c6>if</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>isfile(os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>join(imageFolder, f))]
 
-    <span class=k>try</span><span class=p>:</span>
-        <span class=c1># PostgreSQL接続</span>
-        <span class=n>connect</span> <span class=o>=</span> <span class=n>psycopg2</span><span class=o>.</span><span class=n>connect</span><span class=p>(</span><span class=s1>&#39;host=&#39;</span> <span class=o>+</span> <span class=n>HOST_POST</span> <span class=o>+</span> <span class=s1>&#39; port=&#39;</span> <span class=o>+</span> <span class=n>PORT_POST</span> <span class=o>+</span> <span class=s1>&#39; dbname=&#39;</span> <span class=o>+</span> <span class=n>DB_NAME_POST</span> <span class=o>+</span> <span class=s1>&#39; user=&#39;</span> <span class=o>+</span> <span class=n>USER_POST</span> <span class=o>+</span> <span class=s1>&#39; password=&#39;</span> <span class=o>+</span> <span class=n>PWD_POST</span><span class=p>)</span>
-        <span class=n>cursor</span> <span class=o>=</span> <span class=n>connect</span><span class=o>.</span><span class=n>cursor</span><span class=p>()</span>
-    <span class=k>except</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Unable to connect PostgreSQL. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+    <span style=color:#ff79c6>try</span>:
+        <span style=color:#6272a4># PostgreSQL接続</span>
+        connect <span style=color:#ff79c6>=</span> psycopg2<span style=color:#ff79c6>.</span>connect(<span style=color:#f1fa8c>&#39;host=&#39;</span> <span style=color:#ff79c6>+</span> HOST_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; port=&#39;</span> <span style=color:#ff79c6>+</span> PORT_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; dbname=&#39;</span> <span style=color:#ff79c6>+</span> DB_NAME_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; user=&#39;</span> <span style=color:#ff79c6>+</span> USER_POST <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; password=&#39;</span> <span style=color:#ff79c6>+</span> PWD_POST)
+        cursor <span style=color:#ff79c6>=</span> connect<span style=color:#ff79c6>.</span>cursor()
+    <span style=color:#ff79c6>except</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Unable to connect PostgreSQL. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-    <span class=c1># 結果確認用のファイル数カウンター</span>
-    <span class=n>fileCount</span> <span class=o>=</span> <span class=mi>0</span>
+    <span style=color:#6272a4># 結果確認用のファイル数カウンター</span>
+    fileCount <span style=color:#ff79c6>=</span> <span style=color:#bd93f9>0</span>
 
-    <span class=k>for</span> <span class=n>item_cd</span> <span class=ow>in</span> <span class=n>item_cd_list</span><span class=p>:</span>
-        <span class=c1># アイテム管理用テーブルからコードと一致するレコード取得⇒ファイル格納パス用</span>
-        <span class=n>selectSQL1</span> <span class=o>=</span> <span class=s2>&#34;SELECT file_path1, file_path2, file_path3 FROM item_table WHERE item_cd=&#39;</span><span class=si>%s</span><span class=s2>&#39;&#34;</span> <span class=o>%</span> <span class=p>(</span><span class=nb>str</span><span class=p>(</span><span class=n>item_cd</span><span class=p>),)</span>
-        <span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>selectSQL1</span><span class=p>)</span>
-        <span class=n>resultMaster</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchone</span><span class=p>()</span>
+    <span style=color:#ff79c6>for</span> item_cd <span style=color:#ff79c6>in</span> item_cd_list:
+        <span style=color:#6272a4># アイテム管理用テーブルからコードと一致するレコード取得⇒ファイル格納パス用</span>
+        selectSQL1 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;SELECT file_path1, file_path2, file_path3 FROM item_table WHERE item_cd=&#39;</span><span style=color:#f1fa8c>%s</span><span style=color:#f1fa8c>&#39;&#34;</span> <span style=color:#ff79c6>%</span> (<span style=color:#8be9fd;font-style:italic>str</span>(item_cd),)
+        cursor<span style=color:#ff79c6>.</span>execute(selectSQL1)
+        resultMaster <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchone()
 
-        <span class=c1># 一致するレコードがなかった場合でも処理続行</span>
-        <span class=k>if</span> <span class=n>resultMaster</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Result was 0. continue job.&#39;</span><span class=p>)</span>
-            <span class=k>continue</span>
+        <span style=color:#6272a4># 一致するレコードがなかった場合でも処理続行</span>
+        <span style=color:#ff79c6>if</span> resultMaster <span style=color:#ff79c6>is</span> <span style=color:#ff79c6>None</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Result was 0. continue job.&#39;</span>)
+            <span style=color:#ff79c6>continue</span>
 
-        <span class=c1># 結果から必要な情報を取得し変数に保存</span>
-        <span class=n>image_id</span> <span class=o>=</span> <span class=nb>str</span><span class=p>(</span><span class=n>resultMaster</span><span class=p>[</span><span class=mi>2</span><span class=p>])</span>
-        <span class=n>path</span> <span class=o>=</span> <span class=nb>str</span><span class=p>(</span><span class=n>resultMaster</span><span class=p>[</span><span class=mi>0</span><span class=p>])</span> <span class=o>+</span> <span class=s1>&#39;/&#39;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>resultMaster</span><span class=p>[</span><span class=mi>1</span><span class=p>])</span> <span class=o>+</span> <span class=s1>&#39;/&#39;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>resultMaster</span><span class=p>[</span><span class=mi>2</span><span class=p>])</span> <span class=o>+</span> <span class=s1>&#39;/&#39;</span>
+        <span style=color:#6272a4># 結果から必要な情報を取得し変数に保存</span>
+        image_id <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>str</span>(resultMaster[<span style=color:#bd93f9>2</span>])
+        path <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>str</span>(resultMaster[<span style=color:#bd93f9>0</span>]) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#8be9fd;font-style:italic>str</span>(resultMaster[<span style=color:#bd93f9>1</span>]) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/&#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#8be9fd;font-style:italic>str</span>(resultMaster[<span style=color:#bd93f9>2</span>]) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/&#39;</span>
 
-        <span class=c1># アイテムイメージ管理用テーブルからコードと一致するレコード取得⇒分岐処理</span>
-        <span class=n>selectSQL2</span> <span class=o>=</span> <span class=s2>&#34;SELECT * FROM WHERE image_table image_id=&#39;</span><span class=si>%s</span><span class=s2>&#39;;&#34;</span> <span class=o>%</span> <span class=p>(</span><span class=n>image_id</span><span class=p>,)</span>
-        <span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>selectSQL2</span><span class=p>)</span>
-        <span class=n>result</span> <span class=o>=</span> <span class=n>cursor</span><span class=o>.</span><span class=n>fetchone</span><span class=p>()</span>
-        <span class=n>uploadToS3</span><span class=p>(</span><span class=n>item_cd</span><span class=p>,</span> <span class=n>path</span><span class=p>)</span>
-        <span class=n>fileCount</span> <span class=o>=</span> <span class=n>fileCount</span> <span class=o>+</span> <span class=mi>1</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Processing file upload.&#39;</span><span class=p>)</span>
+        <span style=color:#6272a4># アイテムイメージ管理用テーブルからコードと一致するレコード取得⇒分岐処理</span>
+        selectSQL2 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;SELECT * FROM WHERE image_table image_id=&#39;</span><span style=color:#f1fa8c>%s</span><span style=color:#f1fa8c>&#39;;&#34;</span> <span style=color:#ff79c6>%</span> (image_id,)
+        cursor<span style=color:#ff79c6>.</span>execute(selectSQL2)
+        result <span style=color:#ff79c6>=</span> cursor<span style=color:#ff79c6>.</span>fetchone()
+        uploadToS3(item_cd, path)
+        fileCount <span style=color:#ff79c6>=</span> fileCount <span style=color:#ff79c6>+</span> <span style=color:#bd93f9>1</span>
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Processing file upload.&#39;</span>)
 
-    <span class=c1># 作業完了日時を更新</span>
-    <span class=n>updateProcSQL</span> <span class=o>=</span> <span class=s2>&#34;UPDATE date_table SET last_date = CURRENT_TIMESTAMP WHERE function_code=&#39;</span><span class=si>%s</span><span class=s2>&#39;&#34;</span> <span class=o>%</span> <span class=p>(</span><span class=n>function_code</span><span class=p>,)</span>
-    <span class=n>cursor</span><span class=o>.</span><span class=n>execute</span><span class=p>(</span><span class=n>updateProcSQL</span><span class=p>)</span>
+    <span style=color:#6272a4># 作業完了日時を更新</span>
+    updateProcSQL <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;UPDATE date_table SET last_date = CURRENT_TIMESTAMP WHERE function_code=&#39;</span><span style=color:#f1fa8c>%s</span><span style=color:#f1fa8c>&#39;&#34;</span> <span style=color:#ff79c6>%</span> (function_code,)
+    cursor<span style=color:#ff79c6>.</span>execute(updateProcSQL)
 
-    <span class=c1># 作業終了</span>
-    <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; As result: &#39;</span> <span class=o>+</span> <span class=nb>str</span><span class=p>(</span><span class=n>fileCount</span><span class=p>)</span> <span class=o>+</span> <span class=s1>&#39; files were uploaded.&#39;</span><span class=p>)</span>
-    <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Finished job. Closing connection and quit.&#39;</span><span class=p>)</span>
-    <span class=n>cursor</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-    <span class=n>connect</span><span class=o>.</span><span class=n>commit</span><span class=p>()</span>
-    <span class=n>connect</span><span class=o>.</span><span class=n>close</span><span class=p>()</span>
-    <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
+    <span style=color:#6272a4># 作業終了</span>
+    <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; As result: &#39;</span> <span style=color:#ff79c6>+</span> <span style=color:#8be9fd;font-style:italic>str</span>(fileCount) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; files were uploaded.&#39;</span>)
+    <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Finished job. Closing connection and quit.&#39;</span>)
+    cursor<span style=color:#ff79c6>.</span>close()
+    connect<span style=color:#ff79c6>.</span>commit()
+    connect<span style=color:#ff79c6>.</span>close()
+    sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>0</span>)
 
-<span class=c1># S3へ画像ファイルをアップロード</span>
-<span class=k>def</span> <span class=nf>uploadToS3</span><span class=p>(</span><span class=n>item_cd</span><span class=p>,</span> <span class=n>path</span><span class=p>):</span>
-    <span class=k>global</span> <span class=n>imageFolder</span>
-    <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Upload image files to AWS S3.&#39;</span><span class=p>)</span>
-    <span class=n>bucket_name</span> <span class=o>=</span> <span class=s1>&#39;image&#39;</span>
-    <span class=n>s3</span> <span class=o>=</span> <span class=n>boto3</span><span class=o>.</span><span class=n>resource</span><span class=p>(</span><span class=s1>&#39;s3&#39;</span><span class=p>)</span>
+<span style=color:#6272a4># S3へ画像ファイルをアップロード</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>uploadToS3</span>(item_cd, path):
+    <span style=color:#ff79c6>global</span> imageFolder
+    <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Upload image files to AWS S3.&#39;</span>)
+    bucket_name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;image&#39;</span>
+    s3 <span style=color:#ff79c6>=</span> boto3<span style=color:#ff79c6>.</span>resource(<span style=color:#f1fa8c>&#39;s3&#39;</span>)
 
-    <span class=k>try</span><span class=p>:</span>
-        <span class=c1># サーバーに保存されたファイルを指定したパスに保存(file_path1/file_path2/file_path3/1_1_YYYYMMDD.jpg)</span>
-        <span class=n>s3</span><span class=o>.</span><span class=n>Bucket</span><span class=p>(</span><span class=n>bucket_name</span><span class=p>)</span><span class=o>.</span><span class=n>upload_file</span><span class=p>(</span><span class=n>imageFolder</span> <span class=o>+</span> <span class=s1>&#39;/&#39;</span> <span class=o>+</span> <span class=n>item_cd</span> <span class=o>+</span> <span class=s1>&#39;.jpg&#39;</span><span class=p>,</span> <span class=n>path</span> <span class=o>+</span> <span class=s1>&#39;/1_1_&#39;</span> <span class=o>+</span> <span class=n>datetime</span><span class=o>.</span><span class=n>datetime</span><span class=o>.</span><span class=n>today</span><span class=p>()</span><span class=o>.</span><span class=n>strftime</span><span class=p>(</span><span class=s1>&#39;%Y%m</span><span class=si>%d</span><span class=s1>%H%M%S&#39;</span><span class=p>)</span> <span class=o>+</span> <span class=s1>&#39;.jpg&#39;</span><span class=p>)</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Image file uploaded. (Item code: &#39;</span> <span class=o>+</span> <span class=n>item_cd</span> <span class=o>+</span> <span class=s1>&#39;)&#39;</span><span class=p>)</span>
-    <span class=k>except</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Unable to upload files. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+    <span style=color:#ff79c6>try</span>:
+        <span style=color:#6272a4># サーバーに保存されたファイルを指定したパスに保存(file_path1/file_path2/file_path3/1_1_YYYYMMDD.jpg)</span>
+        s3<span style=color:#ff79c6>.</span>Bucket(bucket_name)<span style=color:#ff79c6>.</span>upload_file(imageFolder <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/&#39;</span> <span style=color:#ff79c6>+</span> item_cd <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;.jpg&#39;</span>, path <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/1_1_&#39;</span> <span style=color:#ff79c6>+</span> datetime<span style=color:#ff79c6>.</span>datetime<span style=color:#ff79c6>.</span>today()<span style=color:#ff79c6>.</span>strftime(<span style=color:#f1fa8c>&#39;%Y%m</span><span style=color:#f1fa8c>%d</span><span style=color:#f1fa8c>%H%M%S&#39;</span>) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;.jpg&#39;</span>)
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Image file uploaded. (Item code: &#39;</span> <span style=color:#ff79c6>+</span> item_cd <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;)&#39;</span>)
+    <span style=color:#ff79c6>except</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Unable to upload files. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-<span class=c1># コネクション情報を入力ファイルから読み込む</span>
-<span class=k>def</span> <span class=nf>getDBConnection</span><span class=p>():</span>
+<span style=color:#6272a4># コネクション情報を入力ファイルから読み込む</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>getDBConnection</span>():
 
-    <span class=c1># DBConnection接続情報ファイルのパスを取得</span>
-    <span class=n>pwd</span> <span class=o>=</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>dirname</span><span class=p>(</span><span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>abspath</span><span class=p>(</span><span class=vm>__file__</span><span class=p>))</span>
-    <span class=n>dbConnection</span> <span class=o>=</span> <span class=n>pwd</span><span class=o>.</span><span class=n>rsplit</span><span class=p>(</span><span class=s2>&#34;/&#34;</span><span class=p>,</span> <span class=mi>1</span><span class=p>)[</span><span class=mi>0</span><span class=p>]</span> <span class=o>+</span> <span class=s1>&#39;/env/DBConnection.conf&#39;</span>
+    <span style=color:#6272a4># DBConnection接続情報ファイルのパスを取得</span>
+    pwd <span style=color:#ff79c6>=</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>dirname(os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>abspath(__file__))
+    dbConnection <span style=color:#ff79c6>=</span> pwd<span style=color:#ff79c6>.</span>rsplit(<span style=color:#f1fa8c>&#34;/&#34;</span>, <span style=color:#bd93f9>1</span>)[<span style=color:#bd93f9>0</span>] <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;/env/DBConnection.conf&#39;</span>
 
-    <span class=c1># ファイルがない場合異常終了</span>
-    <span class=k>if</span> <span class=p>(</span><span class=ow>not</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>dbConnection</span><span class=p>)):</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Please check DBConnection.conf. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+    <span style=color:#6272a4># ファイルがない場合異常終了</span>
+    <span style=color:#ff79c6>if</span> (<span style=color:#ff79c6>not</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>exists(dbConnection)):
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Please check DBConnection.conf. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-    <span class=c1># ファイルを読み込む</span>
-    <span class=n>connectionInfo</span> <span class=o>=</span> <span class=nb>open</span><span class=p>(</span><span class=n>dbConnection</span><span class=p>,</span> <span class=s1>&#39;r&#39;</span><span class=p>)</span>
-    <span class=n>lines</span> <span class=o>=</span> <span class=n>connectionInfo</span><span class=o>.</span><span class=n>readlines</span><span class=p>()</span>
+    <span style=color:#6272a4># ファイルを読み込む</span>
+    connectionInfo <span style=color:#ff79c6>=</span> <span style=color:#8be9fd;font-style:italic>open</span>(dbConnection, <span style=color:#f1fa8c>&#39;r&#39;</span>)
+    lines <span style=color:#ff79c6>=</span> connectionInfo<span style=color:#ff79c6>.</span>readlines()
 
-    <span class=c1># グローバル変数として保存するための宣言</span>
-    <span class=k>global</span> <span class=n>HOST_POST</span>
-    <span class=k>global</span> <span class=n>PORT_POST</span>
-    <span class=k>global</span> <span class=n>DB_NAME_POST</span>
-    <span class=k>global</span> <span class=n>USER_POST</span>
-    <span class=k>global</span> <span class=n>PWD_POST</span>
-    <span class=k>global</span> <span class=n>HOST_ORAC</span>
-    <span class=k>global</span> <span class=n>PORT_ORAC</span>
-    <span class=k>global</span> <span class=n>SERVICE_NAME</span>
-    <span class=k>global</span> <span class=n>USER_ORAC</span>
-    <span class=k>global</span> <span class=n>PWD_ORAC</span>
+    <span style=color:#6272a4># グローバル変数として保存するための宣言</span>
+    <span style=color:#ff79c6>global</span> HOST_POST
+    <span style=color:#ff79c6>global</span> PORT_POST
+    <span style=color:#ff79c6>global</span> DB_NAME_POST
+    <span style=color:#ff79c6>global</span> USER_POST
+    <span style=color:#ff79c6>global</span> PWD_POST
+    <span style=color:#ff79c6>global</span> HOST_ORAC
+    <span style=color:#ff79c6>global</span> PORT_ORAC
+    <span style=color:#ff79c6>global</span> SERVICE_NAME
+    <span style=color:#ff79c6>global</span> USER_ORAC
+    <span style=color:#ff79c6>global</span> PWD_ORAC
 
-    <span class=c1># 条件と一致するデータがある場合変数に保存</span>
-    <span class=k>for</span> <span class=n>line</span> <span class=ow>in</span> <span class=n>lines</span><span class=p>:</span>
-        <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>line</span><span class=p>)</span> <span class=o>&gt;</span> <span class=mi>1</span> <span class=ow>and</span> <span class=s1>&#39;POSTGRESQL&#39;</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>line</span> <span class=ow>and</span> <span class=s1>&#39;ORACLE&#39;</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>line</span><span class=p>):</span>
-            <span class=n>result</span> <span class=o>=</span> <span class=n>line</span><span class=o>.</span><span class=n>split</span><span class=p>(</span><span class=s1>&#39;=&#39;</span><span class=p>)</span>
-            <span class=k>if</span> <span class=p>(</span><span class=s1>&#39;HOST_POST&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>HOST_POST</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;PORT_POST&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>PORT_POST</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;DB_NAME_POST&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>DB_NAME_POST</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;USER_POST&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>USER_POST</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;PWD_POST&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>PWD_POST</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;HOST_ORAC&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>HOST_ORAC</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;PORT_ORAC&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>PORT_ORAC</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;SERVICE_NAME&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>SERVICE_NAME</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;USER_ORAC&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>USER_ORAC</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
-            <span class=k>elif</span> <span class=p>(</span><span class=s1>&#39;PWD_ORAC&#39;</span> <span class=ow>in</span> <span class=n>result</span><span class=p>[</span><span class=mi>0</span><span class=p>]):</span>
-                <span class=n>PWD_ORAC</span> <span class=o>=</span> <span class=n>result</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span><span class=o>.</span><span class=n>replace</span><span class=p>(</span><span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>,</span><span class=s1>&#39;&#39;</span><span class=p>)</span>
+    <span style=color:#6272a4># 条件と一致するデータがある場合変数に保存</span>
+    <span style=color:#ff79c6>for</span> line <span style=color:#ff79c6>in</span> lines:
+        <span style=color:#ff79c6>if</span> (<span style=color:#8be9fd;font-style:italic>len</span>(line) <span style=color:#ff79c6>&gt;</span> <span style=color:#bd93f9>1</span> <span style=color:#ff79c6>and</span> <span style=color:#f1fa8c>&#39;POSTGRESQL&#39;</span> <span style=color:#ff79c6>not</span> <span style=color:#ff79c6>in</span> line <span style=color:#ff79c6>and</span> <span style=color:#f1fa8c>&#39;ORACLE&#39;</span> <span style=color:#ff79c6>not</span> <span style=color:#ff79c6>in</span> line):
+            result <span style=color:#ff79c6>=</span> line<span style=color:#ff79c6>.</span>split(<span style=color:#f1fa8c>&#39;=&#39;</span>)
+            <span style=color:#ff79c6>if</span> (<span style=color:#f1fa8c>&#39;HOST_POST&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                HOST_POST <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;PORT_POST&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                PORT_POST <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;DB_NAME_POST&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                DB_NAME_POST <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;USER_POST&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                USER_POST <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;PWD_POST&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                PWD_POST <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;HOST_ORAC&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                HOST_ORAC <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;PORT_ORAC&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                PORT_ORAC <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;SERVICE_NAME&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                SERVICE_NAME <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;USER_ORAC&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                USER_ORAC <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
+            <span style=color:#ff79c6>elif</span> (<span style=color:#f1fa8c>&#39;PWD_ORAC&#39;</span> <span style=color:#ff79c6>in</span> result[<span style=color:#bd93f9>0</span>]):
+                PWD_ORAC <span style=color:#ff79c6>=</span> result[<span style=color:#bd93f9>1</span>]<span style=color:#ff79c6>.</span>replace(<span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>,<span style=color:#f1fa8c>&#39;&#39;</span>)
 
-<span class=c1># 起動部</span>
-<span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
-    <span class=n>getDBConnection</span><span class=p>()</span>
+<span style=color:#6272a4># 起動部</span>
+<span style=color:#ff79c6>if</span> __name__ <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;__main__&#39;</span>:
+    getDBConnection()
 
-    <span class=c1># 引数がない場合は異常終了処理分岐</span>
-    <span class=k>if</span> <span class=p>(</span><span class=nb>len</span><span class=p>(</span><span class=n>args</span><span class=p>)</span> <span class=o>&lt;</span> <span class=mi>2</span><span class=p>):</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;&gt;&gt; Please check arguement. quitting.&#39;</span><span class=p>)</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
-    <span class=k>else</span><span class=p>:</span>
-        <span class=n>GetProcdate</span><span class=p>(</span><span class=n>args</span><span class=p>)</span>
+    <span style=color:#6272a4># 引数がない場合は異常終了処理分岐</span>
+    <span style=color:#ff79c6>if</span> (<span style=color:#8be9fd;font-style:italic>len</span>(args) <span style=color:#ff79c6>&lt;</span> <span style=color:#bd93f9>2</span>):
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;&gt;&gt; Please check arguement. quitting.&#39;</span>)
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
+    <span style=color:#ff79c6>else</span>:
+        GetProcdate(args)
 </code></pre></div><p>DBConnectionファイルを読み込む処理に関してはより良い書き方があるのではないかと思います…が、Python特有のGetter/Setterの書き方にあまり慣れてないゆえ、自分が理解できるコードとして書いた結果がこうです。グローバル変数がメソッド内で<code>global</code>宣言をしないと使えないというところがJavaに慣れていた自分にはかなり新鮮でした。逆にグローバル変数をそれぞれ違うメソッドではなるべく使うなという意味もあるような気もします。</p>
 <p>あとはファイル書き込みがテキストだけでなく、バイナリーデータの場合も簡単にかけるということが魅力的ですね。Javaだったらストリームやバッファーをはじめとしてかなり複雑な書き方になっていただろうと思いますが(しかも私はテキストしか扱ったことがないので、同じやり方でバイナリーまでかけるかどうかわかりません)、Pythonではモジュールのインポートもなしで簡単にできますね。もちろん性能を考えるとJavaでかいた方がよかったかも知れませんが、こういう簡単さんがやっぱり生産性の向上に役立つのではないかと思います。</p>
 <p>あと、やはりPythonはLinux親和的な構造が魅力的だと思います。処理の結果を判別するために<code>sys.exit()</code>を設定すると終了コードを簡単に確認できますし、<code>sys.args</code>を通じてコマンドラインから引数を受け入れることもできます。簡単かつLinux親和的なので、Linuxでのスクリプト処理が必要な場合はシェルスクリプトよりもPythonを用いる方が良いのでは、と思うようになりました。性能もシェルより良いところもあるという話もありますしね。</p>

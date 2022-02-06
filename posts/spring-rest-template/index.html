@@ -72,39 +72,39 @@ spring
 <p>RestTemplateを使うと、簡単にget・post・deleteと言ったHttpメソッドのAPIをコールできます。また、リクエストやレスポンスをカスタムして状況に合わせて使うこともできます。例えばカスタムヘッダーを作ったり、サイズの大きいファイルを転送するリクエストを作ることも可能ですね。なので今回はRestTemplateを利用し、ファイルをアップロードするとそのファイルになんらかの処理をして返してくれるAPIがすでに存在している場合で、そのAPIをコールする部品を作る方法を紹介します。</p>
 <h2 id=サーバー側の例>サーバー側の例</h2>
 <p>すでにファイルを処理するサーバーが存在している場合のことですので、まずはコールしたいAPIで利用するリクエストとレスポンスの形を把握する必要がありますね。ファイルをアップロードされたら、ヘッダーからファイル情報を読み込むようになっていて、ファイルデータが書かれているボディを読み込むようなメソッドがあるとしましょう。ヘッダーの情報に問題がなかったらローカルストレージにファイルを書き込み、処理を行います。そして処理の終わったファイルはレスポンスとして返すサーバーです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/upload&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>StreamingResponseBody</span><span class=o>&gt;</span> <span class=nf>fileupload</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// リクエストヘッダーからファイルサイズを取得
-</span><span class=c1></span>    <span class=kt>long</span> <span class=n>fileLength</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getContentLengthLong</span><span class=o>();</span>
-    <span class=c1>// ファイルサイズが0だとIOException
-</span><span class=c1></span>    <span class=k>if</span> <span class=o>(</span><span class=n>fileLength</span> <span class=o>==</span> <span class=n>0</span><span class=o>)</span> <span class=o>{</span>
-       <span class=k>throw</span> <span class=k>new</span> <span class=n>IOException</span><span class=o>(</span><span class=s>&#34;data size is 0&#34;</span><span class=o>);</span>
-    <span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@PostMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/upload&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> ResponseEntity<span style=color:#ff79c6>&lt;</span>StreamingResponseBody<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>fileupload</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// リクエストヘッダーからファイルサイズを取得
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd>long</span> fileLength <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getContentLengthLong</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// ファイルサイズが0だとIOException
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>fileLength <span style=color:#ff79c6>==</span> 0<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+       <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> IOException<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;data size is 0&#34;</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// ファイルを臨時ファイルとして保存
-</span><span class=c1></span>    <span class=n>String</span> <span class=n>fileName</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getHeader</span><span class=o>(</span><span class=s>&#34;Content-File-Name&#34;</span><span class=o>);</span>
-    <span class=n>Path</span> <span class=n>tempFile</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>createTempFile</span><span class=o>(</span><span class=s>&#34;process_target_&#34;</span><span class=o>,</span> <span class=n>fileName</span><span class=o>);</span>
-    <span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getInputStream</span><span class=o>())</span> <span class=o>{</span>
-        <span class=n>Files</span><span class=o>.</span><span class=na>copy</span><span class=o>(</span><span class=n>is</span><span class=o>,</span> <span class=n>tempFile</span><span class=o>);</span>
-    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>IOException</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>e</span><span class=o>.</span><span class=na>printStackTrace</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// ファイルを臨時ファイルとして保存
+</span><span style=color:#6272a4></span>    String fileName <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeader</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Content-File-Name&#34;</span><span style=color:#ff79c6>);</span>
+    Path tempFile <span style=color:#ff79c6>=</span> Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>createTempFile</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;process_target_&#34;</span><span style=color:#ff79c6>,</span> fileName<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>(</span>InputStream is <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getInputStream</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+        Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copy</span><span style=color:#ff79c6>(</span>is<span style=color:#ff79c6>,</span> tempFile<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>catch</span> <span style=color:#ff79c6>(</span>IOException e<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        e<span style=color:#ff79c6>.</span><span style=color:#50fa7b>printStackTrace</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// ...ファイルを持ってなんらかの処理を行う
-</span><span class=c1></span>
-    <span class=c1>// レスポンス用のヘッダーを作る
-</span><span class=c1></span>    <span class=n>HttpHeaders</span> <span class=n>headers</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Headers</span><span class=o>();</span>
-    <span class=c1>// 処理が終わったファイルを書き込むボディを作る
-</span><span class=c1></span>    <span class=n>StreamingResponseBody</span> <span class=n>body</span> <span class=o>=</span> <span class=k>new</span> <span class=n>StreamingResponseBody</span><span class=o>()</span> <span class=o>{</span>
-        <span class=nd>@Override</span>
-        <span class=kd>public</span> <span class=kt>void</span> <span class=nf>writeTo</span><span class=o>(</span><span class=n>OutputStream</span> <span class=n>outputStream</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
-            <span class=kt>byte</span><span class=o>[]</span> <span class=n>bytes</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>readAllBytes</span><span class=o>(</span><span class=n>path</span><span class=o>);</span>
-            <span class=n>outputStream</span><span class=o>.</span><span class=na>write</span><span class=o>(</span><span class=n>bytes</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>};</span>
-    <span class=c1>// ヘッダーとボディ、HttpStatusをセットしてレスポンスを返す
-</span><span class=c1></span>    <span class=k>return</span> <span class=k>new</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>StreamingResponseBody</span><span class=o>&gt;(</span><span class=n>body</span><span class=o>,</span> <span class=n>headers</span><span class=o>,</span> <span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>);</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// ...ファイルを持ってなんらかの処理を行う
+</span><span style=color:#6272a4></span>
+    <span style=color:#6272a4>// レスポンス用のヘッダーを作る
+</span><span style=color:#6272a4></span>    HttpHeaders headers <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Headers<span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// 処理が終わったファイルを書き込むボディを作る
+</span><span style=color:#6272a4></span>    StreamingResponseBody body <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> StreamingResponseBody<span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        @Override
+        <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>writeTo</span><span style=color:#ff79c6>(</span>OutputStream outputStream<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException <span style=color:#ff79c6>{</span>
+            <span style=color:#8be9fd>byte</span><span style=color:#ff79c6>[]</span> bytes <span style=color:#ff79c6>=</span> Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>readAllBytes</span><span style=color:#ff79c6>(</span>path<span style=color:#ff79c6>);</span>
+            outputStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>write</span><span style=color:#ff79c6>(</span>bytes<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>};</span>
+    <span style=color:#6272a4>// ヘッダーとボディ、HttpStatusをセットしてレスポンスを返す
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> ResponseEntity<span style=color:#ff79c6>&lt;</span>StreamingResponseBody<span style=color:#ff79c6>&gt;(</span>body<span style=color:#ff79c6>,</span> headers<span style=color:#ff79c6>,</span> HttpStatus<span style=color:#ff79c6>.</span><span style=color:#50fa7b>OK</span><span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>サーバーがこういう形になっている場合、APIをコールする側としてはRequestのヘッダーにはファイル情報を書き、ボディにはファイルのデータを書いて転送する必要がありますね。そして処理結果のResponseにもまたファイルデータが入ってあるので、それを受け止める処理が必要となります。そのためにリクエストもレスポンスもカスタムのものを作って、RestTemplateに載せることにしましょう。</p>
 <h2 id=resttemplateを使う>RestTemplateを使う</h2>
 <p>今回はRestTemplateのexecute()というメソッドを使いますが、このメソッドの引数は以下のようになります。</p>
@@ -117,66 +117,66 @@ spring
 <p>get()・post()・delete()などのメソッドの時と違ってリクエストとレスポンスの方を両方指定する理由は、上に述べた通りリクエストとレスポンスの両方でファイルの転送が必要からです。また、execute()でも引数にURI変数を指定することもできますが、現在はURIが固定なので使いません。では、リクエストとレスポンスのインタフェースをどう実装するかをみていきましょう。</p>
 <h2 id=リクエスト>リクエスト</h2>
 <p>リクエストで使うRequestCallbackの実装クラスを作成します。このインタフェースにはコンストラクターの引数としてファイルを渡すとヘッダーとボディを作るようにしてみましょう。RequestCallbackをimplementsすると、doWithRequest()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpRequestにヘッダーとボディを設定することでリクエスト時のファイルアップロードができます。以下のコードを参照してください。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>FileTransferRequestCallback</span> <span class=kd>implements</span> <span class=n>RequestCallback</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>FileTransferRequestCallback</span> <span style=color:#8be9fd;font-style:italic>implements</span> RequestCallback <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// アップロードしたいファイル
-</span><span class=c1></span>    <span class=kd>private</span> <span class=n>Path</span> <span class=n>path</span><span class=o>;</span>
+    <span style=color:#6272a4>// アップロードしたいファイル
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>private</span> Path path<span style=color:#ff79c6>;</span>
     
-    <span class=c1>// ヘッダーにファイル情報を載せるためのコンストラクター
-</span><span class=c1></span>    <span class=kd>public</span> <span class=nf>PdfConvertRequestCallback</span><span class=o>(</span><span class=n>File</span> <span class=n>file</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>path</span> <span class=o>=</span> <span class=n>file</span><span class=o>.</span><span class=na>toPath</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// ヘッダーにファイル情報を載せるためのコンストラクター
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>PdfConvertRequestCallback</span><span style=color:#ff79c6>(</span>File file<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>path</span> <span style=color:#ff79c6>=</span> file<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toPath</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>doWithRequest</span><span class=o>(</span><span class=n>ClientHttpRequest</span> <span class=n>request</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
-        <span class=c1>// ファイルからヘッダーを作る
-</span><span class=c1></span>        <span class=n>request</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>().</span><span class=na>set</span><span class=o>(</span><span class=s>&#34;Content-Length&#34;</span><span class=o>,</span> <span class=n>Files</span><span class=o>.</span><span class=na>size</span><span class=o>(</span><span class=n>path</span><span class=o>));</span>
-        <span class=n>request</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>().</span><span class=na>set</span><span class=o>(</span><span class=s>&#34;Content-File-Name&#34;</span><span class=o>,</span> <span class=n>path</span><span class=o>.</span><span class=na>getFileName</span><span class=o>().</span><span class=na>toString</span><span class=o>());</span>
-        <span class=c1>// ボディにファイルを書き込む
-</span><span class=c1></span>        <span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>Files</span><span class=o>.</span><span class=na>newInputStream</span><span class=o>(</span><span class=n>file</span><span class=o>);</span> <span class=n>OutputStream</span> <span class=n>os</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getBody</span><span class=o>())</span> <span class=o>{</span>
-            <span class=n>is</span><span class=o>.</span><span class=na>transferTo</span><span class=o>(</span><span class=n>os</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>doWithRequest</span><span style=color:#ff79c6>(</span>ClientHttpRequest request<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// ファイルからヘッダーを作る
+</span><span style=color:#6272a4></span>        request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeaders</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>set</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Content-Length&#34;</span><span style=color:#ff79c6>,</span> Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>size</span><span style=color:#ff79c6>(</span>path<span style=color:#ff79c6>));</span>
+        request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeaders</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>set</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Content-File-Name&#34;</span><span style=color:#ff79c6>,</span> path<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getFileName</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>toString</span><span style=color:#ff79c6>());</span>
+        <span style=color:#6272a4>// ボディにファイルを書き込む
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>(</span>InputStream is <span style=color:#ff79c6>=</span> Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>newInputStream</span><span style=color:#ff79c6>(</span>file<span style=color:#ff79c6>);</span> OutputStream os <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getBody</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+            is<span style=color:#ff79c6>.</span><span style=color:#50fa7b>transferTo</span><span style=color:#ff79c6>(</span>os<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ヘッダーにはサーバーで要求するファイルサイズとファイル名を載せました。そしてアップロードするファイルをInputStreamとして取得して、OutputStreamであるボディに書き込みます。これでリクエストでのファイルアップロード設定は終わりです。次はレスポンスですね。</p>
 <h2 id=レスポンス>レスポンス</h2>
 <p>レスポンスでは、ResponseExctractorをimplementsします。この場合はextractData()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpResponseからはリクエストの時と同じくHttpステータスコード、ヘッダー、ボディを取得できます。このレスポンスの結果からResponseEntityのインスタンスを作成し、レスポンスの結果を載せて返すとRestTemplateからは通信の結果としてResponseEntityを返すようになります。</p>
 <p>ResponseEntityを返すためにはそのボディの型を指定する必要があります。InputStreamの型を指定して、レスポンスのボディがファイルであることを指定しましょう。また、ClientHttpResponseのボディをResponseEntityにそのまま載せると、InputSteamがCloseされるのでボディはコピーしておきます。私は一回byte[]に変えて、さらにByteArrayInputStreamを生成することにしました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>FileTransferResponseExtractor</span> <span class=kd>implements</span> <span class=n>ResponseExtractor</span><span class=o>&lt;</span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;&gt;</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>FileTransferResponseExtractor</span> <span style=color:#8be9fd;font-style:italic>implements</span> ResponseExtractor<span style=color:#ff79c6>&lt;</span>ResponseEntity<span style=color:#ff79c6>&lt;</span>InputStream<span style=color:#ff79c6>&gt;&gt;</span> <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;</span> <span class=nf>extractData</span><span class=o>(</span><span class=n>ClientHttpResponse</span> <span class=n>response</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>IOException</span> <span class=o>{</span>
-        <span class=c1>// レスポンスのボディをコピー
-</span><span class=c1></span>        <span class=kt>byte</span><span class=o>[]</span> <span class=n>bytes</span> <span class=o>=</span> <span class=n>response</span><span class=o>.</span><span class=na>getBody</span><span class=o>().</span><span class=na>readAllBytes</span><span class=o>();</span>
-        <span class=c1>// ステータスコード、ヘッダー、ボディのデータを載せてResponseEntityを返却
-</span><span class=c1></span>        <span class=k>return</span> <span class=n>ResponseEntity</span><span class=o>.</span><span class=na>status</span><span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>getStatusCode</span><span class=o>()).</span><span class=na>headers</span><span class=o>(</span><span class=n>response</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>()).</span><span class=na>body</span><span class=o>(</span><span class=k>new</span> <span class=n>ByteArrayInputStream</span><span class=o>(</span><span class=n>bytes</span><span class=o>));</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> ResponseEntity<span style=color:#ff79c6>&lt;</span>InputStream<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>extractData</span><span style=color:#ff79c6>(</span>ClientHttpResponse response<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> IOException <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// レスポンスのボディをコピー
+</span><span style=color:#6272a4></span>        <span style=color:#8be9fd>byte</span><span style=color:#ff79c6>[]</span> bytes <span style=color:#ff79c6>=</span> response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getBody</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>readAllBytes</span><span style=color:#ff79c6>();</span>
+        <span style=color:#6272a4>// ステータスコード、ヘッダー、ボディのデータを載せてResponseEntityを返却
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>return</span> ResponseEntity<span style=color:#ff79c6>.</span><span style=color:#50fa7b>status</span><span style=color:#ff79c6>(</span>response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getStatusCode</span><span style=color:#ff79c6>()).</span><span style=color:#50fa7b>headers</span><span style=color:#ff79c6>(</span>response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeaders</span><span style=color:#ff79c6>()).</span><span style=color:#50fa7b>body</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>new</span> ByteArrayInputStream<span style=color:#ff79c6>(</span>bytes<span style=color:#ff79c6>));</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これでレスポンスのファイルを取得できるようになりました。次は、RestTemplateでAPIをコールするだけです。</p>
 <h2 id=rest-apiのコール>Rest APIのコール</h2>
 <p>先に述べましたが、RestTemplateのメソッドを実行するのは簡単です。まずはURLと、アップロードしたいファイルのインスタンスを作っておきましょう。そして、先ほど作成したRequestCallbackとResponseExtractorのインスタンスも作成します(ResponseExtractorは、状態を持たないのでBeanとして登録しても良いです)。</p>
 <p>execute()の引数に、URL・Httpメソッドのタイプ・RequestCallback・ResponseExtractorを指定して実行すると、その結果をResponseEntityとして取得できて、そこからさらにステータスコード、ヘッダー、ボディを取得できます。これでアップロードしたファイルを処理してもらい、処理結果のファイルも即取得可能になりますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// RestTemplateに渡す引数を準備
-</span><span class=c1></span><span class=n>String</span> <span class=n>url</span> <span class=o>=</span> <span class=s>&#34;http://api/v1/file/upload&#34;</span><span class=o>;</span>
-<span class=n>File</span> <span class=n>uploadFile</span> <span class=o>=</span> <span class=k>new</span> <span class=n>File</span><span class=o>(</span><span class=s>&#34;path/to/upload_file.txt&#34;</span><span class=o>);</span>
-<span class=n>FileTransferRequestCallback</span> <span class=n>requestCallback</span> <span class=o>=</span> <span class=k>new</span> <span class=n>FileTransferRequestCallback</span><span class=o>(</span><span class=n>uploadFile</span><span class=o>);</span>
-<span class=n>FileTransferResponseExtractor</span> <span class=n>responseExtractor</span> <span class=o>=</span> <span class=k>new</span> <span class=n>FileTransferResponseExtractor</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// RestTemplateに渡す引数を準備
+</span><span style=color:#6272a4></span>String url <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;http://api/v1/file/upload&#34;</span><span style=color:#ff79c6>;</span>
+File uploadFile <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> File<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;path/to/upload_file.txt&#34;</span><span style=color:#ff79c6>);</span>
+FileTransferRequestCallback requestCallback <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> FileTransferRequestCallback<span style=color:#ff79c6>(</span>uploadFile<span style=color:#ff79c6>);</span>
+FileTransferResponseExtractor responseExtractor <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> FileTransferResponseExtractor<span style=color:#ff79c6>();</span>
 
-<span class=c1>// RestTemplateでAPIコールし、その結果を取得
-</span><span class=c1></span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>InputStream</span><span class=o>&gt;</span> <span class=n>responseEntity</span> <span class=o>=</span> <span class=k>new</span> <span class=n>RestTemplate</span><span class=o>().</span><span class=na>execute</span><span class=o>(</span><span class=n>url</span><span class=o>,</span> <span class=n>HttpMethod</span><span class=o>.</span><span class=na>POST</span><span class=o>,</span> <span class=n>requestCallback</span><span class=o>,</span> <span class=n>responseExtractor</span><span class=o>);</span>
+<span style=color:#6272a4>// RestTemplateでAPIコールし、その結果を取得
+</span><span style=color:#6272a4></span>ResponseEntity<span style=color:#ff79c6>&lt;</span>InputStream<span style=color:#ff79c6>&gt;</span> responseEntity <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> RestTemplate<span style=color:#ff79c6>().</span><span style=color:#50fa7b>execute</span><span style=color:#ff79c6>(</span>url<span style=color:#ff79c6>,</span> HttpMethod<span style=color:#ff79c6>.</span><span style=color:#50fa7b>POST</span><span style=color:#ff79c6>,</span> requestCallback<span style=color:#ff79c6>,</span> responseExtractor<span style=color:#ff79c6>);</span>
 
-<span class=c1>// ResponseEntityからHttpステータスを取得
-</span><span class=c1></span><span class=k>if</span> <span class=o>(</span><span class=n>responseEntity</span><span class=o>.</span><span class=na>getStatusCode</span><span class=o>()</span> <span class=o>!=</span> <span class=n>HttpStatus</span><span class=o>.</span><span class=na>OK</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>throw</span> <span class=k>new</span> <span class=n>IOException</span><span class=o>();</span>
-<span class=o>}</span>
-<span class=c1>// ResponseEntityからヘッダーを取得
-</span><span class=c1></span><span class=n>HttpHeaders</span> <span class=n>headers</span> <span class=o>=</span> <span class=n>responseEntity</span><span class=o>.</span><span class=na>getHeaders</span><span class=o>();</span>
+<span style=color:#6272a4>// ResponseEntityからHttpステータスを取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>responseEntity<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getStatusCode</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>!=</span> HttpStatus<span style=color:#ff79c6>.</span><span style=color:#50fa7b>OK</span><span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>throw</span> <span style=color:#ff79c6>new</span> IOException<span style=color:#ff79c6>();</span>
+<span style=color:#ff79c6>}</span>
+<span style=color:#6272a4>// ResponseEntityからヘッダーを取得
+</span><span style=color:#6272a4></span>HttpHeaders headers <span style=color:#ff79c6>=</span> responseEntity<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getHeaders</span><span style=color:#ff79c6>();</span>
 
-<span class=c1>// ResponseEntityからボディを取得
-</span><span class=c1></span><span class=k>try</span> <span class=o>(</span><span class=n>InputStream</span> <span class=n>is</span> <span class=o>=</span> <span class=n>responseEntity</span><span class=o>.</span><span class=na>getBody</span><span class=o>())</span> <span class=o>{</span>
-    <span class=n>File</span> <span class=n>downloadedFile</span> <span class=o>=</span> <span class=k>new</span> <span class=n>File</span><span class=o>(</span><span class=s>&#34;path/to/downloaded_file.txt&#34;</span><span class=o>);</span>
-    <span class=n>Files</span><span class=o>.</span><span class=na>copy</span><span class=o>(</span><span class=n>is</span><span class=o>,</span> <span class=n>downloadedFile</span><span class=o>);</span>
-<span class=o>}</span>
+<span style=color:#6272a4>// ResponseEntityからボディを取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>try</span> <span style=color:#ff79c6>(</span>InputStream is <span style=color:#ff79c6>=</span> responseEntity<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getBody</span><span style=color:#ff79c6>())</span> <span style=color:#ff79c6>{</span>
+    File downloadedFile <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> File<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;path/to/downloaded_file.txt&#34;</span><span style=color:#ff79c6>);</span>
+    Files<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copy</span><span style=color:#ff79c6>(</span>is<span style=color:#ff79c6>,</span> downloadedFile<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>意外と簡単！これで他のRest APIとのファイルのやりとりができるようになりました。</p>
 <h2 id=最後に>最後に</h2>
 <p>クラスやメソッドを機能別に分けるだけでなく、Rest APIもまた機能によっては分離されることもありますね。今回の場合がまさにそのような例でした。もちろんネットを経由するのでこのようなやり方は一つのRest API内に機能をまとめて置くよりは安定性が劣るかもしれませんが、再使用性が確保できるという面では良い方法ではないかと思います。同じサーバー内だと通信失敗の確率も下がるだろうし、色々と活用できる余地はありそうですね。</p>

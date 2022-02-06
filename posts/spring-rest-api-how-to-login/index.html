@@ -76,65 +76,65 @@ spring
 <h3 id=mvcパターンの場合>MVCパターンの場合</h3>
 <p>今も多くの研修で行われているSpringの研修は、普通のMVCパターンとJSPによるものが多いのではないか、と思います。例えば<code>@Controller</code>アノテーションをつけたコントローラクラスに、<code>@RequestMapping</code>アノテーションをつけたメソッドを書いて、そのメソッドでは<code>Model</code>もしくは<code>ModelAndView</code>などのクラスを使ってデータやビュー(主にJSPファイルのパス)を書いていくような形ですね。実際は<code>JSPを使う=MVCパターン</code>というわけでもないですが、多くのSpring MVCパターンのプロジェクトがJSPを使っているのでまずはこのようなレガシーなものをMVCパターンと呼ばせていただきます。</p>
 <p>ただ文章で表現するよりは、コードを持って書いた方がわかりやすいと思います。例えば以下のようなものです。<code>/home</code>というURLに接続すると、サーバの時間を返す簡単な例題ですね。ModelAndViewを使うとしても、Modelにデータとビューを共につめてるだけでやっていることとしてはあまり変わらないと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Controller</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>HomeController</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Controller
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>HomeController</span> <span style=color:#ff79c6>{</span>
     
-    <span class=c1>// homeというJSPファイルとサーバの時間を表示する
-</span><span class=c1></span>    <span class=nd>@RequestMapping</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;/home&#34;</span><span class=o>,</span> <span class=n>method</span> <span class=o>=</span> <span class=n>RequestMethod</span><span class=o>.</span><span class=na>GET</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>String</span> <span class=nf>home</span><span class=o>(</span><span class=n>Model</span> <span class=n>model</span><span class=o>)</span> <span class=o>{</span>
-        <span class=n>Date</span> <span class=n>date</span> <span class=o>=</span> <span class=k>new</span> <span class=n>Date</span><span class=o>();</span>
-        <span class=n>model</span><span class=o>.</span><span class=na>addAttribute</span><span class=o>(</span><span class=s>&#34;serverTime&#34;</span><span class=o>,</span> <span class=n>date</span><span class=o>);</span>
-        <span class=k>return</span> <span class=s>&#34;home&#34;</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// homeというJSPファイルとサーバの時間を表示する
+</span><span style=color:#6272a4></span>    @RequestMapping<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;/home&#34;</span><span style=color:#ff79c6>,</span> method <span style=color:#ff79c6>=</span> RequestMethod<span style=color:#ff79c6>.</span><span style=color:#50fa7b>GET</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>home</span><span style=color:#ff79c6>(</span>Model model<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        Date date <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Date<span style=color:#ff79c6>();</span>
+        model<span style=color:#ff79c6>.</span><span style=color:#50fa7b>addAttribute</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;serverTime&#34;</span><span style=color:#ff79c6>,</span> date<span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;home&#34;</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=rest-apiの場合>REST APIの場合</h3>
 <p>自分の場合も、やはり最初はSpring MVCパターンとJSPから学んだのでこのような書き方に慣れていましたが、入社後にはSpring BootとREST APIというものに出会い、コードの書き方が少し変わりました。最近のトレンドだとやはりJSPよりもAngular/React/VueなどのJavaScriptフレームワークを使って作成する場合が多いので、JSONの形としてデータだけを返したらよくなります。JSONとしてデータをレスポンスボディに載せるには、普通にDTOクラスをビューモデルとして作ります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>HomeViewModel</span> <span class=kd>implements</span> <span class=n>Serializble</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Data
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>HomeViewModel</span> <span style=color:#8be9fd;font-style:italic>implements</span> Serializble <span style=color:#ff79c6>{</span>
     
-    <span class=c1>// サーバの時間を表示する
-</span><span class=c1></span>    <span class=kd>public</span> <span class=n>Date</span> <span class=n>serverTime</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// サーバの時間を表示する
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> Date serverTime<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>あとは、<code>@RestController</code>アノテーションをつけたコントローラクラスを作り、作成したDTOクラスを返すメソッドを作成するだけです。少しアノテーションの種類や使い方も少し変わりましたが、内容としてはビューを担当しているJSPファイルの指定が消えただけで返しているデータは同じです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@RestController</span>
-<span class=nd>@RequestMapping</span><span class=o>(</span><span class=s>&#34;/api/v1&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>HomeApiController</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@RestController
+@RequestMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/api/v1&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>HomeApiController</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// カスタムビューモデルにデータをつめて渡す
-</span><span class=c1></span>    <span class=nd>@GetMapping</span><span class=o>(</span><span class=s>&#34;/home&#34;</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>HomeViewModel</span> <span class=nf>getHome</span><span class=o>()</span> <span class=o>{</span>
-        <span class=n>HomeViewModel</span> <span class=n>model</span> <span class=o>=</span> <span class=k>new</span> <span class=n>HomeViewModel</span><span class=o>();</span>
-        <span class=n>model</span><span class=o>.</span><span class=na>setServerTime</span><span class=o>(</span><span class=k>new</span> <span class=n>Date</span><span class=o>());</span>
-        <span class=k>return</span> <span class=n>model</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// カスタムビューモデルにデータをつめて渡す
+</span><span style=color:#6272a4></span>    @GetMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/home&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> HomeViewModel <span style=color:#50fa7b>getHome</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        HomeViewModel model <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> HomeViewModel<span style=color:#ff79c6>();</span>
+        model<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setServerTime</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>new</span> Date<span style=color:#ff79c6>());</span>
+        <span style=color:#ff79c6>return</span> model<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そしてフロントエンドのJavaScriptフレームワークでは、レスポンスのボディから取得して画面に表示するようになりますね。このようにREST APIだと、サーバサイドではあくまでデータモデルとビジネスロジックだけを考えれば良いようになっていて、よりそれぞれの役割の分担がよくなっていますね。</p>
 <h2 id=ログインをするには>ログインをするには</h2>
 <p>では、とりあえず簡単にSpring MVCパターンとREST APIの比較をしてみたので本題に戻りましょう。先にSpring Securityの話をしましたが、実際はSpring Securityを導入しなくても同じ話になると思います。REST APIはアーキテクチャの一つにすぎないので、フレームワークを導入できるかどうかの問題はすでに別の話になってしまいます。また、ログインというのはSpring Security以前の問題です。なので今回はSpring Securityの話はさておき、二つのアーキテクチャでどのようにログインをするかについて話したいと思います。</p>
 <h3 id=mvcパターン>MVCパターン</h3>
 <p>MVCパターンでは、Sessionでログインを実現する場合が多い(と思い)ます。例えばログインを担当するメソッドを作成して、引数として<code>HttpServletRequest</code>を指定すると、そこからセッションを取得することができますね。あとは、またの引数としてFormのデータ(IDとパスワード)を受けて、これは自分が最初に学んだ方式でもあります。</p>
 <p>まずユーザの観点から話してみましょう。普通のWebアプリケーションでは、画面のほうでログインのためにIDとパスワードを入力するようになります。JSPではそのデータを<code>form</code>として受け取り、POSTとしてコントローラに送りますね。そうしたらコントローラではIDとパスワードをServiceクラスに送って検証してもらい、問題なかったらログインした情報をSessionに載せます。こういうったシナリオで、コントローラにログインのためのメソッドを作るとおそらく以下のコードのような形のなるはずです。(実際はユーザのIDだけ載せる場合はないので参考までに)</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// URLは/login、メソッドはPOST
-</span><span class=c1></span><span class=nd>@RequestMapping</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;/login&#34;</span><span class=o>,</span> <span class=n>method</span> <span class=o>=</span> <span class=n>RequestMethod</span><span class=o>.</span><span class=na>POST</span><span class=o>)</span>
-<span class=kd>public</span> <span class=n>String</span> <span class=nf>login</span><span class=o>(</span><span class=n>User</span> <span class=n>user</span><span class=o>,</span> <span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// Serviceからユーザを取得する
-</span><span class=c1></span>    <span class=n>User</span> <span class=n>loginedUser</span> <span class=o>=</span> <span class=n>service</span><span class=o>.</span><span class=na>getUser</span><span class=o>(</span><span class=n>user</span><span class=o>.</span><span class=na>getId</span><span class=o>(),</span> <span class=n>user</span><span class=o>.</span><span class=na>getPassword</span><span class=o>());</span>
-    <span class=c1>// リクエストからセッションを取得する
-</span><span class=c1></span>    <span class=n>HttpSession</span> <span class=n>session</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getSession</span><span class=o>();</span>
-    <span class=c1>// SessionにユーザIDを載せる
-</span><span class=c1></span>    <span class=n>session</span><span class=o>.</span><span class=na>setAttribute</span><span class=o>(</span><span class=s>&#34;userId&#34;</span><span class=o>,</span> <span class=n>loginedUser</span><span class=o>.</span><span class=na>getId</span><span class=o>());</span>
-    <span class=k>return</span> <span class=s>&#34;/&#34;</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// URLは/login、メソッドはPOST
+</span><span style=color:#6272a4></span>@RequestMapping<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;/login&#34;</span><span style=color:#ff79c6>,</span> method <span style=color:#ff79c6>=</span> RequestMethod<span style=color:#ff79c6>.</span><span style=color:#50fa7b>POST</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>login</span><span style=color:#ff79c6>(</span>User user<span style=color:#ff79c6>,</span> HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// Serviceからユーザを取得する
+</span><span style=color:#6272a4></span>    User loginedUser <span style=color:#ff79c6>=</span> service<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getUser</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>(),</span> user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getPassword</span><span style=color:#ff79c6>());</span>
+    <span style=color:#6272a4>// リクエストからセッションを取得する
+</span><span style=color:#6272a4></span>    HttpSession session <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getSession</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// SessionにユーザIDを載せる
+</span><span style=color:#6272a4></span>    session<span style=color:#ff79c6>.</span><span style=color:#50fa7b>setAttribute</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;userId&#34;</span><span style=color:#ff79c6>,</span> loginedUser<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>());</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;/&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これでログインができたら、あとは他のメソッドでSessionの検証をして、ログインされているかどうかを判断することになります。ログアウトする場合は、Sessionを破棄すればいいです。例えば以下のようになりましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// URLは/logout、メソッドはGet
-</span><span class=c1></span><span class=nd>@RequestMapping</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;/logout&#34;</span><span class=o>,</span> <span class=n>method</span> <span class=o>=</span> <span class=n>RequestMethod</span><span class=o>.</span><span class=na>GET</span><span class=o>)</span>
-<span class=kd>public</span> <span class=n>String</span> <span class=nf>logout</span><span class=o>(</span><span class=n>HttpServletRequest</span> <span class=n>request</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// リクエストからセッションを取得する
-</span><span class=c1></span>    <span class=n>HttpSession</span> <span class=n>session</span> <span class=o>=</span> <span class=n>request</span><span class=o>.</span><span class=na>getSession</span><span class=o>();</span>
-    <span class=c1>// Sessionを破棄する
-</span><span class=c1></span>    <span class=n>session</span><span class=o>.</span><span class=na>invalidate</span><span class=o>();</span>
-    <span class=k>return</span> <span class=s>&#34;/&#34;</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// URLは/logout、メソッドはGet
+</span><span style=color:#6272a4></span>@RequestMapping<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;/logout&#34;</span><span style=color:#ff79c6>,</span> method <span style=color:#ff79c6>=</span> RequestMethod<span style=color:#ff79c6>.</span><span style=color:#50fa7b>GET</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> String <span style=color:#50fa7b>logout</span><span style=color:#ff79c6>(</span>HttpServletRequest request<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// リクエストからセッションを取得する
+</span><span style=color:#6272a4></span>    HttpSession session <span style=color:#ff79c6>=</span> request<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getSession</span><span style=color:#ff79c6>();</span>
+    <span style=color:#6272a4>// Sessionを破棄する
+</span><span style=color:#6272a4></span>    session<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invalidate</span><span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;/&#34;</span><span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Spring Securityを使った場合はかなりコードが変わってきますが、Sessionを使う場合にこう言った基本的なフローは変わりませんね。これでMVCパターンでの認証/認可は実現できます。</p>
 <h2 id=ここで問題が>ここで問題が</h2>
 <p>しかし、Sessionを使った方法はREST APIだと使えなくなります。なぜかというと、REST APIの最大の特徴の一つは<code>Stateless</code>、つまり<code>状態を持たない</code>というのであるからです。ここでいう状態というのはサーバに取ってのクライアントのステータスのことです。今まで通りだとクライアントはサーバに接続した瞬間からサーバに自分の状態を管理させる必要がありました。こういう状態を管理するためのものがSessionであり、先に説明した通りだとREST APIには適用すべきではないですね。(無理やり適用させるとしたら不可能でもないですが…)</p>
@@ -145,23 +145,23 @@ spring
 <p>Spring BootでレスポンスのHeaderにデータを載せるためには二つの方法があります。先に述べたSpring MVCのリクエスト同様、レスポンスを扱うためのクラスである<code>HttpServletResponse</code>を使う方法と、<code>ResponseEntity</code>でレスポンスデータをラッピングすることです。どれも使える方法ですが、</p>
 <h2 id=httpservletresponseでheaderを追加する>HttpServletResponseでHeaderを追加する</h2>
 <p>まずはHttpServletResponseです。シンプルに、「レスポンスにデータを載せたい」という時に使える方法ですね。MVCパターンでのログインと同じく、ログインするメソッドの引数に指定すると、レスポンスのHeaderにデータを載せることができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/login&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=n>User</span> <span class=nf>login</span><span class=o>(</span><span class=n>User</span> <span class=n>user</span><span class=o>,</span> <span class=n>HttpServletResponse</span> <span class=n>response</span><span class=o>)</span> <span class=o>{</span>
-    <span class=c1>// Serviceからユーザを取得する
-</span><span class=c1></span>    <span class=n>User</span> <span class=n>loginedUser</span> <span class=o>=</span> <span class=n>service</span><span class=o>.</span><span class=na>getUser</span><span class=o>(</span><span class=n>user</span><span class=o>.</span><span class=na>getId</span><span class=o>(),</span> <span class=n>user</span><span class=o>.</span><span class=na>getPassword</span><span class=o>());</span>
-    <span class=c1>// レスポンスのHeaderにユーザのIDを載せる
-</span><span class=c1></span>    <span class=n>response</span><span class=o>.</span><span class=na>addHeader</span><span class=o>(</span><span class=s>&#34;userId&#34;</span><span class=o>,</span> <span class=n>loginedUser</span><span class=o>.</span><span class=na>getId</span><span class=o>());</span>
-    <span class=c1>// Bodyを返す(Headerは自動で含まれる)
-</span><span class=c1></span>    <span class=k>return</span> <span class=n>loginedMember</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@PostMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/login&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> User <span style=color:#50fa7b>login</span><span style=color:#ff79c6>(</span>User user<span style=color:#ff79c6>,</span> HttpServletResponse response<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#6272a4>// Serviceからユーザを取得する
+</span><span style=color:#6272a4></span>    User loginedUser <span style=color:#ff79c6>=</span> service<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getUser</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>(),</span> user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getPassword</span><span style=color:#ff79c6>());</span>
+    <span style=color:#6272a4>// レスポンスのHeaderにユーザのIDを載せる
+</span><span style=color:#6272a4></span>    response<span style=color:#ff79c6>.</span><span style=color:#50fa7b>addHeader</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;userId&#34;</span><span style=color:#ff79c6>,</span> loginedUser<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>());</span>
+    <span style=color:#6272a4>// Bodyを返す(Headerは自動で含まれる)
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> loginedMember<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=responseentityでheaderを追加する>ResponseEntityでHeaderを追加する</h2>
 <p>もう一つの方法であるResponseEntityの場合は、引数はユーザ情報(IDとパスワード)のみで良くなります。名前からもわかると思いますが、ResponseEntityはBodyとHeaderを含め、HTTP Status(200 OKなど)を含めレスポンスに必要な情報は全て扱えるクラスです。使い方は簡単で、ログインメソッドの戻り値となるBodyをResponseEntityで包み、Headerなどの情報も一緒に詰めて返します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@PostMapping</span><span class=o>(</span><span class=s>&#34;/login&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>Member</span><span class=o>&gt;</span> <span class=nf>login</span><span class=o>(</span><span class=n>User</span> <span class=n>user</span><span class=o>)</span> <span class=o>{</span>
-    <span class=n>User</span> <span class=n>loginedUser</span> <span class=o>=</span> <span class=n>service</span><span class=o>.</span><span class=na>getUser</span><span class=o>(</span><span class=n>user</span><span class=o>.</span><span class=na>getId</span><span class=o>(),</span> <span class=n>user</span><span class=o>.</span><span class=na>getPassword</span><span class=o>());</span>
-    <span class=c1>// レスポンスとしてHeaderとBodyを一緒にセットして返す
-</span><span class=c1></span>    <span class=k>return</span> <span class=n>ResponseEntity</span><span class=o>.</span><span class=na>ok</span><span class=o>().</span><span class=na>header</span><span class=o>(</span><span class=s>&#34;userId&#34;</span><span class=o>,</span> <span class=n>loginedUser</span><span class=o>.</span><span class=na>getId</span><span class=o>()).</span><span class=na>body</span><span class=o>(</span><span class=n>loginedUser</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@PostMapping<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;/login&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> ResponseEntity<span style=color:#ff79c6>&lt;</span>Member<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>login</span><span style=color:#ff79c6>(</span>User user<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    User loginedUser <span style=color:#ff79c6>=</span> service<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getUser</span><span style=color:#ff79c6>(</span>user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>(),</span> user<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getPassword</span><span style=color:#ff79c6>());</span>
+    <span style=color:#6272a4>// レスポンスとしてHeaderとBodyを一緒にセットして返す
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> ResponseEntity<span style=color:#ff79c6>.</span><span style=color:#50fa7b>ok</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>header</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;userId&#34;</span><span style=color:#ff79c6>,</span> loginedUser<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getId</span><span style=color:#ff79c6>()).</span><span style=color:#50fa7b>body</span><span style=color:#ff79c6>(</span>loginedUser<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=そのあとは>そのあとは？</h2>
 <p>レスポンスのHeaderに載せた情報は、フロントエンド側でリクエスト毎にHeaderに載せて送ることになります。しかし、リクエスト毎に送るためにはどこかにこの情報を保存する必要がありますね。Cookieを使う方法もありますが、セキュリティ情のリスクがあるため多くの場合ではブラウザのローカルストレージに保存するようになっているようです。これはフロントエンドの領域なので、ここでは深掘りしません。</p>
 <p>また、ログアウトの場合はどうなるか、という問題もありますが、これは様々な方法で実現しているようです。例えばフロントエンドからできる方法としては、Headerに載せる認証情報を削除したり、間違った情報を送るようにするような方法があります。そしてサーバサイドでは、一定時間がすぎると認証情報を使えなくするなどの対策があります。</p>

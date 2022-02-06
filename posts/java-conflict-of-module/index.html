@@ -84,17 +84,17 @@ java
 </ul>
 <p>まずNameは、Moduleそのものの名称を意味します。パッケージ名と同じ命名規則で書きます。次にExportsは、このModuleから外へ公開するパッケージのことを意味します。ModuleではPublicであっても、Exportsと明示されていないパッケージは外部からアクセスすることができません。そして最後にRequiresは他のModuleに対する依存関係を表します。</p>
 <p>これらを実際のコードで書くと、以下のようになります。デフォルト・パッケージに<code>module-info.java</code>として記述されます。(Java9以後のシステムライブラリーから確認できます)</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// module-info.javaの書き方
-</span><span class=c1></span><span class=n>module</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>mylibrary</span> <span class=o>{</span>
-    <span class=n>exports</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>mylibrary</span><span class=o>.</span><span class=na>api</span><span class=o>;</span>
-    <span class=n>requires</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>exlibrary</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// module-info.javaの書き方
+</span><span style=color:#6272a4></span>module com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mylibrary</span> <span style=color:#ff79c6>{</span>
+    exports com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mylibrary</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>api</span><span style=color:#ff79c6>;</span>
+    requires com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>exlibrary</span><span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Exportsの場合、公開対象を指定することができます。つまり、アクセスできるMobuleを指定することができるということです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// exlibrary限定のPublic設定
-</span><span class=c1></span><span class=n>module</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>mylibrary</span> <span class=o>{</span>
-    <span class=n>exports</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>mylibrary</span><span class=o>.</span><span class=na>api</span>
-    <span class=n>to</span> <span class=n>com</span><span class=o>.</span><span class=na>module</span><span class=o>.</span><span class=na>exlibrary</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// exlibrary限定のPublic設定
+</span><span style=color:#6272a4></span>module com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mylibrary</span> <span style=color:#ff79c6>{</span>
+    exports com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mylibrary</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>api</span>
+    to com<span style=color:#ff79c6>.</span><span style=color:#50fa7b>module</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>exlibrary</span><span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Moduleはもちろん外部ライブラリーに対しても使うことができます。<code>module-info.java</code>を作成する方法もありますが、Java9以前に作られたライブラリーの場合にはそれがない可能性が高いですね。このようにModuleかされていないライブラリーを含ませる必要がある場合は<code>Automatic Module</code>か<code>Unnamed Module</code>の二つの方法からライブラリーを分けて使うことになります。両方自動的にModuleとして扱われるという面では同じで、全てのパッケージにアクセスできるという面では同じですが、前者は<code>modulepath</code>に属するものとして名前がある(Jarファイル名となります)ことに対して、後者は<code>classpath</code>に属するもので名称がないためRequiresで指定することができません。</p>
 <h2 id=moduleでハマったところ>Moduleでハマったところ</h2>
 <p>自分がModuleであった問題は、同じパッケージをもつ二つのライブラリーの競合によるものでした。問題が生じたのは、既存のプロジェクトにGradleのタスクを追加しようとしていたので原因でした。Gradleのタスクを作成する方法は<code>build.gradle</code>に直接taskを作成することでもできますが、最初自分が参考にしていた方法(Gradleの公式文書に従いました)では<code>java-gradle-plugin</code>というプラグインを含ませる方法でした。こうすると自動的にJavaのライブラリーが追加されて、Javaでプラグインを書けられるようになりますが、ここに含まれているライブラリーがJavaのシステムライブラリーと競合を起こしました。</p>

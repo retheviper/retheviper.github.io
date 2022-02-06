@@ -73,136 +73,136 @@ spring
 <p>結果的には違う方法をとると、<code>@Autowired</code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。</p>
 <h2 id=yamlからbeanを作る>YAMLからBeanを作る</h2>
 <p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=nt>spring</span><span class=p>:</span><span class=w>
-</span><span class=w>  </span><span class=nt>profiles</span><span class=p>:</span><span class=w>
-</span><span class=w>    </span><span class=nt>active</span><span class=p>:</span><span class=w> </span><span class=l>buildingdefault</span><span class=w>
-</span></code></pre></div><p>ここでactiveに記載したものを使って、カスタムYAMLファイルを準備します。ファイル名のプレフィックスとしては<code>application-</code>が入ります。なので今回のファイル名は<code>application-buildingdefault.yml</code>になりますね。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#ff79c6>spring</span>:
+  <span style=color:#ff79c6>profiles</span>:
+    <span style=color:#ff79c6>active</span>: buildingdefault
+</code></pre></div><p>ここでactiveに記載したものを使って、カスタムYAMLファイルを準備します。ファイル名のプレフィックスとしては<code>application-</code>が入ります。なので今回のファイル名は<code>application-buildingdefault.yml</code>になりますね。</p>
 <p>ファイルを作成して、以下のように項目と値を記載します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=nt>settings</span><span class=p>:</span><span class=w>
-</span><span class=w>  </span><span class=nt>material</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;cement&#34;</span><span class=w>
-</span></code></pre></div><p>作成したYAMLファイルはsrc/main/resourceにおきます。そしてこれからはSpringでYAMLを読み込むためのクラスを作成します。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#ff79c6>settings</span>:
+  <span style=color:#ff79c6>material</span>: <span style=color:#f1fa8c>&#34;cement&#34;</span>
+</code></pre></div><p>作成したYAMLファイルはsrc/main/resourceにおきます。そしてこれからはSpringでYAMLを読み込むためのクラスを作成します。</p>
 <p>SpringでYAMLを読み込み、Beanを作成する方法は二つがあります。一つ目はまず、フィールドにアノテーションをつけてYAMLの項目と紐づくことです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Getter</span>
-<span class=nd>@Component</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>DefaultSettings</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Getter
+@Component
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>DefaultSettings</span> <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Value</span><span class=o>(</span><span class=s>&#34;${settings.material}&#34;</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>material</span><span class=o>;</span>
-<span class=o>}</span>
+    @Value<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;${settings.material}&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String material<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>フィールドに<code>@Value</code>をつけて、アノテーションの引数としてYAMLの項目名を入力します。こうすることでYAMLから読み込まれた値はString形でBeanに取り込まれます。フィールドは必ずStringである必要はなく、intやdoubleなどのプリミティブ型はもちろん、ENUMにも対応しています。Localeならja_JPなどとYAMLに記載しておくと、ちゃんと取り込まれます。</p>
 <p>YAMLの値をBeanにするもう一つの方法は、フィールドではなくクラスにアノテーションをつけることです。以下のように<code>@ConfigurationProperties</code>の引数にprefixを指定すると、指定した項目の配下にあるもの全てがフィールドのマッピング対象となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
-<span class=nd>@Configuration</span>
-<span class=nd>@ConfigurationProperties</span><span class=o>(</span><span class=n>prefix</span> <span class=o>=</span> <span class=s>&#34;settings&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>DefaultSettings</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Data
+@Configuration
+@ConfigurationProperties<span style=color:#ff79c6>(</span>prefix <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;settings&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>DefaultSettings</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>material</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String material<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=yamlから複数の設定を読み込みたい時>YAMLから複数の設定を読み込みたい時</h2>
 <p>YAMLから設定値を読み込む際に、設定を複数を記載して状況に合わせて使いたい場合もあります。もちろんYAMLでは配列での記載ができますし、Springで読み込む時もこれをListにすることができます。なのでどうやって複数の設定をBeanにするかを説明します。</p>
 <p>YAMLでは以下のように記載します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=nt>settings</span><span class=p>:</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>preset-name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;default&#34;</span><span class=w>
-</span><span class=w>    </span><span class=nt>material</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;cement&#34;</span><span class=w>
-</span><span class=w>  </span>- <span class=nt>preset-name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;cabin&#34;</span><span class=w>
-</span><span class=w>    </span><span class=nt>material</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;wood&#34;</span><span class=w>
-</span></code></pre></div><p>ここでpreset-nameは、実際Javaで設定を使う時にそれぞれの設定セットを区別するためのキー的なものです。なくても値を読み込むには問題がないですが、こうやって名前をつけておくとのちにどれがどれかを分かりやすくなりますね。</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=color:#ff79c6>settings</span>:
+  - <span style=color:#ff79c6>preset-name</span>: <span style=color:#f1fa8c>&#34;default&#34;</span>
+    <span style=color:#ff79c6>material</span>: <span style=color:#f1fa8c>&#34;cement&#34;</span>
+  - <span style=color:#ff79c6>preset-name</span>: <span style=color:#f1fa8c>&#34;cabin&#34;</span>
+    <span style=color:#ff79c6>material</span>: <span style=color:#f1fa8c>&#34;wood&#34;</span>
+</code></pre></div><p>ここでpreset-nameは、実際Javaで設定を使う時にそれぞれの設定セットを区別するためのキー的なものです。なくても値を読み込むには問題がないですが、こうやって名前をつけておくとのちにどれがどれかを分かりやすくなりますね。</p>
 <p>YAMLの記載が終わったら、それぞれの設定セットに合わせてBeanクラスを作成しておきます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>Material</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Data
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Material</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>presetName</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String presetName<span style=color:#ff79c6>;</span>
 
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>material</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String material<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>最後に、YAMLを読み込むクラスを作成します。このクラスにBeanのListをフィールドとして記載すると、Springアプリケーションの起動と同時にこれらの設定が読み込まれることを確認できます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Data</span>
-<span class=nd>@Configuration</span>
-<span class=nd>@ConfigurationProperties</span><span class=o>(</span><span class=n>prefix</span> <span class=o>=</span> <span class=s>&#34;settings&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>MultiSettings</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Data
+@Configuration
+@ConfigurationProperties<span style=color:#ff79c6>(</span>prefix <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;settings&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>MultiSettings</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Material</span><span class=o>&gt;</span> <span class=n>presets</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>Material<span style=color:#ff79c6>&gt;</span> presets<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>のちにこのクラスからListを取得して、presetNameで各設定値を探すだけで簡単に使えるようになります。</p>
 <h2 id=builderからbeanを使う失敗の例>BuilderからBeanを使う(失敗の例)</h2>
 <p>今までの設定で、普通のSpringアプリケーション内ではBeanをDIして使うことができるようになります。しかし、今回はDIなしてBeanを取得する方法を説明するためのポストになっていますので、その過程を説明します。</p>
 <p>まず自分がやりたかったことは、先に述べましたが、Builderの中でYAMLの値を読み込んでいるBeanを使うことでした。ここでYAMLに記載した値はデフォルト値として使われて、必要に応じて一部の項目だけbuild()時に上書きしたいです。まず試して、ダメだったコードは以下のようなものです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Building</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Building</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>BuildingBuilder</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> BuildingBuilder<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>BuildingBuilder</span> <span class=o>{</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>BuildingBuilder</span> <span style=color:#ff79c6>{</span>
 
-        <span class=c1>// DIができない
-</span><span class=c1></span>        <span class=nd>@Autowired</span>
-        <span class=kd>private</span> <span class=n>DefaultSettings</span> <span class=n>settings</span><span class=o>;</span>
+        <span style=color:#6272a4>// DIができない
+</span><span style=color:#6272a4></span>        @Autowired
+        <span style=color:#8be9fd;font-style:italic>private</span> DefaultSettings settings<span style=color:#ff79c6>;</span>
 
-        <span class=kd>private</span> <span class=n>String</span> <span class=n>material</span><span class=o>;</span>
+        <span style=color:#8be9fd;font-style:italic>private</span> String material<span style=color:#ff79c6>;</span>
 
-        <span class=kd>public</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-            <span class=k>this</span><span class=o>.</span><span class=na>material</span> <span class=o>=</span> <span class=k>this</span><span class=o>.</span><span class=na>settings</span><span class=o>.</span><span class=na>getMaterial</span><span class=o>();</span>
-        <span class=o>}</span>
+        <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>material</span> <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>settings</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>getMaterial</span><span style=color:#ff79c6>();</span>
+        <span style=color:#ff79c6>}</span>
 
-        <span class=o>...</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+        <span style=color:#ff79c6>...</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Builderを使うと、まずBuilderのインスタンスを新しく生成するしかないです。そしてnewしたインスタンスの中では<code>@Autowired</code>で記載していても、DIがまともにできません。実際上のようなコードを書くと、BeanのフィールドがNullになっていることを確認できます。</p>
 <p>なのでDIのことは忘れて、newしたインスタンスの中でBeanを取得できる方法をとります。</p>
 <h2 id=applicationcontextproviderを作る>ApplicationContextProviderを作る</h2>
 <p>ApplicationContextは、SpringでBeanの生成やオブジェクト間の関係設定など様々な機能を担当するインタフェースです。ここで重要なのは、ApplicationContextがSpringアプリケーションを起動する時予め登録されたBeanを生成して管理するということです。つまり、このインタフェースにアクセスできればBeanを取得できるということになります。</p>
 <p>ただ、ApplicationContextそのものはあくまでインタフェースであるため、インスタンスを取得するためにはその役割をするクラスを作成する必要があります。以下のコードでインスタンスを取れるようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Component</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>ApplicationContextProvider</span> <span class=kd>implements</span> <span class=n>ApplicationContextAware</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Component
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ApplicationContextProvider</span> <span style=color:#8be9fd;font-style:italic>implements</span> ApplicationContextAware <span style=color:#ff79c6>{</span>
      
-    <span class=kd>private</span> <span class=kd>static</span> <span class=n>ApplicationContext</span> <span class=n>context</span> <span class=o>=</span> <span class=kc>null</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> ApplicationContext context <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>null</span><span style=color:#ff79c6>;</span>
  
-    <span class=kd>public</span> <span class=kd>static</span> <span class=n>ApplicationContext</span> <span class=nf>getApplicationContext</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>context</span><span class=o>;</span>
-    <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> ApplicationContext <span style=color:#50fa7b>getApplicationContext</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>context</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
  
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>setApplicationContext</span><span class=o>(</span><span class=n>ApplicationContext</span> <span class=n>context</span><span class=o>)</span> <span class=kd>throws</span> <span class=n>BeansException</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>context</span> <span class=o>=</span> <span class=n>context</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>setApplicationContext</span><span style=color:#ff79c6>(</span>ApplicationContext context<span style=color:#ff79c6>)</span> <span style=color:#8be9fd;font-style:italic>throws</span> BeansException <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>context</span> <span style=color:#ff79c6>=</span> context<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>構造は簡単で、フィールドにApplicationContextがあって、それに対するGetterとSetterがあるだけです。これで動くのも不思議ですが、Springアプリケーションが動作すると自動的にApplicationContextのインスタンスがSetterを通じてフィールドにセットされます。ただ、このクラスのインスタンをnewしては使えなくなるのでフィールドとGetterはstaticにしておきます。</p>
 <h2 id=builderからbeanを使う成功の例>BuilderからBeanを使う(成功の例)</h2>
 <p>それでは、ApplicationContextのインスタンスを取得できるようになりましたので、Builderを修正します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Building</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Building</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>BuildingBuilder</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> BuildingBuilder<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>BuildingBuilder</span> <span class=o>{</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>BuildingBuilder</span> <span style=color:#ff79c6>{</span>
 
-        <span class=kd>private</span> <span class=n>DefaultSettings</span> <span class=n>settings</span><span class=o>;</span>
+        <span style=color:#8be9fd;font-style:italic>private</span> DefaultSettings settings<span style=color:#ff79c6>;</span>
 
-        <span class=kd>public</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-            <span class=k>this</span><span class=o>.</span><span class=na>settings</span> <span class=o>=</span> <span class=n>ApplicationContextProvider</span><span class=o>.</span><span class=na>getApplicationContext</span><span class=o>().</span><span class=na>getBean</span><span class=o>(</span><span class=n>DefaultSettings</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
-        <span class=o>}</span>
+        <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+            <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>settings</span> <span style=color:#ff79c6>=</span> ApplicationContextProvider<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getApplicationContext</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getBean</span><span style=color:#ff79c6>(</span>DefaultSettings<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
 
-        <span class=o>...</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+        <span style=color:#ff79c6>...</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>さっき作成したApplicationContextProviderクラスからApplicationContextを取得して、さらにgetBean()を呼び出します。このgetBean()に引数として取得したいBeanのクラスを渡すと、そのBeanのインスタンスを取得することができます。もちろんコンストラクターではなく、フィールドそのものに書くこともできます。そうする場合は以下のようになりますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>Building</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Building</span> <span style=color:#ff79c6>{</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>BuildingBuilder</span><span class=o>();</span>
-    <span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> BuildingBuilder<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>BuildingBuilder</span> <span class=o>{</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>BuildingBuilder</span> <span style=color:#ff79c6>{</span>
 
-        <span class=kd>private</span> <span class=n>DefaultSettings</span> <span class=n>settings</span> <span class=o>=</span> <span class=n>ApplicationContextProvider</span><span class=o>.</span><span class=na>getApplicationContext</span><span class=o>().</span><span class=na>getBean</span><span class=o>(</span><span class=n>DefaultSettings</span><span class=o>.</span><span class=na>class</span><span class=o>);</span>
+        <span style=color:#8be9fd;font-style:italic>private</span> DefaultSettings settings <span style=color:#ff79c6>=</span> ApplicationContextProvider<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getApplicationContext</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>getBean</span><span style=color:#ff79c6>(</span>DefaultSettings<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>);</span>
 
-        <span class=kd>public</span> <span class=nf>BuildingBuilder</span><span class=o>()</span> <span class=o>{</span>
-        <span class=o>}</span>
+        <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>BuildingBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>}</span>
 
-        <span class=o>...</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+        <span style=color:#ff79c6>...</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>修正したコードを動かしてみると、BeanのフィールドがNullではなくちゃんとYAMLから読み込んだ値が入っていることを確認できます。</p>
 <h2 id=最後に>最後に</h2>
 <p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。</p>

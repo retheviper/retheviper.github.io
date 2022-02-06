@@ -77,17 +77,17 @@ kotlin
 <li>社員が部署に配属される日付はそれぞれ</li>
 </ol>
 <p>この場合、データの作りには色々な観点があるかと思いますが、まず部署の配属日を基準にデータを作るとしたら、部署の種類、配属日とその日付に配属となった社員のリストを持つような形になるかと思います。Kotlinのコードとして表現するとしたら以下のような形ですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>enum</span> <span class=k>class</span> <span class=nc>DepartmentType</span> <span class=p>{</span> <span class=n>A</span><span class=p>,</span> <span class=n>B</span> <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>enum</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>DepartmentType</span> { A, B }
 
-<span class=k>data</span> <span class=k>class</span> <span class=nc>Department</span><span class=p>(</span>
-    <span class=k>val</span> <span class=py>departmentType</span><span class=p>:</span> <span class=n>DepartmentType</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>date</span><span class=p>:</span> <span class=n>LocalDate</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>employers</span><span class=p>:</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>Employer</span><span class=p>&gt;</span>
-<span class=p>)</span> <span class=p>{</span>
-    <span class=k>data</span> <span class=k>class</span> <span class=nc>Employer</span><span class=p>(</span>
-        <span class=k>val</span> <span class=py>id</span><span class=p>:</span> <span class=n>Int</span>
-    <span class=p>)</span>
-<span class=p>}</span>
+<span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Department</span>(
+    <span style=color:#ff79c6>val</span> departmentType: DepartmentType,
+    <span style=color:#ff79c6>val</span> date: LocalDate,
+    <span style=color:#ff79c6>val</span> employers: List&lt;Employer&gt;
+) {
+    <span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Employer</span>(
+        <span style=color:#ff79c6>val</span> id: Int
+    )
+}
 </code></pre></div><p>ここで社員の3人がいて、それぞれ部署Aと部署Bに配属された日付が違うケースがあるとしましょう。データとしては、以下のようなものです。</p>
 <div class=table-wrapper><table>
 <thead>
@@ -116,50 +116,50 @@ kotlin
 </tbody>
 </table></div>
 <p>上記のデータを持って、先ほどの部署のデータを実際のリストとして作るとしたら以下のようになるかなと思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>departments</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
-    <span class=n>Department</span><span class=p>(</span>
-        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>,</span>
-        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>1</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
-        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>1</span><span class=p>),</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>2</span><span class=p>)</span>
-        <span class=p>),</span>
-    <span class=p>),</span>
-    <span class=n>Department</span><span class=p>(</span>
-        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>,</span>
-        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
-        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>3</span><span class=p>)</span>
-        <span class=p>),</span>
-    <span class=p>),</span>
-    <span class=n>Department</span><span class=p>(</span>
-        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>,</span>
-        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>1</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
-        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>1</span><span class=p>)</span>
-        <span class=p>),</span>
-    <span class=p>),</span>
-    <span class=n>Department</span><span class=p>(</span>
-        <span class=n>departmentType</span> <span class=p>=</span> <span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>,</span>
-        <span class=n>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2022</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>1</span><span class=p>),</span>
-        <span class=n>employers</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>2</span><span class=p>),</span>
-            <span class=n>Department</span><span class=p>.</span><span class=n>Employer</span><span class=p>(</span><span class=n>id</span> <span class=p>=</span> <span class=m>3</span><span class=p>),</span>
-        <span class=p>)</span>
-    <span class=p>)</span>
-<span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> departments = listOf(
+    Department(
+        departmentType = DepartmentType.A,
+        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
+        employers = listOf(
+            Department.Employer(id = <span style=color:#bd93f9>1</span>),
+            Department.Employer(id = <span style=color:#bd93f9>2</span>)
+        ),
+    ),
+    Department(
+        departmentType = DepartmentType.A,
+        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
+        employers = listOf(
+            Department.Employer(id = <span style=color:#bd93f9>3</span>)
+        ),
+    ),
+    Department(
+        departmentType = DepartmentType.B,
+        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
+        employers = listOf(
+            Department.Employer(id = <span style=color:#bd93f9>1</span>)
+        ),
+    ),
+    Department(
+        departmentType = DepartmentType.B,
+        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
+        employers = listOf(
+            Department.Employer(id = <span style=color:#bd93f9>2</span>),
+            Department.Employer(id = <span style=color:#bd93f9>3</span>),
+        )
+    )
+)
 </code></pre></div><p>ただ、これを社員を基準に、それぞれの部署に配属された日付をデータとして加工するにはどうしたら良いでしょうか。社員番号と部署に配属となった日付の二つを持つような形です。例えば、コードで表現すると以下のようなものです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>data</span> <span class=k>class</span> <span class=nc>JoinedDates</span><span class=p>(</span>
-    <span class=k>val</span> <span class=py>employerId</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>departmentA</span><span class=p>:</span> <span class=n>LocalDate</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>departmentB</span><span class=p>:</span> <span class=n>LocalDate</span>
-<span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>JoinedDates</span>(
+    <span style=color:#ff79c6>val</span> employerId: Int,
+    <span style=color:#ff79c6>val</span> departmentA: LocalDate,
+    <span style=color:#ff79c6>val</span> departmentB: LocalDate
+)
 </code></pre></div><p>つまり、やりたいことは先ほどの<code>departments</code>を、最終的に以下のようなデータにしたいということですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=na>[
-</span><span class=na>  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
-</span><span class=na>  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
-</span><span class=na>  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
-</span><span class=na>]</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#50fa7b>[
+</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
+</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
+</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
+</span><span style=color:#50fa7b>]</span>
 </code></pre></div><p>データの整列の基準がひっくり返されるので、どうしたら良いかと悩ましくなる場面です。今回は、これを解決した自分の方法を紹介したいと思います。</p>
 <h2 id=ロジック>ロジック</h2>
 <p>Departmentを基準に考えるとEmployerのデータが複数になりますが、これを逆転させて、Employerを基準に複数のDepartmentを持つという形に加工したいというのが今回の要件です。だとすると、考えられるロジックは以下がポイントかなと思います。</p>
@@ -175,73 +175,73 @@ kotlin
 </ol>
 <p>なので、一回DepartmentのListをMapに変換して、さらにJoinedDatesのListに変換することとなります。ちょうど上記の分岐については、<a class=link href=https://docs.oracle.com/javase/8/docs/api/java/util/Map.html#compute-K-java.util.function.BiFunction- target=_blank rel=noopener>compute()</a>を活用するとできるので、中間データとしてのMapがどんな形になるかを考えると良いかなと思います。</p>
 <p>私の場合はMapの方がデータを取りやすいので、最終的には以下のような処理となりました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>List</span><span class=p>&lt;</span><span class=n>Department</span><span class=p>&gt;.</span><span class=n>toJoinedDates</span><span class=p>():</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>JoinedDates</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=c1>// 中間データ
-</span><span class=c1></span>    <span class=k>val</span> <span class=py>tempMap</span> <span class=p>=</span> <span class=n>mutableMapOf</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>DepartmentType</span><span class=p>,</span> <span class=n>LocalDate</span><span class=p>&gt;&gt;()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>List</span>&lt;Department&gt;.toJoinedDates(): List&lt;JoinedDates&gt; {
+    <span style=color:#6272a4>// 中間データ
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;Int, Map&lt;DepartmentType, LocalDate&gt;&gt;()
 
-    <span class=k>this</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>department</span> <span class=o>-&gt;</span>
-        <span class=c1>// Departmentのタイプとその日付のPair
-</span><span class=c1></span>        <span class=k>val</span> <span class=py>departmentJoined</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>departmentType</span> <span class=n>to</span> <span class=n>department</span><span class=p>.</span><span class=n>date</span>
+    <span style=color:#ff79c6>this</span>.forEach { department <span style=color:#ff79c6>-&gt;</span>
+        <span style=color:#6272a4>// Departmentのタイプとその日付のPair
+</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>val</span> departmentJoined = department.departmentType to department.date
 
-        <span class=n>department</span><span class=p>.</span><span class=n>employers</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>employer</span> <span class=o>-&gt;</span>
+        department.employers.forEach { employer <span style=color:#ff79c6>-&gt;</span>
 
-            <span class=c1>// EmployerのIDがKeyとして存在したら足して、なかったらMapを追加
-</span><span class=c1></span>            <span class=n>tempMap</span><span class=p>.</span><span class=n>compute</span><span class=p>(</span><span class=n>employer</span><span class=p>.</span><span class=n>id</span><span class=p>)</span> <span class=p>{</span> <span class=n>_</span><span class=p>,</span> <span class=n>value</span> <span class=o>-&gt;</span>
-                <span class=n>value</span><span class=o>?.</span><span class=n>let</span> <span class=p>{</span> <span class=n>value</span> <span class=p>+</span> <span class=n>departmentJoined</span> <span class=p>}</span> <span class=o>?:</span> <span class=n>mapOf</span><span class=p>(</span><span class=n>departmentJoined</span><span class=p>)</span>
-            <span class=p>}</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
+            <span style=color:#6272a4>// EmployerのIDがKeyとして存在したら足して、なかったらMapを追加
+</span><span style=color:#6272a4></span>            tempMap.compute(employer.id) { _, value <span style=color:#ff79c6>-&gt;</span>
+                value<span style=color:#ff79c6>?.</span>let { value + departmentJoined } <span style=color:#ff79c6>?:</span> mapOf(departmentJoined)
+            }
+        }
+    }
 
-    <span class=c1>// 中間データをJoinedDatesのListに変えて返却
-</span><span class=c1></span>    <span class=k>return</span> <span class=n>tempMap</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=p>(</span><span class=n>id</span><span class=p>,</span> <span class=n>department</span><span class=p>)</span> <span class=o>-&gt;</span>
-        <span class=n>JoinedDates</span><span class=p>(</span>
-            <span class=n>employerId</span> <span class=p>=</span> <span class=n>id</span><span class=p>,</span>
-            <span class=n>departmentA</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>),</span>
-            <span class=n>departmentB</span> <span class=p>=</span> <span class=n>department</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>)</span>
-        <span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#6272a4>// 中間データをJoinedDatesのListに変えて返却
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> tempMap.map { (id, department) <span style=color:#ff79c6>-&gt;</span>
+        JoinedDates(
+            employerId = id,
+            departmentA = department.getValue(DepartmentType.A),
+            departmentB = department.getValue(DepartmentType.B)
+        )
+    }
+}
 </code></pre></div><h2 id=共通ロジック化>共通ロジック化</h2>
 <p>ジェネリックを使ったclassとして上記のロジックを一部分離すれば、似たようなケースで色々使い回せるのではないかと思いましたので、以下のようなコードも書いてみました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>class</span> <span class=nc>Aggregator</span><span class=p>&lt;</span><span class=n>T</span><span class=p>,</span> <span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>,</span> <span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
-    <span class=k>private</span> <span class=k>val</span> <span class=py>tempMap</span> <span class=p>=</span> <span class=n>mutableMapOf</span><span class=p>&lt;</span><span class=n>T</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;&gt;()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Aggregator</span>&lt;T, K, V, R&gt; {
+    <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;T, Map&lt;K, V&gt;&gt;()
 
-    <span class=c1>// データの追加
-</span><span class=c1></span>    <span class=k>fun</span> <span class=nf>add</span><span class=p>(</span><span class=n>key</span><span class=p>:</span> <span class=n>T</span><span class=p>,</span> <span class=n>value</span><span class=p>:</span> <span class=n>Pair</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;)</span> <span class=p>{</span>
-        <span class=n>tempMap</span><span class=p>.</span><span class=n>compute</span><span class=p>(</span><span class=n>key</span><span class=p>)</span> <span class=p>{</span> <span class=n>_</span><span class=p>,</span> <span class=n>existingValue</span> <span class=o>-&gt;</span>
-            <span class=n>existingValue</span><span class=o>?.</span><span class=n>let</span> <span class=p>{</span> <span class=n>existingValue</span> <span class=p>+</span> <span class=n>value</span> <span class=p>}</span> <span class=o>?:</span> <span class=n>mapOf</span><span class=p>(</span><span class=n>value</span><span class=p>)</span>
-        <span class=p>}</span>
-    <span class=p>}</span>
+    <span style=color:#6272a4>// データの追加
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(key: T, value: Pair&lt;K, V&gt;) {
+        tempMap.compute(key) { _, existingValue <span style=color:#ff79c6>-&gt;</span>
+            existingValue<span style=color:#ff79c6>?.</span>let { existingValue + value } <span style=color:#ff79c6>?:</span> mapOf(value)
+        }
+    }
 
-    <span class=c1>// 指定したListとして取得
-</span><span class=c1></span>    <span class=k>fun</span> <span class=nf>getList</span><span class=p>(</span><span class=n>transfer</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>,</span> <span class=n>Map</span><span class=p>&lt;</span><span class=n>K</span><span class=p>,</span> <span class=n>V</span><span class=p>&gt;)</span> <span class=o>-&gt;</span> <span class=n>R</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>R</span><span class=p>&gt;</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=n>tempMap</span><span class=p>.</span><span class=n>map</span> <span class=p>{</span> <span class=n>transfer</span><span class=p>(</span><span class=k>it</span><span class=p>.</span><span class=n>key</span><span class=p>,</span> <span class=k>it</span><span class=p>.</span><span class=n>value</span><span class=p>)</span> <span class=p>}</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+    <span style=color:#6272a4>// 指定したListとして取得
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getList</span>(transfer: (T, Map&lt;K, V&gt;) <span style=color:#ff79c6>-&gt;</span> R): List&lt;R&gt; {
+        <span style=color:#ff79c6>return</span> tempMap.map { transfer(<span style=color:#ff79c6>it</span>.key, <span style=color:#ff79c6>it</span>.value) }
+    }
+}
 </code></pre></div><p>これの場合は以下のような使い方ができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>aggregator</span> <span class=p>=</span> <span class=n>Aggregator</span><span class=p>&lt;</span><span class=n>Int</span><span class=p>,</span> <span class=n>DepartmentType</span><span class=p>,</span> <span class=n>LocalDate</span><span class=p>,</span> <span class=n>JoinedDates</span><span class=p>&gt;()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> aggregator = Aggregator&lt;Int, DepartmentType, LocalDate, JoinedDates&gt;()
 
-<span class=c1>// データの追加
-</span><span class=c1></span><span class=n>departments</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>a</span> <span class=o>-&gt;</span>
-    <span class=n>a</span><span class=p>.</span><span class=n>employers</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span> <span class=n>b</span> <span class=o>-&gt;</span>
-        <span class=n>aggregator</span><span class=p>.</span><span class=n>add</span><span class=p>(</span>
-            <span class=n>key</span> <span class=p>=</span> <span class=n>b</span><span class=p>.</span><span class=n>id</span><span class=p>,</span>
-            <span class=n>value</span> <span class=p>=</span> <span class=n>a</span><span class=p>.</span><span class=n>departmentType</span> <span class=n>to</span> <span class=n>a</span><span class=p>.</span><span class=n>date</span>
-        <span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<span style=color:#6272a4>// データの追加
+</span><span style=color:#6272a4></span>departments.forEach { a <span style=color:#ff79c6>-&gt;</span>
+    a.employers.forEach { b <span style=color:#ff79c6>-&gt;</span>
+        aggregator.add(
+            key = b.id,
+            value = a.departmentType to a.date
+        )
+    }
+}
 
-<span class=c1>// Listの結果を取得
-</span><span class=c1></span><span class=k>val</span> <span class=py>joinedDates</span> <span class=p>=</span> <span class=n>aggregator</span><span class=p>.</span><span class=n>getList</span> <span class=p>{</span> <span class=n>id</span><span class=p>,</span> <span class=n>joinedDate</span> <span class=o>-&gt;</span>
-    <span class=n>JoinedDates</span><span class=p>(</span>
-        <span class=n>employerId</span> <span class=p>=</span> <span class=n>id</span><span class=p>,</span>
-        <span class=n>departmentA</span> <span class=p>=</span> <span class=n>joinedDate</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>A</span><span class=p>),</span>
-        <span class=n>departmentB</span> <span class=p>=</span> <span class=n>joinedDate</span><span class=p>.</span><span class=n>getValue</span><span class=p>(</span><span class=n>DepartmentType</span><span class=p>.</span><span class=n>B</span><span class=p>)</span>
-    <span class=p>)</span>
-<span class=p>}</span>
+<span style=color:#6272a4>// Listの結果を取得
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> joinedDates = aggregator.getList { id, joinedDate <span style=color:#ff79c6>-&gt;</span>
+    JoinedDates(
+        employerId = id,
+        departmentA = joinedDate.getValue(DepartmentType.A),
+        departmentB = joinedDate.getValue(DepartmentType.B)
+    )
+}
 </code></pre></div><p>汎用性はあるものの、呼び出し元のコードが増えたり、指定している型の意味や意図がよくわからないので適切なKDocやコメントがないと少しわかりにくいところがデメリットかも知れませんね。ただ大事なのは中間データの型と<code>compute()</code>による分岐処理なので、そこだけをうまく取り出して他でも応用できるかなと思います。</p>
 <h2 id=最後に>最後に</h2>
-<p>サーバサイドKoltinだと、多くの場合にデータを<code>List</code>として扱うのが普通かなと思いますが、場合によっては<code>Map</code>を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した<code>compute()</code>以外でも、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html target=_blank rel=noopener>getOrPut()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html target=_blank rel=noopener>getOrDefault()</a>などの機能が便利なので色々と活用できる場面が多いかなと思います。</p>
+<p>サーバサイドKoltinだと、多くの場合にデータを<code>List</code>として扱うのが普通かなと思いますが、場合によっては<code>Map</code>を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した<code>compute()</code>以外でも、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html target=_blank rel=noopener>getOrPut()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html target=_blank rel=noopener>getOrDefault()</a>などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は<a class=link href=../exposed-mapping-record-to-object>前回のポスト</a>でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。</p>
 <p>プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。</p>
 <p>では、また！</p>
 </section>

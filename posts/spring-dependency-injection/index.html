@@ -73,48 +73,48 @@ spring
 <p>結論からいうと、大概の場合に<code>@Autowired</code>はフィールドよりはコンストラクターにつけた方がいいらしいです。そしてこれを(フィールドやコンストラクターに<code>@Autowired</code>をつけることを)、それぞれ「フィールドインジェクション」と「コンストラクターインジェクション」と呼ぶらしいです。では、これらをコードを持って説明していきましょう。</p>
 <h2 id=field-injection>Field Injection</h2>
 <p>まずインジェクションのために以下のようなコンフィギュレーションクラス<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>を定義したとしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>Mapper</span> <span class=kd>extends</span> <span class=n>ModelMapper</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Mapper</span> <span style=color:#8be9fd;font-style:italic>extends</span> ModelMapper <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Bean</span>
-    <span class=kd>public</span> <span class=n>Mapper</span> <span class=n>mapper</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>ModelMapper</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Bean
+    <span style=color:#8be9fd;font-style:italic>public</span> Mapper mapper <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> ModelMapper<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ここでは<a class=link href=http://modelmapper.org/ target=_blank rel=noopener>ModelMapper</a>を使ってみます。ModelMapperに関しては、以前のポストにも書きましたが、互いにマッチングするGetter/SetterのあるBean同士のマッピングを自動で行ってくれる便利なライブラリーです。</p>
 <p>こうしてSpringでBeanを登録し、Autowiredアノテーションをフィールドにつけるサービスクラスの例が以下です。これをフィールドインジェクションと呼びます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Service</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>ItemServiceImpl</span> <span class=kd>implements</span> <span class=n>ItemService</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>private</span> <span class=n>Mapper</span> <span class=n>mapper</span><span class=o>;</span>
-<span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>自分が最初にSpring Frameworkについて学んだ時はこのようなフィールドインジェクトションが一般的でした。しかし、フィールドインジェクションでは致命的な問題があリます。ここでフィールドがNullだった場合もプログラムは動作するということです。クラスの動作に必要な要件が整ってないのにもかかわらず、プログラムが動作してしまうのはバグを呼ぶこととなりますね。なのでフィールドインジェクションはよくないです。</p>
 <h2 id=setter-injection>Setter Injection</h2>
 <p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Service</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>ItemServiceImpl</span> <span class=kd>implements</span> <span class=n>ItemService</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>Mapper</span> <span class=n>mapper</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>setMapper</span><span class=o>(</span><span class=n>Mapper</span> <span class=n>mapper</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>mapper</span> <span class=o>=</span> <span class=n>mapper</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>setMapper</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>Setterによるインジェクションの問題は、フィールドインジェクションと同じです。Setterで必要なオブジェクトが注入されたかどうかと関係なくプログラムは動く可能性がありますね。この問題を解決できるのが、次に紹介するコンストラクターインジェクションです。</p>
 <h2 id=constructor-injection>Constructor Injection</h2>
 <p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Service</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>ItemServiceImpl</span> <span class=kd>implements</span> <span class=n>ItemService</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
 
-    <span class=kd>private</span> <span class=n>Mapper</span> <span class=n>mapper</span><span class=o>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
 
-    <span class=nd>@Autowired</span>
-    <span class=kd>public</span> <span class=nf>ItemServiceImpl</span><span class=o>(</span><span class=n>Mapper</span> <span class=n>mapper</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>this</span><span class=o>.</span><span class=na>mapper</span> <span class=o>=</span> <span class=n>mapper</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Autowired
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>ItemServiceImpl</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>コンストラクターによるインジェクションの良い点は、先に述べたような問題が発生する可能性をブロックできるということです。これはSpringというよりJavaの言語仕様の話ですが、コンストラクターで引数の要件が満たされてないクラスはインスタンスを生成できませんね。そしてNullを注入しない限り、NullPointerExceptionは発生しなくなります。</p>
 <p>また、コンストラクターインジェクションだと、循環参照<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>の問題を事前に防ぐことができるというメリットがあります。フィールドインジェクションやセッターインジェクションでは実際のコードが呼ばれるまでは問題を発見することができませんが、コンストラクターインジェクションで循環参照が発生する場合はSpringアプリケーションを起動する時に警告が出力されます。</p>
 <p>また、フィールドインジェクションの場合はそのクラスの単体テストができないという問題もあります。Autowiredアノテーションがついているフィールドに対してオブジェクトを注入できる方法がないですので。Setterを使うと一旦注入はできるようになりますが、あえてSetterを使う理由はないですね。</p>

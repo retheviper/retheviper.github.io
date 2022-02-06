@@ -77,75 +77,75 @@ python
 <p>2019/06/15 12:00:00 LOG0001: Job code 1234は正常終了しました。</p>
 </blockquote>
 <p>また、ログファイルの最上段には<code>---- Job Log ----</code>を入れ、これがログファイルであることを示したいです。このように基本要件を決め、実装していきます。私が実装したコードの簡略化したバージョンは以下となります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># ログファイルの存在有無を確認するためのosと日付を残すためのdatetimeをインポート</span>
-<span class=kn>import</span> <span class=nn>os</span>
-<span class=kn>import</span> <span class=nn>datetime</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># ログファイルの存在有無を確認するためのosと日付を残すためのdatetimeをインポート</span>
+<span style=color:#ff79c6>import</span> os
+<span style=color:#ff79c6>import</span> datetime
 
-<span class=c1># ログをかく関数(job_codeは与えられない場合があるのでデフォルト値を設定)</span>
-<span class=k>def</span> <span class=nf>writeLog</span><span class=p>(</span><span class=n>log_code</span><span class=p>,</span> <span class=n>job_code</span><span class=o>=</span><span class=s1>&#39;&#39;</span><span class=p>):</span>
-    <span class=c1># ログファイルのパスを指定(絶対経路)</span>
-    <span class=n>log_path</span> <span class=o>=</span> <span class=s1>&#39;/log/program_log.log&#39;</span>
+<span style=color:#6272a4># ログをかく関数(job_codeは与えられない場合があるのでデフォルト値を設定)</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>writeLog</span>(log_code, job_code<span style=color:#ff79c6>=</span><span style=color:#f1fa8c>&#39;&#39;</span>):
+    <span style=color:#6272a4># ログファイルのパスを指定(絶対経路)</span>
+    log_path <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;/log/program_log.log&#39;</span>
 
-    <span class=c1># ログコード判定によりメッセージを決める</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>log_code</span> <span class=o>==</span> <span class=s1>&#39;LOGI001&#39;</span><span class=p>):</span>
-        <span class=n>log_message</span> <span class=o>=</span> <span class=s1>&#39;Job code &#39;</span> <span class=o>+</span> <span class=n>job_code</span> <span class=o>+</span> <span class=s1>&#39;を実行します。&#39;</span>
-    <span class=k>elif</span> <span class=p>(</span><span class=n>log_code</span> <span class=o>==</span> <span class=s1>&#39;LOGI002&#39;</span><span class=p>):</span>
-        <span class=n>log_message</span> <span class=o>=</span> <span class=s1>&#39;Job code &#39;</span> <span class=o>+</span> <span class=n>job_code</span> <span class=o>+</span> <span class=s1>&#39;は正常終了しました。&#39;</span>
-    <span class=k>elif</span> <span class=p>(</span><span class=n>log_code</span> <span class=o>==</span> <span class=s1>&#39;LOGW001&#39;</span><span class=p>):</span>
-        <span class=n>log_message</span> <span class=o>=</span> <span class=s1>&#39;Job codeがありません。プログラムの起動に失敗しました。&#39;</span>
-    <span class=k>elif</span> <span class=p>(</span><span class=n>log_code</span> <span class=o>==</span> <span class=s1>&#39;LOGE001&#39;</span><span class=p>):</span>
-        <span class=n>log_message</span> <span class=o>=</span> <span class=s1>&#39;Job code &#39;</span> <span class=o>+</span> <span class=n>job_code</span> <span class=o>+</span> <span class=s1>&#39;は異常終了しました。&#39;</span>
-    <span class=k>else</span><span class=p>:</span>
-        <span class=n>log_message</span> <span class=o>=</span> <span class=s1>&#39;原因を特定できないエラーが発生しました。&#39;</span>
+    <span style=color:#6272a4># ログコード判定によりメッセージを決める</span>
+    <span style=color:#ff79c6>if</span> (log_code <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;LOGI001&#39;</span>):
+        log_message <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Job code &#39;</span> <span style=color:#ff79c6>+</span> job_code <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;を実行します。&#39;</span>
+    <span style=color:#ff79c6>elif</span> (log_code <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;LOGI002&#39;</span>):
+        log_message <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Job code &#39;</span> <span style=color:#ff79c6>+</span> job_code <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;は正常終了しました。&#39;</span>
+    <span style=color:#ff79c6>elif</span> (log_code <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;LOGW001&#39;</span>):
+        log_message <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Job codeがありません。プログラムの起動に失敗しました。&#39;</span>
+    <span style=color:#ff79c6>elif</span> (log_code <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;LOGE001&#39;</span>):
+        log_message <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;Job code &#39;</span> <span style=color:#ff79c6>+</span> job_code <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;は異常終了しました。&#39;</span>
+    <span style=color:#ff79c6>else</span>:
+        log_message <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;原因を特定できないエラーが発生しました。&#39;</span>
 
-    <span class=c1># ログファイルが存在しない場合は先端にログであることを示すコードを含むファイルを生成</span>
-    <span class=k>if</span> <span class=p>(</span><span class=ow>not</span> <span class=n>os</span><span class=o>.</span><span class=n>path</span><span class=o>.</span><span class=n>exists</span><span class=p>(</span><span class=n>log_path</span><span class=p>)):</span>
-        <span class=k>with</span> <span class=nb>open</span><span class=p>(</span><span class=n>log_path</span><span class=p>,</span> <span class=n>mode</span><span class=o>=</span><span class=s1>&#39;a&#39;</span><span class=p>)</span> <span class=k>as</span> <span class=n>log</span><span class=p>:</span>
-            <span class=n>log</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=s1>&#39;----- Job Log -----</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>)</span>
-    <span class=k>else</span> 
-    <span class=c1># ログファイルがすでに存在する場合は追記する</span>
-        <span class=k>with</span> <span class=nb>open</span><span class=p>(</span><span class=n>log_path</span><span class=p>,</span> <span class=n>mode</span><span class=o>=</span><span class=s1>&#39;a&#39;</span><span class=p>)</span> <span class=k>as</span> <span class=n>log</span><span class=p>:</span>
-            <span class=n>log</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>datetime</span><span class=o>.</span><span class=n>datetime</span><span class=o>.</span><span class=n>today</span><span class=p>()</span><span class=o>.</span><span class=n>strftime</span><span class=p>(</span><span class=s1>&#39;%Y/%m/</span><span class=si>%d</span><span class=s1> %H:%M:%S&#39;</span><span class=p>)</span> <span class=o>+</span> <span class=s1>&#39; &#39;</span> <span class=o>+</span> <span class=n>log_code</span> <span class=o>+</span> <span class=s1>&#39;: &#39;</span> <span class=o>+</span> <span class=n>log_message</span> <span class=o>+</span> <span class=s1>&#39;</span><span class=se>\n</span><span class=s1>&#39;</span><span class=p>)</span>
+    <span style=color:#6272a4># ログファイルが存在しない場合は先端にログであることを示すコードを含むファイルを生成</span>
+    <span style=color:#ff79c6>if</span> (<span style=color:#ff79c6>not</span> os<span style=color:#ff79c6>.</span>path<span style=color:#ff79c6>.</span>exists(log_path)):
+        <span style=color:#ff79c6>with</span> <span style=color:#8be9fd;font-style:italic>open</span>(log_path, mode<span style=color:#ff79c6>=</span><span style=color:#f1fa8c>&#39;a&#39;</span>) <span style=color:#ff79c6>as</span> log:
+            log<span style=color:#ff79c6>.</span>write(<span style=color:#f1fa8c>&#39;----- Job Log -----</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>)
+    <span style=color:#ff79c6>else</span> 
+    <span style=color:#6272a4># ログファイルがすでに存在する場合は追記する</span>
+        <span style=color:#ff79c6>with</span> <span style=color:#8be9fd;font-style:italic>open</span>(log_path, mode<span style=color:#ff79c6>=</span><span style=color:#f1fa8c>&#39;a&#39;</span>) <span style=color:#ff79c6>as</span> log:
+            log<span style=color:#ff79c6>.</span>write(datetime<span style=color:#ff79c6>.</span>datetime<span style=color:#ff79c6>.</span>today()<span style=color:#ff79c6>.</span>strftime(<span style=color:#f1fa8c>&#39;%Y/%m/</span><span style=color:#f1fa8c>%d</span><span style=color:#f1fa8c> %H:%M:%S&#39;</span>) <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39; &#39;</span> <span style=color:#ff79c6>+</span> log_code <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;: &#39;</span> <span style=color:#ff79c6>+</span> log_message <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;</span><span style=color:#f1fa8c>\n</span><span style=color:#f1fa8c>&#39;</span>)
 </code></pre></div><p>これでメインプログラムでロガーを呼び、そのタイミングでログコードやジョブコードを渡すだけでログは残されます。ログの種類を減らしたい、もしくは増やしたい場合はif文を修正するだけで対応できます。</p>
 <h2 id=メインプログラムでロガーを呼び出す>メインプログラムでロガーを呼び出す</h2>
 <p>メインプログラムでまずログを書く(ロガーを呼ぶ)タイミングを決めます。例えば今回はDBに接続するタスクがあったので、DBの接続に失敗した場合にロガーを書くようにしました。そのほかにも処理の開始や終了時のステータスなどに関してもログを残したいですね。</p>
 <p>同じく簡略化したメインプログラムのコードは以下のような形です。先に作成して置いたロガーをインポートし、ログを出したい場合に呼び出すだけでいいです。ただロガーファイルの位置が実行するメインプログラムと違うパスにある場合はインポートの形が変わるので注意が必要です。ここではメインプログラムとロガーは同じパスから実行される場合を想定して実装しています。それでは下のコードをどうぞ。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># 簡略化したメインプログラム</span>
-<span class=c1># 終了時のリターンコードと起動時の引数のためsysを、ログを書くためにロガーのwriteLog関数をインポート</span>
-<span class=kn>import</span> <span class=nn>sys</span>
-<span class=kn>from</span> <span class=nn>logger</span> <span class=kn>import</span> <span class=n>writeLog</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># 簡略化したメインプログラム</span>
+<span style=color:#6272a4># 終了時のリターンコードと起動時の引数のためsysを、ログを書くためにロガーのwriteLog関数をインポート</span>
+<span style=color:#ff79c6>import</span> sys
+<span style=color:#ff79c6>from</span> logger <span style=color:#ff79c6>import</span> writeLog
 
-<span class=c1># 起動時にコマンドラインから引数を受けるための変数宣言</span>
-<span class=n>args</span> <span class=o>=</span> <span class=n>sys</span><span class=o>.</span><span class=n>argv</span>
+<span style=color:#6272a4># 起動時にコマンドラインから引数を受けるための変数宣言</span>
+args <span style=color:#ff79c6>=</span> sys<span style=color:#ff79c6>.</span>argv
 
-<span class=c1># 関数の例</span>
-<span class=k>def</span> <span class=nf>program</span><span class=p>(</span><span class=n>job_code</span><span class=p>):</span>
-    <span class=c1># 処理開始の時点でログを書く</span>
-    <span class=n>writeLog</span><span class=p>(</span><span class=s1>&#39;LOGI001&#39;</span><span class=p>,</span> <span class=n>job_code</span><span class=p>)</span>
-    <span class=c1># 正常処理時の挙動を書く</span>
-    <span class=k>try</span><span class=p>:</span>
-        <span class=nb>print</span> <span class=p>(</span><span class=s1>&#39;何かの処理を行う&#39;</span><span class=p>)</span>
-        <span class=c1># 正常終了のコードでログを書く</span>
-        <span class=n>writeLog</span><span class=p>(</span><span class=s1>&#39;LOGI002&#39;</span><span class=p>)</span>
-        <span class=c1># 正常終了の場合は終了時のリターンコードが0</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>0</span><span class=p>)</span>
-    <span class=c1># 処理に問題が起きた場合の処理を書く</span>
-    <span class=k>except</span><span class=p>:</span>
-        <span class=c1># 異常終了のコードでログを書く</span>
-        <span class=n>writeLog</span><span class=p>(</span><span class=s1>&#39;LOGE001&#39;</span><span class=p>)</span>
-        <span class=c1># 異常終了の場合は終了時のリターンコードが9</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>9</span><span class=p>)</span>
+<span style=color:#6272a4># 関数の例</span>
+<span style=color:#ff79c6>def</span> <span style=color:#50fa7b>program</span>(job_code):
+    <span style=color:#6272a4># 処理開始の時点でログを書く</span>
+    writeLog(<span style=color:#f1fa8c>&#39;LOGI001&#39;</span>, job_code)
+    <span style=color:#6272a4># 正常処理時の挙動を書く</span>
+    <span style=color:#ff79c6>try</span>:
+        <span style=color:#8be9fd;font-style:italic>print</span> (<span style=color:#f1fa8c>&#39;何かの処理を行う&#39;</span>)
+        <span style=color:#6272a4># 正常終了のコードでログを書く</span>
+        writeLog(<span style=color:#f1fa8c>&#39;LOGI002&#39;</span>)
+        <span style=color:#6272a4># 正常終了の場合は終了時のリターンコードが0</span>
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>0</span>)
+    <span style=color:#6272a4># 処理に問題が起きた場合の処理を書く</span>
+    <span style=color:#ff79c6>except</span>:
+        <span style=color:#6272a4># 異常終了のコードでログを書く</span>
+        writeLog(<span style=color:#f1fa8c>&#39;LOGE001&#39;</span>)
+        <span style=color:#6272a4># 異常終了の場合は終了時のリターンコードが9</span>
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>9</span>)
 
-<span class=c1># プログラムの起動部</span>
-<span class=k>if</span> <span class=vm>__name__</span> <span class=o>==</span> <span class=s1>&#39;__main__&#39;</span><span class=p>:</span>
-    <span class=c1># 引数(ジョブコード)が入力されなかった場合のチェック</span>
-    <span class=k>if</span> <span class=p>(</span><span class=n>args</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=ow>in</span> <span class=kc>None</span><span class=p>):</span>
-        <span class=c1># 警告終了のコードでログを書く</span>
-        <span class=n>writeLog</span><span class=p>(</span><span class=s1>&#39;LOGW001&#39;</span><span class=p>)</span>
-        <span class=c1># 警告終了の場合は終了時のリターンコードが1</span>
-        <span class=n>sys</span><span class=o>.</span><span class=n>exit</span><span class=p>(</span><span class=mi>1</span><span class=p>)</span>
-    <span class=k>else</span><span class=p>:</span>
-        <span class=n>program</span><span class=p>(</span><span class=n>args</span><span class=p>[</span><span class=mi>1</span><span class=p>])</span>
+<span style=color:#6272a4># プログラムの起動部</span>
+<span style=color:#ff79c6>if</span> __name__ <span style=color:#ff79c6>==</span> <span style=color:#f1fa8c>&#39;__main__&#39;</span>:
+    <span style=color:#6272a4># 引数(ジョブコード)が入力されなかった場合のチェック</span>
+    <span style=color:#ff79c6>if</span> (args[<span style=color:#bd93f9>1</span>] <span style=color:#ff79c6>in</span> <span style=color:#ff79c6>None</span>):
+        <span style=color:#6272a4># 警告終了のコードでログを書く</span>
+        writeLog(<span style=color:#f1fa8c>&#39;LOGW001&#39;</span>)
+        <span style=color:#6272a4># 警告終了の場合は終了時のリターンコードが1</span>
+        sys<span style=color:#ff79c6>.</span>exit(<span style=color:#bd93f9>1</span>)
+    <span style=color:#ff79c6>else</span>:
+        program(args[<span style=color:#bd93f9>1</span>])
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>どんなログを吐き出して欲しいかによってロガーを呼び出す位置を決めます。そして引数を渡すことでどんな場合にどんなログを出力するかを決められます。実装が難しい作業ではないですが、こうやってロガーを分離して必要な時だけ呼び出すことでメインプログラムのコードがいくら長くなっても関数を呼び出すだけで済むという効率的な構造となっています。そもそも関数というものは、反復を減らすために書くものでもありますしね。</p>
 <p>あと少し調べたところ、Pythonではモジュールとしてloggerをすでに提供しているとのことです。標準出力としてログのレベルを指定して文字列を出力できるらしいですね。これを応用してファイルに描くようにコードを書くこともまた良い方法になるのではないかと思います。</p>

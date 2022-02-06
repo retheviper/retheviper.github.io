@@ -74,37 +74,37 @@ spring
 <p>※これらを全部試してみたわけではないですが、とりあえずはご紹介まで。</p>
 <h2 id=条件でdiする>条件でDIする</h2>
 <p>以前のポストで紹介したコートから始めます。以下のようなことをすれば、application.ymlに記載した値によりどのリポジトリをDIするか決定できるという話をしました。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SomeServiceConfig</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SomeServiceConfig</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// YAMLに設定した値を読み込む
-</span><span class=c1></span>    <span class=nd>@Value</span><span class=o>(</span><span class=s>&#34;${settings.TestMode:false}&#34;</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=kt>boolean</span> <span class=n>testMode</span><span class=o>;</span>
+    <span style=color:#6272a4>// YAMLに設定した値を読み込む
+</span><span style=color:#6272a4></span>    @Value<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;${settings.TestMode:false}&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>boolean</span> testMode<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// YAMLの設定からどのImplクラスを使うかを決定してBean登録
-</span><span class=c1></span>    <span class=nd>@Bean</span>
-    <span class=kd>public</span> <span class=n>SomeService</span> <span class=nf>someService</span><span class=o>(</span><span class=n>SomeRepository</span> <span class=n>repository</span><span class=o>,</span> <span class=n>SomeTestRepository</span> <span class=n>testRepository</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>this</span><span class=o>.</span><span class=na>testMode</span> <span class=o>?</span> <span class=k>new</span> <span class=n>SomeTestSerivce</span><span class=o>(</span><span class=n>testRepository</span><span class=o>)</span> <span class=o>:</span> <span class=k>new</span> <span class=n>SomeServiceImple</span><span class=o>(</span><span class=n>repository</span><span class=o>);</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// YAMLの設定からどのImplクラスを使うかを決定してBean登録
+</span><span style=color:#6272a4></span>    @Bean
+    <span style=color:#8be9fd;font-style:italic>public</span> SomeService <span style=color:#50fa7b>someService</span><span style=color:#ff79c6>(</span>SomeRepository repository<span style=color:#ff79c6>,</span> SomeTestRepository testRepository<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>testMode</span> <span style=color:#ff79c6>?</span> <span style=color:#ff79c6>new</span> SomeTestSerivce<span style=color:#ff79c6>(</span>testRepository<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>:</span> <span style=color:#ff79c6>new</span> SomeServiceImple<span style=color:#ff79c6>(</span>repository<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>同じようなことを、これから紹介するSpringのアノテーションで実装するとしたら、以下のように変わります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>SomeServiceConfig</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>SomeServiceConfig</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// 本番用のサービスクラス
-</span><span class=c1></span>    <span class=nd>@Bean</span>
-    <span class=nd>@ConditionalOnProperty</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;settings.Testmode&#34;</span><span class=o>,</span> <span class=n>havingValue</span> <span class=o>=</span> <span class=s>&#34;false&#34;</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>SomeService</span> <span class=nf>someService</span><span class=o>(</span><span class=n>SomeRepository</span> <span class=n>repository</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>SomeServiceImple</span><span class=o>(</span><span class=n>repository</span><span class=o>);</span>
-    <span class=o>}</span>
+    <span style=color:#6272a4>// 本番用のサービスクラス
+</span><span style=color:#6272a4></span>    @Bean
+    @ConditionalOnProperty<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;settings.Testmode&#34;</span><span style=color:#ff79c6>,</span> havingValue <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;false&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> SomeService <span style=color:#50fa7b>someService</span><span style=color:#ff79c6>(</span>SomeRepository repository<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> SomeServiceImple<span style=color:#ff79c6>(</span>repository<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=c1>// テスト用のサービスクラス
-</span><span class=c1></span>    <span class=nd>@Bean</span>
-    <span class=nd>@ConditionalOnProperty</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;settings.Testmode&#34;</span><span class=o>,</span> <span class=n>havingValue</span> <span class=o>=</span> <span class=s>&#34;true&#34;</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>SomeService</span> <span class=nf>someTestService</span><span class=o>(</span><span class=n>SomeTestRepository</span> <span class=n>testRepository</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>SomeTestService</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// テスト用のサービスクラス
+</span><span style=color:#6272a4></span>    @Bean
+    @ConditionalOnProperty<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;settings.Testmode&#34;</span><span style=color:#ff79c6>,</span> havingValue <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;true&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> SomeService <span style=color:#50fa7b>someTestService</span><span style=color:#ff79c6>(</span>SomeTestRepository testRepository<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> SomeTestService<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>以上のコードからわかるように、<code>@ConditionalOnProperty</code>というアノテーションを使うと、とある条件によりメソッドの内容が実行されるようにすることができるようになります。わざわざ分岐を書いたり、カスタムな<code>@Value</code>アノテーションを用意するよりかなりすっきりしたコードになりますね。</p>
 <p>また、このアノテーションはBeanアノテーションとだけ組み合わせができるわけでもないです。他のSpringのクラスアノテーション(Configuration、Component、Service、Repository、Controller)にも使えるので、より自由度が高いですね。</p>
 <p>他にもSpring Bootのorg.springframework.boot.autoconfigure.conditionパッケージにはには<code>@Conditional...</code>といったアノテーションがいくつか用意されていて、これらを簡単に紹介したいと思います。</p>
@@ -112,114 +112,114 @@ spring
 <h3 id=conditionalonproperty>ConditionalOnProperty</h3>
 <p>application.ymlなど、プロパティを書いたファイルやシステムプロパティに、指定したアノテーションがある場合実行されるアノテーションです。Spring Bootアプリケーションで最も一般的に使われるものらしいですね。括弧の中にはプロパティ名と値、そしてそのプロパティが存在しない場合も実行するかどうかを指定できます。</p>
 <p>以下のコードは、use.testmodeというプロパティが存在していて、かつtrueの場合に実行されるConfigurationクラスの例です。matchIfMissingをtrueに指定すると、use.testmodeというプロパティが存在しなくても実行されるようになります。もちろん指定しなかった場合のデフォルト値はfalseとなります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnProperty</span><span class=o>(</span><span class=n>value</span> <span class=o>=</span> <span class=s>&#34;use.testmode&#34;</span><span class=o>,</span> <span class=n>havingValue</span> <span class=o>=</span> <span class=s>&#34;true&#34;</span><span class=o>,</span> <span class=n>matchIfMissing</span> <span class=o>=</span> <span class=kc>true</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>TestConfig</span> <span class=o>{</span>
-  <span class=c1>// テストモードで使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnProperty<span style=color:#ff79c6>(</span>value <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;use.testmode&#34;</span><span style=color:#ff79c6>,</span> havingValue <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;true&#34;</span><span style=color:#ff79c6>,</span> matchIfMissing <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>true</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>TestConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// テストモードで使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonexpression>ConditionalOnExpression</h3>
 <p>プロパティの記述方法による実行というアノテーションです。括弧で条件を指定できます。ここでいう条件(表現式)は、Valueアノテーションなどでも使われる<a class=link href=https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#expressions target=_blank rel=noopener>SpEL</a>を使います。application.ymlなどに記載したプロパティが、括弧の中の条件と一致する場合に実行されますね。以下のコードはuse.testmodeとuse.submodeのどちらもtrueの場合に実行される例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnExpression</span><span class=o>(</span><span class=s>&#34;${use.testmode:true} and ${use.submode:true}&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>TestSubConfig</span> <span class=o>{</span>
-  <span class=c1>// テストモード及びサブモードの両方がtrueの場合に使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnExpression<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;${use.testmode:true} and ${use.submode:true}&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>TestSubConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// テストモード及びサブモードの両方がtrueの場合に使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonbean>ConditionalOnBean</h3>
 <p>指定したBeanが存在する場合に実行というアノテーションです。括弧の中にBeanとして登録されているかどうか判定したいクラスを指定するだけで使えます。ConditionalOnPropertyでとあるBeanが登録されたら、それに合わせて必要なサブモジュール的なものも登録したい、といった場合に使えるのかなと思います。以下のコードは、TestRepositoryというクラスがBeanとして登録されている場合に実行される例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnBean</span><span class=o>(</span><span class=n>TestRepository</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>TestBeanConfig</span> <span class=o>{</span>
-  <span class=c1>// テスト用のBeanが登録された場合に使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnBean<span style=color:#ff79c6>(</span>TestRepository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>TestBeanConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// テスト用のBeanが登録された場合に使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonmissingbean>ConditionalOnMissingBean</h3>
 <p>ConditionalOnBeanとは逆のものです。こちらは、指定したクラスがBeanとして登録されてない場合に実行というものとなります。以下のコードは、RepositoryがBeanとして登録されてない場合は自動的にTestRepositoryをBeanとして登録する例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>AlternativeConfigutration</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>AlternativeConfigutration</span> <span style=color:#ff79c6>{</span>
 
-    <span class=nd>@Bean</span>
-    <span class=nd>@ConditionalOnMissingBean</span>
-    <span class=kd>public</span> <span class=n>Repository</span> <span class=nf>testRepository</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>TestRepository</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    @Bean
+    @ConditionalOnMissingBean
+    <span style=color:#8be9fd;font-style:italic>public</span> Repository <span style=color:#50fa7b>testRepository</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> TestRepository<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonresource>ConditionalOnResource</h3>
 <p>リソースファイルが存在する場合に実行するというアノテーションです。例えばLogBackを使う場合、xmlファイルが必要となりますが、そのxmlファイルが存在する場合はConfigurationも実行するという構成にしたい場合に使えますね。以下のコードは、そのような場合の例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnResource</span><span class=o>(</span><span class=n>resources</span> <span class=o>=</span> <span class=s>&#34;/logback.xml&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>LogbackConfig</span> <span class=o>{</span>
-  <span class=c1>// リソースフォルダにlogback.xmlが存在する場合に使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnResource<span style=color:#ff79c6>(</span>resources <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;/logback.xml&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>LogbackConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// リソースフォルダにlogback.xmlが存在する場合に使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonclass>ConditionalOnClass</h3>
 <p>指定したクラスが存在する場合に実行するというアノテーションです。ConditionalOnBeanと似ていますが、こちらはBeanではなくても良いという違いがありますね。例えば依存関係でとあるライブラリがあるかどうかで使えると思います。以下のコードはcom.custom.library.moduleパッケージのSomeClassというクラスが存在する場合に実行される例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnClass</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;com.custom.library.module.SomeClass&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>CustomLibraryConfig</span> <span class=o>{</span>
-  <span class=c1>// カスタムライブラリのSomeClassがある場合使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnClass<span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;com.custom.library.module.SomeClass&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>CustomLibraryConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// カスタムライブラリのSomeClassがある場合使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonmissingclass>ConditionalOnMissingClass</h3>
 <p>ConditionalOnClassの逆の場合のアノテーションです。こちらはConditionalOnMissingBeanと似ていますね。同じく、指定するクラスはBeanでなくても良いです。以下のコードは、上のConditionalOnClassの逆の場合の例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnMissingClass</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;com.custom.library.module.SomeClass&#34;</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>NoCustomLibraryConfig</span> <span class=o>{</span>
-  <span class=c1>// カスタムライブラリのSomeClassがない場合使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnMissingClass<span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;com.custom.library.module.SomeClass&#34;</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>NoCustomLibraryConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// カスタムライブラリのSomeClassがない場合使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h3 id=conditionalonjava>ConditionalOnJava</h3>
 <p>アプリケーションがJavaのどのバージョンで実行されているかのによるアノテーションです。JavaのバージョンによってAPIの仕様が変わる場合があるので、複数の環境でアプリケーションを実行する必要がある場合は使うことを考えられますね。以下のコードは、Javaのバージョンが1.8の場合の例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=nd>@ConditionalOnJava</span><span class=o>(</span><span class=n>JavaVersion</span><span class=o>.</span><span class=na>EIGHT</span><span class=o>)</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>JavaEightConfig</span> <span class=o>{</span>
-  <span class=c1>// Javaのバージョンが1.8の場合に使うConfiguration
-</span><span class=c1></span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+@ConditionalOnJava<span style=color:#ff79c6>(</span>JavaVersion<span style=color:#ff79c6>.</span><span style=color:#50fa7b>EIGHT</span><span style=color:#ff79c6>)</span>
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>JavaEightConfig</span> <span style=color:#ff79c6>{</span>
+  <span style=color:#6272a4>// Javaのバージョンが1.8の場合に使うConfiguration
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=カスタムcondition>カスタムCondition</h2>
 <p>Conditionインタフェースを実装することで、カスタムConditionを作ることもできます。例えば以下のコードのように、アプリケーションが実行されるOSがLinuxの場合のConditionを自作することができます。</p>
 <p>使い方は簡単で、戻り値がbooleanであるmatchesを実装するだけです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>OnUnixCondition</span> <span class=kd>implements</span> <span class=n>Condition</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OnUnixCondition</span> <span style=color:#8be9fd;font-style:italic>implements</span> Condition <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// OSがLinuxかどうかを判定するConditionとなる
-</span><span class=c1></span>    <span class=nd>@Override</span>
-    <span class=kd>public</span> <span class=kt>boolean</span> <span class=nf>matches</span><span class=o>(</span><span class=n>ConditionContext</span> <span class=n>context</span><span class=o>,</span> <span class=n>AnnotatedTypeMetadata</span> <span class=n>metadata</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=n>SystemUtils</span><span class=o>.</span><span class=na>IS_OS_LINUX</span><span class=o>;</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// OSがLinuxかどうかを判定するConditionとなる
+</span><span style=color:#6272a4></span>    @Override
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>matches</span><span style=color:#ff79c6>(</span>ConditionContext context<span style=color:#ff79c6>,</span> AnnotatedTypeMetadata metadata<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> SystemUtils<span style=color:#ff79c6>.</span><span style=color:#50fa7b>IS_OS_LINUX</span><span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>実装したConditionは、Conditionalアノテーションに指定して使います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>OsConfig</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OsConfig</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// LinuxではBeanが登録される
-</span><span class=c1></span>    <span class=nd>@Bean</span>
-    <span class=nd>@Conditional</span><span class=o>(</span><span class=n>OnUnixCondition</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-        <span class=kd>public</span> <span class=n>UnixBean</span> <span class=nf>unixBean</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>UnixBean</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// LinuxではBeanが登録される
+</span><span style=color:#6272a4></span>    @Bean
+    @Conditional<span style=color:#ff79c6>(</span>OnUnixCondition<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+        <span style=color:#8be9fd;font-style:italic>public</span> UnixBean <span style=color:#50fa7b>unixBean</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> UnixBean<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>AnyNestConditionクラスを継承すると、より複雑な条件の指定ができます。上で実装したOnUnixCondition以外でも、Windowsで実行されているかどうかを判定するOnWindwosConditionクラスを実装したとしましょう。そういった場合は、以下のように実装することができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>class</span> <span class=nc>OnWindowsOrUnixCondition</span> <span class=kd>extends</span> <span class=n>AnyNestedCondition</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OnWindowsOrUnixCondition</span> <span style=color:#8be9fd;font-style:italic>extends</span> AnyNestedCondition <span style=color:#ff79c6>{</span>
 
-    <span class=n>OnWindowsOrUnixCondition</span><span class=o>()</span> <span class=o>{</span>
-        <span class=kd>super</span><span class=o>(</span><span class=n>ConfigurationPhase</span><span class=o>.</span><span class=na>REGISTER_BEAN</span><span class=o>);</span>
-    <span class=o>}</span>
+    OnWindowsOrUnixCondition<span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd;font-style:italic>super</span><span style=color:#ff79c6>(</span>ConfigurationPhase<span style=color:#ff79c6>.</span><span style=color:#50fa7b>REGISTER_BEAN</span><span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Conditional</span><span class=o>(</span><span class=n>OnWindowsCondition</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>OnWindows</span> <span class=o>{</span>
-        <span class=c1>// Windowsの場合
-</span><span class=c1></span>    <span class=o>}</span>
+    @Conditional<span style=color:#ff79c6>(</span>OnWindowsCondition<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OnWindows</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// Windowsの場合
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
 
-    <span class=nd>@Conditional</span><span class=o>(</span><span class=n>OnUnixCondition</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=kd>static</span> <span class=kd>class</span> <span class=nc>OnUnix</span> <span class=o>{</span>
-        <span class=c1>// Linuxの場合
-</span><span class=c1></span>    <span class=o>}</span>
-<span class=o>}</span>
+    @Conditional<span style=color:#ff79c6>(</span>OnUnixCondition<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OnUnix</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#6272a4>// Linuxの場合
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>実装したConditionは、また同じ方法でConditionalアノテーションに指定します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=nd>@Configuration</span>
-<span class=kd>public</span> <span class=kd>class</span> <span class=nc>OsConfig</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
+<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>OsConfig</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// WindowsかLinuxのどちらだとBeanが登録される
-</span><span class=c1></span>    <span class=nd>@Bean</span>
-    <span class=nd>@Conditional</span><span class=o>(</span><span class=n>OnWindowsOrUnixCondition</span><span class=o>.</span><span class=na>class</span><span class=o>)</span>
-    <span class=kd>public</span> <span class=n>WindowsOrUnixBean</span> <span class=nf>windowsOrUnixBean</span><span class=o>()</span> <span class=o>{</span>
-        <span class=k>return</span> <span class=k>new</span> <span class=n>WindowsOrUnixBean</span><span class=o>();</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// WindowsかLinuxのどちらだとBeanが登録される
+</span><span style=color:#6272a4></span>    @Bean
+    @Conditional<span style=color:#ff79c6>(</span>OnWindowsOrUnixCondition<span style=color:#ff79c6>.</span><span style=color:#50fa7b>class</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> WindowsOrUnixBean <span style=color:#50fa7b>windowsOrUnixBean</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> WindowsOrUnixBean<span style=color:#ff79c6>();</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>こちらで紹介したアノテーション以外でも、org.springframework.boot.autoconfigure.conditionのパッケージの下には様々なクラスが存在しています。例えばWebアプリケーションかどうか、クラウドプラットフォームかどうかのアノテーションが用意されていて、のちにまた様々な条件が追加される可能性もありますね。</p>
 <p>これらConditionalアノテーション群は、Spring BootのAuto Configurationでも使われているものらしいです。あので以前私が紹介したように自分でプロパティを直接読み込み、if文を書くよりは安定的な方法であると思います。また、様々な条件に対応するアノテーションがそれぞれ存在していて、カスタムCondtionを作ることで共通化できる部分もあると思うので、いろいろ便利ですね。</p>

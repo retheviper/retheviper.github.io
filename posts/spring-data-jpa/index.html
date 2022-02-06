@@ -81,16 +81,16 @@ spring
 <p>まずはJPAの特徴です。正確には特徴というよりは、JPAを使う場合のメリットに近いのではないかと思います。</p>
 <h4 id=自動グラフ探索>自動グラフ探索</h4>
 <p>まず、このようなクラスがあるとします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Team</span> <span class=o>{</span>
-    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Team</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>long</span> id<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String name<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>そしてチームには所属された選手がいます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>class</span> <span class=nc>Player</span> <span class=o>{</span>
-    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
-    <span class=kd>private</span> <span class=n>Team</span> <span class=n>team</span><span class=o>;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Player</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>long</span> id<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String name<span style=color:#ff79c6>;</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> Team team<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>既存のSQLでこの選手オブジェクトをDBから照会する場合は、以下の手順が必要となります。</p>
 <ol>
 <li>TeamテーブルをSelectする</li>
@@ -101,10 +101,10 @@ spring
 </ol>
 <p>この手順は、テーブルのJoinが多くなればなるほど増えます。また、SQLもさらに長くなりますね。例えばTeamクラスにRegionというクラスがフィールドとして入り、RegionにはさらにCountryというクラスが入るとしたら？それぞれのテーブルを照会してJoinするようなクエリーを作る必要があって、またオブジェクトも全部マッピングする必要がありますね。もしこの手順に何らかの抜け漏れなどがあったら、コードは思い通りに作動しないはずです。</p>
 <p>JPAでは、このような参照関係を自動で解決してくれます。例えば、何もしなくても以下のようなことが可能です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// RepositoryからPlayerオブジェクトを取得する
-</span><span class=c1></span><span class=n>Player</span> <span class=n>player</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findById</span><span class=o>(</span><span class=n>1</span><span class=o>);</span>
-<span class=c1>// Playerが所属したTeamを取得する
-</span><span class=c1></span><span class=n>Team</span> <span class=n>team</span> <span class=o>=</span> <span class=n>player</span><span class=o>.</span><span class=na>getTeam</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// RepositoryからPlayerオブジェクトを取得する
+</span><span style=color:#6272a4></span>Player player <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>findById</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>);</span>
+<span style=color:#6272a4>// Playerが所属したTeamを取得する
+</span><span style=color:#6272a4></span>Team team <span style=color:#ff79c6>=</span> player<span style=color:#ff79c6>.</span><span style=color:#50fa7b>getTeam</span><span style=color:#ff79c6>();</span>
 </code></pre></div><h3 id=性能の最適化>性能の最適化</h3>
 <p>自動的にグラフ探索をしてくれるところをみると、まさかPlayerテーブルを照会するたびにTeamテーブルも照会しているような無駄なことをしているわけではないか、と思われそうですが、実際はLazy Loadingにより、Teamは<code>getTeam()</code>を実行した時点でまたのSelect文を発行して照会していることになります。なので、Playerだけの情報が必要な場合はその情報しか照会しないことになります。</p>
 <p>では、場合によっては数回もトランザクションが発生するのではないか、という疑問もあり得ると思いますが、これをJPAではキャッシュとバッチ、フェッチタイプの指定で解決しているようです。これらは以下のように作動します。</p>
@@ -121,56 +121,56 @@ spring
 <p>では、実際のJPAをコードとしてはどう使えるかをみていきましょう。</p>
 <h4 id=entity>Entity</h4>
 <p>JPAでは、エンティティとそのフィールド(テーブルのカラムや参照関係)をアノテーションによって簡単に定義することができます。例えば以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Entityとして指定する
-</span><span class=c1></span><span class=nd>@Entity</span>
-<span class=kd>class</span> <span class=nc>Car</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Entityとして指定する
+</span><span style=color:#6272a4></span>@Entity
+<span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Car</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// 自動的に増加するPK
-</span><span class=c1></span>    <span class=nd>@Id</span>
-    <span class=nd>@GeneratedValue</span><span class=o>(</span><span class=n>strategy</span> <span class=o>=</span> <span class=n>GenerationType</span><span class=o>.</span><span class=na>IDENTITY</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=kt>long</span> <span class=n>id</span><span class=o>;</span>
+    <span style=color:#6272a4>// 自動的に増加するPK
+</span><span style=color:#6272a4></span>    @Id
+    @GeneratedValue<span style=color:#ff79c6>(</span>strategy <span style=color:#ff79c6>=</span> GenerationType<span style=color:#ff79c6>.</span><span style=color:#50fa7b>IDENTITY</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd>long</span> id<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// UniqueかつNonNull設定
-</span><span class=c1></span>    <span class=nd>@Column</span><span class=o>(</span><span class=n>nullable</span> <span class=o>=</span> <span class=kc>false</span><span class=o>,</span> <span class=n>unique</span> <span class=o>=</span> <span class=kc>true</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>String</span> <span class=n>name</span><span class=o>;</span>
+    <span style=color:#6272a4>// UniqueかつNonNull設定
+</span><span style=color:#6272a4></span>    @Column<span style=color:#ff79c6>(</span>nullable <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>false</span><span style=color:#ff79c6>,</span> unique <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>true</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> String name<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// Companyとは多対一の関係
-</span><span class=c1></span>    <span class=nd>@ManyToOne</span>
-    <span class=nd>@JoinColumn</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;company_id&#34;</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>Company</span> <span class=n>company</span><span class=o>;</span>
+    <span style=color:#6272a4>// Companyとは多対一の関係
+</span><span style=color:#6272a4></span>    @ManyToOne
+    @JoinColumn<span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;company_id&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> Company company<span style=color:#ff79c6>;</span>
 
-    <span class=c1>// Insuranceとは一対多の関係で、Lazy Loadingをする
-</span><span class=c1></span>    <span class=nd>@OneToMany</span><span class=o>(</span><span class=n>fetch</span> <span class=o>=</span> <span class=n>FetchType</span><span class=o>.</span><span class=na>LAZY</span><span class=o>)</span>
-    <span class=nd>@JoinColumn</span><span class=o>(</span><span class=n>name</span> <span class=o>=</span> <span class=s>&#34;insurances_id&#34;</span><span class=o>)</span>
-    <span class=kd>private</span> <span class=n>List</span><span class=o>&lt;</span><span class=n>Insurance</span><span class=o>&gt;</span> <span class=n>insurances</span><span class=o>;</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// Insuranceとは一対多の関係で、Lazy Loadingをする
+</span><span style=color:#6272a4></span>    @OneToMany<span style=color:#ff79c6>(</span>fetch <span style=color:#ff79c6>=</span> FetchType<span style=color:#ff79c6>.</span><span style=color:#50fa7b>LAZY</span><span style=color:#ff79c6>)</span>
+    @JoinColumn<span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;insurances_id&#34;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>private</span> List<span style=color:#ff79c6>&lt;</span>Insurance<span style=color:#ff79c6>&gt;</span> insurances<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>こうやってEntityにはGetter・Setterをつけておくことで、Selectした時点でこのクラスに紐づくCompanyはInsuranceのようなテーブルの情報も参照できるようになります。</p>
 <h4 id=repository>Repository</h4>
 <p>JPAでは、いくつかのRepositoryというインタフェースを提供しています。よく使われているものは、<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html target=_blank rel=noopener>JpaRepository</a>や<a class=link href=https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html target=_blank rel=noopener>CrudRepository</a>、<a class=link href=https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/PagingAndSortingRepository.html target=_blank rel=noopener>PagingAndSortingRepository</a>などがあって、それぞれ基本的に提供しているメソッドが異なります。例えばCrudRepositoryは普通にCRUDのためのメソッド(Selectに該当するfind()、Upsertに該当するsave()、Deleteに該当するdelete()など)を基本的に提供していて、PagingAndSortingRepositoryの場合はページング(ページネーション)に対応したメソッドを提供しているなど、基本的によく使われるメソッドが揃っています。例えば以下のようなものです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// レコードを数える
-</span><span class=c1></span><span class=kt>long</span> <span class=n>count</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>count</span><span class=o>();</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// レコードを数える
+</span><span style=color:#6272a4></span><span style=color:#8be9fd>long</span> count <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>count</span><span style=color:#ff79c6>();</span>
 
-<span class=c1>// 全レコードを取得
-</span><span class=c1></span><span class=n>Iterable</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=n>cars</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findAll</span><span class=o>();</span>
+<span style=color:#6272a4>// 全レコードを取得
+</span><span style=color:#6272a4></span>Iterable<span style=color:#ff79c6>&lt;</span>Car<span style=color:#ff79c6>&gt;</span> cars <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>findAll</span><span style=color:#ff79c6>();</span>
 
-<span class=c1>// レコードを一件取得する
-</span><span class=c1></span><span class=n>Optional</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=n>car1</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>findById</span><span class=o>(</span><span class=n>1</span><span class=o>);</span>
+<span style=color:#6272a4>// レコードを一件取得する
+</span><span style=color:#6272a4></span>Optional<span style=color:#ff79c6>&lt;</span>Car<span style=color:#ff79c6>&gt;</span> car1 <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>findById</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>);</span>
 
-<span class=c1>// レコードを一件削除する
-</span><span class=c1></span><span class=n>repository</span><span class=o>.</span><span class=na>delete</span><span class=o>(</span><span class=n>car2</span><span class=o>);</span>
+<span style=color:#6272a4>// レコードを一件削除する
+</span><span style=color:#6272a4></span>repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>delete</span><span style=color:#ff79c6>(</span>car2<span style=color:#ff79c6>);</span>
 
-<span class=c1>// レコードを保存する(Upsert)
-</span><span class=c1></span><span class=n>Car</span> <span class=n>saved</span> <span class=o>=</span> <span class=n>repository</span><span class=o>.</span><span class=na>save</span><span class=o>(</span><span class=n>car3</span><span class=o>);</span>
+<span style=color:#6272a4>// レコードを保存する(Upsert)
+</span><span style=color:#6272a4></span>Car saved <span style=color:#ff79c6>=</span> repository<span style=color:#ff79c6>.</span><span style=color:#50fa7b>save</span><span style=color:#ff79c6>(</span>car3<span style=color:#ff79c6>);</span>
 </code></pre></div><p>最初エンティティを定義して、それぞれのエンティティに合わせてJPAが提供するRepositoryを作成すると(extend)、そのRepositoryを使ってクエリを発行することができるようになります。また、基本的に提供しているメソッドが十分でない場合は、命名規則に従ってRepositoryに直接<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods target=_blank rel=noopener>クエリーメソッド</a>を書くと自動的にクエリーを作成してくれたり、<a class=link href=https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.at-query target=_blank rel=noopener>@Query</a>アノテーションで必要なクエリーを直接書くこともできます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>interface</span> <span class=nc>CarRepository</span> <span class=kd>extends</span> <span class=n>CrudRepository</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>,</span> <span class=n>Long</span><span class=o>&gt;</span> <span class=o>{</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>interface</span> <span style=color:#50fa7b>CarRepository</span> <span style=color:#8be9fd;font-style:italic>extends</span> CrudRepository<span style=color:#ff79c6>&lt;</span>Car<span style=color:#ff79c6>,</span> Long<span style=color:#ff79c6>&gt;</span> <span style=color:#ff79c6>{</span>
 
-    <span class=c1>// nameで照会するカスタムクエリーメソッド
-</span><span class=c1></span>    <span class=kt>boolean</span> <span class=nf>existsByName</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
+    <span style=color:#6272a4>// nameで照会するカスタムクエリーメソッド
+</span><span style=color:#6272a4></span>    <span style=color:#8be9fd>boolean</span> <span style=color:#50fa7b>existsByName</span><span style=color:#ff79c6>(</span>String name<span style=color:#ff79c6>);</span>
 
-    <span class=c1>// アノテーションにクエリーを指定する場合
-</span><span class=c1></span>    <span class=nd>@Query</span><span class=o>(</span><span class=s>&#34;select c from Car c where c.name = ?1&#34;</span><span class=o>)</span>
-    <span class=n>Optional</span><span class=o>&lt;</span><span class=n>Car</span><span class=o>&gt;</span> <span class=nf>findByName</span><span class=o>(</span><span class=n>String</span> <span class=n>name</span><span class=o>);</span>
-<span class=o>}</span>
+    <span style=color:#6272a4>// アノテーションにクエリーを指定する場合
+</span><span style=color:#6272a4></span>    @Query<span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;select c from Car c where c.name = ?1&#34;</span><span style=color:#ff79c6>)</span>
+    Optional<span style=color:#ff79c6>&lt;</span>Car<span style=color:#ff79c6>&gt;</span> <span style=color:#50fa7b>findByName</span><span style=color:#ff79c6>(</span>String name<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><h2 id=他に>他に</h2>
 <p>2018年には、<a class=link href=https://spring.io/projects/spring-data-jdbc target=_blank rel=noopener>Spring Data JDBC</a>というものも発表されています。Spring Data JPAとJDBCのAPIの間にはJPA + Hibernateという階層を経由することに比べ、Spring Data JDBCは直接JDBCのAPIを呼び出すことで性能面での利点があるらしいですね。他にも実装をより単純化することでJPAの持つ問題を解消しているらしいですね。例えばキャッシュやLazy Loadingをなくしたとか(JPAのメリットとして紹介しましたが…)</p>
 <p>ただ、Spring Data JDBCは2018年にリリースされたばかりのものなので、クエリーメソッドだけでクエリーを自動生成してくれるなどの機能には対応してなかったり、テーブルやカラムの命名規則がJPAと違うなど、JPAからマイグレートするにはまだいろいろと考慮しなければならない点が多いように思われます。こういうところは、まるでNode.jsとDenoの関係みたいですね。</p>

@@ -81,31 +81,31 @@ python
 <p>まずはファイルを読み込むことからです。xmlファイルも結局はテキスト基盤なので、シェルでも読み込みはできます。For文一つで特定の拡張子をもつファイルを巡回しながら一行づつ読むことができるらしいです。そして既存のアイコン(このファイルを使うツールの表現を借りると、コンポーネント)のDB接続先の情報の行を把握し、書き換えれば完了。</p>
 <p>ただ、前述したようにFromとToのコンポーネントを区別する必要があります。xmlファイルを覗くとどうやらコンポーネントの構造(タグの種類)はほぼ同じみたいなので、どう判定するかが問題でした。シェルではxmlをパーシングできるモジュールなどはないみたいですからね。それでまずは行数を比較して、Fromのコンポーネントがより上にあったら１番目に引っかかったDB設定がFromのやつだ、という風に判定することにしました。以下はその実装のコードです。</p>
 <h2 id=コードの例シェルスクリプト>コードの例(シェルスクリプト)</h2>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=cp>#!/bin/bash
-</span><span class=cp></span><span class=c1># 下のフォルダを巡回しながらxmlの拡張子を持つファイルを変数のfileNameに入れる</span>
-<span class=k>for</span> fileName in <span class=sb>`</span><span class=se>\f</span>ind . -name <span class=s1>&#39;*.xml&#39;</span><span class=sb>`</span><span class=p>;</span> <span class=k>do</span>
-    <span class=c1># コンポーネントの行数をつかめる(grepでコンポーネントのタグかを確認し、sedで行数を確保)</span>
-    <span class=nv>getComponentLine</span><span class=o>=</span><span class=k>$(</span>grep -n RDBGet <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> grep Component <span class=p>|</span> sed -e <span class=s1>&#39;s/:.*//g&#39;</span><span class=k>)</span>
-    <span class=nv>putComponentLine</span><span class=o>=</span><span class=k>$(</span>grep -n RDBPut <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> grep Component <span class=p>|</span> sed -e <span class=s1>&#39;s/:.*//g&#39;</span><span class=k>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#ff79c6>#!/bin/bash
+</span><span style=color:#ff79c6></span><span style=color:#6272a4># 下のフォルダを巡回しながらxmlの拡張子を持つファイルを変数のfileNameに入れる</span>
+<span style=color:#ff79c6>for</span> fileName in <span style=color:#f1fa8c>`</span><span style=color:#f1fa8c>\f</span>ind . -name <span style=color:#f1fa8c>&#39;*.xml&#39;</span><span style=color:#f1fa8c>`</span>; <span style=color:#ff79c6>do</span>
+    <span style=color:#6272a4># コンポーネントの行数をつかめる(grepでコンポーネントのタグかを確認し、sedで行数を確保)</span>
+    <span style=color:#8be9fd;font-style:italic>getComponentLine</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep -n RDBGet <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | grep Component | sed -e <span style=color:#f1fa8c>&#39;s/:.*//g&#39;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>putComponentLine</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep -n RDBPut <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | grep Component | sed -e <span style=color:#f1fa8c>&#39;s/:.*//g&#39;</span><span style=color:#ff79c6>)</span>
 
-    <span class=c1># コネクションの行数をつかめる</span>
-    <span class=nv>ConnectionOneLine</span><span class=o>=</span><span class=k>$(</span>grep -n Connection <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> sed -e <span class=s1>&#39;s/:.*//g&#39;</span> <span class=p>|</span> awk <span class=s1>&#39;NR==1&#39;</span><span class=k>)</span>
-    <span class=nv>ConnectionTwoLine</span><span class=o>=</span><span class=k>$(</span>grep -n Connection <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> sed -e <span class=s1>&#39;s/:.*//g&#39;</span> <span class=p>|</span> awk <span class=s1>&#39;NR==2&#39;</span><span class=k>)</span>
+    <span style=color:#6272a4># コネクションの行数をつかめる</span>
+    <span style=color:#8be9fd;font-style:italic>ConnectionOneLine</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep -n Connection <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | sed -e <span style=color:#f1fa8c>&#39;s/:.*//g&#39;</span> | awk <span style=color:#f1fa8c>&#39;NR==1&#39;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>ConnectionTwoLine</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep -n Connection <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | sed -e <span style=color:#f1fa8c>&#39;s/:.*//g&#39;</span> | awk <span style=color:#f1fa8c>&#39;NR==2&#39;</span><span style=color:#ff79c6>)</span>
 
-    <span class=c1># コネクション名をつかめる(cutでDB設定名だけを取り、awkで2種類以上の結果からどちらかを取る)</span>
-    <span class=nv>ConnectionOneName</span><span class=o>=</span><span class=k>$(</span>grep Connection <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> cut -d <span class=s2>&#34;&gt;&#34;</span> -f <span class=m>2</span> <span class=p>|</span> cut -d <span class=s2>&#34;&lt;&#34;</span> -f <span class=m>1</span> <span class=p>|</span> awk <span class=s1>&#39;NR==1&#39;</span><span class=k>)</span>
-    <span class=nv>ConnectionTwoName</span><span class=o>=</span><span class=k>$(</span>grep Connection <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span> <span class=p>|</span> cut -d <span class=s2>&#34;&gt;&#34;</span> -f <span class=m>2</span> <span class=p>|</span> cut -d <span class=s2>&#34;&lt;&#34;</span> -f <span class=m>1</span> <span class=p>|</span> awk <span class=s1>&#39;NR==2&#39;</span><span class=k>)</span>
+    <span style=color:#6272a4># コネクション名をつかめる(cutでDB設定名だけを取り、awkで2種類以上の結果からどちらかを取る)</span>
+    <span style=color:#8be9fd;font-style:italic>ConnectionOneName</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep Connection <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | cut -d <span style=color:#f1fa8c>&#34;&gt;&#34;</span> -f <span style=color:#bd93f9>2</span> | cut -d <span style=color:#f1fa8c>&#34;&lt;&#34;</span> -f <span style=color:#bd93f9>1</span> | awk <span style=color:#f1fa8c>&#39;NR==1&#39;</span><span style=color:#ff79c6>)</span>
+    <span style=color:#8be9fd;font-style:italic>ConnectionTwoName</span><span style=color:#ff79c6>=</span><span style=color:#ff79c6>$(</span>grep Connection <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span> | cut -d <span style=color:#f1fa8c>&#34;&gt;&#34;</span> -f <span style=color:#bd93f9>2</span> | cut -d <span style=color:#f1fa8c>&#34;&lt;&#34;</span> -f <span style=color:#bd93f9>1</span> | awk <span style=color:#f1fa8c>&#39;NR==2&#39;</span><span style=color:#ff79c6>)</span>
 
-    <span class=k>if</span> <span class=o>[</span> <span class=s2>&#34;</span><span class=si>${</span><span class=nv>getComponentLine</span><span class=si>}</span><span class=s2>&#34;</span> -lt <span class=s2>&#34;</span><span class=si>${</span><span class=nv>putComponentLine</span><span class=si>}</span><span class=s2>&#34;</span> <span class=o>]</span><span class=p>;</span> <span class=k>then</span>
-        <span class=c1># get &lt; putの場合ConnectionOneLineはgetのコネクション</span>
-        sed -i -e <span class=s2>&#34;</span><span class=si>${</span><span class=nv>ConnectionOneLine</span><span class=si>}</span><span class=s2> s/</span><span class=si>${</span><span class=nv>ConnectionOneName</span><span class=si>}</span><span class=s2>/HONBADBFROM/g&#34;</span> <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span>
-        sed -i -e <span class=s2>&#34;</span><span class=si>${</span><span class=nv>ConnectionTwoLine</span><span class=si>}</span><span class=s2> s/</span><span class=si>${</span><span class=nv>ConnectionTwoName</span><span class=si>}</span><span class=s2>/HONBADBTO/g&#34;</span> <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span>
-    <span class=k>else</span>
-        <span class=c1># get &gt; putの場合ConnectionOneLineはputのコネクション</span>
-        sed -i -e <span class=s2>&#34;</span><span class=si>${</span><span class=nv>ConnectionTwoLine</span><span class=si>}</span><span class=s2> s/</span><span class=si>${</span><span class=nv>ConnectionTwoName</span><span class=si>}</span><span class=s2>/HONBADBFROM/g&#34;</span> <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span>
-        sed -i -e <span class=s2>&#34;</span><span class=si>${</span><span class=nv>ConnectionOneLine</span><span class=si>}</span><span class=s2> s/</span><span class=si>${</span><span class=nv>ConnectionOneName</span><span class=si>}</span><span class=s2>/HONBADBTO/g&#34;</span> <span class=si>${</span><span class=nv>fileName</span><span class=si>}</span>
-    <span class=k>fi</span>
-<span class=k>done</span>
+    <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>[</span> <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>getComponentLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span> -lt <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>putComponentLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>&#34;</span> <span style=color:#ff79c6>]</span>; <span style=color:#ff79c6>then</span>
+        <span style=color:#6272a4># get &lt; putの場合ConnectionOneLineはgetのコネクション</span>
+        sed -i -e <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionOneLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c> s/</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionOneName</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>/HONBADBFROM/g&#34;</span> <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span>
+        sed -i -e <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionTwoLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c> s/</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionTwoName</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>/HONBADBTO/g&#34;</span> <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span>
+    <span style=color:#ff79c6>else</span>
+        <span style=color:#6272a4># get &gt; putの場合ConnectionOneLineはputのコネクション</span>
+        sed -i -e <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionTwoLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c> s/</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionTwoName</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>/HONBADBFROM/g&#34;</span> <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span>
+        sed -i -e <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionOneLine</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c> s/</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>ConnectionOneName</span><span style=color:#f1fa8c>}</span><span style=color:#f1fa8c>/HONBADBTO/g&#34;</span> <span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>fileName</span><span style=color:#f1fa8c>}</span>
+    <span style=color:#ff79c6>fi</span>
+<span style=color:#ff79c6>done</span>
 </code></pre></div><h2 id=問題点>問題点</h2>
 <p>ファイルの形式がxmlであり、タグのパーシングで確実にコンポーネントを分けて処理していない現行の方式ではあまり安全だとは言えない処理です。そしてこの方式だとFromとToのコンポーネントがそれぞれ一つづつある場合は大丈夫かもしれませんが、どちらかのコンポーネントが一つでも増えたら処理の方法を変えるしかないです。もしかしたらそんなケースが増えると、そのケースに合わせてそれぞれ違うコードを書く必要があるかも知れません。そしてそれはいちいちファイルをチェックしてそれにあうコードとマッチさせる必要がありますね。これなら手書きで変えるのとあまり変わらないのでは…と思いますね。</p>
 <p>結果的に汎用性もなく、安全でもないコードとなってしまいました。こんなコードは本場では使えません。なので方法を変えることにしました。</p>
@@ -114,39 +114,39 @@ python
 <p>ただLinuxに内蔵されているPythonは2が多いらしく(確認してみると、私の使うMacでもPython2が入っていました)、Pythonは2と3で文法が違うところも多くて特定の機能を使うには注意がいるらしいです。実際私の書いたコードでは、Python3でしか使えない部分があります。alternativeのようなコマンドでPythonのリンクを3に指定するという方法もありますが、それならPython2を使うプログラムで問題が起こる可能性があります。<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>なので最初からPython2のコードに書くか、実行するコードをPython3として実行するようにするか、Python2を使うプログラムの実行環境を変えるかの方法を工夫する必要がありました。</p>
 <p>ここで私は、自分が書いたコードをPython3で実行するよう(Jenkinsに埋め込むので、そちらの設定を通しています)にしました。コードは以下となります。</p>
 <h2 id=コードの例python>コードの例(Python)</h2>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-python data-lang=python><span class=c1># -*- coding: UTF-8 -*-</span>
-<span class=c1># 日本語のコメントのために最初にエンコードを指定する</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-python data-lang=python><span style=color:#6272a4># -*- coding: UTF-8 -*-</span>
+<span style=color:#6272a4># 日本語のコメントのために最初にエンコードを指定する</span>
 
-<span class=c1># xmlパーサーとフォルダからファイルを取得するモジュールをインポート</span>
-<span class=kn>import</span> <span class=nn>xml.etree.ElementTree</span> <span class=k>as</span> <span class=nn>ET</span>
-<span class=kn>import</span> <span class=nn>glob</span>
+<span style=color:#6272a4># xmlパーサーとフォルダからファイルを取得するモジュールをインポート</span>
+<span style=color:#ff79c6>import</span> xml.etree.ElementTree <span style=color:#ff79c6>as</span> ET
+<span style=color:#ff79c6>import</span> glob
 
-<span class=c1># 名前空間（prefix）をマップで宣言</span>
-<span class=n>ns</span> <span class=o>=</span> <span class=p>{</span><span class=s1>&#39;fb&#39;</span><span class=p>:</span><span class=s1>&#39;http://foo.com/builder&#39;</span><span class=p>,</span> <span class=s1>&#39;fe&#39;</span><span class=p>:</span><span class=s1>&#39;http://foo.com/engine&#39;</span><span class=p>,</span> <span class=s1>&#39;mp&#39;</span><span class=p>:</span><span class=s1>&#39;http://foo.com/mapper&#39;</span><span class=p>}</span>
+<span style=color:#6272a4># 名前空間（prefix）をマップで宣言</span>
+ns <span style=color:#ff79c6>=</span> {<span style=color:#f1fa8c>&#39;fb&#39;</span>:<span style=color:#f1fa8c>&#39;http://foo.com/builder&#39;</span>, <span style=color:#f1fa8c>&#39;fe&#39;</span>:<span style=color:#f1fa8c>&#39;http://foo.com/engine&#39;</span>, <span style=color:#f1fa8c>&#39;mp&#39;</span>:<span style=color:#f1fa8c>&#39;http://foo.com/mapper&#39;</span>}
 
-<span class=c1># ファイル名を再帰的に取得(recursiveオプションはPython3専用)</span>
-<span class=n>fileList</span> <span class=o>=</span> <span class=n>glob</span><span class=o>.</span><span class=n>glob</span><span class=p>(</span><span class=s2>&#34;**/HOGE*.xml&#34;</span><span class=p>,</span> <span class=n>recursive</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
+<span style=color:#6272a4># ファイル名を再帰的に取得(recursiveオプションはPython3専用)</span>
+fileList <span style=color:#ff79c6>=</span> glob<span style=color:#ff79c6>.</span>glob(<span style=color:#f1fa8c>&#34;**/HOGE*.xml&#34;</span>, recursive<span style=color:#ff79c6>=</span><span style=color:#ff79c6>True</span>)
 
-<span class=c1># 取得したファイルを巡回しながらコネクション名の書き換え処理</span>
-<span class=k>for</span> <span class=n>fileName</span> <span class=ow>in</span> <span class=n>fileList</span><span class=p>:</span>
-    <span class=c1># ファイルをパーシング開始</span>
-    <span class=n>tree</span> <span class=o>=</span> <span class=n>ET</span><span class=o>.</span><span class=n>parse</span><span class=p>(</span><span class=n>fileName</span><span class=p>)</span>
+<span style=color:#6272a4># 取得したファイルを巡回しながらコネクション名の書き換え処理</span>
+<span style=color:#ff79c6>for</span> fileName <span style=color:#ff79c6>in</span> fileList:
+    <span style=color:#6272a4># ファイルをパーシング開始</span>
+    tree <span style=color:#ff79c6>=</span> ET<span style=color:#ff79c6>.</span>parse(fileName)
 
-    <span class=c1># Toのコンポーネントで子要素であるコネクション名を取得(prefix内)</span>
-    <span class=n>putCon</span> <span class=o>=</span> <span class=n>tree</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=s2>&#34;fe:WorkFlow/fe:Component[@type=&#39;RDB(Put)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span><span class=p>,</span> <span class=n>ns</span><span class=p>)</span>
-    <span class=n>putCon</span><span class=o>.</span><span class=n>text</span> <span class=o>=</span> <span class=n>putCon</span><span class=o>.</span><span class=n>text</span> <span class=o>+</span> <span class=s1>&#39;x&#39;</span>
+    <span style=color:#6272a4># Toのコンポーネントで子要素であるコネクション名を取得(prefix内)</span>
+    putCon <span style=color:#ff79c6>=</span> tree<span style=color:#ff79c6>.</span>find(<span style=color:#f1fa8c>&#34;fe:WorkFlow/fe:Component[@type=&#39;RDB(Put)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span>, ns)
+    putCon<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>=</span> putCon<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;x&#39;</span>
  
-    <span class=c1># Fromのコンポーネントで子要素であるコネクション名を取得(prefix内)</span>
-    <span class=n>getCon</span> <span class=o>=</span> <span class=n>tree</span><span class=o>.</span><span class=n>find</span><span class=p>(</span><span class=s2>&#34;fe:WorkFlow/fe:Component[@type=&#39;RDB(Get)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span><span class=p>,</span> <span class=n>ns</span><span class=p>)</span>
-    <span class=n>getCon</span><span class=o>.</span><span class=n>text</span> <span class=o>=</span> <span class=n>getCon</span><span class=o>.</span><span class=n>text</span> <span class=o>+</span> <span class=s1>&#39;y&#39;</span>
+    <span style=color:#6272a4># Fromのコンポーネントで子要素であるコネクション名を取得(prefix内)</span>
+    getCon <span style=color:#ff79c6>=</span> tree<span style=color:#ff79c6>.</span>find(<span style=color:#f1fa8c>&#34;fe:WorkFlow/fe:Component[@type=&#39;RDB(Get)&#39;]/fe:Property[@name=&#39;Connection&#39;]&#34;</span>, ns)
+    getCon<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>=</span> getCon<span style=color:#ff79c6>.</span>text <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;y&#39;</span>
 
-    <span class=c1># 書き込みの時prefixが変わることを防止</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;fb&#39;</span><span class=p>,</span> <span class=s1>&#39;http://foo.com/builder&#39;</span><span class=p>)</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;fe&#39;</span><span class=p>,</span> <span class=s1>&#39;http://foo.com/engine&#39;</span><span class=p>)</span>
-    <span class=n>ET</span><span class=o>.</span><span class=n>register_namespace</span><span class=p>(</span><span class=s1>&#39;mp&#39;</span><span class=p>,</span> <span class=s1>&#39;http://foo.com/mapper&#39;</span><span class=p>)</span>
+    <span style=color:#6272a4># 書き込みの時prefixが変わることを防止</span>
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;fb&#39;</span>, <span style=color:#f1fa8c>&#39;http://foo.com/builder&#39;</span>)
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;fe&#39;</span>, <span style=color:#f1fa8c>&#39;http://foo.com/engine&#39;</span>)
+    ET<span style=color:#ff79c6>.</span>register_namespace(<span style=color:#f1fa8c>&#39;mp&#39;</span>, <span style=color:#f1fa8c>&#39;http://foo.com/mapper&#39;</span>)
 
-    <span class=c1># 書き換え処理</span>
-    <span class=n>tree</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>fileName</span><span class=p>,</span> <span class=s1>&#39;UTF-8&#39;</span><span class=p>,</span> <span class=kc>True</span><span class=p>)</span>
+    <span style=color:#6272a4># 書き換え処理</span>
+    tree<span style=color:#ff79c6>.</span>write(fileName, <span style=color:#f1fa8c>&#39;UTF-8&#39;</span>, <span style=color:#ff79c6>True</span>)
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>コードの量もそんなに長くないし、ちゃんとパーシングで要素を捉えているのでシェルスクリプトに比べ安全な書き方になっています。それにタグによってコンポーネントを区別しているので、コンポーネントを数に変動があってもそのまま使えるという長所がありますね。タグに名前空間があると初期設定と書き込み直前にその処理が必要となるので少し面倒な部分はありますが<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>、確かにシェルスクリプトに比べ維持補修の面で手間がかからなくなったので満足できるコードを書けたと思います。速度も直接測定してみた訳ではないですが、相当早かったです(ただ単にPythonは遅いだろうという自分の偏見が問題だったかも知れません)。いやーPythonいいですね。</p>
 <p>何よりもメインの関数やクラスを省略しても、本当にスクリプトぽい書き方でもちゃんと意図通りに動くということが素晴らしいですね。これからもLinux環境で簡単な反復作業を自動化したいという場合には、皆さんもぜひPythonを使ってみてくださいとオススメしたいくらいです。とても簡単な言語なので、これからもどんどん使って色々やってみたいなと思います。</p>

@@ -112,97 +112,97 @@ java
 <h3 id=再使用>再使用</h3>
 <p>Streaｍは何度も繰り返して中間操作が可能ですが、一度でも終端操作が行われるとクローズされ、再利用ができなくなります。なぜなら、Streamの目的はデータの処理であって、データの格納ではないからです。</p>
 <p>しかし、たまには同じデータに対してStreamを利用し、それぞれ違う処理を行たい場合もありますね。そういう時はどうしたらいいでしょう。Javaでデータを格納するためのものは配列やCollectionがありますので、必要なデータを予め定義して、場合によってそれをStreamに転換して使う方法があります。配列の場合は<code>Arrays.stream()</code>や<code>Stream.of()</code>があり、Collectionだと<code>stream()</code>がありますね。例えば以下のような方法です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// Listで必要なデータを集めておく
-</span><span class=c1></span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>names</span> <span class=o>=</span> 
-  <span class=n>Stream</span><span class=o>.</span><span class=na>of</span><span class=o>(</span><span class=s>&#34;Eric&#34;</span><span class=o>,</span> <span class=s>&#34;Elena&#34;</span><span class=o>,</span> <span class=s>&#34;Java&#34;</span><span class=o>)</span>
-  <span class=o>.</span><span class=na>filter</span><span class=o>(</span><span class=n>name</span> <span class=o>-&gt;</span> <span class=n>name</span><span class=o>.</span><span class=na>contains</span><span class=o>(</span><span class=s>&#34;a&#34;</span><span class=o>))</span>
-  <span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>Collectors</span><span class=o>.</span><span class=na>toList</span><span class=o>());</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// Listで必要なデータを集めておく
+</span><span style=color:#6272a4></span>List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> names <span style=color:#ff79c6>=</span> 
+  Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Eric&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;Elena&#34;</span><span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;Java&#34;</span><span style=color:#ff79c6>)</span>
+  <span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>(</span>name <span style=color:#ff79c6>-&gt;</span> name<span style=color:#ff79c6>.</span><span style=color:#50fa7b>contains</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;a&#34;</span><span style=color:#ff79c6>))</span>
+  <span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>Collectors<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toList</span><span style=color:#ff79c6>());</span>
 
-<span class=c1>// 1番目のStream
-</span><span class=c1></span><span class=n>Optional</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>firstElement</span> <span class=o>=</span> <span class=n>names</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>findFirst</span><span class=o>();</span>
-<span class=c1>// 2番目のStream
-</span><span class=c1></span><span class=n>Optional</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span> <span class=n>anyElement</span> <span class=o>=</span> <span class=n>names</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>findAny</span><span class=o>();</span>
+<span style=color:#6272a4>// 1番目のStream
+</span><span style=color:#6272a4></span>Optional<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> firstElement <span style=color:#ff79c6>=</span> names<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>findFirst</span><span style=color:#ff79c6>();</span>
+<span style=color:#6272a4>// 2番目のStream
+</span><span style=color:#6272a4></span>Optional<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> anyElement <span style=color:#ff79c6>=</span> names<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>findAny</span><span style=color:#ff79c6>();</span>
 </code></pre></div><p>予め必要なデータはListとしてCollectし、必要な場合はそれをまたStreamに変換して使う例でした。データがそもそもCollectionや配列の場合は、必要に応じてstream()を呼び出すことでそれぞれ違う処理ができます。また、peek()を挟むことで違うCollectionにデータを追加することもできます。厳密にいうと再使用というよりはどうStreamを作るかに関する話となりますが、これで一つのデータから複数の処理結果を出すことは可能、ということになります。</p>
 <h3 id=短く書く>短く書く</h3>
 <p>先に述べましたが、StreamはメソッドチェーニングのできるAPIなので、非効率的なコードを書きやすい傾向がありました。なのでケース別により効率的な書き方を集めてみました。自分はEclipseを主に使っているのですが、Intellijだと、こうした方がいいよとオススメしてくれる部分らしいです。</p>
 <ul>
 <li>Collectionのメソッドを使う</li>
 </ul>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// CollectionのForEach
-</span><span class=c1></span><span class=n>collection</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>forEach</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>collection</span><span class=o>.</span><span class=na>forEach</span><span class=o>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// CollectionのForEach
+</span><span style=color:#6272a4></span>collection<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>()</span> 
+  → collection<span style=color:#ff79c6>.</span><span style=color:#50fa7b>forEach</span><span style=color:#ff79c6>()</span>
   
-<span class=c1>// Collectionを配列に
-</span><span class=c1></span><span class=n>collection</span><span class=o>.</span><span class=na>stream</span><span class=o>().</span><span class=na>toArray</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>collection</span><span class=o>.</span><span class=na>toArray</span><span class=o>()</span>
+<span style=color:#6272a4>// Collectionを配列に
+</span><span style=color:#6272a4></span>collection<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>toArray</span><span style=color:#ff79c6>()</span> 
+  → collection<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toArray</span><span style=color:#ff79c6>()</span>
 </code></pre></div><ul>
 <li>Streamを作る</li>
 </ul>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 配列からStreamに
-</span><span class=c1></span><span class=n>Arrays</span><span class=o>.</span><span class=na>asList</span><span class=o>().</span><span class=na>stream</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>stream</span><span class=o>()</span> <span class=o>/</span> <span class=n>Stream</span><span class=o>.</span><span class=na>of</span><span class=o>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 配列からStreamに
+</span><span style=color:#6272a4></span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>asList</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>()</span> 
+  → Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>/</span> Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>of</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 空のStreamを作成
-</span><span class=c1></span><span class=n>Collections</span><span class=o>.</span><span class=na>emptyList</span><span class=o>().</span><span class=na>stream</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>Stream</span><span class=o>.</span><span class=na>empty</span><span class=o>()</span>
+<span style=color:#6272a4>// 空のStreamを作成
+</span><span style=color:#6272a4></span>Collections<span style=color:#ff79c6>.</span><span style=color:#50fa7b>emptyList</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>()</span> 
+  → Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>empty</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 範囲指定で配列を作成
-</span><span class=c1></span><span class=n>IntStream</span><span class=o>.</span><span class=na>range</span><span class=o>(</span><span class=n>expr1</span><span class=o>,</span> <span class=n>expr2</span><span class=o>).</span><span class=na>mapToObj</span><span class=o>(</span><span class=n>x</span> <span class=o>-&gt;</span> <span class=n>array</span><span class=o>[</span><span class=n>x</span><span class=o>])</span> 
-  <span class=err>→</span> <span class=n>Arrays</span><span class=o>.</span><span class=na>stream</span><span class=o>(</span><span class=n>array</span><span class=o>,</span> <span class=n>expr1</span><span class=o>,</span> <span class=n>expr2</span><span class=o>)</span>
+<span style=color:#6272a4>// 範囲指定で配列を作成
+</span><span style=color:#6272a4></span>IntStream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>range</span><span style=color:#ff79c6>(</span>expr1<span style=color:#ff79c6>,</span> expr2<span style=color:#ff79c6>).</span><span style=color:#50fa7b>mapToObj</span><span style=color:#ff79c6>(</span>x <span style=color:#ff79c6>-&gt;</span> array<span style=color:#ff79c6>[</span>x<span style=color:#ff79c6>])</span> 
+  → Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>stream</span><span style=color:#ff79c6>(</span>array<span style=color:#ff79c6>,</span> expr1<span style=color:#ff79c6>,</span> expr2<span style=color:#ff79c6>)</span>
 
-<span class=c1>// 範囲指定でStreamを作成
-</span><span class=c1></span><span class=n>Collection</span><span class=o>.</span><span class=na>nCopies</span><span class=o>(</span><span class=n>count</span><span class=o>,</span> <span class=o>...)</span> 
-  <span class=err>→</span> <span class=n>Stream</span><span class=o>.</span><span class=na>generate</span><span class=o>().</span><span class=na>limit</span><span class=o>(</span><span class=n>count</span><span class=o>)</span>
+<span style=color:#6272a4>// 範囲指定でStreamを作成
+</span><span style=color:#6272a4></span>Collection<span style=color:#ff79c6>.</span><span style=color:#50fa7b>nCopies</span><span style=color:#ff79c6>(</span>count<span style=color:#ff79c6>,</span> <span style=color:#ff79c6>...)</span> 
+  → Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>generate</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>limit</span><span style=color:#ff79c6>(</span>count<span style=color:#ff79c6>)</span>
 </code></pre></div><ul>
 <li>要素の判定</li>
 </ul>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 条件に一致する要素が存在するかの判定(1)
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>filter</span><span class=o>().</span><span class=na>findFirst</span><span class=o>().</span><span class=na>isPresent</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>anyMatch</span><span class=o>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 条件に一致する要素が存在するかの判定(1)
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>filter</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>findFirst</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>isPresent</span><span style=color:#ff79c6>()</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyMatch</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 条件に一致する要素が存在するかの判定(2)
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>map</span><span class=o>().</span><span class=na>anyMatch</span><span class=o>(</span><span class=n>Boolean</span><span class=o>::</span><span class=n>booleanValue</span><span class=o>)</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>anyMatch</span><span class=o>()</span>
+<span style=color:#6272a4>// 条件に一致する要素が存在するかの判定(2)
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>anyMatch</span><span style=color:#ff79c6>(</span>Boolean<span style=color:#ff79c6>::</span>booleanValue<span style=color:#ff79c6>)</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyMatch</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 要素が一つでも条件と一致しないかの判定
-</span><span class=c1></span><span class=o>!</span><span class=n>stream</span><span class=o>.</span><span class=na>anyMatch</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>noneMatch</span><span class=o>()</span>
+<span style=color:#6272a4>// 要素が一つでも条件と一致しないかの判定
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>!</span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyMatch</span><span style=color:#ff79c6>()</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>noneMatch</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 全要素が条件と一致するかの判定
-</span><span class=c1></span><span class=o>!</span><span class=n>stream</span><span class=o>.</span><span class=na>anyMatch</span><span class=o>(</span><span class=n>x</span> <span class=o>-&gt;</span> <span class=o>!(...))</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>allMatch</span><span class=o>()</span>
+<span style=color:#6272a4>// 全要素が条件と一致するかの判定
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>!</span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>anyMatch</span><span style=color:#ff79c6>(</span>x <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>!(...))</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>allMatch</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// ソートして最も先にある値を探す
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>sorted</span><span class=o>(</span><span class=n>comparator</span><span class=o>).</span><span class=na>findFirst</span><span class=o>()</span> 
-  <span class=err>→</span> <span class=n>Stream</span><span class=o>.</span><span class=na>min</span><span class=o>(</span><span class=n>comparator</span><span class=o>)</span>
+<span style=color:#6272a4>// ソートして最も先にある値を探す
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>sorted</span><span style=color:#ff79c6>(</span>comparator<span style=color:#ff79c6>).</span><span style=color:#50fa7b>findFirst</span><span style=color:#ff79c6>()</span> 
+  → Stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>min</span><span style=color:#ff79c6>(</span>comparator<span style=color:#ff79c6>)</span>
 </code></pre></div><ul>
 <li>要素を集める</li>
 </ul>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 要素の数を数える
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>counting</span><span class=o>())</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>count</span><span class=o>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 要素の数を数える
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>counting<span style=color:#ff79c6>())</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>count</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 最も大きい要素を探す
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>maxBy</span><span class=o>())</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>max</span><span class=o>()</span>
+<span style=color:#6272a4>// 最も大きい要素を探す
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>maxBy<span style=color:#ff79c6>())</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>max</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 要素を違うオブジェクトにマッピングする
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>mapping</span><span class=o>())</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>map</span><span class=o>().</span><span class=na>collect</span><span class=o>()</span>
+<span style=color:#6272a4>// 要素を違うオブジェクトにマッピングする
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>mapping<span style=color:#ff79c6>())</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 要素を一つにまとめる
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>reducing</span><span class=o>())</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>reduce</span><span class=o>()</span>
+<span style=color:#6272a4>// 要素を一つにまとめる
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>reducing<span style=color:#ff79c6>())</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>reduce</span><span style=color:#ff79c6>()</span>
 
-<span class=c1>// 要素を数字の合計にする
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>collect</span><span class=o>(</span><span class=n>summingInt</span><span class=o>())</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>mapToInt</span><span class=o>().</span><span class=na>sum</span><span class=o>()</span>
+<span style=color:#6272a4>// 要素を数字の合計にする
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>collect</span><span style=color:#ff79c6>(</span>summingInt<span style=color:#ff79c6>())</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapToInt</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>sum</span><span style=color:#ff79c6>()</span>
 </code></pre></div><ul>
 <li>要素の処理</li>
 </ul>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=c1>// 要素の状態だけを変える
-</span><span class=c1></span><span class=n>stream</span><span class=o>.</span><span class=na>map</span><span class=o>(</span><span class=n>x</span> <span class=o>-&gt;</span> <span class=o>{...;</span> <span class=k>return</span> <span class=n>x</span><span class=o>;})</span> 
-  <span class=err>→</span> <span class=n>stream</span><span class=o>.</span><span class=na>peek</span><span class=o>(</span><span class=n>x</span> <span class=o>-&gt;</span> <span class=o>...)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// 要素の状態だけを変える
+</span><span style=color:#6272a4></span>stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>map</span><span style=color:#ff79c6>(</span>x <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>{...;</span> <span style=color:#ff79c6>return</span> x<span style=color:#ff79c6>;})</span> 
+  → stream<span style=color:#ff79c6>.</span><span style=color:#50fa7b>peek</span><span style=color:#ff79c6>(</span>x <span style=color:#ff79c6>-&gt;</span> <span style=color:#ff79c6>...)</span>
 </code></pre></div><h2 id=最後に>最後に</h2>
 <p>関数型プログラミングに興味がないとしても、Streamそのものはかなり魅力的なAPIですので、皆さんにもぜひ使ってみて欲しいです。Java 1.8がリリースされた当時には性能も劣り読みにくいという批判も多かったのですが、もう時間は経ち、Javaのバージョンはすでに14となっているくらいです。もうそろそろStreamを使ってモダンな書き方を試してみても良いでしょう。</p>
 <p>そしてStreamを通じて、関数型プログラミングを味わえるのも一つのメリットではないかと思います。もちろん、Streamが完璧な関数型プログラミングの例だとは言い切れませんが、少なくとも、オブジェクト指向だけでなく新しいプログラミングのトレンドはどういうものかを経験できるということだけでも十分価値があるのではないでしょうか。もう関数型プログラミングの概念が登場してからも数年が経っています。プログラミングの世界は常に変化と発達が伴うものなので、少なくとも最近のトレンドが何であるかくらいは把握しておきたいものです。</p>

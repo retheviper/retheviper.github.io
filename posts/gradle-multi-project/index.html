@@ -85,21 +85,21 @@ gradle
 <li>gradlew.bat</li>
 </ul>
 <p>以上のファイルとフォルダを残したら、次は<code>build.gradle</code>ファイルを修正します。ルートプロジェクトはサブプロジェクトの管理だけをしていて、必要なタスクやプラグイン、依存関係の設定はサブプロジェクトで記述します。なのでなるべくシンプルにしましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>subprojects</span> <span class=o>{</span>
-    <span class=n>repositories</span> <span class=o>{</span>
-        <span class=n>mavenCentral</span><span class=o>()</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>subprojects <span style=color:#ff79c6>{</span>
+    repositories <span style=color:#ff79c6>{</span>
+        mavenCentral<span style=color:#ff79c6>()</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ここでやっていることは、サブプロジェクトのリポジトリ指定だけですが、同じやり方でサブプロジェクトの<code>build.gradle</code>に共通記述しなければならないことはなんでも入れていいです。例えばプラグインとかがあるでしょう。</p>
 <p>次に、<code>settings.gradle</code>ファイルを作成します。このファイルはルートプロジェクトとサブプロジェクトを紐付け、プロジェクト名を決める役割をします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>include</span> <span class=s1>&#39;core&#39;</span>
-<span class=n>include</span> <span class=s1>&#39;web&#39;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>include <span style=color:#f1fa8c>&#39;core&#39;</span>
+include <span style=color:#f1fa8c>&#39;web&#39;</span>
 
-<span class=n>rootProject</span><span class=o>.</span><span class=na>name</span> <span class=o>=</span> <span class=s1>&#39;TestProject&#39;</span>
-<span class=n>rootProject</span><span class=o>.</span><span class=na>children</span><span class=o>.</span><span class=na>each</span> <span class=o>{</span> <span class=n>it</span><span class=o>.</span><span class=na>name</span> <span class=o>=</span> <span class=n>rootProject</span><span class=o>.</span><span class=na>name</span> <span class=o>+</span> <span class=s1>&#39;-&#39;</span> <span class=o>+</span> <span class=n>it</span><span class=o>.</span><span class=na>name</span> <span class=o>}</span>
+rootProject<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span> <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#39;TestProject&#39;</span>
+rootProject<span style=color:#ff79c6>.</span><span style=color:#50fa7b>children</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>each</span> <span style=color:#ff79c6>{</span> it<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span> <span style=color:#ff79c6>=</span> rootProject<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span> <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#39;-&#39;</span> <span style=color:#ff79c6>+</span> it<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span> <span style=color:#ff79c6>}</span>
 </code></pre></div><p><code>include</code>と書いたものはサブプロジェクトで、<code>rootProject.name</code>はその名の通りルートプロジェクト名を意味します。他にも命名できる方法はありますが、あくまでルートプロジェクト名がこのプロジェクト全体を意味するもので、サブプロジェクトはそのうちの一つの機能単位という感覚て命名しています。</p>
 <p><code>rootProject.children.each { it.name = rootProject.name + '-' + it.name } </code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>rootProject</span><span class=o>.</span><span class=na>children</span><span class=o>.</span><span class=na>each</span> <span class=o>{</span> <span class=n>p</span> <span class=o>-&gt;</span> <span class=n>p</span><span class=o>.</span><span class=na>name</span> <span class=o>=</span> <span class=s2>&#34;${rootProject.name}-${p.name}&#34;</span><span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>rootProject<span style=color:#ff79c6>.</span><span style=color:#50fa7b>children</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>each</span> <span style=color:#ff79c6>{</span> p <span style=color:#ff79c6>-&gt;</span> p<span style=color:#ff79c6>.</span><span style=color:#50fa7b>name</span> <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;${rootProject.name}-${p.name}&#34;</span><span style=color:#ff79c6>}</span>
 </code></pre></div><p>この命名法によりそれぞれのサブプロジェクトは<code>TestProject-core</code>や<code>TestProject-web</code>のように命名されます。</p>
 <p>こう構成したプロジェクトをEclipseのパッケージエクスプローラからみると、以下のように見えるようになります。</p>
 <ul>
@@ -112,17 +112,17 @@ gradle
 <p>ルートプロジェクトの準備が終わったら次は、子要素のサブプロジェクトを作ります。サブプロジェクトは普通のGradleプロジェクトでも良く、ルートプロジェクトの配下に置くだけで使えるようになりますが、ここでは空のフォルダを作成して作る方法を紹介します。</p>
 <p>まずルートプロジェクトの配下にサブプロジェクトとして使うフォルダを作ります。フォルダ名をサブプロジェクト名として使う予定なので、適したフォルダ名を選びます。ここでフォルダ名はルートプロジェクトの<code>settings.gradle</code>で記述した<code>include</code>と一致しなければならないです。例えば上のルートプロジェクトでは<code>core</code>と<code>web</code>をすでに書いているので、それに合わせて<code>core</code>と<code>web</code>のフォルダを作成します。</p>
 <p>フォルダを作成したら、その中にルートプロジェクトを作成した時コピーしておいた<code>build.gradle</code>を置いて編集します。今回はEclipseを基準にJavaプロジェクトを生成するので以下のようなプラグインが必要です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>plugins</span> <span class=o>{</span>
-    <span class=n>id</span> <span class=s1>&#39;eclipse&#39;</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>plugins <span style=color:#ff79c6>{</span>
+    id <span style=color:#f1fa8c>&#39;eclipse&#39;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ファイルを保存してルートプロジェクトから<code>gradlew tasks</code>を実行すると、ide節に<code>eclipse</code>があります。こちらのタスクを実行します。コマンドラインだと<code>gradlew eclipse</code>を入力することで実行できます。もちろんEclipse上でも実行できますが、更新に時間がかかる場合があるのでコマンドラインの方をお勧めします。</p>
 <p>このタスクを実行することで、作成したフォルダの中にEclipseプロジェクトとして機能するための準備ができます。あとは普通のJavaプロジェクトのようにソースフォルダ(src/main/java)を生成し、パッケージを作成してサブプロジェクトの中を埋めていきます。</p>
 <p>もしマルチプロジェクトがEclipse上で正しく認識されない場合は、プロジェクトを右クリックしてリフレッシュしたり、Gradleメニューから<code>Gradleプロジェクトのリフレッシュ</code>を実行してください。</p>
 <h2 id=sub-project-dependency>Sub Project Dependency</h2>
 <p>この方法で作成したマルチプロジェクトでは、サブプロジェクト同士で依存することもできます。例えば<code>web</code>プロジェクトの起動に<code>core</code>プロジェクトで作成したクラスを読み込む必要があるときは、<code>web</code>の<code>build.gralde</code>で以下のように記述すると<code>core</code>のクラスをインポートできるようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-groovy data-lang=groovy><span class=n>dependencies</span> <span class=o>{</span>
-    <span class=n>implementation</span> <span class=nf>project</span><span class=o>(</span><span class=s1>&#39;:TestProject-core&#39;</span><span class=o>)</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-groovy data-lang=groovy>dependencies <span style=color:#ff79c6>{</span>
+    implementation <span style=color:#50fa7b>project</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#39;:TestProject-core&#39;</span><span style=color:#ff79c6>)</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>ただこの場合、<code>web</code>の起動時に一度<code>core</code>プロジェクトをコンパイルすることになるのでテスト時に<code>core</code>側の修正事項は即反映されないので注意しましょう。</p>
 <h2 id=最後に>最後に</h2>
 <p>まだEclipse上でGradleのマルチプロジェクトの生成を簡単にできる方法がなく、このような多少不便な方法でしかプロジェクトの作成ができないというところが不便ですね。のちに追加されるかも知れませんが…</p>

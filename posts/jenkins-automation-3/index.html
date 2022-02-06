@@ -75,18 +75,18 @@ jenkins
 <p>今回のタスクを振り返ってみましょう。JavaアプリケーションがGitにあります。それをPullし（Jenkinsが実行されているサーバにソースコードを持ってきて）、ビルド（実行可能なパッケージにする）する。これでJenkinsは最新のソースコードを確保しつつ、実行可能なアプリケーションをデプロイできる状態になります。それではまず必要な道具はJDKとGradleです。</p>
 <h2 id=openjdkをインストールしましょう>OpenJDKをインストールしましょう</h2>
 <p>まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>をインストールします。<code>yum install java</code>をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
 </code></pre></div><p>curl -OはURLからファイルをダウンロードして保存するということです。ダウンロードしたファイルは圧縮されているので解凍します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
 </code></pre></div><p>tarは圧縮したり解凍するとき使うコマンド。zは.gzファイルを、xは圧縮ファイルの展開、vは処理したファイルを表示、fはこのファイルを指定するという意味らしいです。解凍が終わったらファイルを適切な場所に格納しましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ mv jdk-11.0.1 /usr/local/
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ mv jdk-11.0.1 /usr/local/
 </code></pre></div><p>次に簡単なシェルスクリプトを書きます。Linuxでの環境変数を設定するためです。まずviやvimでファイルを作りましょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ vi /etc/profile.d/jdk11.sh
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ vi /etc/profile.d/jdk11.sh
 </code></pre></div><p>iを押して以下の内容を書きます。Javaを格納したパスを確認してください。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=nb>export</span> <span class=nv>JAVA_HOME</span><span class=o>=</span>/usr/local/jdk-11.0.1
-<span class=nb>export</span> <span class=nv>PATH</span><span class=o>=</span><span class=nv>$PATH</span>:<span class=nv>$JAVA_HOME</span>/bin
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#8be9fd;font-style:italic>export</span> <span style=color:#8be9fd;font-style:italic>JAVA_HOME</span><span style=color:#ff79c6>=</span>/usr/local/jdk-11.0.1
+<span style=color:#8be9fd;font-style:italic>export</span> <span style=color:#8be9fd;font-style:italic>PATH</span><span style=color:#ff79c6>=</span><span style=color:#8be9fd;font-style:italic>$PATH</span>:<span style=color:#8be9fd;font-style:italic>$JAVA_HOME</span>/bin
 </code></pre></div><p>esc⇨:wqで保存と終了。そしてすぐシェルスクリプトを今の状態に適用させます。sourceコマンドを使います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ <span class=nb>source</span> /etc/profile.d/jdk11.sh
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ <span style=color:#8be9fd;font-style:italic>source</span> /etc/profile.d/jdk11.sh
 </code></pre></div><p>これでOpenJDK11は準備されました。私はCentOS7を使っているのですが、ubuntuなどの違うLinuxではまた手順も色々あるようです。とにかくインストールがちゃんと終わっているか<code>java -version</code>で確認してみましょう。</p>
 <p><figure class=gallery-image style=flex-grow:144;flex-basis:346px>
 <a href=/posts/jenkins-automation-3/jenkins_java8.png data-size=894x619>
@@ -98,9 +98,9 @@ jenkins
 <h2 id=使いたいjavaのバージュヨンを切り替える>使いたいJavaのバージュヨンを切り替える</h2>
 <p>すでに違うバージョンのJDKがインストールされた場合は、次の手順で使いたいJavaのバージョンを選択できます。
 まず新しくインストールしたJavaを選択できるよう登録します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ alternatives --install /usr/bin/java java <span class=nv>$JAVA_HOME</span>/bin/java <span class=m>2</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ alternatives --install /usr/bin/java java <span style=color:#8be9fd;font-style:italic>$JAVA_HOME</span>/bin/java <span style=color:#bd93f9>2</span>
 </code></pre></div><p>登録が終わったら、以下のコマンドで現在登録されているJavaを表示します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ alternatives --config java
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ alternatives --config java
 </code></pre></div><p>CentOSインストール時にすでに二つのバージョンのJavaがインストールされてましたね。Java11が3番目になったので3を入力します。これでJavaは準備オッケーです。</p>
 <p><figure class=gallery-image style=flex-grow:144;flex-basis:346px>
 <a href=/posts/jenkins-automation-3/jenkins_alter.png data-size=894x619>
@@ -109,7 +109,7 @@ jenkins
 <figcaption>Jenkins Alter</figcaption>
 </figure></p>
 <p>ちなみに、JenkinsもまたJavaで作られているので場合によってはJava11のJVMで起動できます。Java11のJVMをJenkinsに登録するには以下の手順になります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ vi /etc/init.d/jenkins
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ vi /etc/init.d/jenkins
 </code></pre></div><p>Jenkinsの設定ファイルです。candidatesという部分に様々なバージョンのJVMの経路が機材されていますので、ここにOpenJDK11のbinフォルダのパスを追加します。esc⇨:wqで終了！</p>
 <p><figure class=gallery-image style=flex-grow:144;flex-basis:346px>
 <a href=/posts/jenkins-automation-3/jenkins_jvm.png data-size=894x619>
@@ -119,11 +119,11 @@ jenkins
 </figure></p>
 <h2 id=gradleもインストールしよう>Gradleもインストールしよう</h2>
 <p>次にGradleをインストールします。macOSでは<code>brew install gradle</code>で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
 </code></pre></div><p>-Pオプションをつけると指定したフォルダにファイルを保存します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
 </code></pre></div><p>zipファイルンなので、unzipコマンドで解凍します。-dもまたフォルダ（ディレクトリ）を指定するオプションです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sudo nano /etc/profile.d/gradle.sh
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ sudo nano /etc/profile.d/gradle.sh
 </code></pre></div><p>今回はnanoを使ってスクリプトを作ってみます。よりGUIに近い感じがしますね。nanoがなければ<code>yum install nano</code>でインストールしてもいいし、viを使っても良いです。</p>
 <p>私はどこでも使えるということ（環境によってはsudoの権限があるとしても、勝手に色々インストールできない場合もあるので)からviを使うことが多いですが、nanoはより直観的で使いやすいと思います。</p>
 <p><figure class=gallery-image style=flex-grow:144;flex-basis:346px>
@@ -133,14 +133,14 @@ jenkins
 <figcaption>Gradle SH</figcaption>
 </figure></p>
 <p>添付の画像のように、以下の内容を入力します。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash><span class=nb>export</span> <span class=nv>GRADLE_HOME</span><span class=o>=</span>/opt/gradle/gradle-5.4.1
-<span class=nb>export</span> <span class=nv>PATH</span><span class=o>=</span><span class=si>${</span><span class=nv>GRADLE_HOME</span><span class=si>}</span>/bin:<span class=si>${</span><span class=nv>PATH</span><span class=si>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=color:#8be9fd;font-style:italic>export</span> <span style=color:#8be9fd;font-style:italic>GRADLE_HOME</span><span style=color:#ff79c6>=</span>/opt/gradle/gradle-5.4.1
+<span style=color:#8be9fd;font-style:italic>export</span> <span style=color:#8be9fd;font-style:italic>PATH</span><span style=color:#ff79c6>=</span><span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>GRADLE_HOME</span><span style=color:#f1fa8c>}</span>/bin:<span style=color:#f1fa8c>${</span><span style=color:#8be9fd;font-style:italic>PATH</span><span style=color:#f1fa8c>}</span>
 </code></pre></div><p>nanoではctrl+xを押すと編集した内容を保存するかを聞いてきます。Yのあとエンターを押すと保存。US標準のキーボードを使う私にとっては:wqより入力が簡単で好きです。</p>
 <p>あとは作られたスクリプトに実行の権限を与え、<code>source</code>コマンドで環境変数として登録。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ sudo chmod +x /etc/profile.d/gradle.sh
-$ <span class=nb>source</span> /etc/profile.d/gradle.sh
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ sudo chmod +x /etc/profile.d/gradle.sh
+$ <span style=color:#8be9fd;font-style:italic>source</span> /etc/profile.d/gradle.sh
 </code></pre></div><p>chmod 755のようなコマンドを書いたことが多いですが、+xで実行の権限だけ与える方が習慣的には良さそうですね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>$ gradle -v
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>$ gradle -v
 </code></pre></div><p>インストールに成功したかを確認するにはやはりバージョンの確認ですね。以下のような画面が表示されたらGradleのインストールも成功です。</p>
 <p><figure class=gallery-image style=flex-grow:144;flex-basis:346px>
 <a href=/posts/jenkins-automation-3/gradle_version.png data-size=894x619>

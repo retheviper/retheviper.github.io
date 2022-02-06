@@ -77,39 +77,39 @@ go
 <h3 id=似ているようで似ていない>似ているようで、似ていない</h3>
 <p>まず目立つのは、文法です。もちろん、大枠はいわゆるCファミリープログラミング言語とそう変わらないですが、Javaと比較すると文法の構造以外の部分でかなり変わった部分があります。例えば、<code>Walrus Operator</code>とも呼ばれる<a class=link href=https://docs.python.org/ja/3/whatsnew/3.8.html#assignment-expressions target=_blank rel=noopener>Pythonの代入式</a>に似たような表現があったり、if文の条件式を括弧なしで書けたり、importを文字列で書いたり、クラスや<code>public</code>・<code>private</code>のようなキーワードが無かったりの違いがあるので、コードを書くときの感覚が違うだけでなく、パッケージ構造やアプリケーションのアーキテクチャ設計のレベルで今まで自分が経験していたJavaやKotlinとは違うアプローチが必要ではないかと思えるくらいです。</p>
 <p>色々と違う点を述べましたが、単純にコードを持って比較してみましょう。例えば、以下のようなコードがあるとしましょう。数字に関する計算を担当するクラスがあって、中には渡された引数が奇数か偶数かを判別して、結果を標準出力する形です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kn>package</span> <span class=nn>simple.math</span><span class=o>;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>package</span> simple.math<span style=color:#ff79c6>;</span>
 
-<span class=kd>public</span> <span class=n>Class</span> <span class=n>Calculator</span> <span class=o>{</span>
+<span style=color:#8be9fd;font-style:italic>public</span> Class Calculator <span style=color:#ff79c6>{</span>
 
-    <span class=kd>public</span> <span class=kt>void</span> <span class=nf>judge</span><span class=o>(</span><span class=kt>int</span> <span class=n>number</span><span class=o>)</span> <span class=o>{</span>
-        <span class=kt>boolean</span> <span class=n>result</span> <span class=o>=</span> <span class=n>number</span> <span class=o>%</span><span class=n>2</span> <span class=o>==</span> <span class=n>0</span><span class=o>;</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>result</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>number</span> <span class=o>+</span> <span class=s>&#34;は偶数です&#34;</span><span class=o>);</span>
-        <span class=o>}</span> <span class=k>else</span> <span class=o>{</span>
-            <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>number</span> <span class=o>+</span> <span class=s>&#34;は奇数です&#34;</span><span class=o>);</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-<span class=o>}</span>
+    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>judge</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> number<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#8be9fd>boolean</span> result <span style=color:#ff79c6>=</span> number <span style=color:#ff79c6>%</span>2 <span style=color:#ff79c6>==</span> 0<span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>result<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>number <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;は偶数です&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>else</span> <span style=color:#ff79c6>{</span>
+            System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>number <span style=color:#ff79c6>+</span> <span style=color:#f1fa8c>&#34;は奇数です&#34;</span><span style=color:#ff79c6>);</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>これをGoのコードに変えてみます。例えば以下のようになると思います。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>package</span> <span class=nx>simple</span><span class=p>.</span><span class=nx>math</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>package</span> simple.math
 
-<span class=kn>import</span> <span class=s>&#34;fmt&#34;</span>
+<span style=color:#ff79c6>import</span> <span style=color:#f1fa8c>&#34;fmt&#34;</span>
 
-<span class=kd>func</span> <span class=nf>Judge</span><span class=p>(</span><span class=nx>number</span> <span class=kt>int</span><span class=p>)</span> <span class=p>{</span>
-    <span class=nx>condition</span> <span class=o>:=</span> <span class=nx>number</span> <span class=o>%</span> <span class=mi>2</span> <span class=o>==</span> <span class=mi>0</span>
-    <span class=k>if</span> <span class=nx>condition</span> <span class=p>{</span>
-        <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>number</span><span class=p>,</span> <span class=s>&#34;は偶数です&#34;</span><span class=p>)</span>
-    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>number</span><span class=p>,</span><span class=s>&#34;は奇数です&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>Judge</span>(number <span style=color:#8be9fd>int</span>) {
+    condition <span style=color:#ff79c6>:=</span> number <span style=color:#ff79c6>%</span> <span style=color:#bd93f9>2</span> <span style=color:#ff79c6>==</span> <span style=color:#bd93f9>0</span>
+    <span style=color:#ff79c6>if</span> condition {
+        fmt.<span style=color:#50fa7b>Println</span>(number, <span style=color:#f1fa8c>&#34;は偶数です&#34;</span>)
+    } <span style=color:#ff79c6>else</span> {
+        fmt.<span style=color:#50fa7b>Println</span>(number,<span style=color:#f1fa8c>&#34;は奇数です&#34;</span>)
+    }
+}
 </code></pre></div><p>一見あまり変わらないように見えるかも知れませんが、細かいところが違うので注意しなければならないところがあります。いくらIDEの性能がよくなったとはいえ、その言語の仕様と全く違うようなコードを書いてしまっては、正しいコードを提示してくれませんので。例えばインポートは複数になると、以下のようになりますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>import</span> <span class=p>(</span>
-    <span class=s>&#34;fmt&#34;</span>
-    <span class=s>&#34;math&#34;</span>
-<span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>import</span> (
+    <span style=color:#f1fa8c>&#34;fmt&#34;</span>
+    <span style=color:#f1fa8c>&#34;math&#34;</span>
+)
 </code></pre></div><p>Pythonの場合も一行でimportをまとめたり、<code>from</code>と<code>as</code>でAliasを指定するようなことができたりもします。しかし、Goで根本的に違うのは、GoそのものがMavenやGradleのようなパッケージ管理もできるので、インポートにgithubのパッケージを描くこともできるということです。例えば以下のようなコードで、Goのウェブフレームワークである<a class=link href=https://github.com/gin-gonic/gin target=_blank rel=noopener>Gin</a>をインポートすることができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>import</span> <span class=s>&#34;github.com/gin-gonic/gin&#34;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>import</span> <span style=color:#f1fa8c>&#34;github.com/gin-gonic/gin&#34;</span>
 </code></pre></div><p>また、変数を<code>:=</code>を使って宣言する場合は、関数内でのみ可能であるので、パッケージレベルで宣言する場合は普通に<code>var</code>を使う必要があるという仕様も理解する必要があったりします。そしてそれに対して、関数の引数としては<code>var</code>宣言がいらなく、型を宣言する必要があります。どんな場合でも(初期化とともに<code>var</code>を使うことは最近のJavaでも可能になりましたが)変数の型を書く必要のあるJavaとは大きく違うところですね。こういう細かい違いがあるので、Goの作法に対する理解なしでJavaの感覚のままコードを書くのは大変なことになるかも知れません。</p>
 <h3 id=大文字には機能がある>大文字には機能がある</h3>
 <p>会社ごとにルールは違うかと思いますが、今までの自分が経験では、言語がJavaであれJavaScriptであれ以下のようなルールで書く場合が多かったです。</p>
@@ -120,22 +120,22 @@ go
 <p>たまにPythonでコードを書く場合はsnake_caseだったり、URLはkebab-caseだったりもしたのですが、プライベートでも多くの場合このルールに従ってコードを書いています。そしてこれはあくまで人間が定めたルールなので、守らなくても</p>
 <p>しかし、GoではPascalCaseかcamelCaseかによって意味が変わる部分があります。正確には頭が大文字か小文字かによる違いですね。<code>public</code>と<code>private</code>の代わりになってくるのが、この仕様です。簡単に説明すると、<code>他のパッケージからも参照できる</code>のは大文字から始まるフィールドや関数であり、そうでない場合は小文字から始まるものということです。</p>
 <p>例えば以下をみてください。<a class=link href=https://tour.golang.org target=_blank rel=noopener>A Tour of Go</a>で提示しているコードです。ここでは<code>math</code>パッケージをインポートして、あらかじめ定義されてある<code>π</code>を標準出力している例です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>package</span> <span class=nx>main</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>package</span> main
 
-<span class=kn>import</span> <span class=p>(</span>
-    <span class=s>&#34;fmt&#34;</span>
-    <span class=s>&#34;math&#34;</span>
-<span class=p>)</span>
+<span style=color:#ff79c6>import</span> (
+    <span style=color:#f1fa8c>&#34;fmt&#34;</span>
+    <span style=color:#f1fa8c>&#34;math&#34;</span>
+)
 
-<span class=kd>func</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>math</span><span class=p>.</span><span class=nx>pi</span><span class=p>)</span>
-<span class=p>}</span>
+<span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>main</span>() {
+    fmt.<span style=color:#50fa7b>Println</span>(math.pi)
+}
 </code></pre></div><p>上記のコードは、なんの問題もないかのように見えますが、実行すると以下のようなエラーメッセージが出力されます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>./prog.go:9:14: cannot refer to unexported name math.pi
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>./prog.go:9:14: cannot refer to unexported name math.pi
 </code></pre></div><p>これはつまり、外部から参照できないということですね。なので、正しいコードに変えると<code>main</code>関数を以下のように直す必要があります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kd>func</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>math</span><span class=p>.</span><span class=nx>Pi</span><span class=p>)</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>main</span>() {
+    fmt.<span style=color:#50fa7b>Println</span>(math.Pi)
+}
 </code></pre></div><p>先端が大文字であり、外部から参照できるように定義された名前のことを<a class=link href=https://go-tour-jp.appspot.com/basics/3 target=_blank rel=noopener>Exported Names</a>というらしいです。Goにはクラスがないので、パッケージをインポートして、そのパッケージ内に存在する<code>.go</code>ファイルの中に<code>Export Names</code>で定義された項目のみを参照することになります。なのでクラスを作って、そのクラスのインスタンスを生成し、小文字から始まるフィールドやメソッドを呼ぶというJavaの作法とは感覚が大きく違いますね。</p>
 <h2 id=ポインターの存在>ポインターの存在</h2>
 <p>プログラマーだと誰もが知っていることだと思いますが、ポインターがあるかどうかの問題は、コードを各感覚にかなりの影響を与えるようなものです。JavaやKotlinなど、ポインターがない言語ではクラスやメソッド間にただ、GoにはGCがあるので、CやC++のようなメモリー問題はないかとも思いますが、とにかく直接使ってみないとわからないところですね。</p>
@@ -144,95 +144,95 @@ go
 <p>まだ私はポインターを本格的に扱う言語に触れてみたことがなく、Goでもポインターを活用するようなコードは書いたことがあまりないので、ここで言えるのは上記で述べた内容だけですが、私と同じくポインターのない言語の経験しかない方にはやはり慣れるまで時間がかかるのではないかと思います。試行錯誤もかなりありそうですね。</p>
 <h2 id=例外処理が独特>例外処理が独特</h2>
 <p>Goで書かれてあるコードをみて、何が一番目立つかというと、例外処理の部分ではないかと思います。私が経験したことのある言語(Java、Python、JavaScript、TypeScript、Kotlin)では、例外処理のために<code>try-catch</code>ブロックという仕様がありました。言語ごとに少しづつ違うところはありましたが、基本的に例外が発生しうる場所をそのブロックで囲んでから処理する、という発想自体は変わりがありません。例えば以下のようなコードで例外を処理することが一般的でしょう。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=kd>public</span> <span class=kd>static</span> <span class=kt>void</span> <span class=nf>main</span><span class=o>(</span><span class=n>String</span><span class=o>[]</span> <span class=n>args</span><span class=o>)</span> <span class=o>{</span>
-    <span class=kt>int</span> <span class=n>result</span> <span class=o>=</span> <span class=n>0</span><span class=o>;</span>
-    <span class=k>try</span> <span class=o>{</span>
-        <span class=n>result</span> <span class=o>=</span> <span class=n>divide</span><span class=o>(</span><span class=n>1</span><span class=o>,</span> <span class=n>0</span><span class=o>);</span>
-    <span class=o>}</span> <span class=k>catch</span> <span class=o>(</span><span class=n>Exception</span> <span class=n>e</span><span class=o>)</span> <span class=o>{</span>
-        <span class=k>if</span> <span class=o>(</span><span class=n>e</span> <span class=k>instanceof</span> <span class=n>ArithmeticException</span><span class=o>)</span> <span class=o>{</span>
-            <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=s>&#34;0で分けません&#34;</span><span class=o>);</span>
-            <span class=k>return</span><span class=o>;</span>
-        <span class=o>}</span>
-    <span class=o>}</span>
-    <span class=n>System</span><span class=o>.</span><span class=na>out</span><span class=o>.</span><span class=na>println</span><span class=o>(</span><span class=n>result</span><span class=o>);</span>
-<span class=o>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>main</span><span style=color:#ff79c6>(</span>String<span style=color:#ff79c6>[]</span> args<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#8be9fd>int</span> result <span style=color:#ff79c6>=</span> 0<span style=color:#ff79c6>;</span>
+    <span style=color:#ff79c6>try</span> <span style=color:#ff79c6>{</span>
+        result <span style=color:#ff79c6>=</span> divide<span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>,</span> 0<span style=color:#ff79c6>);</span>
+    <span style=color:#ff79c6>}</span> <span style=color:#ff79c6>catch</span> <span style=color:#ff79c6>(</span>Exception e<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+        <span style=color:#ff79c6>if</span> <span style=color:#ff79c6>(</span>e <span style=color:#ff79c6>instanceof</span> ArithmeticException<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+            System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;0で分けません&#34;</span><span style=color:#ff79c6>);</span>
+            <span style=color:#ff79c6>return</span><span style=color:#ff79c6>;</span>
+        <span style=color:#ff79c6>}</span>
+    <span style=color:#ff79c6>}</span>
+    System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>result<span style=color:#ff79c6>);</span>
+<span style=color:#ff79c6>}</span>
 
-<span class=kd>private</span> <span class=kd>static</span> <span class=kt>int</span> <span class=nf>divide</span><span class=o>(</span><span class=kt>int</span> <span class=n>numerator</span><span class=o>,</span> <span class=kt>int</span> <span class=n>denominator</span><span class=o>)</span> <span class=o>{</span>
-    <span class=k>return</span> <span class=n>numerator</span> <span class=o>/</span> <span class=n>denominator</span><span class=o>;</span>
-<span class=o>}</span>
+<span style=color:#8be9fd;font-style:italic>private</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>divide</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> numerator<span style=color:#ff79c6>,</span> <span style=color:#8be9fd>int</span> denominator<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+    <span style=color:#ff79c6>return</span> numerator <span style=color:#ff79c6>/</span> denominator<span style=color:#ff79c6>;</span>
+<span style=color:#ff79c6>}</span>
 </code></pre></div><p>しかし、Goではそのような機能はありません。代わりに、どんな関数でも戻り値として<code>期待する値</code>と<code>発生したエラー</code>を定義し、呼び出し元では関数の実行結果としてエラーが発生したを確認して、エラーが発生していたら(エラーが<code>nil</code>ではない場合)にそのエラーの対応をする、ということが一般的な作法のようです。言葉で説明すると難しいので、実際のコードをみていきましょう。上記のコードをGoの作法に合わせて書き直すと、以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kd>func</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=nx>result</span><span class=p>,</span> <span class=nx>err</span> <span class=o>:=</span> <span class=nf>divide</span><span class=p>(</span><span class=mi>1</span><span class=p>,</span> <span class=mi>0</span><span class=p>)</span>
-    <span class=k>if</span> <span class=nx>err</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
-        <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>err</span><span class=p>)</span>
-        <span class=k>return</span>
-    <span class=p>}</span>
-    <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=nx>result</span><span class=p>)</span>
-<span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>main</span>() {
+    result, err <span style=color:#ff79c6>:=</span> <span style=color:#50fa7b>divide</span>(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>0</span>)
+    <span style=color:#ff79c6>if</span> err <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>nil</span> {
+        fmt.<span style=color:#50fa7b>Println</span>(err)
+        <span style=color:#ff79c6>return</span>
+    }
+    fmt.<span style=color:#50fa7b>Println</span>(result)
+}
 
-<span class=kd>func</span> <span class=nf>divide</span><span class=p>(</span><span class=nx>numerator</span> <span class=kt>int32</span><span class=p>,</span> <span class=nx>denominator</span> <span class=kt>int32</span><span class=p>)</span> <span class=p>(</span><span class=kt>int32</span><span class=p>,</span> <span class=kt>error</span><span class=p>)</span> <span class=p>{</span>
-    <span class=k>if</span> <span class=p>(</span><span class=nx>denominator</span> <span class=o>!=</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=nx>numerator</span> <span class=o>/</span> <span class=nx>denominator</span><span class=p>,</span> <span class=kc>nil</span>
-    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=mi>0</span><span class=p>,</span> <span class=nx>errors</span><span class=p>.</span><span class=nf>New</span><span class=p>(</span><span class=s>&#34;0で分けません&#34;</span><span class=p>)</span>
-    <span class=p>}</span>
-<span class=p>}</span>
+<span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>divide</span>(numerator <span style=color:#8be9fd>int32</span>, denominator <span style=color:#8be9fd>int32</span>) (<span style=color:#8be9fd>int32</span>, <span style=color:#8be9fd>error</span>) {
+    <span style=color:#ff79c6>if</span> (denominator <span style=color:#ff79c6>!=</span> <span style=color:#bd93f9>0</span>) {
+        <span style=color:#ff79c6>return</span> numerator <span style=color:#ff79c6>/</span> denominator, <span style=color:#ff79c6>nil</span>
+    } <span style=color:#ff79c6>else</span> {
+        <span style=color:#ff79c6>return</span> <span style=color:#bd93f9>0</span>, errors.<span style=color:#50fa7b>New</span>(<span style=color:#f1fa8c>&#34;0で分けません&#34;</span>)
+    }
+}
 </code></pre></div><p>このように、関数ではエラーが発生した場合にそれをそのまま返し(上記のコードでは、あえてエラーを作っていますが)、呼び出し元ではエラーがあったかどうかを確認して分岐します。こうすることで「エラーが発生した場所が明確になる」メリットがあるらしいです。確かに、<code>try-catch</code>ブロックが囲んでいるコードが多ければ多いほど、例外が発生し得るコードがどれなのかわからなくなる場合もありますね。例外を処理するための機能が、例外を起こさないコードと混り、わけがわからなくなります。そういう観点からすると、Goのアプローチはエラーとロジックを分離できるというメリットがあると言えるでしょう。</p>
 <p>ただ、Goの作法では関数を呼び出す度に後続でエラーチェックが入るので、毎回同じ様なコードを書く場合があるのは少し違和感があります。例えば以下のようなコードを見かけるのですが、皆さんはどう思われるのでしょうか。もっとスマートな方法があって、自分が知らないだけなのかも知れませんが…</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=c1>// いくつかの関数を呼び出して処理をする関数
-</span><span class=c1></span><span class=kd>func</span> <span class=nf>doSomething</span><span class=p>()</span> <span class=p>(</span><span class=kt>string</span><span class=p>,</span> <span class=kt>error</span><span class=p>)</span> <span class=p>{</span>
-    <span class=c1>// 関数1を呼び出す
-</span><span class=c1></span>    <span class=nx>result1</span><span class=p>,</span> <span class=nx>err1</span> <span class=o>:=</span> <span class=nf>someFunction1</span><span class=p>()</span>
-    <span class=c1>// 関数1でエラーが発生した場合はエラーを返却する
-</span><span class=c1></span>    <span class=k>if</span> <span class=nx>err1</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=s>&#34;&#34;</span><span class=p>,</span> <span class=nx>err</span>
-    <span class=p>}</span>
-    <span class=c1>// 関数1でエラーが発生していない場合は関数2を呼び出す
-</span><span class=c1></span>    <span class=nx>result2</span><span class=p>,</span> <span class=nx>err2</span> <span class=o>:=</span> <span class=nf>someFunction2</span><span class=p>(</span><span class=nx>result1</span><span class=p>)</span>
-    <span class=c1>// 関数2でエラーが発生した場合はエラーを返却する
-</span><span class=c1></span>    <span class=k>if</span> <span class=nx>err2</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=s>&#34;&#34;</span><span class=p>,</span> <span class=nx>err</span>
-    <span class=p>}</span>
-    <span class=c1>// 関数2でエラーが発生していない場合は関数2を呼び出す
-</span><span class=c1></span>    <span class=nx>result3</span><span class=p>,</span> <span class=nx>err3</span> <span class=o>:=</span> <span class=nf>someFunction3</span><span class=p>(</span><span class=nx>result2</span><span class=p>)</span>
-    <span class=c1>// 関数3でエラーが発生した場合はエラーを返却する
-</span><span class=c1></span>    <span class=k>if</span> <span class=nx>err3</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=s>&#34;&#34;</span><span class=p>,</span> <span class=nx>err</span>
-    <span class=p>}</span>
-    <span class=c1>// 関数3でエラーが発生していない場合は関数2を呼び出す
-</span><span class=c1></span>    <span class=nx>result4</span><span class=p>,</span> <span class=nx>err4</span> <span class=o>:=</span> <span class=nf>someFunction4</span><span class=p>(</span><span class=nx>result3</span><span class=p>)</span>
-    <span class=c1>// 関数4でエラーが発生した場合はエラーを返却する
-</span><span class=c1></span>    <span class=k>if</span> <span class=nx>err4</span> <span class=o>!=</span> <span class=kc>nil</span> <span class=p>{</span>
-        <span class=k>return</span> <span class=s>&#34;&#34;</span><span class=p>,</span> <span class=nx>err</span>
-    <span class=p>}</span>
-    <span class=c1>// ...続く
-</span><span class=c1></span><span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#6272a4>// いくつかの関数を呼び出して処理をする関数
+</span><span style=color:#6272a4></span><span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>doSomething</span>() (<span style=color:#8be9fd>string</span>, <span style=color:#8be9fd>error</span>) {
+    <span style=color:#6272a4>// 関数1を呼び出す
+</span><span style=color:#6272a4></span>    result1, err1 <span style=color:#ff79c6>:=</span> <span style=color:#50fa7b>someFunction1</span>()
+    <span style=color:#6272a4>// 関数1でエラーが発生した場合はエラーを返却する
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>if</span> err1 <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>nil</span> {
+        <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;&#34;</span>, err
+    }
+    <span style=color:#6272a4>// 関数1でエラーが発生していない場合は関数2を呼び出す
+</span><span style=color:#6272a4></span>    result2, err2 <span style=color:#ff79c6>:=</span> <span style=color:#50fa7b>someFunction2</span>(result1)
+    <span style=color:#6272a4>// 関数2でエラーが発生した場合はエラーを返却する
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>if</span> err2 <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>nil</span> {
+        <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;&#34;</span>, err
+    }
+    <span style=color:#6272a4>// 関数2でエラーが発生していない場合は関数2を呼び出す
+</span><span style=color:#6272a4></span>    result3, err3 <span style=color:#ff79c6>:=</span> <span style=color:#50fa7b>someFunction3</span>(result2)
+    <span style=color:#6272a4>// 関数3でエラーが発生した場合はエラーを返却する
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>if</span> err3 <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>nil</span> {
+        <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;&#34;</span>, err
+    }
+    <span style=color:#6272a4>// 関数3でエラーが発生していない場合は関数2を呼び出す
+</span><span style=color:#6272a4></span>    result4, err4 <span style=color:#ff79c6>:=</span> <span style=color:#50fa7b>someFunction4</span>(result3)
+    <span style=color:#6272a4>// 関数4でエラーが発生した場合はエラーを返却する
+</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>if</span> err4 <span style=color:#ff79c6>!=</span> <span style=color:#ff79c6>nil</span> {
+        <span style=color:#ff79c6>return</span> <span style=color:#f1fa8c>&#34;&#34;</span>, err
+    }
+    <span style=color:#6272a4>// ...続く
+</span><span style=color:#6272a4></span>}
 </code></pre></div><h2 id=コンパイラーが厳しい>コンパイラーが厳しい</h2>
 <p>コンパイルエラーが発生した場合はIDEで知らせてくれるので気にすることはあまりないかと思いがちですが、意外と気になるのはコンパイラーの厳しさです。個人的には<code>jShell</code>の様なインタラクティブツールを使ってよくコードの検証をするのですが、GoにはそれがないのでVimで書いたコードをターミナルで動かしてみたり、<a class=link href=https://play.golang.org/ target=_blank rel=noopener>The Go Playground</a>を使ってみています。そしてこういう方法ではIDEの様なサポートをあまり期待できませんので、コンバイルエラーになることが多かったです。</p>
 <p>ただ、コンパイルエラーといっても色々な原因がありますが、Goは特に他の言語と比べてもかなり厳しいのではないかと思います。例えば以下の様なコードがあるとします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>package</span> <span class=nx>main</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>package</span> main
 
-<span class=kn>import</span> <span class=p>(</span>
-    <span class=s>&#34;fmt&#34;</span>
-<span class=p>)</span>
+<span style=color:#ff79c6>import</span> (
+    <span style=color:#f1fa8c>&#34;fmt&#34;</span>
+)
 
-<span class=kd>func</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-<span class=p>}</span>
+<span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>main</span>() {
+}
 </code></pre></div><p>ターミナルやThe Go Playgroundでこれを実行すると、以下の様なエラーメッセージが出ます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>./prog.go:4:2: imported and not used: <span class=s2>&#34;fmt&#34;</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>./prog.go:4:2: imported and not used: <span style=color:#f1fa8c>&#34;fmt&#34;</span>
 </code></pre></div><p>インポートしたパッケージが使われていないというエラーですね。さらに、以下の様なコードを実行したとします。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-go data-lang=go><span class=kn>package</span> <span class=nx>main</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#ff79c6>package</span> main
 
-<span class=kn>import</span> <span class=p>(</span>
-    <span class=s>&#34;fmt&#34;</span>
-<span class=p>)</span>
+<span style=color:#ff79c6>import</span> (
+    <span style=color:#f1fa8c>&#34;fmt&#34;</span>
+)
 
-<span class=kd>func</span> <span class=nf>main</span><span class=p>()</span> <span class=p>{</span>
-    <span class=kd>var</span> <span class=nx>result</span> <span class=kt>string</span>
-    <span class=nx>fmt</span><span class=p>.</span><span class=nf>Println</span><span class=p>(</span><span class=s>&#34;this is test program&#34;</span><span class=p>)</span>
-<span class=p>}</span>
+<span style=color:#8be9fd;font-style:italic>func</span> <span style=color:#50fa7b>main</span>() {
+    <span style=color:#8be9fd;font-style:italic>var</span> result <span style=color:#8be9fd>string</span>
+    fmt.<span style=color:#50fa7b>Println</span>(<span style=color:#f1fa8c>&#34;this is test program&#34;</span>)
+}
 </code></pre></div><p>上記のコードを実行した結果は、以下の通りです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-bash data-lang=bash>./prog.go:8:9: result declared but not used
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>./prog.go:8:9: result declared but not used
 </code></pre></div><p>今回は<code>result</code>という変数が使われてないというエラーです。この様に、Goでは使われてないインポートや変数などがあればエラーとなるので、他の言語と比べ厳しい方と言えますね。なので、プラグインなしのVimを使って修正するなどの場合には十分に気をつける必要がありますね。IDEでも少しはめんどくさいかも知れません。(リンティングと同時に使われてないパッケージや変数を削除してくれるとかの設定をすれば良いかもですが)</p>
 <h2 id=最後に>最後に</h2>
 <p>他にも細かい違いはまだまだ山ほどありますが、今の時点で言えるものはこのくらいです。ここで述べた、Javaプログラマーの観点からみたGoの特徴というものは、実は「慣れれば問題ない」だけなのかも知れません。しかし、「慣れる」ということは、「すでに慣れている」ものがあったらまたなかなか難しいものにもなりますね。</p>

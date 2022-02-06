@@ -73,81 +73,81 @@ kotlin
 <p>Listの要素の順番を変える方法はソートなどを含め色々とありますが、二つの要素をスワップ（インデックスを交換）したい場合もあるかと思います。こういう時に活用できる拡張関数を考えてみました。</p>
 <h3 id=インデックスがわかる場合>インデックスがわかる場合</h3>
 <p>スワップしたい要素のインデックスがわかる場合は、そのインデックスを交換すればいいだけですね。ここでインデックスの交換は、二つの変数の値をスワップすることと変わらないです。変数の値を交換するのは伝統的には以下のような方法がありますね。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>var</span> <span class=py>a</span> <span class=p>=</span> <span class=m>10</span>
-<span class=k>var</span> <span class=py>b</span> <span class=p>=</span> <span class=m>20</span>
-<span class=k>var</span> <span class=py>c</span> <span class=p>=</span> <span class=n>a</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>var</span> a = <span style=color:#bd93f9>10</span>
+<span style=color:#ff79c6>var</span> b = <span style=color:#bd93f9>20</span>
+<span style=color:#ff79c6>var</span> c = a
 
-<span class=n>a</span> <span class=p>=</span> <span class=n>b</span>
-<span class=n>b</span> <span class=p>=</span> <span class=n>c</span>
+a = b
+b = c
 </code></pre></div><p>もう少しKotlinらしい方法では、<code>also</code>を用いたものがあります。その方法だと、必要な処理は以下のようにもっとシンプルになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>var</span> <span class=py>a</span> <span class=p>=</span> <span class=m>10</span>
-<span class=k>var</span> <span class=py>b</span> <span class=p>=</span> <span class=m>20</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>var</span> a = <span style=color:#bd93f9>10</span>
+<span style=color:#ff79c6>var</span> b = <span style=color:#bd93f9>20</span>
 
-<span class=n>a</span> <span class=p>=</span> <span class=n>b</span><span class=p>.</span><span class=n>also</span> <span class=p>{</span> <span class=n>b</span> <span class=p>=</span> <span class=n>a</span> <span class=p>}</span>
+a = b.also { b = a }
 </code></pre></div><p>これと同じく、Listの要素をスワップする処理を拡張関数で書くとしたらと以下のようになります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;.</span><span class=n>swapByIndex</span><span class=p>(</span><span class=n>indexFrom</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span> <span class=n>indexTo</span><span class=p>:</span> <span class=n>Int</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=n>toMutableList</span><span class=p>().</span><span class=n>apply</span> <span class=p>{</span>
-        <span class=k>this</span><span class=p>[</span><span class=n>indexFrom</span><span class=p>]</span> <span class=p>=</span> <span class=k>this</span><span class=p>[</span><span class=n>indexTo</span><span class=p>].</span><span class=n>also</span> <span class=p>{</span> <span class=k>this</span><span class=p>[</span><span class=n>indexTo</span><span class=p>]</span> <span class=p>=</span> <span class=k>this</span><span class=p>[</span><span class=n>indexFrom</span><span class=p>]</span> <span class=p>}</span>
-    <span class=p>}.</span><span class=n>toList</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>T</span>&gt; <span style=color:#50fa7b>List</span>&lt;T&gt;.swapByIndex(indexFrom: Int, indexTo: Int): List&lt;T&gt; =
+    toMutableList().apply {
+        <span style=color:#ff79c6>this</span>[indexFrom] = <span style=color:#ff79c6>this</span>[indexTo].also { <span style=color:#ff79c6>this</span>[indexTo] = <span style=color:#ff79c6>this</span>[indexFrom] }
+    }.toList()
 </code></pre></div><h3 id=インデックスがわからない場合>インデックスがわからない場合</h3>
 <p>スワップしたい要素のインデックスがわからない場合もありますが、これも結局インデックスを持って値をスワップすることになるので、まずインデックスを抽出する処理だけを足せば良いかなと思います。</p>
 <p>インデックスを取得する方法は、要素を渡して取得する<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/index-of.html target=_blank rel=noopener>indexOf</a>とPredicateを渡して取得する<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/index-of-first.html target=_blank rel=noopener>indexOfFirst</a>があるので、これらを活用することにします。あとはこれらの方法で取得したインデックスを、先に実装しておいた拡張関数に渡すだけで良いです。例えば以下のような実装ができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=c1>// indexOf(element)を使うケース
-</span><span class=c1></span><span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;.</span><span class=n>swapByElement</span><span class=p>(</span><span class=n>from</span><span class=p>:</span> <span class=n>T</span><span class=p>,</span> <span class=n>to</span><span class=p>:</span> <span class=n>T</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=n>swapByIndex</span><span class=p>(</span><span class=n>indexOf</span><span class=p>(</span><span class=n>from</span><span class=p>),</span> <span class=n>indexOf</span><span class=p>(</span><span class=n>to</span><span class=p>))</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#6272a4>// indexOf(element)を使うケース
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>T</span>&gt; <span style=color:#50fa7b>List</span>&lt;T&gt;.swapByElement(from: T, to: T): List&lt;T&gt; =
+    swapByIndex(indexOf(from), indexOf(to))
 
-<span class=c1>// indexOfFirst(predicate)を使うケース
-</span><span class=c1></span><span class=k>fun</span> <span class=p>&lt;</span><span class=nc>T</span><span class=p>&gt;</span> <span class=nf>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;.</span><span class=n>swapByCondition</span><span class=p>(</span><span class=n>from</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Boolean</span><span class=p>,</span> <span class=n>to</span><span class=p>:</span> <span class=p>(</span><span class=n>T</span><span class=p>)</span> <span class=o>-&gt;</span> <span class=n>Boolean</span><span class=p>):</span> <span class=n>List</span><span class=p>&lt;</span><span class=n>T</span><span class=p>&gt;</span> <span class=p>=</span>
-    <span class=n>swapByIndex</span><span class=p>(</span><span class=n>indexOfFirst</span> <span class=p>{</span> <span class=n>from</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=p>},</span> <span class=n>indexOfFirst</span> <span class=p>{</span> <span class=n>to</span><span class=p>(</span><span class=k>it</span><span class=p>)</span> <span class=p>})</span>
+<span style=color:#6272a4>// indexOfFirst(predicate)を使うケース
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>T</span>&gt; <span style=color:#50fa7b>List</span>&lt;T&gt;.swapByCondition(from: (T) <span style=color:#ff79c6>-&gt;</span> Boolean, to: (T) <span style=color:#ff79c6>-&gt;</span> Boolean): List&lt;T&gt; =
+    swapByIndex(indexOfFirst { from(<span style=color:#ff79c6>it</span>) }, indexOfFirst { to(<span style=color:#ff79c6>it</span>) })
 </code></pre></div><h2 id=時間を数字に>時間を数字に</h2>
 <p><code>java.time</code>パッケージの<code>LocalDate</code>や<code>LocalDateTime</code>のようなオブジェクトは、コード上で時間を扱うには便利ですが、ファイルに書き込むなどでフォーマットを変更する必要がある時もあります。つまり、<code>yyyy-MM-dd</code>ではなく<code>yyyyMMddhhmmss</code>のような形にしたい場合があるということです。こういうときは、簡単にInt型に変更できる拡張関数を書いておくと便利でしょう。例えば以下のようなものを考えられます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>LocalDate</span><span class=p>.</span><span class=n>toInt</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> <span class=s2>&#34;</span><span class=si>$year$monthValue$dayOfMonth</span><span class=s2>&#34;</span><span class=p>.</span><span class=n>toInt</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>LocalDate</span>.toInt(): Int = <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>$year$monthValue$dayOfMonth</span><span style=color:#f1fa8c>&#34;</span>.toInt()
 
-<span class=k>val</span> <span class=py>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>12</span><span class=p>,</span> <span class=m>31</span><span class=p>)</span> <span class=c1>// 2021-12-31
-</span><span class=c1></span><span class=n>println</span><span class=p>(</span><span class=n>date</span><span class=p>.</span><span class=n>toInt</span><span class=p>())</span> <span class=c1>// 20211231
+<span style=color:#ff79c6>val</span> date = LocalDate.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>12</span>, <span style=color:#bd93f9>31</span>) <span style=color:#6272a4>// 2021-12-31
+</span><span style=color:#6272a4></span>println(date.toInt()) <span style=color:#6272a4>// 20211231
 </span></code></pre></div><p>ただ、こうする場合、以下のように月や日付が一桁のものになってしまうケースもあります。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>9</span><span class=p>,</span> <span class=m>1</span><span class=p>)</span> <span class=c1>// 2021-09-01
-</span><span class=c1></span><span class=n>println</span><span class=p>(</span><span class=n>date</span><span class=p>.</span><span class=n>toInt</span><span class=p>())</span> <span class=c1>// 202191
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> date = LocalDate.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>9</span>, <span style=color:#bd93f9>1</span>) <span style=color:#6272a4>// 2021-09-01
+</span><span style=color:#6272a4></span>println(date.toInt()) <span style=color:#6272a4>// 202191
 </span></code></pre></div><p>この問題を解決するには、まず月や日付を二桁の文字列に変える必要がありますね。例えば以下のようなことができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>LocalDate</span><span class=p>.</span><span class=n>toInt</span><span class=p>():</span> <span class=n>Int</span> <span class=p>=</span> 
-    <span class=s2>&#34;</span><span class=si>$year${monthValue.toString().padStart(2, &#39;0&#39;)}${dayOfMonth.toString().padStart(2, &#39;0&#39;)}</span><span class=s2>&#34;</span><span class=p>.</span><span class=n>toInt</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>LocalDate</span>.toInt(): Int = 
+    <span style=color:#f1fa8c>&#34;</span><span style=color:#f1fa8c>$year${monthValue.toString().padStart(2, &#39;0&#39;)}${dayOfMonth.toString().padStart(2, &#39;0&#39;)}</span><span style=color:#f1fa8c>&#34;</span>.toInt()
 
-<span class=k>val</span> <span class=py>date</span> <span class=p>=</span> <span class=n>LocalDate</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>9</span><span class=p>,</span> <span class=m>1</span><span class=p>)</span> <span class=c1>// 2021-09-01
-</span><span class=c1></span><span class=n>println</span><span class=p>(</span><span class=n>date</span><span class=p>.</span><span class=n>toInt</span><span class=p>())</span> <span class=c1>// 20210901
+<span style=color:#ff79c6>val</span> date = LocalDate.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>9</span>, <span style=color:#bd93f9>1</span>) <span style=color:#6272a4>// 2021-09-01
+</span><span style=color:#6272a4></span>println(date.toInt()) <span style=color:#6272a4>// 20210901
 </span></code></pre></div><p>しかし、これでも完璧とはいえません。<code>LocalDate</code>のみでなく<code>LocalDate</code>や<code>LocalDateTime</code>, <code>YearMonth</code>など、<code>java.time</code>パッケージに属する他のオブジェクトも使いたい場合には、全てのオブジェクトに対して同じような拡張関数を書く必要があるからです。</p>
 <p>幸い、<code>LocalDate</code>、<code>LocalDateTime</code>、<code>YearMonth</code>は共通的に<a class=link href=https://docs.oracle.com/javase/jp/8/docs/api/java/time/temporal/Temporal.html target=_blank rel=noopener>Temporal</a>というインタフェースを継承しているので、<code>Temporal</code>に拡張関数を追加することで問題は解決できます。</p>
 <p>そしてこれらの実装クラスで扱っている時間の範囲はオブジェクトごとに違うので、実装も変える必要がありますね。これらのオブジェクトはどれも時間を数字として表現しているので、まず<code>toString</code>で文字列に変換した後、数字だけを抽出することです。<code>String</code>は<code>CharSequence</code>を継承しているので、<code>filter</code>で数字だけを抽出すると良いでしょう。そうすると、以下のような方法が使えます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>fun</span> <span class=nf>Temporal</span><span class=p>.</span><span class=n>toDigit</span><span class=p>():</span> <span class=n>Long</span> <span class=p>=</span> <span class=n>toString</span><span class=p>().</span><span class=n>filter</span> <span class=p>{</span> <span class=k>it</span><span class=p>.</span><span class=n>isDigit</span><span class=p>()</span> <span class=p>}.</span><span class=n>toLong</span><span class=p>()</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Temporal</span>.toDigit(): Long = toString().filter { <span style=color:#ff79c6>it</span>.isDigit() }.toLong()
 
-<span class=k>val</span> <span class=py>yearMonth</span> <span class=p>=</span> <span class=n>YearMonth</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>8</span><span class=p>)</span> <span class=c1>// 2021-08
-</span><span class=c1></span><span class=n>println</span><span class=p>(</span><span class=n>yearMonth</span><span class=p>.</span><span class=n>toDigit</span><span class=p>())</span> <span class=c1>// 202108
-</span><span class=c1></span><span class=k>val</span> <span class=py>dateTime</span> <span class=p>=</span> <span class=n>LocalDateTime</span><span class=p>.</span><span class=n>of</span><span class=p>(</span><span class=m>2021</span><span class=p>,</span> <span class=m>10</span><span class=p>,</span> <span class=m>2</span><span class=p>,</span> <span class=m>10</span><span class=p>,</span> <span class=m>10</span><span class=p>,</span> <span class=m>10</span><span class=p>)</span> <span class=c1>// 2021-10-02T10:10:10
-</span><span class=c1></span><span class=n>println</span><span class=p>(</span><span class=n>dateTime</span><span class=p>.</span><span class=n>toDigit</span><span class=p>())</span> <span class=c1>// 20211002101010
+<span style=color:#ff79c6>val</span> yearMonth = YearMonth.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>8</span>) <span style=color:#6272a4>// 2021-08
+</span><span style=color:#6272a4></span>println(yearMonth.toDigit()) <span style=color:#6272a4>// 202108
+</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> dateTime = LocalDateTime.of(<span style=color:#bd93f9>2021</span>, <span style=color:#bd93f9>10</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>10</span>, <span style=color:#bd93f9>10</span>, <span style=color:#bd93f9>10</span>) <span style=color:#6272a4>// 2021-10-02T10:10:10
+</span><span style=color:#6272a4></span>println(dateTime.toDigit()) <span style=color:#6272a4>// 20211002101010
 </span></code></pre></div><p>Stringのフォーマットで数字に変換する場合は<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/to-int.html target=_blank rel=noopener>toInt</a>や<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/to-long.html target=_blank rel=noopener>toLong</a>でループが一回発生するだけですが、CharSequenceとして扱う場合はループが2回発生するという違いがあるので性能的には前者が良いはずですが、時間を扱うくらいではそこまでループは長くないので気にするほどではないかと思います。</p>
 <h2 id=要素の一部を合算>要素の一部を合算</h2>
 <p>Listの値を一つに集約したい（合算値を出したい）場合があります。<code>sum</code>を使っても良いですが、これはそもそも要素が数字ではないと難しいですね。例えば要素が以下のようなクラスとなっているケースはどうしたら良いでしょうか。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>data</span> <span class=k>class</span> <span class=nc>Data</span><span class=p>(</span>
-    <span class=k>val</span> <span class=py>name</span><span class=p>:</span> <span class=n>String</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>amount</span><span class=p>:</span> <span class=n>Int</span><span class=p>,</span>
-    <span class=k>val</span> <span class=py>price</span><span class=p>:</span> <span class=n>Int</span>
-<span class=p>)</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Data</span>(
+    <span style=color:#ff79c6>val</span> name: String,
+    <span style=color:#ff79c6>val</span> amount: Int,
+    <span style=color:#ff79c6>val</span> price: Int
+)
 </code></pre></div><h3 id=合算したい値が一つの場合>合算したい値が一つの場合</h3>
 <p>合算したい値が一つだけの場合は、<code>sumOf</code>で合算したい値だけを指定すれば良いです。以下は、<code>Data</code>クラスの<code>amount</code>だけを合算したい場合に使える方法です。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=py>list</span> <span class=p>=</span> <span class=n>listOf</span><span class=p>(</span><span class=n>Data</span><span class=p>(</span><span class=s2>&#34;data1&#34;</span><span class=p>,</span> <span class=m>10</span><span class=p>,</span> <span class=m>100</span><span class=p>),</span> <span class=n>Data</span><span class=p>(</span><span class=s2>&#34;data2&#34;</span><span class=p>,</span> <span class=m>20</span><span class=p>,</span> <span class=m>200</span><span class=p>))</span>
-<span class=k>val</span> <span class=py>totalAmount</span> <span class=p>=</span> <span class=n>list</span><span class=p>.</span><span class=n>sumOf</span> <span class=p>{</span> <span class=k>it</span><span class=p>.</span><span class=n>amount</span> <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> list = listOf(Data(<span style=color:#f1fa8c>&#34;data1&#34;</span>, <span style=color:#bd93f9>10</span>, <span style=color:#bd93f9>100</span>), Data(<span style=color:#f1fa8c>&#34;data2&#34;</span>, <span style=color:#bd93f9>20</span>, <span style=color:#bd93f9>200</span>))
+<span style=color:#ff79c6>val</span> totalAmount = list.sumOf { <span style=color:#ff79c6>it</span>.amount }
 </code></pre></div><h3 id=合算したい値が複数の場合>合算したい値が複数の場合</h3>
 <p>ここで<code>amount</code>のみでなく、<code>price</code>も合算したい場合はどうすれば良いでしょう。同じく<code>sumOf</code>を<code>price</code>にも使うことで実装はできますが、同じListに対してループが2回も発生するのあまり効率的ではありません。こういうときは、素直にそれぞれの合算値を変数として宣言しておいて<code>forEach</code>ループの中で値を足していく方が効率が良いでしょう。例えば以下のようにです。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>var</span> <span class=py>totalAmount</span> <span class=p>=</span> <span class=m>0</span>
-<span class=k>var</span> <span class=py>totalPrice</span> <span class=p>=</span> <span class=m>0</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>var</span> totalAmount = <span style=color:#bd93f9>0</span>
+<span style=color:#ff79c6>var</span> totalPrice = <span style=color:#bd93f9>0</span>
 
-<span class=n>list</span><span class=p>.</span><span class=n>forEach</span> <span class=p>{</span>
-    <span class=n>totalAmount</span> <span class=o>+=</span> <span class=k>it</span><span class=p>.</span><span class=n>amount</span>
-    <span class=n>totalPrice</span> <span class=o>+=</span> <span class=k>it</span><span class=p>.</span><span class=n>price</span>
-<span class=p>}</span>
+list.forEach {
+    totalAmount <span style=color:#ff79c6>+=</span> <span style=color:#ff79c6>it</span>.amount
+    totalPrice <span style=color:#ff79c6>+=</span> <span style=color:#ff79c6>it</span>.price
+}
 </code></pre></div><p>もう一つの方法は、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/fold.html target=_blank rel=noopener>fold</a>を使う方法です。<code>fold</code>は<code>reduce</code>と似たようなもので、初期値(initial)を指定できるという違いがありますが、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/reduce-to.html target=_blank rel=noopener>reduceTo</a>のようにこの初期値の型はListの要素とは違うものに指定できます。そして関数を実行した結果はinitialと同じ型になるので、これを応用すると<code>Data</code>のリストを二つの値(<code>Pair</code>)に<code>reduce</code>することもできます。例えば上記の処理は<code>fold</code>を使うと以下のようにワンライナで実装ができます。</p>
-<div class=highlight><pre tabindex=0 class=chroma><code class=language-kotlin data-lang=kotlin><span class=k>val</span> <span class=err>(</span><span class=py>totalAmount</span><span class=p>,</span> <span class=n>totalPrice</span><span class=p>)</span> <span class=p>=</span> <span class=n>list</span><span class=p>.</span><span class=n>fold</span><span class=p>(</span><span class=m>0</span> <span class=n>to</span> <span class=m>0</span><span class=p>)</span> <span class=p>{</span> <span class=n>acc</span><span class=p>,</span> <span class=n>value</span> <span class=o>-&gt;</span>
-        <span class=p>(</span><span class=n>acc</span><span class=p>.</span><span class=n>first</span> <span class=p>+</span> <span class=n>value</span><span class=p>.</span><span class=n>amount</span><span class=p>)</span> <span class=n>to</span> <span class=p>(</span><span class=n>acc</span><span class=p>.</span><span class=n>second</span> <span class=p>+</span> <span class=n>value</span><span class=p>.</span><span class=n>price</span><span class=p>)</span>
-    <span class=p>}</span>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> (totalAmount, totalPrice) = list.fold(<span style=color:#bd93f9>0</span> to <span style=color:#bd93f9>0</span>) { acc, value <span style=color:#ff79c6>-&gt;</span>
+        (acc.first + value.amount) to (acc.second + value.price)
+    }
 </code></pre></div><p><code>fold</code>を使う場合、合算したい値が三つある場合は<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-triple/ target=_blank rel=noopener>Triple</a>を使うこともできますし、さらに値が多い場合は専用のクラスを作ることで対応もできるかと思います。ただ、こうする場合、合算した値を<code>val</code>として宣言できるというメリットはありますが、ループごとにインスタンスが作成されるので合算したい項目が増えれば増えるほど性能的にはあまり良くない可能性が高いので場合によって適切なものを選ぶ必要がありそうですね。</p>
 <h2 id=最後に>最後に</h2>
 <p>いかがだったでしょうか。私はずっとJavaでコードを書いていたので、完全にKotlinに転向した今でもついJavaらしいコードを書いてしまうのではないか、と思う時があります。元を辿ると、「Javaらしいコード」や「Kotlinらしいコード」がそもそも何であるかを考えなければならないとは思いますが、それでも、確かに言語が違うとその言語に合わせて自分のコーディングスタイルも変化する必要はあるのではないかと思います。そうすることで、より良いコードが書けるようになりそうな気がしていますので。</p>
