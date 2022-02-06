@@ -3,7 +3,7 @@ title: "個人的な2022年のロードマップ"
 date: 2022-01-11
 categories: 
   - recent
-image: "../../images/magic.jpg"
+image: "../../images/map.jpg"
 tags:
   - kotlin
   - swift

@@ -200,7 +200,7 @@ val joinedDates = aggregator.getList { id, joinedDate ->
 
 ## 最後に
 
-サーバサイドKoltinだと、多くの場合にデータを`List`として扱うのが普通かなと思いますが、場合によっては`Map`を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した`compute()`以外でも、[getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html)、[getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html)などの機能が便利なので色々と活用できる場面が多いかなと思います。
+サーバサイドKoltinだと、多くの場合にデータを`List`として扱うのが普通かなと思いますが、場合によっては`Map`を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した`compute()`以外でも、[getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html)、[getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html)などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は[前回のポスト](../exposed-mapping-record-to-object)でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。
 
 プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。
 
