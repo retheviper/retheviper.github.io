@@ -46,7 +46,7 @@ calculatePointsFromPassedCourses() &amp;gt; &lt;span style="color:#bd93f9">30&lt
 &lt;p>オブジェクトの作成時の複雑な処理はDSLを使いましょう、というパートです。Kotlinですでに提供している例としたら、HTMLがありますね。以下のような形で定義することになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">body {
 div {
-a(&lt;span style="color:#f1fa8c">&amp;#34;https://kotlinlang.org&amp;#34;&lt;/span>) {
+a(&lt;span style="color:#f1fa8c">&amp;#34;https://kotlilang.org&amp;#34;&lt;/span>) {
 target = ATarget.blank
 +&lt;span style="color:#f1fa8c">&amp;#34;google&amp;#34;&lt;/span>
 }
@@ -161,20 +161,117 @@ bacon = &lt;span style="color:#bd93f9">5&lt;/span>
 &lt;/ul>
 &lt;/li>
 &lt;li>オブジェクトの外に作ることで可視性を制御できる&lt;/li>
-&lt;li>&lt;code>inline&lt;/code>にできるので、&lt;code>reified&lt;/code>にもできる&lt;/li>
+&lt;li>&lt;code>inline&lt;/code>にできるので、&lt;a class="link" href="https://kotlinlang.org/docs/inline-functions.html#reified-type-parameters" target="_blank" rel="noopener"
+>reified&lt;/a>にもできる&lt;/li>
 &lt;li>インスタンスを作るのが複雑なオブジェクトの手間を省く&lt;/li>
 &lt;li>スーパークラスやプライマリコンストラクタを呼び出さずにインスタンスを生成できる&lt;/li>
 &lt;/ul>
 &lt;p>こちらも読みながらなるほどと納得しました。特に私の場合でも、Service層のDTOとController層のResponseなどのオブジェクト間のマッピングではfactory functionを導入してコードを再使用性を高められたと思っていたので、良い判断だったなと今は思っています。&lt;/p>
 &lt;p>他に、factory functionを作る方法としても以下のようなものが提示されてありました。一般的にはcompanion object内に定義しておくことが多いかと思いますが、他の方法も必要であれば考慮したいものですね。&lt;/p>
-&lt;ol>
-&lt;li>companion object&lt;/li>
-&lt;li>extension&lt;/li>
-&lt;li>top-level&lt;/li>
-&lt;li>fake constructor&lt;/li>
-&lt;li>factory class&lt;/li>
-&lt;/ol>
-&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;h4 id="companion-object">companion object&lt;/h4>
+&lt;p>Javaのstaticメソッドのようなパターン。最もわかりやすいですね。以下のような形です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">MyLinkedList&lt;/span>&amp;lt;T&amp;gt;(
+&lt;span style="color:#ff79c6">val&lt;/span> head: T,
+&lt;span style="color:#ff79c6">val&lt;/span> tail: MyLinkedList&amp;lt;T&amp;gt;?
+) {
+&lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> {
+&lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">of&lt;/span>(&lt;span style="color:#ff79c6">vararg&lt;/span> elements: T): MyLinkedList&amp;lt;T&amp;gt;? {
+&lt;span style="color:#6272a4">/*...*/&lt;/span>
+}
+}
+}
+&lt;span style="color:#6272a4">// Usage
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> list = MyLinkedList.of(&lt;span style="color:#bd93f9">1&lt;/span>, &lt;span style="color:#bd93f9">2&lt;/span>)
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>factory functionは大体以下の規則を持って命名されるという説明もありました。&lt;/p>
+&lt;h5 id="from">from&lt;/h5>
+&lt;p>一つのパラメータを渡し、タイプを変える時&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> date: Date = Date.from(instant)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="of">of&lt;/h4>
+&lt;p>複数のパタメータを渡し、それを束ねタイプにするとき&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> faceCards: Set&amp;lt;Rank&amp;gt; = EnumSet.of(JACK, QUEEN, KING)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="valueof">valueOf&lt;/h5>
+&lt;p>&lt;code>of&lt;/code>の違う形&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> prime: BigInteger = BigInteger.valueOf(Integer.MAX_- VALUE)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="instance--getinstance">instance / getInstance&lt;/h5>
+&lt;p>Singletonのインスタンス取得（パラメータが同じだと常に同じインスタンスが帰ってくる）&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> luke: StackWalker = StackWalker.getInstance(options)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="createinstance--newinstance">createInstance / newInstance&lt;/h5>
+&lt;p>instance / getInstanceは似ているが、常に新しいインスタンスを返す&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> newArray = Array.newInstance(classObject, arrayLen)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="gettype">getType&lt;/h5>
+&lt;p>instance / getInstanceと似ているが、違うタイプのインスタンスを返すとき&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> fs: FileStore = Files.getFileStore(path)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="newtype">newType&lt;/h5>
+&lt;p>createInstance / newInstanceに似てるが、違うタイプのインスタンスを返す時&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">val&lt;/span> br: BufferedReader = Files.newBufferedReader(path)
+&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="extension">extension&lt;/h4>
+&lt;p>クラスにからのcompanion objectを定義しておいて、外部から拡張関数でfactory functionを付ける形です。元のクラスをいじらなくても良くなるし、パッケージと可視性の制御など拡張関数の持つ特徴を活用できますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">interface&lt;/span> &lt;span style="color:#50fa7b">Tool&lt;/span> {
+&lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> { &lt;span style="color:#6272a4">/*...*/&lt;/span> }
+}
+&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Tool&lt;/span>.Companion.createBigTool( &lt;span style="color:#6272a4">/*...*/&lt;/span> ): BigTool{
+&lt;span style="color:#6272a4">//...
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>}
+&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="top-level">top-level&lt;/h4>
+&lt;p>&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/list-of.html" target="_blank" rel="noopener"
+>listOf()&lt;/a>、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html" target="_blank" rel="noopener"
+>setOf()&lt;/a>、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html" target="_blank" rel="noopener"
+>mapOf()&lt;/a>のようなものですね。&lt;/p>
+&lt;p>よく使うタイプに関しては使い勝手がいいので便利なものの、IDEの自動補完などに現れたら混乱するケースもあるので命名は慎重にする必要がある、とのことでした。&lt;/p>
+&lt;h4 id="fake-constructor">fake constructor&lt;/h4>
+&lt;p>大文字を使って、関数をコンストラクタに見せかけるものです。Kotlinのスタンダードライブラリとしては、以下のようなものがあります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">List(&lt;span style="color:#bd93f9">4&lt;/span>) { &lt;span style="color:#f1fa8c">&amp;#34;User&lt;/span>&lt;span style="color:#f1fa8c">$it&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span> } &lt;span style="color:#6272a4">// [User0,User1,User2,User3]
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これは実際は以下のような関数ですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">inline&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">List&lt;/span>(
+size: Int,
+&lt;span style="color:#ff79c6">init&lt;/span>: (index: Int) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> T
+): List&amp;lt;T&amp;gt; = MutableList(size, &lt;span style="color:#ff79c6">init&lt;/span>)
+&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">inline&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">MutableList&lt;/span>(
+size: Int,
+&lt;span style="color:#ff79c6">init&lt;/span>: (index: Int) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> T
+): MutableList&amp;lt;T&amp;gt; {
+&lt;span style="color:#ff79c6">val&lt;/span> list = ArrayList&amp;lt;T&amp;gt;(size)
+repeat(size) { index &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> list.add(&lt;span style="color:#ff79c6">init&lt;/span>(index)) }
+&lt;span style="color:#ff79c6">return&lt;/span> list
+}
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはinterfaceに対してコンストラクタを作る必要があったり、&lt;code>reified&lt;/code>タイプの引数が必要な時に考慮できるものらしいです。&lt;/p>
+&lt;p>他にもfake constructorを作る方法があります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Tree&lt;/span>&amp;lt;T&amp;gt; {
+&lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> {
+&lt;span style="color:#ff79c6">operator&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">invoke&lt;/span>(size: Int, generator: (Int) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> T): Tree&amp;lt;T&amp;gt; {
+&lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span> }
+}
+}
+&lt;span style="color:#6272a4">// Usage
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>Tree(&lt;span style="color:#bd93f9">10&lt;/span>) { &lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>&lt;span style="color:#f1fa8c">$it&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span> }
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、この場合constructor referenceではコードが複雑になる問題があるらしいですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#6272a4">// Constructor
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> f: () &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Tree = &lt;span style="color:#ff79c6">::&lt;/span>Tree
+&lt;span style="color:#6272a4">// Fake Constructor
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> d: () &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Tree = &lt;span style="color:#ff79c6">::&lt;/span>Tree
+&lt;span style="color:#6272a4">// Invoke in companion object
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> g: () &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Tree = Tree.Companion&lt;span style="color:#ff79c6">::&lt;/span>invoke
+&lt;/code>&lt;/pre>&lt;/div>&lt;p>なのでfake constructorを使うとしたら、関数として定義したほうがよさそうです。&lt;/p>
+&lt;h4 id="factory-class">factory class&lt;/h4>
+&lt;p>別途Factoryというクラスを置いてインスタンスを返すようにする方法ですね。Javaではinterfaceでそのようなことをするケースがありますが（&lt;a class="link" href="https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/util/List.html#of%28E%29" target="_blank" rel="noopener"
+>List.of()&lt;/a>みたいな）、Kotlinでも良いのか？という疑問が湧きました。結論から言いますと、「factoryクラスは状態を持つことが可能」なため、場合によっては考慮しても良いとのことです。これは思ったより活用できそうな可能性がありますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Student&lt;/span>(
+&lt;span style="color:#ff79c6">val&lt;/span> id: Int,
+&lt;span style="color:#ff79c6">val&lt;/span> name: String,
+&lt;span style="color:#ff79c6">val&lt;/span> surname: String
+)
+&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">StudentsFactory&lt;/span>{
+&lt;span style="color:#ff79c6">var&lt;/span> nextId = &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">next&lt;/span>(name: String, surname: String) =
+Student(nextId&lt;span style="color:#ff79c6">++&lt;/span>, name, surname)
+}
+&lt;span style="color:#ff79c6">val&lt;/span> factory = StudentsFactory()
+&lt;span style="color:#ff79c6">val&lt;/span> s1 = factory.next(&lt;span style="color:#f1fa8c">&amp;#34;Marcin&amp;#34;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;Moskala&amp;#34;&lt;/span>)
+println(s1) &lt;span style="color:#6272a4">// Student(id=0, name=Marcin, Surname=Moskala)
+&lt;/span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> s2 = factory.next(&lt;span style="color:#f1fa8c">&amp;#34;Igor&amp;#34;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#34;Wojda&amp;#34;&lt;/span>)
+println(s2) &lt;span style="color:#6272a4">// Student(id=1, name=Igor, Surname=Wojda)
+&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>ざっくりなまとめとなりますが、以上が私のこの本で得られた知識への感想となります。新しい発見もあり、自分の習慣が間違ってなかったということを人の説明で補ってもらったような気にもなり、かなり興味深かったです。&lt;/p>
 &lt;p>ただやはり、Kotlinがまだ新しい言語であり、いろいろなパラダイムを吸収しているためか、&lt;code>Effective Java&lt;/code>のようなレベルの高い作法に対する議論は少し足りてないような気がしていて、そこは多少残念に思います。まあ、こう思うようになったということ自体が、少しは自分が成長した証拠でもあるかなという生意気な想像もしてみるのですが。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>今年のブログの話</title><link>https://retheviper.github.io/posts/renew-blog/</link><pubDate>Sun, 06 Feb 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/renew-blog/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 今年のブログの話" />&lt;p>すでに気づいている方もいらっしゃるかと思いますが、2年ぶりにブログのテーマを変えました。正確にはテーマだけでなく、静的ページ生成ツールを&lt;a class="link" href="https://jekyllrb.com/" target="_blank" rel="noopener"
