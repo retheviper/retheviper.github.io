@@ -273,7 +273,7 @@ factory functionは大体以下の規則を持って命名されるという説�
 val date: Date = Date.from(instant)
 ```
 
-#### of
+##### of
 
 複数のパタメータを渡し、それを束ねタイプにするとき
 
