@@ -6,6 +6,8 @@ categories:
 image: "../../images/kotlin.jpg"
 tags:
   - kotlin
+  - java
+  - design pattern
 ---
 
 今回は久々に本を読んだのでそれに関する感想を少し書こうと思います。転職前は主にJavaを扱っていたため、[Effective Java](https://www.amazon.co.jp/Effective-Java-%E7%AC%AC3%E7%89%88-%E3%82%B8%E3%83%A7%E3%82%B7%E3%83%A5%E3%82%A2%E3%83%BB%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF-ebook/dp/B099922DML/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1OT3QRYCGG9BB&keywords=Effective+Java&qid=1645265607&sprefix=effective+kotlin%2Caps%2C753&sr=8-1)を読み自分の書いたコードを振り返って見たことがありました。転職後はKotlinという違う言語を触るようになったものの、やはりJVMで動く言語であり、現在使っているフレームワークもSpringから変わってないので基本的には同じ観点でコードを作成すると良いのかなと思っていました。しかし、Kotlinに触れてから1年が経った今、やはり言語が違うとコードを作成するときの週間も一度は見直す必要があるのではないかと思っています。
