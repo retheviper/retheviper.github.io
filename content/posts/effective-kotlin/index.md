@@ -81,7 +81,7 @@ fun Student.calculatePointsFromPassedCourses(): Boolean{
 ```kotlin
 body {
     div {
-        a("https://kotlinlang.org") {
+        a("https://kotlilang.org") {
             target = ATarget.blank
             +"google"
         }
@@ -233,7 +233,7 @@ Javaでも最近は色々とfactory functionを導入していて、簡単にimm
 - まだ存在しないオブジェクトを提供できる
   - プロキシなしで動くようなオブジェクトを作るなどで応用できる
 - オブジェクトの外に作ることで可視性を制御できる
-- `inline`にできるので、`reified`にもできる
+- `inline`にできるので、[reified](https://kotlinlang.org/docs/inline-functions.html#reified-type-parameters)にもできる
 - インスタンスを作るのが複雑なオブジェクトの手間を省く
 - スーパークラスやプライマリコンストラクタを呼び出さずにインスタンスを生成できる
 
@@ -241,11 +241,186 @@ Javaでも最近は色々とfactory functionを導入していて、簡単にimm
 
 他に、factory functionを作る方法としても以下のようなものが提示されてありました。一般的にはcompanion object内に定義しておくことが多いかと思いますが、他の方法も必要であれば考慮したいものですね。
 
-1. companion object
-2. extension
-3. top-level
-4. fake constructor
-5. factory class
+#### companion object
+
+Javaのstaticメソッドのようなパターン。最もわかりやすいですね。以下のような形です。
+
+```kotlin
+class MyLinkedList<T>(
+    val head: T,
+    val tail: MyLinkedList<T>?
+) {
+    companion object {
+        fun <T> of(vararg elements: T): MyLinkedList<T>? {
+            /*...*/
+        }
+    }
+}
+
+// Usage
+val list = MyLinkedList.of(1, 2)
+```
+
+factory functionは大体以下の規則を持って命名されるという説明もありました。
+
+##### from
+
+一つのパラメータを渡し、タイプを変える時
+
+```kotlin
+val date: Date = Date.from(instant)
+```
+
+#### of
+
+複数のパタメータを渡し、それを束ねタイプにするとき
+
+```kotlin
+val faceCards: Set<Rank> = EnumSet.of(JACK, QUEEN, KING)
+```
+
+##### valueOf
+
+`of`の違う形
+
+```kotlin
+val prime: BigInteger = BigInteger.valueOf(Integer.MAX_- VALUE)
+```
+
+##### instance / getInstance
+
+Singletonのインスタンス取得（パラメータが同じだと常に同じインスタンスが帰ってくる）
+
+```kotlin
+val luke: StackWalker = StackWalker.getInstance(options)
+```
+
+##### createInstance / newInstance
+
+instance / getInstanceは似ているが、常に新しいインスタンスを返す
+
+```kotlin
+val newArray = Array.newInstance(classObject, arrayLen)
+```
+
+##### getType
+
+instance / getInstanceと似ているが、違うタイプのインスタンスを返すとき
+
+```kotlin
+val fs: FileStore = Files.getFileStore(path)
+```
+
+##### newType
+
+createInstance / newInstanceに似てるが、違うタイプのインスタンスを返す時
+
+```kotlin
+val br: BufferedReader = Files.newBufferedReader(path)
+```
+
+#### extension
+
+クラスにからのcompanion objectを定義しておいて、外部から拡張関数でfactory functionを付ける形です。元のクラスをいじらなくても良くなるし、パッケージと可視性の制御など拡張関数の持つ特徴を活用できますね。
+
+```kotlin
+interface Tool {
+    companion object { /*...*/ }
+}
+
+fun Tool.Companion.createBigTool( /*...*/ ): BigTool{
+    //...
+}
+```
+
+#### top-level
+
+[listOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/list-of.html)、[setOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html)、[mapOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html)のようなものですね。
+
+よく使うタイプに関しては使い勝手がいいので便利なものの、IDEの自動補完などに現れたら混乱するケースもあるので命名は慎重にする必要がある、とのことでした。
+
+#### fake constructor
+
+大文字を使って、関数をコンストラクタに見せかけるものです。Kotlinのスタンダードライブラリとしては、以下のようなものがあります。
+
+```kotlin
+List(4) { "User$it" } // [User0,User1,User2,User3]
+```
+
+これは実際は以下のような関数ですね。
+
+```kotlin
+public inline fun <T> List(
+    size: Int,
+    init: (index: Int) -> T
+): List<T> = MutableList(size, init)
+
+public inline fun <T> MutableList(
+    size: Int,
+    init: (index: Int) -> T
+): MutableList<T> {
+    val list = ArrayList<T>(size)
+    repeat(size) { index -> list.add(init(index)) }
+    return list
+}
+```
+
+これはinterfaceに対してコンストラクタを作る必要があったり、`reified`タイプの引数が必要な時に考慮できるものらしいです。
+
+他にもfake constructorを作る方法があります。
+
+```kotlin
+class Tree<T> {
+
+    companion object {
+        operator fun <T> invoke(size: Int, generator: (Int) -> T): Tree<T> {
+            // ...
+        }
+    }
+}
+
+// Usage
+Tree(10) { "$it" }
+```
+
+ただ、この場合constructor referenceではコードが複雑になる問題があるらしいですね。
+
+```kotlin
+// Constructor
+val f: () -> Tree = ::Tree
+
+// Fake Constructor
+val d: () -> Tree = ::Tree
+
+// Invoke in companion object
+val g: () -> Tree = Tree.Companion::invoke
+```
+
+なのでfake constructorを使うとしたら、関数として定義したほうがよさそうです。
+
+#### factory class
+
+別途Factoryというクラスを置いてインスタンスを返すようにする方法ですね。Javaではinterfaceでそのようなことをするケースがありますが（[List.of()](https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/util/List.html#of(E))みたいな）、Kotlinでも良いのか？という疑問が湧きました。結論から言いますと、「factoryクラスは状態を持つことが可能」なため、場合によっては考慮しても良いとのことです。これは思ったより活用できそうな可能性がありますね。
+
+```kotlin
+data class Student(
+    val id: Int,
+    val name: String,
+    val surname: String
+)
+
+class StudentsFactory{
+    var nextId = 0
+    fun next(name: String, surname: String) =
+        Student(nextId++, name, surname)
+}
+
+val factory = StudentsFactory()
+val s1 = factory.next("Marcin", "Moskala")
+println(s1) // Student(id=0, name=Marcin, Surname=Moskala)
+val s2 = factory.next("Igor","Wojda")
+println(s2) // Student(id=1, name=Igor, Surname=Wojda)
+```
 
 ## 最後に
 
