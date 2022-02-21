@@ -286,7 +286,7 @@ val faceCards: Set<Rank> = EnumSet.of(JACK, QUEEN, KING)
 `of`の違う形
 
 ```kotlin
-val prime: BigInteger = BigInteger.valueOf(Integer.MAX_- VALUE)
+val prime: BigInteger = BigInteger.valueOf(Integer.MAX_VALUE)
 ```
 
 ##### instance / getInstance
@@ -315,7 +315,7 @@ val fs: FileStore = Files.getFileStore(path)
 
 ##### newType
 
-createInstance / newInstanceに似てるが、違うタイプのインスタンスを返す時
+createInstance / newInstanceに似ているが、違うタイプのインスタンスを返す時
 
 ```kotlin
 val br: BufferedReader = Files.newBufferedReader(path)
