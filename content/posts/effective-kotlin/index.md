@@ -19,7 +19,7 @@ tags:
 ## 全体的な印象
 
 個人的に`Effective Java`は上級者向けの本で、ある程度Javaでアプリを書いたこと経験のある人でないと理解が難しいところが多かったかなと思います。例えば、「`try-finally`を
-`try-with-resource`に代替した方がいいとか、`Stream`で副作用のない関数を書く方法などが紹介されていますが、これらはやはりある程度Javaという言語の設計と仕様に対する基盤知識を必要とするものですね。
+`try-with-resource`に代替した方がいい」とか、「`Stream`で副作用のない関数を書く方法」などが紹介されていますが、これらはやはりある程度Javaという言語の設計と仕様に対する基盤知識を必要とするものですね。
 
 それに比べ、`Effective Kotlin`には初心者向けの内容も結構あります。例えば、そもそものオブジェクト志向が何かのような内容がありました。ただそれだけではどう思っても`Effective Java`を意識したような題名が意味をなくすと判断したからか（前書きでも`Effective Java`を言及しています）他には「ベストプラクティス」として書かれているものも多いです。
 
@@ -83,7 +83,7 @@ fun Student.calculatePointsFromPassedCourses(): Boolean{
 ```kotlin
 body {
     div {
-        a("https://kotlilang.org") {
+        a("https://kotlinlang.org") {
             target = ATarget.blank
             +"google"
         }
