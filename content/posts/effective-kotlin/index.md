@@ -215,11 +215,11 @@ val villagePizza = Pizza.Builder("L").build()
 
 ```kotlin
 val myFavorite = Pizza(
-                    size = "L",
-                    cheese = 5,
-                    olives = 5,
-                    bacon = 5
-                )
+            size = "L",
+            cheese = 5,
+            olives = 5,
+            bacon = 5
+        )
 ```
 
 ### Consider factory functions instead of constructors
@@ -420,7 +420,7 @@ class StudentsFactory{
 val factory = StudentsFactory()
 val s1 = factory.next("Marcin", "Moskala")
 println(s1) // Student(id=0, name=Marcin, Surname=Moskala)
-val s2 = factory.next("Igor","Wojda")
+val s2 = factory.next("Igor", "Wojda")
 println(s2) // Student(id=1, name=Igor, Surname=Wojda)
 ```
 
