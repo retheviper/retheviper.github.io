@@ -337,16 +337,16 @@ fun Tool.Companion.createBigTool( /*...*/ ): BigTool{
 
 #### top-level
 
-[listOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/list-of.html)、[setOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html)、[mapOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html)のようなものですね。
+スタンダードライブラリに含まれている、[listOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/list-of.html)、[setOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html)、[mapOf()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html)のようなものです。
 
 よく使うタイプに関しては使い勝手がいいので便利なものの、IDEの自動補完などに現れたら混乱するケースもあるので命名は慎重にする必要がある、とのことでした。
 
 #### fake constructor
 
-大文字を使って、関数をコンストラクタに見せかけるものです。Kotlinのスタンダードライブラリとしては、以下のようなものがあります。
+Pascal Caseを使って、関数をコンストラクタに見せかけるものです。Kotlinのスタンダードライブラリとしては、以下のようなものがあります。
 
 ```kotlin
-List(4) { "User$it" } // [User0,User1,User2,User3]
+List(4) { "User$it" } // [User0, User1, User2, User3]
 ```
 
 これは実際は以下のような関数ですね。
