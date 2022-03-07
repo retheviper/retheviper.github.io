@@ -1,7 +1,6 @@
 <!doctype html><html lang=en-us>
 <head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり@AutowiredによるDI1ではないかと思います。初"><title>SpringのDIはコンストラクターでしましょう</title>
-<link rel=canonical href=https://retheviper.github.io/posts/spring-dependency-injection/>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり@AutowiredによるDI1ではないかと思います。初"><title>SpringのDIはコンストラクターでしましょう</title><link rel=canonical href=https://retheviper.github.io/posts/spring-dependency-injection/>
 <link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="SpringのDIはコンストラクターでしましょう">
 <meta property="og:description" content="Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり@AutowiredによるDI1ではないかと思います。初">
 <meta property="og:url" content="https://retheviper.github.io/posts/spring-dependency-injection/">
@@ -27,251 +26,150 @@
 <meta name=msapplication-TileColor content="#ffffff">
 <meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
 <meta name=theme-color content="#ffffff">
-<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
-</head>
-<body class="article-page has-toc">
-<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script>
+</head><body class="article-page has-toc">
+<script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script>
 <div class="container main-container flex
 extended">
 <div id=article-toolbar>
 <a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
 <span>Back</span>
 </a>
-</div>
-<main class="main full-width">
+</div><main class="main full-width">
 <article class="has-image main-article">
 <header class=article-header>
 <div class=article-image>
 <a href=/posts/spring-dependency-injection/>
 <img src=/../../images/spring.jpg loading=lazy alt="Featured image of post SpringのDIはコンストラクターでしましょう">
 </a>
-</div>
-<div class=article-details>
+</div><div class=article-details>
 <header class=article-category>
 <a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>
 spring
 </a>
-</header>
-<h2 class=article-title>
+</header><h2 class=article-title>
 <a href=/posts/spring-dependency-injection/>SpringのDIはコンストラクターでしましょう</a>
-</h2>
-<footer class=article-time>
+</h2><footer class=article-time>
 <div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>Dec 09, 2019</time>
-</div>
-<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+</div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
 <time class=article-time--reading>
 6 minute read
 </time>
-</div>
-</footer>
-</div>
-</header>
-<section class=article-content>
-<p>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり<code>@Autowired</code>によるDI<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>ではないかと思います。初めてSpringに接したときはオブジェクトが<code>new</code>なしでも動くと言うことが何ともいえない不思議なことに見えました。これがデザインパターンの一つであるということを知ってからはますますすごいなぁと思いましたね。やはり良いコードを書くためには、様々な方面での工夫が必要なものですね。</p>
-<p>とにかく、こうも重要で便利なDIですが、最近Spring Bootを触りながら気になったことがありました。今までは当たり前のように、<code>@Autowired</code>はフィールドに宣言していましたが、今回の案件ではコンストラクターにつけている場合がありました。なぜ一部はフィールドにつけ、一部はコンストラクターにつけるんだろう？と思いましたね。結果的には全てのアノテーションをコンストラクターにつけることになりましたが、それが特にフィールドにつける場合との違いを理解させたわけではないので、少し調べてみました。</p>
-<p>結論からいうと、大概の場合に<code>@Autowired</code>はフィールドよりはコンストラクターにつけた方がいいらしいです。そしてこれを(フィールドやコンストラクターに<code>@Autowired</code>をつけることを)、それぞれ「フィールドインジェクション」と「コンストラクターインジェクション」と呼ぶらしいです。では、これらをコードを持って説明していきましょう。</p>
-<h2 id=field-injection>Field Injection</h2>
-<p>まずインジェクションのために以下のようなコンフィギュレーションクラス<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>を定義したとしましょう。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Configuration
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Mapper</span> <span style=color:#8be9fd;font-style:italic>extends</span> ModelMapper <span style=color:#ff79c6>{</span>
-
-    @Bean
-    <span style=color:#8be9fd;font-style:italic>public</span> Mapper mapper <span style=color:#ff79c6>{</span>
-        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> ModelMapper<span style=color:#ff79c6>();</span>
-    <span style=color:#ff79c6>}</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>ここでは<a class=link href=http://modelmapper.org/ target=_blank rel=noopener>ModelMapper</a>を使ってみます。ModelMapperに関しては、以前のポストにも書きましたが、互いにマッチングするGetter/SetterのあるBean同士のマッピングを自動で行ってくれる便利なライブラリーです。</p>
-<p>こうしてSpringでBeanを登録し、Autowiredアノテーションをフィールドにつけるサービスクラスの例が以下です。これをフィールドインジェクションと呼びます。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
-
-    @Autowired
-    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>自分が最初にSpring Frameworkについて学んだ時はこのようなフィールドインジェクトションが一般的でした。しかし、フィールドインジェクションでは致命的な問題があリます。ここでフィールドがNullだった場合もプログラムは動作するということです。クラスの動作に必要な要件が整ってないのにもかかわらず、プログラムが動作してしまうのはバグを呼ぶこととなりますね。なのでフィールドインジェクションはよくないです。</p>
-<h2 id=setter-injection>Setter Injection</h2>
-<p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
-
-    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
-
-    @Autowired
-    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>setMapper</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
-    <span style=color:#ff79c6>}</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>Setterによるインジェクションの問題は、フィールドインジェクションと同じです。Setterで必要なオブジェクトが注入されたかどうかと関係なくプログラムは動く可能性がありますね。この問題を解決できるのが、次に紹介するコンストラクターインジェクションです。</p>
-<h2 id=constructor-injection>Constructor Injection</h2>
-<p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Service
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
-
-    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
-
-    @Autowired
-    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>ItemServiceImpl</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
-    <span style=color:#ff79c6>}</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>コンストラクターによるインジェクションの良い点は、先に述べたような問題が発生する可能性をブロックできるということです。これはSpringというよりJavaの言語仕様の話ですが、コンストラクターで引数の要件が満たされてないクラスはインスタンスを生成できませんね。そしてNullを注入しない限り、NullPointerExceptionは発生しなくなります。</p>
-<p>また、コンストラクターインジェクションだと、循環参照<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>の問題を事前に防ぐことができるというメリットがあります。フィールドインジェクションやセッターインジェクションでは実際のコードが呼ばれるまでは問題を発見することができませんが、コンストラクターインジェクションで循環参照が発生する場合はSpringアプリケーションを起動する時に警告が出力されます。</p>
-<p>また、フィールドインジェクションの場合はそのクラスの単体テストができないという問題もあります。Autowiredアノテーションがついているフィールドに対してオブジェクトを注入できる方法がないですので。Setterを使うと一旦注入はできるようになりますが、あえてSetterを使う理由はないですね。</p>
-<p>コンストラクターインジェクションが良いもう一つの理由は、フィールドをfinal宣言できるということです。フィールドにfinalをつけることでクラス内でオブジェクトが変更されることを防止できるので、より安全になります。</p>
-<h2 id=最後に>最後に</h2>
-<p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。</p>
-<p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！</p>
-<section class=footnotes role=doc-endnotes>
+</div></footer></div></header><section class=article-content>
+<p>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり<code>@Autowired</code>によるDI<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>ではないかと思います。初めてSpringに接したときはオブジェクトが<code>new</code>なしでも動くと言うことが何ともいえない不思議なことに見えました。これがデザインパターンの一つであるということを知ってからはますますすごいなぁと思いましたね。やはり良いコードを書くためには、様々な方面での工夫が必要なものですね。</p><p>とにかく、こうも重要で便利なDIですが、最近Spring Bootを触りながら気になったことがありました。今までは当たり前のように、<code>@Autowired</code>はフィールドに宣言していましたが、今回の案件ではコンストラクターにつけている場合がありました。なぜ一部はフィールドにつけ、一部はコンストラクターにつけるんだろう？と思いましたね。結果的には全てのアノテーションをコンストラクターにつけることになりましたが、それが特にフィールドにつける場合との違いを理解させたわけではないので、少し調べてみました。</p><p>結論からいうと、大概の場合に<code>@Autowired</code>はフィールドよりはコンストラクターにつけた方がいいらしいです。そしてこれを(フィールドやコンストラクターに<code>@Autowired</code>をつけることを)、それぞれ「フィールドインジェクション」と「コンストラクターインジェクション」と呼ぶらしいです。では、これらをコードを持って説明していきましょう。</p><h2 id=field-injection>Field Injection</h2><p>まずインジェクションのために以下のようなコンフィギュレーションクラス<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>を定義したとしましょう。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@Configuration
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Mapper</span> <span style=color:#8be9fd;font-style:italic>extends</span> ModelMapper <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Bean
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>public</span> Mapper mapper <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> ModelMapper<span style=color:#ff79c6>();</span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>ここでは<a class=link href=http://modelmapper.org/ target=_blank rel=noopener>ModelMapper</a>を使ってみます。ModelMapperに関しては、以前のポストにも書きましたが、互いにマッチングするGetter/SetterのあるBean同士のマッピングを自動で行ってくれる便利なライブラリーです。</p><p>こうしてSpringでBeanを登録し、Autowiredアノテーションをフィールドにつけるサービスクラスの例が以下です。これをフィールドインジェクションと呼びます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@Service
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Autowired
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>自分が最初にSpring Frameworkについて学んだ時はこのようなフィールドインジェクトションが一般的でした。しかし、フィールドインジェクションでは致命的な問題があリます。ここでフィールドがNullだった場合もプログラムは動作するということです。クラスの動作に必要な要件が整ってないのにもかかわらず、プログラムが動作してしまうのはバグを呼ぶこととなりますね。なのでフィールドインジェクションはよくないです。</p><h2 id=setter-injection>Setter Injection</h2><p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@Service
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Autowired
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>setMapper</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>Setterによるインジェクションの問題は、フィールドインジェクションと同じです。Setterで必要なオブジェクトが注入されたかどうかと関係なくプログラムは動く可能性がありますね。この問題を解決できるのが、次に紹介するコンストラクターインジェクションです。</p><h2 id=constructor-injection>Constructor Injection</h2><p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@Service
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>ItemServiceImpl</span> <span style=color:#8be9fd;font-style:italic>implements</span> ItemService <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>private</span> Mapper mapper<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Autowired
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#50fa7b>ItemServiceImpl</span><span style=color:#ff79c6>(</span>Mapper mapper<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>mapper</span> <span style=color:#ff79c6>=</span> mapper<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>コンストラクターによるインジェクションの良い点は、先に述べたような問題が発生する可能性をブロックできるということです。これはSpringというよりJavaの言語仕様の話ですが、コンストラクターで引数の要件が満たされてないクラスはインスタンスを生成できませんね。そしてNullを注入しない限り、NullPointerExceptionは発生しなくなります。</p><p>また、コンストラクターインジェクションだと、循環参照<sup id=fnref:3><a href=#fn:3 class=footnote-ref role=doc-noteref>3</a></sup>の問題を事前に防ぐことができるというメリットがあります。フィールドインジェクションやセッターインジェクションでは実際のコードが呼ばれるまでは問題を発見することができませんが、コンストラクターインジェクションで循環参照が発生する場合はSpringアプリケーションを起動する時に警告が出力されます。</p><p>また、フィールドインジェクションの場合はそのクラスの単体テストができないという問題もあります。Autowiredアノテーションがついているフィールドに対してオブジェクトを注入できる方法がないですので。Setterを使うと一旦注入はできるようになりますが、あえてSetterを使う理由はないですね。</p><p>コンストラクターインジェクションが良いもう一つの理由は、フィールドをfinal宣言できるということです。フィールドにfinalをつけることでクラス内でオブジェクトが変更されることを防止できるので、より安全になります。</p><h2 id=最後に>最後に</h2><p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。</p><p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！</p><section class=footnotes role=doc-endnotes>
 <hr>
 <ol>
 <li id=fn:1 role=doc-endnote>
-<p>Dependency Injection(依存性の注入)。ネット上に詳しい説明が多いので深くは入りませんが、簡単に概念を説明するとオブジェクトを外部から生成してコードに入れることでオブジェクトの依存性をコードから独立させることを意味します。注入されたオブジェクトはコードに依存してないので、どこで呼ばれても同じものとして機能することができます。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-<li id=fn:2 role=doc-endnote>
-<p>Configurationアノテーションをつけると自動的にSpring内で設定クラスとして認識されます。ここでオブジェクトをBeanとして定義すると、DIができるようになります。以前はxmlファイルに記入しておく場合もありました。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-<li id=fn:3 role=doc-endnote>
-<p>循環参照とは、複数のオブジェクトが互いを参照していることを意味します。例えばAクラスのインスタンスを生成する時にBを参照することとなっていて、BクラスもAクラスを参照することとなっていると、どちらかのインスタンスを作成する時に互いの参照を繰り返す無限ループに落ちてしまいます。この無限ループの果てはStackOverflowですね。&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-</ol>
-</section>
-</section>
-<footer class=article-footer>
+<p>Dependency Injection(依存性の注入)。ネット上に詳しい説明が多いので深くは入りませんが、簡単に概念を説明するとオブジェクトを外部から生成してコードに入れることでオブジェクトの依存性をコードから独立させることを意味します。注入されたオブジェクトはコードに依存してないので、どこで呼ばれても同じものとして機能することができます。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2 role=doc-endnote>
+<p>Configurationアノテーションをつけると自動的にSpring内で設定クラスとして認識されます。ここでオブジェクトをBeanとして定義すると、DIができるようになります。以前はxmlファイルに記入しておく場合もありました。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:3 role=doc-endnote>
+<p>循環参照とは、複数のオブジェクトが互いを参照していることを意味します。例えばAクラスのインスタンスを生成する時にBを参照することとなっていて、BクラスもAクラスを参照することとなっていると、どちらかのインスタンスを作成する時に互いの参照を繰り返す無限ループに落ちてしまいます。この無限ループの果てはStackOverflowですね。&#160;<a href=#fnref:3 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></section></section><footer class=article-footer>
 <section class=article-tags>
 <a href=/tags/dependency-injection/>dependency injection</a>
 <a href=/tags/java/>java</a>
 <a href=/tags/spring/>spring</a>
-</section>
-<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+</section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
 <span>Licensed under CC BY-NC-SA 4.0</span>
-</section>
-</footer>
-</article>
-<aside class=related-contents--wrapper>
-<h2 class=section-title>Related contents</h2>
-<div class=related-contents>
+</section></footer></article><aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2><div class=related-contents>
 <div class="flex article-list--tile">
 <article class=has-image>
 <a href=/posts/spring-bean-with-yaml/>
 <div class=article-image>
 <img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>newしたインスタンスの中でBeanを使いたい</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>newしたインスタンスの中でBeanを使いたい</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/spring-webflux-dividing-router-and-handler/>
 <div class=article-image>
 <img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/spring-conditional/>
 <div class=article-image>
 <img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>条件で動作するアノテーションを使う</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>条件で動作するアノテーションを使う</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/spring-settings-encryption/>
 <div class=article-image>
 <img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Jasyptでプロパティを暗号化する</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Jasyptでプロパティを暗号化する</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/spring-switching-service/>
 <div class=article-image>
 <img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>ServiceのImplクラスをYAMLで選択する</h2>
-</div>
-</a>
-</article>
-</div>
-</div>
-</aside>
-<footer class=site-footer>
+</div><div class=article-details>
+<h2 class=article-title>ServiceのImplクラスをYAMLで選択する</h2></div></a>
+</article></div></div></aside><footer class=site-footer>
 <section class=copyright>
 &copy;
 2019 -
 2022 Korean-man in Tokyo
-</section>
-<section class=powerby>
+</section><section class=powerby>
 Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
 Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
-</section>
-</footer>
-<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
-<div class=pswp__bg></div>
-<div class=pswp__scroll-wrap>
+</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div><div class=pswp__scroll-wrap>
 <div class=pswp__container>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-</div>
-<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden">
 <div class=pswp__top-bar>
-<div class=pswp__counter></div>
-<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
 <button class="pswp__button pswp__button--share" title=Share></button>
 <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
 <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
 <div class=pswp__preloader>
 <div class=pswp__preloader__icn>
 <div class=pswp__preloader__cut>
-<div class=pswp__preloader__donut></div>
-</div>
-</div>
-</div>
-</div>
-<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-<div class=pswp__share-tooltip></div>
-</div>
-<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+<div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
 </button>
 <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
 </button>
 <div class=pswp__caption>
-<div class=pswp__caption__center></div>
-</div>
-</div>
-</div>
-</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
-</main>
-<aside class="sidebar right-sidebar sticky">
+<div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main><aside class="sidebar right-sidebar sticky">
 <section class="widget archives">
 <div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
-</div>
-<h2 class="widget-title section-title">Table of contents</h2>
-<div class=widget--toc>
+</div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc>
 <nav id=TableOfContents>
 <ol>
-<li><a href=#field-injection>Field Injection</a></li>
-<li><a href=#setter-injection>Setter Injection</a></li>
-<li><a href=#constructor-injection>Constructor Injection</a></li>
-<li><a href=#最後に>最後に</a></li>
-</ol>
-</nav>
-</div>
-</section>
-</aside>
-</div>
-<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
-<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
-</body>
-</html>
+<li><a href=#field-injection>Field Injection</a></li><li><a href=#setter-injection>Setter Injection</a></li><li><a href=#constructor-injection>Constructor Injection</a></li><li><a href=#最後に>最後に</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script>
+</body></html>

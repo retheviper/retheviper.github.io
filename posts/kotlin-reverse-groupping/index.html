@@ -1,7 +1,6 @@
 <!doctype html><html lang=en-us>
 <head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正"><title>Kotlinでデータの逆転グルーピング</title>
-<link rel=canonical href=https://retheviper.github.io/posts/kotlin-reverse-groupping/>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正"><title>Kotlinでデータの逆転グルーピング</title><link rel=canonical href=https://retheviper.github.io/posts/kotlin-reverse-groupping/>
 <link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Kotlinでデータの逆転グルーピング">
 <meta property="og:description" content="DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正">
 <meta property="og:url" content="https://retheviper.github.io/posts/kotlin-reverse-groupping/">
@@ -27,357 +26,232 @@
 <meta name=msapplication-TileColor content="#ffffff">
 <meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
 <meta name=theme-color content="#ffffff">
-<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
-</head>
-<body class="article-page has-toc">
-<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script>
+</head><body class="article-page has-toc">
+<script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script>
 <div class="container main-container flex
 extended">
 <div id=article-toolbar>
 <a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
 <span>Back</span>
 </a>
-</div>
-<main class="main full-width">
+</div><main class="main full-width">
 <article class="has-image main-article">
 <header class=article-header>
 <div class=article-image>
 <a href=/posts/kotlin-reverse-groupping/>
 <img src=/../../images/kotlin.jpg loading=lazy alt="Featured image of post Kotlinでデータの逆転グルーピング">
 </a>
-</div>
-<div class=article-details>
+</div><div class=article-details>
 <header class=article-category>
 <a href=/categories/kotlin/ style=background-color:#2a9d8f;color:#fff>
 kotlin
 </a>
-</header>
-<h2 class=article-title>
+</header><h2 class=article-title>
 <a href=/posts/kotlin-reverse-groupping/>Kotlinでデータの逆転グルーピング</a>
-</h2>
-<footer class=article-time>
+</h2><footer class=article-time>
 <div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>Jan 29, 2022</time>
-</div>
-<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+</div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
 <time class=article-time--reading>
 6 minute read
 </time>
-</div>
-</footer>
-</div>
-</header>
-<section class=article-content>
-<p>DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正規化などを通じてより効率的にデータを保存する方法を考える必要のあるDBと、データをいかに加工して使うかを工夫するアプリの違いによるものもありますが、アプリの改修が続くと同じデータでも活用する箇所や表現の仕方が変わってくるからでもあるかなと思います。</p>
-<p>そういうわけで、今回はそのようなケースで一つ活用できる方法をご紹介したいと思います。アルゴリズムというわけでもありませんし、より効率的な方法はあるかなと思いますが、応用すれば結構色々な場所で使えそうな方法ではないかと思います。</p>
-<h2 id=シナリオ>シナリオ</h2>
-<p>例えば以下のようなシナリオがあるとします。</p>
-<ol>
-<li>社員はA、Bという二つの部署に配属される</li>
-<li>社員が部署に配属される日付はそれぞれ</li>
-</ol>
-<p>この場合、データの作りには色々な観点があるかと思いますが、まず部署の配属日を基準にデータを作るとしたら、部署の種類、配属日とその日付に配属となった社員のリストを持つような形になるかと思います。Kotlinのコードとして表現するとしたら以下のような形ですね。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>enum</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>DepartmentType</span> { A, B }
-
-<span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Department</span>(
-    <span style=color:#ff79c6>val</span> departmentType: DepartmentType,
-    <span style=color:#ff79c6>val</span> date: LocalDate,
-    <span style=color:#ff79c6>val</span> employers: List&lt;Employer&gt;
-) {
-    <span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Employer</span>(
-        <span style=color:#ff79c6>val</span> id: Int
-    )
-}
-</code></pre></div><p>ここで社員の3人がいて、それぞれ部署Aと部署Bに配属された日付が違うケースがあるとしましょう。データとしては、以下のようなものです。</p>
-<div class=table-wrapper><table>
+</div></footer></div></header><section class=article-content>
+<p>DBを設計する時と、最終的にアプリで活用するデータの形は大きく変わるケースがあります。特に後から機能を付け加えるとそうなりますね。もちろん正規化などを通じてより効率的にデータを保存する方法を考える必要のあるDBと、データをいかに加工して使うかを工夫するアプリの違いによるものもありますが、アプリの改修が続くと同じデータでも活用する箇所や表現の仕方が変わってくるからでもあるかなと思います。</p><p>そういうわけで、今回はそのようなケースで一つ活用できる方法をご紹介したいと思います。アルゴリズムというわけでもありませんし、より効率的な方法はあるかなと思いますが、応用すれば結構色々な場所で使えそうな方法ではないかと思います。</p><h2 id=シナリオ>シナリオ</h2><p>例えば以下のようなシナリオがあるとします。</p><ol>
+<li>社員はA、Bという二つの部署に配属される</li><li>社員が部署に配属される日付はそれぞれ</li></ol><p>この場合、データの作りには色々な観点があるかと思いますが、まず部署の配属日を基準にデータを作るとしたら、部署の種類、配属日とその日付に配属となった社員のリストを持つような形になるかと思います。Kotlinのコードとして表現するとしたら以下のような形ですね。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>enum</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>DepartmentType</span> { A, B }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Department</span>(
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> departmentType: DepartmentType,
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> date: LocalDate,
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> employers: List&lt;Employer&gt;
+</span></span><span style=display:flex><span>) {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Employer</span>(
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>val</span> id: Int
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>ここで社員の3人がいて、それぞれ部署Aと部署Bに配属された日付が違うケースがあるとしましょう。データとしては、以下のようなものです。</p><div class=table-wrapper><table>
 <thead>
 <tr>
-<th>社員番号</th>
-<th>部署A配属</th>
-<th>部署B配属</th>
-</tr>
-</thead>
-<tbody>
+<th>社員番号</th><th>部署A配属</th><th>部署B配属</th></tr></thead><tbody>
 <tr>
-<td>1</td>
-<td>1月1日</td>
-<td>1月1日</td>
-</tr>
-<tr>
-<td>2</td>
-<td>1月1日</td>
-<td>2月1日</td>
-</tr>
-<tr>
-<td>3</td>
-<td>2月1日</td>
-<td>2月1日</td>
-</tr>
-</tbody>
-</table></div>
-<p>上記のデータを持って、先ほどの部署のデータを実際のリストとして作るとしたら以下のようになるかなと思います。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> departments = listOf(
-    Department(
-        departmentType = DepartmentType.A,
-        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
-        employers = listOf(
-            Department.Employer(id = <span style=color:#bd93f9>1</span>),
-            Department.Employer(id = <span style=color:#bd93f9>2</span>)
-        ),
-    ),
-    Department(
-        departmentType = DepartmentType.A,
-        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
-        employers = listOf(
-            Department.Employer(id = <span style=color:#bd93f9>3</span>)
-        ),
-    ),
-    Department(
-        departmentType = DepartmentType.B,
-        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
-        employers = listOf(
-            Department.Employer(id = <span style=color:#bd93f9>1</span>)
-        ),
-    ),
-    Department(
-        departmentType = DepartmentType.B,
-        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
-        employers = listOf(
-            Department.Employer(id = <span style=color:#bd93f9>2</span>),
-            Department.Employer(id = <span style=color:#bd93f9>3</span>),
-        )
-    )
-)
-</code></pre></div><p>ただ、これを社員を基準に、それぞれの部署に配属された日付をデータとして加工するにはどうしたら良いでしょうか。社員番号と部署に配属となった日付の二つを持つような形です。例えば、コードで表現すると以下のようなものです。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>JoinedDates</span>(
-    <span style=color:#ff79c6>val</span> employerId: Int,
-    <span style=color:#ff79c6>val</span> departmentA: LocalDate,
-    <span style=color:#ff79c6>val</span> departmentB: LocalDate
-)
-</code></pre></div><p>つまり、やりたいことは先ほどの<code>departments</code>を、最終的に以下のようなデータにしたいということですね。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#50fa7b>[
-</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
-</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
-</span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
-</span><span style=color:#50fa7b>]</span>
-</code></pre></div><p>データの整列の基準がひっくり返されるので、どうしたら良いかと悩ましくなる場面です。今回は、これを解決した自分の方法を紹介したいと思います。</p>
-<h2 id=ロジック>ロジック</h2>
-<p>Departmentを基準に考えるとEmployerのデータが複数になりますが、これを逆転させて、Employerを基準に複数のDepartmentを持つという形に加工したいというのが今回の要件です。だとすると、考えられるロジックは以下がポイントかなと思います。</p>
-<ol>
-<li>EmployerのID単位でまとめる</li>
-<li>EmployerごとにDepartmentをType別に分けた配列を持たせる</li>
-</ol>
-<p>まずはネスとしているEmployerのリストに入り、そのIDを抽出する必要がありますね。このIDは重複させたくないので、MapのKeyにしておくと良さげです。</p>
-<p>あとは、そのMapにEmployerのIDがKeyとして存在するかどうかで以下の処理をすると良いでしょう。</p>
-<ol>
-<li>Keyが存在しない場合は、新しくDepartmentのタイプとその日付をinsert</li>
-<li>Keyが存在する場合は、そのvalueを取り出してDepartmentのタイプと日付を追加</li>
-</ol>
-<p>なので、一回DepartmentのListをMapに変換して、さらにJoinedDatesのListに変換することとなります。ちょうど上記の分岐については、<a class=link href=https://docs.oracle.com/javase/8/docs/api/java/util/Map.html#compute-K-java.util.function.BiFunction- target=_blank rel=noopener>compute()</a>を活用するとできるので、中間データとしてのMapがどんな形になるかを考えると良いかなと思います。</p>
-<p>私の場合はMapの方がデータを取りやすいので、最終的には以下のような処理となりました。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>List</span>&lt;Department&gt;.toJoinedDates(): List&lt;JoinedDates&gt; {
-    <span style=color:#6272a4>// 中間データ
-</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;Int, Map&lt;DepartmentType, LocalDate&gt;&gt;()
-
-    <span style=color:#ff79c6>this</span>.forEach { department <span style=color:#ff79c6>-&gt;</span>
-        <span style=color:#6272a4>// Departmentのタイプとその日付のPair
-</span><span style=color:#6272a4></span>        <span style=color:#ff79c6>val</span> departmentJoined = department.departmentType to department.date
-
-        department.employers.forEach { employer <span style=color:#ff79c6>-&gt;</span>
-
-            <span style=color:#6272a4>// EmployerのIDがKeyとして存在したら足して、なかったらMapを追加
-</span><span style=color:#6272a4></span>            tempMap.compute(employer.id) { _, value <span style=color:#ff79c6>-&gt;</span>
-                value<span style=color:#ff79c6>?.</span>let { value + departmentJoined } <span style=color:#ff79c6>?:</span> mapOf(departmentJoined)
-            }
-        }
-    }
-
-    <span style=color:#6272a4>// 中間データをJoinedDatesのListに変えて返却
-</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> tempMap.map { (id, department) <span style=color:#ff79c6>-&gt;</span>
-        JoinedDates(
-            employerId = id,
-            departmentA = department.getValue(DepartmentType.A),
-            departmentB = department.getValue(DepartmentType.B)
-        )
-    }
-}
-</code></pre></div><h2 id=共通ロジック化>共通ロジック化</h2>
-<p>ジェネリックを使ったclassとして上記のロジックを一部分離すれば、似たようなケースで色々使い回せるのではないかと思いましたので、以下のようなコードも書いてみました。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Aggregator</span>&lt;T, K, V, R&gt; {
-    <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;T, Map&lt;K, V&gt;&gt;()
-
-    <span style=color:#6272a4>// データの追加
-</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(key: T, value: Pair&lt;K, V&gt;) {
-        tempMap.compute(key) { _, existingValue <span style=color:#ff79c6>-&gt;</span>
-            existingValue<span style=color:#ff79c6>?.</span>let { existingValue + value } <span style=color:#ff79c6>?:</span> mapOf(value)
-        }
-    }
-
-    <span style=color:#6272a4>// 指定したListとして取得
-</span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getList</span>(transfer: (T, Map&lt;K, V&gt;) <span style=color:#ff79c6>-&gt;</span> R): List&lt;R&gt; {
-        <span style=color:#ff79c6>return</span> tempMap.map { transfer(<span style=color:#ff79c6>it</span>.key, <span style=color:#ff79c6>it</span>.value) }
-    }
-}
-</code></pre></div><p>これの場合は以下のような使い方ができます。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> aggregator = Aggregator&lt;Int, DepartmentType, LocalDate, JoinedDates&gt;()
-
-<span style=color:#6272a4>// データの追加
-</span><span style=color:#6272a4></span>departments.forEach { a <span style=color:#ff79c6>-&gt;</span>
-    a.employers.forEach { b <span style=color:#ff79c6>-&gt;</span>
-        aggregator.add(
-            key = b.id,
-            value = a.departmentType to a.date
-        )
-    }
-}
-
-<span style=color:#6272a4>// Listの結果を取得
-</span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> joinedDates = aggregator.getList { id, joinedDate <span style=color:#ff79c6>-&gt;</span>
-    JoinedDates(
-        employerId = id,
-        departmentA = joinedDate.getValue(DepartmentType.A),
-        departmentB = joinedDate.getValue(DepartmentType.B)
-    )
-}
-</code></pre></div><p>汎用性はあるものの、呼び出し元のコードが増えたり、指定している型の意味や意図がよくわからないので適切なKDocやコメントがないと少しわかりにくいところがデメリットかも知れませんね。ただ大事なのは中間データの型と<code>compute()</code>による分岐処理なので、そこだけをうまく取り出して他でも応用できるかなと思います。</p>
-<h2 id=最後に>最後に</h2>
-<p>サーバサイドKoltinだと、多くの場合にデータを<code>List</code>として扱うのが普通かなと思いますが、場合によっては<code>Map</code>を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した<code>compute()</code>以外でも、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html target=_blank rel=noopener>getOrPut()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html target=_blank rel=noopener>getOrDefault()</a>などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は<a class=link href=../exposed-mapping-record-to-object>前回のポスト</a>でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。</p>
-<p>プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。</p>
-<p>では、また！</p>
-</section>
-<footer class=article-footer>
+<td>1</td><td>1月1日</td><td>1月1日</td></tr><tr>
+<td>2</td><td>1月1日</td><td>2月1日</td></tr><tr>
+<td>3</td><td>2月1日</td><td>2月1日</td></tr></tbody></table></div><p>上記のデータを持って、先ほどの部署のデータを実際のリストとして作るとしたら以下のようになるかなと思います。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> departments = listOf(
+</span></span><span style=display:flex><span>    Department(
+</span></span><span style=display:flex><span>        departmentType = DepartmentType.A,
+</span></span><span style=display:flex><span>        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
+</span></span><span style=display:flex><span>        employers = listOf(
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>1</span>),
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>2</span>)
+</span></span><span style=display:flex><span>        ),
+</span></span><span style=display:flex><span>    ),
+</span></span><span style=display:flex><span>    Department(
+</span></span><span style=display:flex><span>        departmentType = DepartmentType.A,
+</span></span><span style=display:flex><span>        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
+</span></span><span style=display:flex><span>        employers = listOf(
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>3</span>)
+</span></span><span style=display:flex><span>        ),
+</span></span><span style=display:flex><span>    ),
+</span></span><span style=display:flex><span>    Department(
+</span></span><span style=display:flex><span>        departmentType = DepartmentType.B,
+</span></span><span style=display:flex><span>        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>1</span>),
+</span></span><span style=display:flex><span>        employers = listOf(
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>1</span>)
+</span></span><span style=display:flex><span>        ),
+</span></span><span style=display:flex><span>    ),
+</span></span><span style=display:flex><span>    Department(
+</span></span><span style=display:flex><span>        departmentType = DepartmentType.B,
+</span></span><span style=display:flex><span>        date = LocalDate.of(<span style=color:#bd93f9>2022</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>1</span>),
+</span></span><span style=display:flex><span>        employers = listOf(
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>2</span>),
+</span></span><span style=display:flex><span>            Department.Employer(id = <span style=color:#bd93f9>3</span>),
+</span></span><span style=display:flex><span>        )
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>)
+</span></span></code></pre></div><p>ただ、これを社員を基準に、それぞれの部署に配属された日付をデータとして加工するにはどうしたら良いでしょうか。社員番号と部署に配属となった日付の二つを持つような形です。例えば、コードで表現すると以下のようなものです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>data</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>JoinedDates</span>(
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> employerId: Int,
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> departmentA: LocalDate,
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> departmentB: LocalDate
+</span></span><span style=display:flex><span>)
+</span></span></code></pre></div><p>つまり、やりたいことは先ほどの<code>departments</code>を、最終的に以下のようなデータにしたいということですね。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#50fa7b>[
+</span></span></span><span style=display:flex><span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
+</span></span></span><span style=display:flex><span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
+</span></span></span><span style=display:flex><span><span style=color:#50fa7b>  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
+</span></span></span><span style=display:flex><span><span style=color:#50fa7b>]</span>
+</span></span></code></pre></div><p>データの整列の基準がひっくり返されるので、どうしたら良いかと悩ましくなる場面です。今回は、これを解決した自分の方法を紹介したいと思います。</p><h2 id=ロジック>ロジック</h2><p>Departmentを基準に考えるとEmployerのデータが複数になりますが、これを逆転させて、Employerを基準に複数のDepartmentを持つという形に加工したいというのが今回の要件です。だとすると、考えられるロジックは以下がポイントかなと思います。</p><ol>
+<li>EmployerのID単位でまとめる</li><li>EmployerごとにDepartmentをType別に分けた配列を持たせる</li></ol><p>まずはネスとしているEmployerのリストに入り、そのIDを抽出する必要がありますね。このIDは重複させたくないので、MapのKeyにしておくと良さげです。</p><p>あとは、そのMapにEmployerのIDがKeyとして存在するかどうかで以下の処理をすると良いでしょう。</p><ol>
+<li>Keyが存在しない場合は、新しくDepartmentのタイプとその日付をinsert</li><li>Keyが存在する場合は、そのvalueを取り出してDepartmentのタイプと日付を追加</li></ol><p>なので、一回DepartmentのListをMapに変換して、さらにJoinedDatesのListに変換することとなります。ちょうど上記の分岐については、<a class=link href=https://docs.oracle.com/javase/8/docs/api/java/util/Map.html#compute-K-java.util.function.BiFunction- target=_blank rel=noopener>compute()</a>を活用するとできるので、中間データとしてのMapがどんな形になるかを考えると良いかなと思います。</p><p>私の場合はMapの方がデータを取りやすいので、最終的には以下のような処理となりました。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>List</span>&lt;Department&gt;.toJoinedDates(): List&lt;JoinedDates&gt; {
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// 中間データ
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;Int, Map&lt;DepartmentType, LocalDate&gt;&gt;()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>this</span>.forEach { department <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#6272a4>// Departmentのタイプとその日付のPair
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        <span style=color:#ff79c6>val</span> departmentJoined = department.departmentType to department.date
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        department.employers.forEach { employer <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#6272a4>// EmployerのIDがKeyとして存在したら足して、なかったらMapを追加
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>            tempMap.compute(employer.id) { _, value <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>                value<span style=color:#ff79c6>?.</span>let { value + departmentJoined } <span style=color:#ff79c6>?:</span> mapOf(departmentJoined)
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// 中間データをJoinedDatesのListに変えて返却
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>return</span> tempMap.map { (id, department) <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>        JoinedDates(
+</span></span><span style=display:flex><span>            employerId = id,
+</span></span><span style=display:flex><span>            departmentA = department.getValue(DepartmentType.A),
+</span></span><span style=display:flex><span>            departmentB = department.getValue(DepartmentType.B)
+</span></span><span style=display:flex><span>        )
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=共通ロジック化>共通ロジック化</h2><p>ジェネリックを使ったclassとして上記のロジックを一部分離すれば、似たようなケースで色々使い回せるのではないかと思いましたので、以下のようなコードも書いてみました。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>Aggregator</span>&lt;T, K, V, R&gt; {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> tempMap = mutableMapOf&lt;T, Map&lt;K, V&gt;&gt;()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// データの追加
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(key: T, value: Pair&lt;K, V&gt;) {
+</span></span><span style=display:flex><span>        tempMap.compute(key) { _, existingValue <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>            existingValue<span style=color:#ff79c6>?.</span>let { existingValue + value } <span style=color:#ff79c6>?:</span> mapOf(value)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// 指定したListとして取得
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getList</span>(transfer: (T, Map&lt;K, V&gt;) <span style=color:#ff79c6>-&gt;</span> R): List&lt;R&gt; {
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> tempMap.map { transfer(<span style=color:#ff79c6>it</span>.key, <span style=color:#ff79c6>it</span>.value) }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>これの場合は以下のような使い方ができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> aggregator = Aggregator&lt;Int, DepartmentType, LocalDate, JoinedDates&gt;()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#6272a4>// データの追加
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>departments.forEach { a <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>    a.employers.forEach { b <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>        aggregator.add(
+</span></span><span style=display:flex><span>            key = b.id,
+</span></span><span style=display:flex><span>            value = a.departmentType to a.date
+</span></span><span style=display:flex><span>        )
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#6272a4>// Listの結果を取得
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> joinedDates = aggregator.getList { id, joinedDate <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>    JoinedDates(
+</span></span><span style=display:flex><span>        employerId = id,
+</span></span><span style=display:flex><span>        departmentA = joinedDate.getValue(DepartmentType.A),
+</span></span><span style=display:flex><span>        departmentB = joinedDate.getValue(DepartmentType.B)
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>汎用性はあるものの、呼び出し元のコードが増えたり、指定している型の意味や意図がよくわからないので適切なKDocやコメントがないと少しわかりにくいところがデメリットかも知れませんね。ただ大事なのは中間データの型と<code>compute()</code>による分岐処理なので、そこだけをうまく取り出して他でも応用できるかなと思います。</p><h2 id=最後に>最後に</h2><p>サーバサイドKoltinだと、多くの場合にデータを<code>List</code>として扱うのが普通かなと思いますが、場合によっては<code>Map</code>を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した<code>compute()</code>以外でも、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html target=_blank rel=noopener>getOrPut()</a>、<a class=link href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html target=_blank rel=noopener>getOrDefault()</a>などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は<a class=link href=../exposed-mapping-record-to-object>前回のポスト</a>でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。</p><p>プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。</p><p>では、また！</p></section><footer class=article-footer>
 <section class=article-tags>
 <a href=/tags/kotlin/>kotlin</a>
-</section>
-<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+</section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
 <span>Licensed under CC BY-NC-SA 4.0</span>
-</section>
-</footer>
-</article>
-<aside class=related-contents--wrapper>
-<h2 class=section-title>Related contents</h2>
-<div class=related-contents>
+</section></footer></article><aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2><div class=related-contents>
 <div class="flex article-list--tile">
 <article class=has-image>
 <a href=/posts/effective-kotlin/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Effective Kotlinを読む</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Effective Kotlinを読む</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-japanese-era/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinで和暦を使う</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinで和暦を使う</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-hidden-cost-3/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinの隠されたコストーその３</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその３</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-hidden-cost-2/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinの隠されたコストーその２</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその２</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-hidden-cost-1/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinの隠されたコストーその１</h2>
-</div>
-</a>
-</article>
-</div>
-</div>
-</aside>
-<footer class=site-footer>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその１</h2></div></a>
+</article></div></div></aside><footer class=site-footer>
 <section class=copyright>
 &copy;
 2019 -
 2022 Korean-man in Tokyo
-</section>
-<section class=powerby>
+</section><section class=powerby>
 Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
 Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
-</section>
-</footer>
-<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
-<div class=pswp__bg></div>
-<div class=pswp__scroll-wrap>
+</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div><div class=pswp__scroll-wrap>
 <div class=pswp__container>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-</div>
-<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden">
 <div class=pswp__top-bar>
-<div class=pswp__counter></div>
-<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
 <button class="pswp__button pswp__button--share" title=Share></button>
 <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
 <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
 <div class=pswp__preloader>
 <div class=pswp__preloader__icn>
 <div class=pswp__preloader__cut>
-<div class=pswp__preloader__donut></div>
-</div>
-</div>
-</div>
-</div>
-<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-<div class=pswp__share-tooltip></div>
-</div>
-<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+<div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
 </button>
 <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
 </button>
 <div class=pswp__caption>
-<div class=pswp__caption__center></div>
-</div>
-</div>
-</div>
-</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
-</main>
-<aside class="sidebar right-sidebar sticky">
+<div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main><aside class="sidebar right-sidebar sticky">
 <section class="widget archives">
 <div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
-</div>
-<h2 class="widget-title section-title">Table of contents</h2>
-<div class=widget--toc>
+</div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc>
 <nav id=TableOfContents>
 <ol>
-<li><a href=#シナリオ>シナリオ</a></li>
-<li><a href=#ロジック>ロジック</a></li>
-<li><a href=#共通ロジック化>共通ロジック化</a></li>
-<li><a href=#最後に>最後に</a></li>
-</ol>
-</nav>
-</div>
-</section>
-</aside>
-</div>
-<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
-<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
-</body>
-</html>
+<li><a href=#シナリオ>シナリオ</a></li><li><a href=#ロジック>ロジック</a></li><li><a href=#共通ロジック化>共通ロジック化</a></li><li><a href=#最後に>最後に</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script>
+</body></html>

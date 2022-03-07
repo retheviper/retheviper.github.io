@@ -1,7 +1,6 @@
 <!doctype html><html lang=en-us>
 <head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="今回はまたKotlinの隠されたコストに対するポストです。今となってはあまり気にすることはないかも知れませんし（検証は必要そうですが、バージ"><title>Kotlinの隠されたコストーその２</title>
-<link rel=canonical href=https://retheviper.github.io/posts/kotlin-hidden-cost-2/>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="今回はまたKotlinの隠されたコストに対するポストです。今となってはあまり気にすることはないかも知れませんし（検証は必要そうですが、バージ"><title>Kotlinの隠されたコストーその２</title><link rel=canonical href=https://retheviper.github.io/posts/kotlin-hidden-cost-2/>
 <link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Kotlinの隠されたコストーその２">
 <meta property="og:description" content="今回はまたKotlinの隠されたコストに対するポストです。今となってはあまり気にすることはないかも知れませんし（検証は必要そうですが、バージ">
 <meta property="og:url" content="https://retheviper.github.io/posts/kotlin-hidden-cost-2/">
@@ -27,313 +26,181 @@
 <meta name=msapplication-TileColor content="#ffffff">
 <meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
 <meta name=theme-color content="#ffffff">
-<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
-</head>
-<body class="article-page has-toc">
-<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script>
+</head><body class="article-page has-toc">
+<script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script>
 <div class="container main-container flex
 extended">
 <div id=article-toolbar>
 <a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
 <span>Back</span>
 </a>
-</div>
-<main class="main full-width">
+</div><main class="main full-width">
 <article class="has-image main-article">
 <header class=article-header>
 <div class=article-image>
 <a href=/posts/kotlin-hidden-cost-2/>
 <img src=/../../images/kotlin.jpg loading=lazy alt="Featured image of post Kotlinの隠されたコストーその２">
 </a>
-</div>
-<div class=article-details>
+</div><div class=article-details>
 <header class=article-category>
 <a href=/categories/kotlin/ style=background-color:#2a9d8f;color:#fff>
 kotlin
 </a>
-</header>
-<h2 class=article-title>
+</header><h2 class=article-title>
 <a href=/posts/kotlin-hidden-cost-2/>Kotlinの隠されたコストーその２</a>
-</h2>
-<footer class=article-time>
+</h2><footer class=article-time>
 <div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>Nov 21, 2021</time>
-</div>
-<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+</div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
 <time class=article-time--reading>
 9 minute read
 </time>
-</div>
-</footer>
-</div>
-</header>
-<section class=article-content>
-<p>今回はまたKotlinの隠されたコストに対するポストです。今となってはあまり気にすることはないかも知れませんし（検証は必要そうですが、バージョンアップごとにコンパイラが生成するコードを追うのは大変そうですね…）、極限のチューニングをするよりもマシンスペックを上げた方がよい時代になったとはいうものの、この記事で紹介していることをコーディングの習慣として身につけておくと良いかなと思います。</p>
-<p>前回は高階関数とLambda、そしてcompanion objectに関する記事を紹介しました。今回はローカル関数、Null安定性、Varargsに隠されたKotlinのコストについて述べます。この記事は<a class=link href=https://bladecoder.medium.com/exploring-kotlins-hidden-costs-part-2-324a4a50b70 target=_blank rel=noopener>Exploring Kotlin’s hidden costs - Part 2</a>の内容を要約したものです。</p>
-<h2 id=ローカル関数>ローカル関数</h2>
-<p>関数内に定義した関数を「ローカル関数」と言います。これらローカル関数は、アウター関数（ローカル関数が定義された関数）の範囲にアクセスできます。例えば以下だと、<code>sumSquare</code>で<code>someMath</code>のパラメータにアクセスしているのがわかります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>someMath</span>(a: Int): Int {
-    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sumSquare</span>(b: Int) = (a + b) * (a + b)
-
-    <span style=color:#ff79c6>return</span> sumSquare(<span style=color:#bd93f9>1</span>) + sumSquare(<span style=color:#bd93f9>2</span>)
-}
-</code></pre></div><p>ローカル関数は基本的にLambdaと似ていますが、他に制限があります。ローカル関数そのものと、ローカル関数を含む関数もまた<code>inline</code>として定義できません。なので関数の呼び出しにかかるコストを避ける方法がありません。</p>
-<p>コンパイルされたローカル関数は<code>Function</code>オブジェクトに変わります。なので前回の記事で述べた「インライン化してないLambda」と同じ問題を持っています。上記のコードをJavaのコードで表すと以下のような形になります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>someMath</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> a<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-   Function1 sumSquare$ <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Function1<span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-      <span style=color:#6272a4>// $FF: 生成されたメソッド
-</span><span style=color:#6272a4></span>      <span style=color:#6272a4>// $FF: ブリッジメソッド
-</span><span style=color:#6272a4></span>      <span style=color:#8be9fd;font-style:italic>public</span> Object <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>Object var1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-         <span style=color:#ff79c6>return</span> Integer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>valueOf</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(((</span>Number<span style=color:#ff79c6>)</span>var1<span style=color:#ff79c6>).</span><span style=color:#50fa7b>intValue</span><span style=color:#ff79c6>()));</span>
-      <span style=color:#ff79c6>}</span>
-
-      <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> b<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-         <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>(</span>a <span style=color:#ff79c6>+</span> b<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>*</span> <span style=color:#ff79c6>(</span>a <span style=color:#ff79c6>+</span> b<span style=color:#ff79c6>);</span>
-      <span style=color:#ff79c6>}</span>
-   <span style=color:#ff79c6>};</span>
-   <span style=color:#ff79c6>return</span> sumSquare$<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>+</span> sumSquare$<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>2<span style=color:#ff79c6>);</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>ただ、Lambdaと比べ一つ性能が劣化されない点があります。関数のインスタンスが呼び出し元からわかるので、ジェネリックなインタフェースを使わず、匿名クラスになりメソッドが直接呼び出されます。これは外の関数からローカル関数を呼び出す際に、<code>casting</code>や<code>boxing</code>が発生しないということを意味します。実際のBytecodeを見ると以下の通りです。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text>ALOAD 1
-ICONST_1
-INVOKEVIRTUAL be/myapplication/MyClassKt$someMath$1.invoke (I)I
-ALOAD 1
-ICONST_2
-INVOKEVIRTUAL be/myapplication/MyClassKt$someMath$1.invoke (I)I
-IADD
-IRETURN
-</code></pre></div><p>ここでメソッドが2回呼び出されていますが、メソッドの引数も戻り値も<code>int</code>型になっていて、<code>boxing</code>と<code>unboxing</code>がないのを確認できます。</p>
-<p>ただ、依然としてメソッドが呼び出されるたびに<code>Function</code>オブジェクトのインスタンスを生成していますが、ローカル関数をvalue caputeなしのものに代替することでこの問題は回避できます。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>someMath</span>(a: Int): Int {
-    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sumSquare</span>(a: Int, b: Int) = (a + b) * (a + b)
-
-    <span style=color:#ff79c6>return</span> sumSquare(a, <span style=color:#bd93f9>1</span>) + sumSquare(a, <span style=color:#bd93f9>2</span>)
-}
-</code></pre></div><p>上記のようにすることで、<code>Function</code>オブジェクトのインスタンスは再利用できるようなものになります。こうすることで既存のprivate関数に比べ、ローカル関数のデメリットは追加のクラス（メソッドを含む）を生成するということだけになります。</p>
-<p>ローカル関数はprivate関数の代替として、アウター関数の変数にアクセスできるというメリットがあります。ただこれによって<code>Function</code>オブジェクトを生成するというコストがかかりますので、non-capturingにする工夫が必要です。</p>
-<h2 id=null安全性>Null安全性</h2>
-<p>Kotlinの最も良い機能の一つは明視的にnullになり得る型とそうでない型を区別できるということです。これによってコンパイラがランタイムで予期せぬ<code>NullPointerException</code>を投げるのを防止できます。</p>
-<h3 id=non-nullパラメータのランタイムでのチェック>Non-nullパラメータのランタイムでのチェック</h3>
-<p>例えば以下のような関数があるとします。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sayHello</span>(who: String) {
-    println(<span style=color:#f1fa8c>&#34;Hello </span><span style=color:#f1fa8c>$who</span><span style=color:#f1fa8c>&#34;</span>)
-}
-</code></pre></div><p>これはJavaのコードで以下のようになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>sayHello</span><span style=color:#ff79c6>(</span>@NotNull String who<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-   Intrinsics<span style=color:#ff79c6>.</span><span style=color:#50fa7b>checkParameterIsNotNull</span><span style=color:#ff79c6>(</span>who<span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;who&#34;</span><span style=color:#ff79c6>);</span>
-   String var1 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;Hello &#34;</span> <span style=color:#ff79c6>+</span> who<span style=color:#ff79c6>;</span>
-   System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>var1<span style=color:#ff79c6>);</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p><code>@NotNull</code>アノテーションが追加され、Java側にnullが渡されてはいけないということを知らせています。</p>
-<p>しかし、アノテーションは呼び出し側にnull safetyを強制するものではありません。なのでstaticメソッドを呼び出してパラメータをもう一度確認しています。この関数は<code>IllegalArgumentException</code>を投げて呼び出し元の修正を簡単にします。</p>
-<p>publicな関数には常にnon-nullなパラメータに対して<code>Intrinsics.checkParameterIsNotNull()</code>でのチェックがが追加されますが、privateな関数に対しては追加されません。なぜなら、Kotlinクラスはnull safeであることをコンパイラが保証するからです。</p>
-<p>このNullチェックによるパフォーマンスへの影響は無視しても良いほどでテストにも有用ですが、ビルド時にもっと時間がかかる原因になります。これに対してはコンパイラのオプションに<code>-Xno-param-assertions</code>を追加するか、<a class=link href=https://www.guardsquare.com/proguard target=_blank rel=noopener>ProGuard</a>のルールに以下の設定を追加することでランタイムNullチェックをなくすことができます。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#ff79c6>-</span>assumenosideeffects <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>kotlin</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>jvm</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>internal</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>Intrinsics</span> <span style=color:#ff79c6>{</span>
-    <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>checkParameterIsNotNull</span><span style=color:#ff79c6>(</span>java<span style=color:#ff79c6>.</span><span style=color:#50fa7b>lang</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>Object</span><span style=color:#ff79c6>,</span> java<span style=color:#ff79c6>.</span><span style=color:#50fa7b>lang</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>String</span><span style=color:#ff79c6>);</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>ただ上記のルールを追加する場合、AndroidのProGuardのOptimization設定が有効になっているかのチェックがまず必要です。この設定はデフォルトでは無効になっています。</p>
-<h3 id=nullable-primitive型>Nullable primitive型</h3>
-<p>まず先に覚えておくべきことは、nullableで宣言したprimitive型は常にJavaの<code>int</code>や<code>float</code>などの代わりに<code>Integer</code>、<code>Float</code>といった<code>boxed reference</code>型が使われるので追加のコストが発生するということです。</p>
-<p><a class=link href=http://docs.oracle.com/javase/8/docs/technotes/guides/language/autoboxing.html target=_blank rel=noopener>autoboxing</a>とnull-safetyを無視するのでJavaでは<code>Integer</code>でも<code>int</code>でもコードはあまり変わらないJavaに対して、Kotlinだとnullableに対して安全なコードを書くように強制しているので、non-nullの方を使った方が良いというのが明確にわかります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(a: Int, b: Int): Int {
-    <span style=color:#ff79c6>return</span> a + b
-}
-
-<span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(a: Int?, b: Int?): Int {
-    <span style=color:#ff79c6>return</span> (a <span style=color:#ff79c6>?:</span> <span style=color:#bd93f9>0</span>) + (b <span style=color:#ff79c6>?:</span> <span style=color:#bd93f9>0</span>)
-}
-</code></pre></div><p>なので、なるべくコードの可読性と性能を考慮してnon-nullの方を選んだ方が良いです。</p>
-<h3 id=配列>配列</h3>
-<p>Kotlinには、以下の3通りの配列があります。</p>
-<ul>
-<li><code>IntArray</code>、<code>FloatArray</code>のようなもの：primitive型の配列。<code>int[]</code>、<code>float[]</code>のような型にコンパイルされる。</li>
-<li><code>Array&lt;T></code>：non-nullオブジェクトの型が指定された配列。primitiveに対して<code>boxing</code>が起こりえる。</li>
-<li><code>Array&lt;T?></code>：nullableオブジェクトの型が指定された配列。明確に<code>boxing</code>が起こる。</li>
-</ul>
-<p>もしnon-nullなprimitive型の配列が必要な場合は、なるべく<code>Array&lt;Int></code>の代わりに<code>IntArray</code>を使いましょう。</p>
-<h2 id=varargs>Varargs</h2>
-<p>KotlinではJavaとは書き方が少し違いますが、<a class=link href=https://kotlinlang.org/docs/functions.html#variable-number-of-arguments-varargs target=_blank rel=noopener>可変長引数</a>を定義することができます。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>printDouble</span>(<span style=color:#ff79c6>vararg</span> values: Int) {
-    values.forEach { println(<span style=color:#ff79c6>it</span> * <span style=color:#bd93f9>2</span>) }
-}
-</code></pre></div><p>Javaと同じく、<code>vararg</code>はコンパイルされると指定した型の配列になります。そして上記の関数は以下のように、３つの方法で呼び出すことができます。</p>
-<h3 id=複数のパラメータを渡す>複数のパラメータを渡す</h3>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>printDouble(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
-</code></pre></div><p>Kotlinのコンパイラはこれを新しい配列の生成と初期化に変えます。これはJavaと一緒です。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin>printDouble(new int[]{<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>});
-</code></pre></div><p>これはつまり新しい配列を作るためのオーバヘッドがあるということです。ただJavaと変わらないやり方です。</p>
-<h3 id=配列を渡す>配列を渡す</h3>
-<p>Javaでは配列をそのまま渡すことができますが、Kotlinだとそれができず、<code>spread operator</code>を使う必要があります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> values = intArrayOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
-printDouble(*values)
-</code></pre></div><p>Javaでは配列の参照が<code>as-is</code>として関数に渡され、新しい配列の割り当ては起こりません。しかし、Kotlinの<code>spread operator</code>は以下のようなことをします。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]</span> values <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> <span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]{</span>1<span style=color:#ff79c6>,</span> 2<span style=color:#ff79c6>,</span> 3<span style=color:#ff79c6>};</span>
-printDouble<span style=color:#ff79c6>(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copyOf</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>,</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>));</span>
-</code></pre></div><p>配列のコピーが関数に渡されるので、より安全なコードといえます。呼び出し側には影響なしで、配列を修正できますので。しかしメモリを追加的に消費してしまいます。</p>
-<h3 id=配列と他の引数を混ぜて渡す>配列と他の引数を混ぜて渡す</h3>
-<p><code>spread operator</code>の良い点は、配列と他の引数を混ぜて渡すこともできるということです。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=color:#ff79c6>val</span> values = intArrayOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
-printDouble(<span style=color:#bd93f9>0</span>, *values, <span style=color:#bd93f9>42</span>)
-</code></pre></div><p>この場合はどうコンパイルされるか気になりませんか？結果はかなり面白いです。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]</span> values <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> <span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]{</span>1<span style=color:#ff79c6>,</span> 2<span style=color:#ff79c6>,</span> 3<span style=color:#ff79c6>};</span>
-IntSpreadBuilder var10000 <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> IntSpreadBuilder<span style=color:#ff79c6>(</span>3<span style=color:#ff79c6>);</span>
-var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>);</span>
-var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>addSpread</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>);</span>
-var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>42<span style=color:#ff79c6>);</span>
-printDouble<span style=color:#ff79c6>(</span>var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toArray</span><span style=color:#ff79c6>());</span>
-</code></pre></div><p>配列を新しく生成するだけでなく、一時的なビルダオブジェクトを使って配列の最終的なサイズを計算しています。なので配列を渡す時よりもコストは追加されます。</p>
-<p>なので、呼び出される回数の多くパフォーマンスが重要なコードに対してはなるべく可変長引数より実際の配列をパラメータとして使った方が良いです。</p>
-<h2 id=最後に>最後に</h2>
-<p>いかがでしたか。個人的にprivate関数をよく使うので、よりスコープを制限できるという面でローカル関数を積極的に使いたいと思っていましたが、ここでも隠されたコストがあるというというのは興味深かったです。primitive型についてはJavaがそうだったので、なんとなく<code>boxing</code>が起こるんじゃないかなと思っていたものの、nullableに対してのみそうだというのも面白かったですね。逆に、primitiveのままになるnon-null型に対してはどうやってチェックが走るのだろうという新しい疑問もありました。（例えば<code>int</code>だとデフォルト値の<code>0</code>が常に割り当てられるので）</p>
-<p>あと、配列の場合はJavaでも<code>IntStream</code>、<code>DoubleStream</code>などがあったのでなんとなくすぐ理解ができましたが、まさか<code>varargs</code>で渡したパラメータに対して色々とコストが追加されるとは思わなかったです。そもそもあまり配列を使わないので、可変長引数を使う場面もなかったのですが…よく使わないものほど重要なことを忘れやすそうなので、これは覚えておかないとですね。色々と勉強になりました。</p>
-<p>では、また！</p>
-</section>
-<footer class=article-footer>
+</div></footer></div></header><section class=article-content>
+<p>今回はまたKotlinの隠されたコストに対するポストです。今となってはあまり気にすることはないかも知れませんし（検証は必要そうですが、バージョンアップごとにコンパイラが生成するコードを追うのは大変そうですね…）、極限のチューニングをするよりもマシンスペックを上げた方がよい時代になったとはいうものの、この記事で紹介していることをコーディングの習慣として身につけておくと良いかなと思います。</p><p>前回は高階関数とLambda、そしてcompanion objectに関する記事を紹介しました。今回はローカル関数、Null安定性、Varargsに隠されたKotlinのコストについて述べます。この記事は<a class=link href=https://bladecoder.medium.com/exploring-kotlins-hidden-costs-part-2-324a4a50b70 target=_blank rel=noopener>Exploring Kotlin’s hidden costs - Part 2</a>の内容を要約したものです。</p><h2 id=ローカル関数>ローカル関数</h2><p>関数内に定義した関数を「ローカル関数」と言います。これらローカル関数は、アウター関数（ローカル関数が定義された関数）の範囲にアクセスできます。例えば以下だと、<code>sumSquare</code>で<code>someMath</code>のパラメータにアクセスしているのがわかります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>someMath</span>(a: Int): Int {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sumSquare</span>(b: Int) = (a + b) * (a + b)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> sumSquare(<span style=color:#bd93f9>1</span>) + sumSquare(<span style=color:#bd93f9>2</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>ローカル関数は基本的にLambdaと似ていますが、他に制限があります。ローカル関数そのものと、ローカル関数を含む関数もまた<code>inline</code>として定義できません。なので関数の呼び出しにかかるコストを避ける方法がありません。</p><p>コンパイルされたローカル関数は<code>Function</code>オブジェクトに変わります。なので前回の記事で述べた「インライン化してないLambda」と同じ問題を持っています。上記のコードをJavaのコードで表すと以下のような形になります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>someMath</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> a<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>   Function1 sumSquare$ <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> Function1<span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>      <span style=color:#6272a4>// $FF: 生成されたメソッド
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>      <span style=color:#6272a4>// $FF: ブリッジメソッド
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>      <span style=color:#8be9fd;font-style:italic>public</span> Object <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>Object var1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>         <span style=color:#ff79c6>return</span> Integer<span style=color:#ff79c6>.</span><span style=color:#50fa7b>valueOf</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(((</span>Number<span style=color:#ff79c6>)</span>var1<span style=color:#ff79c6>).</span><span style=color:#50fa7b>intValue</span><span style=color:#ff79c6>()));</span>
+</span></span><span style=display:flex><span>      <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>      <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>int</span> <span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span><span style=color:#8be9fd>int</span> b<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>         <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>(</span>a <span style=color:#ff79c6>+</span> b<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>*</span> <span style=color:#ff79c6>(</span>a <span style=color:#ff79c6>+</span> b<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>      <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span>   <span style=color:#ff79c6>};</span>
+</span></span><span style=display:flex><span>   <span style=color:#ff79c6>return</span> sumSquare$<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>1<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>+</span> sumSquare$<span style=color:#ff79c6>.</span><span style=color:#50fa7b>invoke</span><span style=color:#ff79c6>(</span>2<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>ただ、Lambdaと比べ一つ性能が劣化されない点があります。関数のインスタンスが呼び出し元からわかるので、ジェネリックなインタフェースを使わず、匿名クラスになりメソッドが直接呼び出されます。これは外の関数からローカル関数を呼び出す際に、<code>casting</code>や<code>boxing</code>が発生しないということを意味します。実際のBytecodeを見ると以下の通りです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-text data-lang=text><span style=display:flex><span>ALOAD 1
+</span></span><span style=display:flex><span>ICONST_1
+</span></span><span style=display:flex><span>INVOKEVIRTUAL be/myapplication/MyClassKt$someMath$1.invoke (I)I
+</span></span><span style=display:flex><span>ALOAD 1
+</span></span><span style=display:flex><span>ICONST_2
+</span></span><span style=display:flex><span>INVOKEVIRTUAL be/myapplication/MyClassKt$someMath$1.invoke (I)I
+</span></span><span style=display:flex><span>IADD
+</span></span><span style=display:flex><span>IRETURN
+</span></span></code></pre></div><p>ここでメソッドが2回呼び出されていますが、メソッドの引数も戻り値も<code>int</code>型になっていて、<code>boxing</code>と<code>unboxing</code>がないのを確認できます。</p><p>ただ、依然としてメソッドが呼び出されるたびに<code>Function</code>オブジェクトのインスタンスを生成していますが、ローカル関数をvalue caputeなしのものに代替することでこの問題は回避できます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>someMath</span>(a: Int): Int {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sumSquare</span>(a: Int, b: Int) = (a + b) * (a + b)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> sumSquare(a, <span style=color:#bd93f9>1</span>) + sumSquare(a, <span style=color:#bd93f9>2</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>上記のようにすることで、<code>Function</code>オブジェクトのインスタンスは再利用できるようなものになります。こうすることで既存のprivate関数に比べ、ローカル関数のデメリットは追加のクラス（メソッドを含む）を生成するということだけになります。</p><p>ローカル関数はprivate関数の代替として、アウター関数の変数にアクセスできるというメリットがあります。ただこれによって<code>Function</code>オブジェクトを生成するというコストがかかりますので、non-capturingにする工夫が必要です。</p><h2 id=null安全性>Null安全性</h2><p>Kotlinの最も良い機能の一つは明視的にnullになり得る型とそうでない型を区別できるということです。これによってコンパイラがランタイムで予期せぬ<code>NullPointerException</code>を投げるのを防止できます。</p><h3 id=non-nullパラメータのランタイムでのチェック>Non-nullパラメータのランタイムでのチェック</h3><p>例えば以下のような関数があるとします。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>sayHello</span>(who: String) {
+</span></span><span style=display:flex><span>    println(<span style=color:#f1fa8c>&#34;Hello </span><span style=color:#f1fa8c>$who</span><span style=color:#f1fa8c>&#34;</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>これはJavaのコードで以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd;font-style:italic>final</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>sayHello</span><span style=color:#ff79c6>(</span>@NotNull String who<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>   Intrinsics<span style=color:#ff79c6>.</span><span style=color:#50fa7b>checkParameterIsNotNull</span><span style=color:#ff79c6>(</span>who<span style=color:#ff79c6>,</span> <span style=color:#f1fa8c>&#34;who&#34;</span><span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>   String var1 <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;Hello &#34;</span> <span style=color:#ff79c6>+</span> who<span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>   System<span style=color:#ff79c6>.</span><span style=color:#50fa7b>out</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>println</span><span style=color:#ff79c6>(</span>var1<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p><code>@NotNull</code>アノテーションが追加され、Java側にnullが渡されてはいけないということを知らせています。</p><p>しかし、アノテーションは呼び出し側にnull safetyを強制するものではありません。なのでstaticメソッドを呼び出してパラメータをもう一度確認しています。この関数は<code>IllegalArgumentException</code>を投げて呼び出し元の修正を簡単にします。</p><p>publicな関数には常にnon-nullなパラメータに対して<code>Intrinsics.checkParameterIsNotNull()</code>でのチェックがが追加されますが、privateな関数に対しては追加されません。なぜなら、Kotlinクラスはnull safeであることをコンパイラが保証するからです。</p><p>このNullチェックによるパフォーマンスへの影響は無視しても良いほどでテストにも有用ですが、ビルド時にもっと時間がかかる原因になります。これに対してはコンパイラのオプションに<code>-Xno-param-assertions</code>を追加するか、<a class=link href=https://www.guardsquare.com/proguard target=_blank rel=noopener>ProGuard</a>のルールに以下の設定を追加することでランタイムNullチェックをなくすことができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#ff79c6>-</span>assumenosideeffects <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>kotlin</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>jvm</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>internal</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>Intrinsics</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>    <span style=color:#8be9fd;font-style:italic>static</span> <span style=color:#8be9fd>void</span> <span style=color:#50fa7b>checkParameterIsNotNull</span><span style=color:#ff79c6>(</span>java<span style=color:#ff79c6>.</span><span style=color:#50fa7b>lang</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>Object</span><span style=color:#ff79c6>,</span> java<span style=color:#ff79c6>.</span><span style=color:#50fa7b>lang</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>String</span><span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>ただ上記のルールを追加する場合、AndroidのProGuardのOptimization設定が有効になっているかのチェックがまず必要です。この設定はデフォルトでは無効になっています。</p><h3 id=nullable-primitive型>Nullable primitive型</h3><p>まず先に覚えておくべきことは、nullableで宣言したprimitive型は常にJavaの<code>int</code>や<code>float</code>などの代わりに<code>Integer</code>、<code>Float</code>といった<code>boxed reference</code>型が使われるので追加のコストが発生するということです。</p><p><a class=link href=http://docs.oracle.com/javase/8/docs/technotes/guides/language/autoboxing.html target=_blank rel=noopener>autoboxing</a>とnull-safetyを無視するのでJavaでは<code>Integer</code>でも<code>int</code>でもコードはあまり変わらないJavaに対して、Kotlinだとnullableに対して安全なコードを書くように強制しているので、non-nullの方を使った方が良いというのが明確にわかります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(a: Int, b: Int): Int {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> a + b
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>add</span>(a: Int?, b: Int?): Int {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> (a <span style=color:#ff79c6>?:</span> <span style=color:#bd93f9>0</span>) + (b <span style=color:#ff79c6>?:</span> <span style=color:#bd93f9>0</span>)
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>なので、なるべくコードの可読性と性能を考慮してnon-nullの方を選んだ方が良いです。</p><h3 id=配列>配列</h3><p>Kotlinには、以下の3通りの配列があります。</p><ul>
+<li><code>IntArray</code>、<code>FloatArray</code>のようなもの：primitive型の配列。<code>int[]</code>、<code>float[]</code>のような型にコンパイルされる。</li><li><code>Array&lt;T></code>：non-nullオブジェクトの型が指定された配列。primitiveに対して<code>boxing</code>が起こりえる。</li><li><code>Array&lt;T?></code>：nullableオブジェクトの型が指定された配列。明確に<code>boxing</code>が起こる。</li></ul><p>もしnon-nullなprimitive型の配列が必要な場合は、なるべく<code>Array&lt;Int></code>の代わりに<code>IntArray</code>を使いましょう。</p><h2 id=varargs>Varargs</h2><p>KotlinではJavaとは書き方が少し違いますが、<a class=link href=https://kotlinlang.org/docs/functions.html#variable-number-of-arguments-varargs target=_blank rel=noopener>可変長引数</a>を定義することができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>printDouble</span>(<span style=color:#ff79c6>vararg</span> values: Int) {
+</span></span><span style=display:flex><span>    values.forEach { println(<span style=color:#ff79c6>it</span> * <span style=color:#bd93f9>2</span>) }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Javaと同じく、<code>vararg</code>はコンパイルされると指定した型の配列になります。そして上記の関数は以下のように、３つの方法で呼び出すことができます。</p><h3 id=複数のパラメータを渡す>複数のパラメータを渡す</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>printDouble(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
+</span></span></code></pre></div><p>Kotlinのコンパイラはこれを新しい配列の生成と初期化に変えます。これはJavaと一緒です。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>printDouble(new int[]{<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>});
+</span></span></code></pre></div><p>これはつまり新しい配列を作るためのオーバヘッドがあるということです。ただJavaと変わらないやり方です。</p><h3 id=配列を渡す>配列を渡す</h3><p>Javaでは配列をそのまま渡すことができますが、Kotlinだとそれができず、<code>spread operator</code>を使う必要があります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> values = intArrayOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
+</span></span><span style=display:flex><span>printDouble(*values)
+</span></span></code></pre></div><p>Javaでは配列の参照が<code>as-is</code>として関数に渡され、新しい配列の割り当ては起こりません。しかし、Kotlinの<code>spread operator</code>は以下のようなことをします。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]</span> values <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> <span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]{</span>1<span style=color:#ff79c6>,</span> 2<span style=color:#ff79c6>,</span> 3<span style=color:#ff79c6>};</span>
+</span></span><span style=display:flex><span>printDouble<span style=color:#ff79c6>(</span>Arrays<span style=color:#ff79c6>.</span><span style=color:#50fa7b>copyOf</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>,</span> values<span style=color:#ff79c6>.</span><span style=color:#50fa7b>length</span><span style=color:#ff79c6>));</span>
+</span></span></code></pre></div><p>配列のコピーが関数に渡されるので、より安全なコードといえます。呼び出し側には影響なしで、配列を修正できますので。しかしメモリを追加的に消費してしまいます。</p><h3 id=配列と他の引数を混ぜて渡す>配列と他の引数を混ぜて渡す</h3><p><code>spread operator</code>の良い点は、配列と他の引数を混ぜて渡すこともできるということです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> values = intArrayOf(<span style=color:#bd93f9>1</span>, <span style=color:#bd93f9>2</span>, <span style=color:#bd93f9>3</span>)
+</span></span><span style=display:flex><span>printDouble(<span style=color:#bd93f9>0</span>, *values, <span style=color:#bd93f9>42</span>)
+</span></span></code></pre></div><p>この場合はどうコンパイルされるか気になりませんか？結果はかなり面白いです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]</span> values <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> <span style=color:#8be9fd>int</span><span style=color:#ff79c6>[]{</span>1<span style=color:#ff79c6>,</span> 2<span style=color:#ff79c6>,</span> 3<span style=color:#ff79c6>};</span>
+</span></span><span style=display:flex><span>IntSpreadBuilder var10000 <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> IntSpreadBuilder<span style=color:#ff79c6>(</span>3<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>0<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>addSpread</span><span style=color:#ff79c6>(</span>values<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>42<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>printDouble<span style=color:#ff79c6>(</span>var10000<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toArray</span><span style=color:#ff79c6>());</span>
+</span></span></code></pre></div><p>配列を新しく生成するだけでなく、一時的なビルダオブジェクトを使って配列の最終的なサイズを計算しています。なので配列を渡す時よりもコストは追加されます。</p><p>なので、呼び出される回数の多くパフォーマンスが重要なコードに対してはなるべく可変長引数より実際の配列をパラメータとして使った方が良いです。</p><h2 id=最後に>最後に</h2><p>いかがでしたか。個人的にprivate関数をよく使うので、よりスコープを制限できるという面でローカル関数を積極的に使いたいと思っていましたが、ここでも隠されたコストがあるというというのは興味深かったです。primitive型についてはJavaがそうだったので、なんとなく<code>boxing</code>が起こるんじゃないかなと思っていたものの、nullableに対してのみそうだというのも面白かったですね。逆に、primitiveのままになるnon-null型に対してはどうやってチェックが走るのだろうという新しい疑問もありました。（例えば<code>int</code>だとデフォルト値の<code>0</code>が常に割り当てられるので）</p><p>あと、配列の場合はJavaでも<code>IntStream</code>、<code>DoubleStream</code>などがあったのでなんとなくすぐ理解ができましたが、まさか<code>varargs</code>で渡したパラメータに対して色々とコストが追加されるとは思わなかったです。そもそもあまり配列を使わないので、可変長引数を使う場面もなかったのですが…よく使わないものほど重要なことを忘れやすそうなので、これは覚えておかないとですね。色々と勉強になりました。</p><p>では、また！</p></section><footer class=article-footer>
 <section class=article-tags>
 <a href=/tags/kotlin/>kotlin</a>
 <a href=/tags/java/>java</a>
-</section>
-<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+</section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
 <span>Licensed under CC BY-NC-SA 4.0</span>
-</section>
-</footer>
-</article>
-<aside class=related-contents--wrapper>
-<h2 class=section-title>Related contents</h2>
-<div class=related-contents>
+</section></footer></article><aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2><div class=related-contents>
 <div class="flex article-list--tile">
 <article class=has-image>
 <a href=/posts/effective-kotlin/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Effective Kotlinを読む</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Effective Kotlinを読む</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-japanese-era/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinで和暦を使う</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinで和暦を使う</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-hidden-cost-3/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinの隠されたコストーその３</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその３</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-hidden-cost-1/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinの隠されたコストーその１</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinの隠されたコストーその１</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/kotlin-code-in-my-style-3/>
 <div class=article-image>
 <img src=/../../images/kotlin.jpg loading=lazy data-key data-hash=/../../images/kotlin.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Kotlinで書いてみた〜その三〜</h2>
-</div>
-</a>
-</article>
-</div>
-</div>
-</aside>
-<footer class=site-footer>
+</div><div class=article-details>
+<h2 class=article-title>Kotlinで書いてみた〜その三〜</h2></div></a>
+</article></div></div></aside><footer class=site-footer>
 <section class=copyright>
 &copy;
 2019 -
 2022 Korean-man in Tokyo
-</section>
-<section class=powerby>
+</section><section class=powerby>
 Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
 Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
-</section>
-</footer>
-<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
-<div class=pswp__bg></div>
-<div class=pswp__scroll-wrap>
+</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div><div class=pswp__scroll-wrap>
 <div class=pswp__container>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-</div>
-<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden">
 <div class=pswp__top-bar>
-<div class=pswp__counter></div>
-<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
 <button class="pswp__button pswp__button--share" title=Share></button>
 <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
 <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
 <div class=pswp__preloader>
 <div class=pswp__preloader__icn>
 <div class=pswp__preloader__cut>
-<div class=pswp__preloader__donut></div>
-</div>
-</div>
-</div>
-</div>
-<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-<div class=pswp__share-tooltip></div>
-</div>
-<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+<div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
 </button>
 <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
 </button>
 <div class=pswp__caption>
-<div class=pswp__caption__center></div>
-</div>
-</div>
-</div>
-</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
-</main>
-<aside class="sidebar right-sidebar sticky">
+<div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main><aside class="sidebar right-sidebar sticky">
 <section class="widget archives">
 <div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
-</div>
-<h2 class="widget-title section-title">Table of contents</h2>
-<div class=widget--toc>
+</div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc>
 <nav id=TableOfContents>
 <ol>
-<li><a href=#ローカル関数>ローカル関数</a></li>
-<li><a href=#null安全性>Null安全性</a>
+<li><a href=#ローカル関数>ローカル関数</a></li><li><a href=#null安全性>Null安全性</a>
 <ol>
-<li><a href=#non-nullパラメータのランタイムでのチェック>Non-nullパラメータのランタイムでのチェック</a></li>
-<li><a href=#nullable-primitive型>Nullable primitive型</a></li>
-<li><a href=#配列>配列</a></li>
-</ol>
-</li>
-<li><a href=#varargs>Varargs</a>
+<li><a href=#non-nullパラメータのランタイムでのチェック>Non-nullパラメータのランタイムでのチェック</a></li><li><a href=#nullable-primitive型>Nullable primitive型</a></li><li><a href=#配列>配列</a></li></ol></li><li><a href=#varargs>Varargs</a>
 <ol>
-<li><a href=#複数のパラメータを渡す>複数のパラメータを渡す</a></li>
-<li><a href=#配列を渡す>配列を渡す</a></li>
-<li><a href=#配列と他の引数を混ぜて渡す>配列と他の引数を混ぜて渡す</a></li>
-</ol>
-</li>
-<li><a href=#最後に>最後に</a></li>
-</ol>
-</nav>
-</div>
-</section>
-</aside>
-</div>
-<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
-<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
-</body>
-</html>
+<li><a href=#複数のパラメータを渡す>複数のパラメータを渡す</a></li><li><a href=#配列を渡す>配列を渡す</a></li><li><a href=#配列と他の引数を混ぜて渡す>配列と他の引数を混ぜて渡す</a></li></ol></li><li><a href=#最後に>最後に</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script>
+</body></html>

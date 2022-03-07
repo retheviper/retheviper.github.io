@@ -1,7 +1,6 @@
 <!doctype html><html lang=en-us>
 <head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="前回のポストで、BuilderパターンとともにLombokを紹介しました。Beanだけでなく、Immutableなクラス1やBuilderを"><title>Lombokのバグにあった話</title>
-<link rel=canonical href=https://retheviper.github.io/posts/java-lombok-annotation-bug/>
+<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="前回のポストで、BuilderパターンとともにLombokを紹介しました。Beanだけでなく、Immutableなクラス1やBuilderを"><title>Lombokのバグにあった話</title><link rel=canonical href=https://retheviper.github.io/posts/java-lombok-annotation-bug/>
 <link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="Lombokのバグにあった話">
 <meta property="og:description" content="前回のポストで、BuilderパターンとともにLombokを紹介しました。Beanだけでなく、Immutableなクラス1やBuilderを">
 <meta property="og:url" content="https://retheviper.github.io/posts/java-lombok-annotation-bug/">
@@ -27,249 +26,153 @@
 <meta name=msapplication-TileColor content="#ffffff">
 <meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
 <meta name=theme-color content="#ffffff">
-<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(a,e,f,g,b,c,d){a.GoogleAnalyticsObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=1,c.src=g,d.parentNode.insertBefore(c,d)}(window,document,'script','https://www.google-analytics.com/analytics.js','ga'),ga('create','UA-139986442-1','auto'),ga('send','pageview'))</script>
-</head>
-<body class="article-page has-toc">
-<script>(function(){const a='StackColorScheme';localStorage.getItem(a)||localStorage.setItem(a,"auto")})()</script><script>(function(){const b='StackColorScheme',a=localStorage.getItem(b),c=window.matchMedia('(prefers-color-scheme: dark)').matches===!0;a=='dark'||a==='auto'&&c?document.documentElement.dataset.scheme='dark':document.documentElement.dataset.scheme='light'})()</script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script>
+</head><body class="article-page has-toc">
+<script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script>
 <div class="container main-container flex
 extended">
 <div id=article-toolbar>
 <a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
 <span>Back</span>
 </a>
-</div>
-<main class="main full-width">
+</div><main class="main full-width">
 <article class="has-image main-article">
 <header class=article-header>
 <div class=article-image>
 <a href=/posts/java-lombok-annotation-bug/>
 <img src=/../../images/java.jpg loading=lazy alt="Featured image of post Lombokのバグにあった話">
 </a>
-</div>
-<div class=article-details>
+</div><div class=article-details>
 <header class=article-category>
 <a href=/categories/java/ style=background-color:#2a9d8f;color:#fff>
 java
 </a>
-</header>
-<h2 class=article-title>
+</header><h2 class=article-title>
 <a href=/posts/java-lombok-annotation-bug/>Lombokのバグにあった話</a>
-</h2>
-<footer class=article-time>
+</h2><footer class=article-time>
 <div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>Aug 12, 2019</time>
-</div>
-<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+</div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
 <time class=article-time--reading>
 6 minute read
 </time>
-</div>
-</footer>
-</div>
-</header>
-<section class=article-content>
-<p><a class=link href=../java-design-pattern-builder>前回のポスト</a>で、Builderパターンとともに<code>Lombok</code>を紹介しました。Beanだけでなく、Immutableなクラス<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>やBuilderを作れるなど便利な機能が集まっていて、さらにアノテーションで様々なオプションが指定できたり(フィールドのアクセスレベルを指定できるなど)、必要なメソッドは追記しても良いなど使い道が多いですね。ただ、今回はそのLombokを使いながらバグらしき現象を発見したのでポストします。</p>
-<h2 id=バグの発生したところ>バグの発生したところ</h2>
-<p>どこでバグが発生したかを述べる前に、まずどんなLombokのアノテーションを使っていて、それらがそれぞれどんな機能をしているかを紹介したいと思います。なぜなら今回の場合は二つ以上のLombokアノテーションを組み合わせて使っていて、ほかにも自分と同じような組み合わせでLombokを使って同じバグを経験される方がいるかも知れないからです。</p>
-<p>Lombokの<code>@Builder</code>には、<code>(toBuilder=true)</code>のオプションをつけられます。これを使うと、基本的に新しいインスタンスの生成はstaticメソッドを呼ぶ事でできるようになって、すでに存在しているインスタンスから一部の値を変えて違うインスタンスに再生成する事ができます。コードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// @Builderだけを使って新しいインスタンスを生成
-</span><span style=color:#6272a4></span>House house2 <span style=color:#ff79c6>=</span> House<span style=color:#ff79c6>.</span><span style=color:#50fa7b>builder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>type</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;wooden&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
-
-<span style=color:#6272a4>// toBuilderオプションで既存のインスタンスから値を変えて再生成
-</span><span style=color:#6272a4></span>House house3 <span style=color:#ff79c6>=</span> house2<span style=color:#ff79c6>.</span><span style=color:#50fa7b>tobuilder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>type</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;block&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
-</code></pre></div><p>そしてBuilderを使いながらも、元のクラスのフィールドの中でBuilderにデフォルト値として渡したいものもあります。つまり、Nullにしたくない場合ですね。自分の場合は、Listでした。インスタンスが生成される場合にはとにかくListを初期化して、Builderを使ってListそのものを代入したり、<code>addList()</code>のようなメソッドを作って個別の要素を追加できるようにしたかったです。</p>
-<p>これを実現するためには、元のクラスでListを初期化して、その状態でBuilderに渡す必要はありました。Lombokのアノテーションではフィールドに<code>@Builder.Default</code>をつけることでできるようになります。そしてBuilderのアノテーションでは生成されない、<code>addList()</code>的なメソッドだけを実装することですね。コードで表現すると以下のようになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java>@Builder<span style=color:#ff79c6>(</span>toBuilder<span style=color:#ff79c6>=</span><span style=color:#ff79c6>true</span><span style=color:#ff79c6>)</span>
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Wallet</span> <span style=color:#ff79c6>{</span>
-
-    <span style=color:#6272a4>// Builderでインスタンスが生成されるときはNullにしたくない
-</span><span style=color:#6272a4></span>    @Builder.Default
-    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> cards <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span> 
-
-    <span style=color:#6272a4>// カスタムメソッドをBuilderに追加するための宣言
-</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>WalletBuilder</span> <span style=color:#ff79c6>{</span>
-
-        <span style=color:#6272a4>// 元のBuilderではListそのものを代入する方法しかないので、個別要素を追加できるメソッドを書く
-</span><span style=color:#6272a4></span>        <span style=color:#8be9fd;font-style:italic>public</span> WalletBuilder <span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span>String card<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
-            <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>card<span style=color:#ff79c6>);</span>
-            <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>;</span>
-        <span style=color:#ff79c6>}</span>
-    <span style=color:#ff79c6>}</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>こうした実装で期待していた動きは以下のようなものでした。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// インスタンスを生成しながらListにAddする
-</span><span style=color:#6272a4></span>Wallet myWallet <span style=color:#ff79c6>=</span> Wallet<span style=color:#ff79c6>.</span><span style=color:#50fa7b>builder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Apple Card&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
-
-<span style=color:#6272a4>// 既存のインスタンスにAddする
-</span><span style=color:#6272a4></span>Wallet newWallet <span style=color:#ff79c6>=</span> myWallet<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toBuilder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;American Express Card&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
-</code></pre></div><p>しかし、実際テストをしてみるとこの二つのアノテーションによりバグが発生したのです。</p>
-<h2 id=それでどんなバグが>それでどんなバグが？</h2>
-<p>既存のインスタンス(Listの操作を一切していない)では<code>add</code>が思い通りになったのですが、インスタンスを生成すると同時に<code>add</code>した場合はNPE<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>が発生していました。場所を調べてみると<code>this.cards.add(card);</code>のところで例外が発生していたので、生成されてないオブジェクトに要素を追加しようとしていたとのことですね。つまり、Listがちゃんと初期化されてないという事です。</p>
-<p>少し調べてみると、<a class=link href=https://github.com/rzwitserloot/lombok/issues/1347 target=_blank rel=noopener>Githubでのイシュー</a>がありました。2017年に書かれたもので今となってはずいぶん古い感じもしましたが、読んでみると今の自分が経験している現象と似ていましたね。しかも、Lombokの<code>1.18.2</code>バージョンで解消されたという話もありましたが、今の自分が使っているバージョンは<code>1.18.8</code>でした。解消されているはずがちゃんと想定通りならなかったのか、バージョンアップにより再発したのかわかりませんが、ともかく同じ現象が起きていましたね。</p>
-<h2 id=解決策>解決策</h2>
-<p>それではどう解決したらいいか？他にも方法があるのかも知れませんが、自分の場合は<code>toBuilder=true</code>と<code>@Builder.Default</code>の両方を使わない事で解決できました。Builderにちゃんとフィールドが渡らない時点で後者は意味がなくなりました。そして<code>toBuilder</code>の場合も、二つのメソッドが追加されるだけなのでそれを手書きで確実に値を渡せるようにしました。上で提示した<code>Wallet</code>クラスをこのやり方で直すと、以下のようなコードになります。</p>
-<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=color:#6272a4>// toBuilderオプションを使わない
-</span><span style=color:#6272a4></span>@Builder
-<span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Wallet</span> <span style=color:#ff79c6>{</span>
-
-    <span style=color:#6272a4>// @Builder.Defaultを使わない
-</span><span style=color:#6272a4></span>    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> cards <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
-
-    <span style=color:#6272a4>// toBuilderメソッドも手書きする
-</span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> WalletBuilder <span style=color:#50fa7b>toBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
-        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> WalletBuilder<span style=color:#ff79c6>().</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>);</span>
-    <span style=color:#ff79c6>}</span>
-<span style=color:#ff79c6>}</span>
-</code></pre></div><p>これで元の想定通り、インスタンスを生成する時もちゃんと初期化されたListが渡るようになりました。めでたしめでたし。</p>
-<h2 id=教訓>教訓？</h2>
-<p>ライブラリーを使ってコードの量を減らし、自動化することは生産性の向上という面では大事な事ではありますが、人間の書いたコードはどこでバグが発生するかわからないので(想定していない使い方をする場合もありますし)、たまには手間がかかっても確実なコードを書くのが安全な場合もありますね。特にこの場合、アノテーションを諦めずコードを直そうとしていたらいつまでたってもバグは回避できなかったのかも知れません。そういう意味で、よい勉強になったと思える事件ではなかったのだろうかと思います。</p>
-<p>もしこのポストを読まれる方の中、私と同じような実装を考えている方がいたら、こんなこともあるんだなと参考できるようなことになっていると嬉しいです。それではまた会いましょう！</p>
-<section class=footnotes role=doc-endnotes>
+</div></footer></div></header><section class=article-content>
+<p><a class=link href=../java-design-pattern-builder>前回のポスト</a>で、Builderパターンとともに<code>Lombok</code>を紹介しました。Beanだけでなく、Immutableなクラス<sup id=fnref:1><a href=#fn:1 class=footnote-ref role=doc-noteref>1</a></sup>やBuilderを作れるなど便利な機能が集まっていて、さらにアノテーションで様々なオプションが指定できたり(フィールドのアクセスレベルを指定できるなど)、必要なメソッドは追記しても良いなど使い道が多いですね。ただ、今回はそのLombokを使いながらバグらしき現象を発見したのでポストします。</p><h2 id=バグの発生したところ>バグの発生したところ</h2><p>どこでバグが発生したかを述べる前に、まずどんなLombokのアノテーションを使っていて、それらがそれぞれどんな機能をしているかを紹介したいと思います。なぜなら今回の場合は二つ以上のLombokアノテーションを組み合わせて使っていて、ほかにも自分と同じような組み合わせでLombokを使って同じバグを経験される方がいるかも知れないからです。</p><p>Lombokの<code>@Builder</code>には、<code>(toBuilder=true)</code>のオプションをつけられます。これを使うと、基本的に新しいインスタンスの生成はstaticメソッドを呼ぶ事でできるようになって、すでに存在しているインスタンスから一部の値を変えて違うインスタンスに再生成する事ができます。コードで表現すると以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#6272a4>// @Builderだけを使って新しいインスタンスを生成
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>House house2 <span style=color:#ff79c6>=</span> House<span style=color:#ff79c6>.</span><span style=color:#50fa7b>builder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>type</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;wooden&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#6272a4>// toBuilderオプションで既存のインスタンスから値を変えて再生成
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>House house3 <span style=color:#ff79c6>=</span> house2<span style=color:#ff79c6>.</span><span style=color:#50fa7b>tobuilder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>type</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;block&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
+</span></span></code></pre></div><p>そしてBuilderを使いながらも、元のクラスのフィールドの中でBuilderにデフォルト値として渡したいものもあります。つまり、Nullにしたくない場合ですね。自分の場合は、Listでした。インスタンスが生成される場合にはとにかくListを初期化して、Builderを使ってListそのものを代入したり、<code>addList()</code>のようなメソッドを作って個別の要素を追加できるようにしたかったです。</p><p>これを実現するためには、元のクラスでListを初期化して、その状態でBuilderに渡す必要はありました。Lombokのアノテーションではフィールドに<code>@Builder.Default</code>をつけることでできるようになります。そしてBuilderのアノテーションでは生成されない、<code>addList()</code>的なメソッドだけを実装することですね。コードで表現すると以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@Builder<span style=color:#ff79c6>(</span>toBuilder<span style=color:#ff79c6>=</span><span style=color:#ff79c6>true</span><span style=color:#ff79c6>)</span>
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Wallet</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// Builderでインスタンスが生成されるときはNullにしたくない
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    @Builder.Default
+</span></span><span style=display:flex><span>    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> cards <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span> 
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// カスタムメソッドをBuilderに追加するための宣言
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>WalletBuilder</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#6272a4>// 元のBuilderではListそのものを代入する方法しかないので、個別要素を追加できるメソッドを書く
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        <span style=color:#8be9fd;font-style:italic>public</span> WalletBuilder <span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span>String card<span style=color:#ff79c6>)</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>            <span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>add</span><span style=color:#ff79c6>(</span>card<span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>            <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>this</span><span style=color:#ff79c6>;</span>
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>こうした実装で期待していた動きは以下のようなものでした。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#6272a4>// インスタンスを生成しながらListにAddする
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>Wallet myWallet <span style=color:#ff79c6>=</span> Wallet<span style=color:#ff79c6>.</span><span style=color:#50fa7b>builder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;Apple Card&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#6272a4>// 既存のインスタンスにAddする
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>Wallet newWallet <span style=color:#ff79c6>=</span> myWallet<span style=color:#ff79c6>.</span><span style=color:#50fa7b>toBuilder</span><span style=color:#ff79c6>().</span><span style=color:#50fa7b>addCard</span><span style=color:#ff79c6>(</span><span style=color:#f1fa8c>&#34;American Express Card&#34;</span><span style=color:#ff79c6>).</span><span style=color:#50fa7b>build</span><span style=color:#ff79c6>();</span>
+</span></span></code></pre></div><p>しかし、実際テストをしてみるとこの二つのアノテーションによりバグが発生したのです。</p><h2 id=それでどんなバグが>それでどんなバグが？</h2><p>既存のインスタンス(Listの操作を一切していない)では<code>add</code>が思い通りになったのですが、インスタンスを生成すると同時に<code>add</code>した場合はNPE<sup id=fnref:2><a href=#fn:2 class=footnote-ref role=doc-noteref>2</a></sup>が発生していました。場所を調べてみると<code>this.cards.add(card);</code>のところで例外が発生していたので、生成されてないオブジェクトに要素を追加しようとしていたとのことですね。つまり、Listがちゃんと初期化されてないという事です。</p><p>少し調べてみると、<a class=link href=https://github.com/rzwitserloot/lombok/issues/1347 target=_blank rel=noopener>Githubでのイシュー</a>がありました。2017年に書かれたもので今となってはずいぶん古い感じもしましたが、読んでみると今の自分が経験している現象と似ていましたね。しかも、Lombokの<code>1.18.2</code>バージョンで解消されたという話もありましたが、今の自分が使っているバージョンは<code>1.18.8</code>でした。解消されているはずがちゃんと想定通りならなかったのか、バージョンアップにより再発したのかわかりませんが、ともかく同じ現象が起きていましたね。</p><h2 id=解決策>解決策</h2><p>それではどう解決したらいいか？他にも方法があるのかも知れませんが、自分の場合は<code>toBuilder=true</code>と<code>@Builder.Default</code>の両方を使わない事で解決できました。Builderにちゃんとフィールドが渡らない時点で後者は意味がなくなりました。そして<code>toBuilder</code>の場合も、二つのメソッドが追加されるだけなのでそれを手書きで確実に値を渡せるようにしました。上で提示した<code>Wallet</code>クラスをこのやり方で直すと、以下のようなコードになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#6272a4>// toBuilderオプションを使わない
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>@Builder
+</span></span><span style=display:flex><span><span style=color:#8be9fd;font-style:italic>public</span> <span style=color:#8be9fd;font-style:italic>class</span> <span style=color:#50fa7b>Wallet</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// @Builder.Defaultを使わない
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    List<span style=color:#ff79c6>&lt;</span>String<span style=color:#ff79c6>&gt;</span> cards <span style=color:#ff79c6>=</span> <span style=color:#ff79c6>new</span> ArrayList<span style=color:#ff79c6>&lt;&gt;();</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#6272a4>// toBuilderメソッドも手書きする
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#8be9fd;font-style:italic>public</span> WalletBuilder <span style=color:#50fa7b>toBuilder</span><span style=color:#ff79c6>()</span> <span style=color:#ff79c6>{</span>
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> <span style=color:#ff79c6>new</span> WalletBuilder<span style=color:#ff79c6>().</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>(</span><span style=color:#ff79c6>this</span><span style=color:#ff79c6>.</span><span style=color:#50fa7b>cards</span><span style=color:#ff79c6>);</span>
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
+</span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
+</span></span></code></pre></div><p>これで元の想定通り、インスタンスを生成する時もちゃんと初期化されたListが渡るようになりました。めでたしめでたし。</p><h2 id=教訓>教訓？</h2><p>ライブラリーを使ってコードの量を減らし、自動化することは生産性の向上という面では大事な事ではありますが、人間の書いたコードはどこでバグが発生するかわからないので(想定していない使い方をする場合もありますし)、たまには手間がかかっても確実なコードを書くのが安全な場合もありますね。特にこの場合、アノテーションを諦めずコードを直そうとしていたらいつまでたってもバグは回避できなかったのかも知れません。そういう意味で、よい勉強になったと思える事件ではなかったのだろうかと思います。</p><p>もしこのポストを読まれる方の中、私と同じような実装を考えている方がいたら、こんなこともあるんだなと参考できるようなことになっていると嬉しいです。それではまた会いましょう！</p><section class=footnotes role=doc-endnotes>
 <hr>
 <ol>
 <li id=fn:1 role=doc-endnote>
-<p>一度インスタンスを生成すると、途中で値を変える事が出来ないクラス。Stringの場合がそうです。値を代入すると、メモリーに載せてある値を捨てて新しく生成します。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-<li id=fn:2 role=doc-endnote>
-<p>Null Pointer Exception、ヌルポとも呼ぶ例外です。参照しようとしているオブジェクトがメモリー上にありませんよーとのことで、Javaで最も遭遇しやすい例外ですね。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p>
-</li>
-</ol>
-</section>
-</section>
-<footer class=article-footer>
+<p>一度インスタンスを生成すると、途中で値を変える事が出来ないクラス。Stringの場合がそうです。値を代入すると、メモリーに載せてある値を捨てて新しく生成します。&#160;<a href=#fnref:1 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li><li id=fn:2 role=doc-endnote>
+<p>Null Pointer Exception、ヌルポとも呼ぶ例外です。参照しようとしているオブジェクトがメモリー上にありませんよーとのことで、Javaで最も遭遇しやすい例外ですね。&#160;<a href=#fnref:2 class=footnote-backref role=doc-backlink>&#8617;&#xfe0e;</a></p></li></ol></section></section><footer class=article-footer>
 <section class=article-tags>
 <a href=/tags/lombok/>lombok</a>
 <a href=/tags/java/>java</a>
-</section>
-<section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+</section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
 <span>Licensed under CC BY-NC-SA 4.0</span>
-</section>
-</footer>
-</article>
-<aside class=related-contents--wrapper>
-<h2 class=section-title>Related contents</h2>
-<div class=related-contents>
+</section></footer></article><aside class=related-contents--wrapper>
+<h2 class=section-title>Related contents</h2><div class=related-contents>
 <div class="flex article-list--tile">
 <article class=has-image>
 <a href=/posts/java-enter-to-17/>
 <div class=article-image>
 <img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>Java 17は何が変わったか</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>Java 17は何が変わったか</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/java-string-concat-and-split/>
 <div class=article-image>
 <img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>今更な文字列操作の話</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>今更な文字列操作の話</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/java-file-copy/>
 <div class=article-image>
 <img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>今更なI/Oの話</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>今更なI/Oの話</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/java-new-methods-from-9-to-11/>
 <div class=article-image>
 <img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>9からの新メソッドめぐり</h2>
-</div>
-</a>
-</article>
-<article class=has-image>
+</div><div class=article-details>
+<h2 class=article-title>9からの新メソッドめぐり</h2></div></a>
+</article><article class=has-image>
 <a href=/posts/java-collection-loop/>
 <div class=article-image>
 <img src=/../../images/java.jpg loading=lazy data-key data-hash=/../../images/java.jpg>
-</div>
-<div class=article-details>
-<h2 class=article-title>今更なループの話</h2>
-</div>
-</a>
-</article>
-</div>
-</div>
-</aside>
-<footer class=site-footer>
+</div><div class=article-details>
+<h2 class=article-title>今更なループの話</h2></div></a>
+</article></div></div></aside><footer class=site-footer>
 <section class=copyright>
 &copy;
 2019 -
 2022 Korean-man in Tokyo
-</section>
-<section class=powerby>
+</section><section class=powerby>
 Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
 Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
-</section>
-</footer>
-<div class=pswp tabindex=-1 role=dialog aria-hidden=true>
-<div class=pswp__bg></div>
-<div class=pswp__scroll-wrap>
+</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true>
+<div class=pswp__bg></div><div class=pswp__scroll-wrap>
 <div class=pswp__container>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-<div class=pswp__item></div>
-</div>
-<div class="pswp__ui pswp__ui--hidden">
+<div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden">
 <div class=pswp__top-bar>
-<div class=pswp__counter></div>
-<button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
 <button class="pswp__button pswp__button--share" title=Share></button>
 <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
 <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
 <div class=pswp__preloader>
 <div class=pswp__preloader__icn>
 <div class=pswp__preloader__cut>
-<div class=pswp__preloader__donut></div>
-</div>
-</div>
-</div>
-</div>
-<div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-<div class=pswp__share-tooltip></div>
-</div>
-<button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+<div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+<div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
 </button>
 <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
 </button>
 <div class=pswp__caption>
-<div class=pswp__caption__center></div>
-</div>
-</div>
-</div>
-</div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
-</main>
-<aside class="sidebar right-sidebar sticky">
+<div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
+</main><aside class="sidebar right-sidebar sticky">
 <section class="widget archives">
 <div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
-</div>
-<h2 class="widget-title section-title">Table of contents</h2>
-<div class=widget--toc>
+</div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc>
 <nav id=TableOfContents>
 <ol>
-<li><a href=#バグの発生したところ>バグの発生したところ</a></li>
-<li><a href=#それでどんなバグが>それでどんなバグが？</a></li>
-<li><a href=#解決策>解決策</a></li>
-<li><a href=#教訓>教訓？</a></li>
-</ol>
-</nav>
-</div>
-</section>
-</aside>
-</div>
-<script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
-<script>(function(){const a=document.createElement('link');a.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",a.type="text/css",a.rel="stylesheet",document.head.appendChild(a)})()</script>
-</body>
-</html>
+<li><a href=#バグの発生したところ>バグの発生したところ</a></li><li><a href=#それでどんなバグが>それでどんなバグが？</a></li><li><a href=#解決策>解決策</a></li><li><a href=#教訓>教訓？</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script>
+</body></html>
