@@ -57,12 +57,12 @@ class Student {
 
 ```kotlin
 // scholarship module
-fun Student.qualifiesForScholarship(): Boolean{
+fun Student.qualifiesForScholarship(): Boolean {
     /*...*/
 }
 
 // accreditations module
-fun Student.calculatePointsFromPassedCourses(): Boolean{
+fun Student.calculatePointsFromPassedCourses(): Boolean {
     /*...*/
 }
 ```
@@ -267,7 +267,7 @@ factory functionは大体以下の規則を持って命名されるという説�
 
 ##### from
 
-一つのパラメータを渡し、タイプを変える時
+一つのパラメータを渡し、タイプを変える時（自分自身のインスタンスを返す）
 
 ```kotlin
 val date: Date = Date.from(instant)
@@ -275,7 +275,7 @@ val date: Date = Date.from(instant)
 
 ##### of
 
-複数のパタメータを渡し、それを束ねタイプにするとき
+複数のパタメータを渡し、それを束ねたタイプに変換するとき
 
 ```kotlin
 val faceCards: Set<Rank> = EnumSet.of(JACK, QUEEN, KING)
@@ -283,7 +283,7 @@ val faceCards: Set<Rank> = EnumSet.of(JACK, QUEEN, KING)
 
 ##### valueOf
 
-`of`の違う形
+`of`の冗長な形
 
 ```kotlin
 val prime: BigInteger = BigInteger.valueOf(Integer.MAX_VALUE)
@@ -330,7 +330,7 @@ interface Tool {
     companion object { /*...*/ }
 }
 
-fun Tool.Companion.createBigTool( /*...*/ ): BigTool{
+fun Tool.Companion.createBigTool( /*...*/ ): BigTool {
     //...
 }
 ```
@@ -411,7 +411,7 @@ data class Student(
     val surname: String
 )
 
-class StudentsFactory{
+class StudentsFactory {
     var nextId = 0
     fun next(name: String, surname: String) =
         Student(nextId++, name, surname)
