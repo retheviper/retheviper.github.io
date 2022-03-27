@@ -1,63 +1,5 @@
-<!doctype html><html lang=en-us>
-<head><meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今"><title>newしたインスタンスの中でBeanを使いたい</title><link rel=canonical href=https://retheviper.github.io/posts/spring-bean-with-yaml/>
-<link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="newしたインスタンスの中でBeanを使いたい">
-<meta property="og:description" content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今">
-<meta property="og:url" content="https://retheviper.github.io/posts/spring-bean-with-yaml/">
-<meta property="og:site_name" content="Korean-man in Tokyo">
-<meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="dependency injection"><meta property="article:tag" content="java"><meta property="article:tag" content="spring"><meta property="article:published_time" content="2019-12-22T00:00:00+00:00"><meta property="article:modified_time" content="2019-12-22T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/spring.jpg">
-<meta name=twitter:title content="newしたインスタンスの中でBeanを使いたい">
-<meta name=twitter:description content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今"><meta name=twitter:card content="summary_large_image">
-<meta name=twitter:image content="https://retheviper.github.io/images/spring.jpg">
-<link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png>
-<link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png>
-<link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png>
-<link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png>
-<link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png>
-<link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png>
-<link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png>
-<link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png>
-<link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png>
-<link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png>
-<link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png>
-<link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png>
-<link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png>
-<link rel=manifest href=/favicon/manifest.json>
-<meta name=msapplication-TileColor content="#ffffff">
-<meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png">
-<meta name=theme-color content="#ffffff">
-<script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script>
-</head><body class="article-page has-toc">
-<script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script>
-<div class="container main-container flex
-extended">
-<div id=article-toolbar>
-<a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg>
-<span>Back</span>
-</a>
-</div><main class="main full-width">
-<article class="has-image main-article">
-<header class=article-header>
-<div class=article-image>
-<a href=/posts/spring-bean-with-yaml/>
-<img src=/../../images/spring.jpg loading=lazy alt="Featured image of post newしたインスタンスの中でBeanを使いたい">
-</a>
-</div><div class=article-details>
-<header class=article-category>
-<a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>
-spring
-</a>
-</header><h2 class=article-title>
-<a href=/posts/spring-bean-with-yaml/>newしたインスタンスの中でBeanを使いたい</a>
-</h2><footer class=article-time>
-<div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
-<time class=article-time--published>Dec 22, 2019</time>
-</div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-<time class=article-time--reading>
-8 minute read
-</time>
-</div></footer></div></header><section class=article-content>
-<p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の<a class=link href=../java-yaml-for-configuration>以前のポスト</a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも<code>@Autowired</code>を使って呼び出せるというメリットがあります。</p><p>しかし、そんな便利なDIですが、使い方の難点もあります。例えば、普通にnewして使うインスタンスのなかで<code>@Autowired</code>は使えない問題があるということです。今回もかなりハマっていたことなのですが、Builderでオブジェクトを作成するようにして、使用者が指定してない値はYAMLから取得したBeanを使いたかったです。でもBuilderだと新しいインスタンスを作ってしまうので、Beanを読み込めなくなっていたのでかなりはまりました。</p><p>結果的には違う方法をとると、<code>@Autowired</code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。</p><h2 id=yamlからbeanを作る>YAMLからBeanを作る</h2><p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ff79c6>spring</span>:
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今"><title>newしたインスタンスの中でBeanを使いたい</title><link rel=canonical href=https://retheviper.github.io/posts/spring-bean-with-yaml/><link rel=stylesheet href=/scss/style.min.1b3ac667198cb83edcc9c45e606a6f4dd6910b8ada6b74d7fd988f1b2dfd0c7c.css><meta property="og:title" content="newしたインスタンスの中でBeanを使いたい"><meta property="og:description" content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今"><meta property="og:url" content="https://retheviper.github.io/posts/spring-bean-with-yaml/"><meta property="og:site_name" content="Korean-man in Tokyo"><meta property="og:type" content="article"><meta property="article:section" content="Posts"><meta property="article:tag" content="dependency injection"><meta property="article:tag" content="java"><meta property="article:tag" content="spring"><meta property="article:published_time" content="2019-12-22T00:00:00+00:00"><meta property="article:modified_time" content="2019-12-22T00:00:00+00:00"><meta property="og:image" content="https://retheviper.github.io/images/spring.jpg"><meta name=twitter:title content="newしたインスタンスの中でBeanを使いたい"><meta name=twitter:description content="一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://retheviper.github.io/images/spring.jpg"><link rel=apple-touch-icon sizes=57x57 href=/favicon/apple-icon-57x57.png><link rel=apple-touch-icon sizes=60x60 href=/favicon/apple-icon-60x60.png><link rel=apple-touch-icon sizes=72x72 href=/favicon/apple-icon-72x72.png><link rel=apple-touch-icon sizes=76x76 href=/favicon/apple-icon-76x76.png><link rel=apple-touch-icon sizes=114x114 href=/favicon/apple-icon-114x114.png><link rel=apple-touch-icon sizes=120x120 href=/favicon/apple-icon-120x120.png><link rel=apple-touch-icon sizes=144x144 href=/favicon/apple-icon-144x144.png><link rel=apple-touch-icon sizes=152x152 href=/favicon/apple-icon-152x152.png><link rel=apple-touch-icon sizes=180x180 href=/favicon/apple-icon-180x180.png><link rel=icon type=image/png sizes=192x192 href=/favicon/android-icon-192x192.png><link rel=icon type=image/png sizes=32x32 href=/favicon/favicon-32x32.png><link rel=icon type=image/png sizes=96x96 href=/favicon/favicon-96x96.png><link rel=icon type=image/png sizes=16x16 href=/favicon/favicon-16x16.png><link rel=manifest href=/favicon/manifest.json><meta name=msapplication-TileColor content="#ffffff"><meta name=msapplication-TileImage content="/favicon/ms-icon-144x144.png"><meta name=theme-color content="#ffffff"><script type=application/javascript>var doNotTrack=!1;doNotTrack||(function(e,o,i,a,t,n,s){e.GoogleAnalyticsObject=t,e[t]=e[t]||function(){(e[t].q=e[t].q||[]).push(arguments)},e[t].l=1*new Date,n=o.createElement(i),s=o.getElementsByTagName(i)[0],n.async=1,n.src=a,s.parentNode.insertBefore(n,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-139986442-1","auto"),ga("send","pageview"))</script></head><body class="article-page has-toc"><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex
+extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="15 6 9 12 15 18"/></svg><span>Back</span></a></div><main class="main full-width"><article class="has-image main-article"><header class=article-header><div class=article-image><a href=/posts/spring-bean-with-yaml/><img src=/../../images/spring.jpg loading=lazy alt="Featured image of post newしたインスタンスの中でBeanを使いたい"></a></div><div class=article-details><header class=article-category><a href=/categories/spring/ style=background-color:#2a9d8f;color:#fff>spring</a></header><h2 class=article-title><a href=/posts/spring-bean-with-yaml/>newしたインスタンスの中でBeanを使いたい</a></h2><footer class=article-time><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg><time class=article-time--published>Dec 22, 2019</time></div><div><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg><time class=article-time--reading>8 minute read</time></div></footer></div></header><section class=article-content><p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の<a class=link href=../java-yaml-for-configuration>以前のポスト</a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも<code>@Autowired</code>を使って呼び出せるというメリットがあります。</p><p>しかし、そんな便利なDIですが、使い方の難点もあります。例えば、普通にnewして使うインスタンスのなかで<code>@Autowired</code>は使えない問題があるということです。今回もかなりハマっていたことなのですが、Builderでオブジェクトを作成するようにして、使用者が指定してない値はYAMLから取得したBeanを使いたかったです。でもBuilderだと新しいインスタンスを作ってしまうので、Beanを読み込めなくなっていたのでかなりはまりました。</p><p>結果的には違う方法をとると、<code>@Autowired</code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。</p><h2 id=yamlからbeanを作る>YAMLからBeanを作る</h2><p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ff79c6>spring</span>:
 </span></span><span style=display:flex><span>  <span style=color:#ff79c6>profiles</span>:
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>active</span>: buildingdefault
 </span></span></code></pre></div><p>ここでactiveに記載したものを使って、カスタムYAMLファイルを準備します。ファイル名のプレフィックスとしては<code>application-</code>が入ります。なので今回のファイル名は<code>application-buildingdefault.yml</code>になりますね。</p><p>ファイルを作成して、以下のように項目と値を記載します。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-yaml data-lang=yaml><span style=display:flex><span><span style=color:#ff79c6>settings</span>:
@@ -162,79 +104,13 @@ spring
 </span></span><span style=display:flex><span>        <span style=color:#ff79c6>...</span>
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>}</span>
 </span></span><span style=display:flex><span><span style=color:#ff79c6>}</span>
-</span></span></code></pre></div><p>修正したコードを動かしてみると、BeanのフィールドがNullではなくちゃんとYAMLから読み込んだ値が入っていることを確認できます。</p><h2 id=最後に>最後に</h2><p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。</p></section><footer class=article-footer>
-<section class=article-tags>
-<a href=/tags/dependency-injection/>dependency injection</a>
+</span></span></code></pre></div><p>修正したコードを動かしてみると、BeanのフィールドがNullではなくちゃんとYAMLから読み込んだ値が入っていることを確認できます。</p><h2 id=最後に>最後に</h2><p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。</p></section><footer class=article-footer><section class=article-tags><a href=/tags/dependency-injection/>dependency injection</a>
 <a href=/tags/java/>java</a>
-<a href=/tags/spring/>spring</a>
-</section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
-<span>Licensed under CC BY-NC-SA 4.0</span>
-</section></footer></article><aside class=related-contents--wrapper>
-<h2 class=section-title>Related contents</h2><div class=related-contents>
-<div class="flex article-list--tile">
-<article class=has-image>
-<a href=/posts/spring-dependency-injection/>
-<div class=article-image>
-<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div><div class=article-details>
-<h2 class=article-title>SpringのDIはコンストラクターでしましょう</h2></div></a>
-</article><article class=has-image>
-<a href=/posts/spring-webflux-dividing-router-and-handler/>
-<div class=article-image>
-<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div><div class=article-details>
-<h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2></div></a>
-</article><article class=has-image>
-<a href=/posts/spring-conditional/>
-<div class=article-image>
-<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div><div class=article-details>
-<h2 class=article-title>条件で動作するアノテーションを使う</h2></div></a>
-</article><article class=has-image>
-<a href=/posts/spring-settings-encryption/>
-<div class=article-image>
-<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div><div class=article-details>
-<h2 class=article-title>Jasyptでプロパティを暗号化する</h2></div></a>
-</article><article class=has-image>
-<a href=/posts/spring-switching-service/>
-<div class=article-image>
-<img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg>
-</div><div class=article-details>
-<h2 class=article-title>ServiceのImplクラスをYAMLで選択する</h2></div></a>
-</article></div></div></aside><footer class=site-footer>
-<section class=copyright>
-&copy;
+<a href=/tags/spring/>spring</a></section><section class=article-copyright><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg><span>Licensed under CC BY-NC-SA 4.0</span></section></footer></article><aside class=related-contents--wrapper><h2 class=section-title>Related contents</h2><div class=related-contents><div class="flex article-list--tile"><article class=has-image><a href=/posts/spring-dependency-injection/><div class=article-image><img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg></div><div class=article-details><h2 class=article-title>SpringのDIはコンストラクターでしましょう</h2></div></a></article><article class=has-image><a href=/posts/spring-webflux-dividing-router-and-handler/><div class=article-image><img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg></div><div class=article-details><h2 class=article-title>WebFluxのFunctional Enpointに対する小考察</h2></div></a></article><article class=has-image><a href=/posts/spring-conditional/><div class=article-image><img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg></div><div class=article-details><h2 class=article-title>条件で動作するアノテーションを使う</h2></div></a></article><article class=has-image><a href=/posts/spring-settings-encryption/><div class=article-image><img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg></div><div class=article-details><h2 class=article-title>Jasyptでプロパティを暗号化する</h2></div></a></article><article class=has-image><a href=/posts/spring-switching-service/><div class=article-image><img src=/../../images/spring.jpg loading=lazy data-key data-hash=/../../images/spring.jpg></div><div class=article-details><h2 class=article-title>ServiceのImplクラスをYAMLで選択する</h2></div></a></article></div></div></aside><footer class=site-footer><section class=copyright>&copy;
 2019 -
-2022 Korean-man in Tokyo
-</section><section class=powerby>
-Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> <br>
-Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a>
-</section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true>
-<div class=pswp__bg></div><div class=pswp__scroll-wrap>
-<div class=pswp__container>
-<div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden">
-<div class=pswp__top-bar>
-<div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+2022 Korean-man in Tokyo</section><section class=powerby>Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a><br>Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.7.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a></section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true><div class=pswp__bg></div><div class=pswp__scroll-wrap><div class=pswp__container><div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden"><div class=pswp__top-bar><div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
 <button class="pswp__button pswp__button--share" title=Share></button>
 <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
-<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-<div class=pswp__preloader>
-<div class=pswp__preloader__icn>
-<div class=pswp__preloader__cut>
-<div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-<div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
-</button>
-<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
-</button>
-<div class=pswp__caption>
-<div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous>
-</main><aside class="sidebar right-sidebar sticky">
-<section class="widget archives">
-<div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg>
-</div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc>
-<nav id=TableOfContents>
-<ol>
-<li><a href=#yamlからbeanを作る>YAMLからBeanを作る</a></li><li><a href=#yamlから複数の設定を読み込みたい時>YAMLから複数の設定を読み込みたい時</a></li><li><a href=#builderからbeanを使う失敗の例>BuilderからBeanを使う(失敗の例)</a></li><li><a href=#applicationcontextproviderを作る>ApplicationContextProviderを作る</a></li><li><a href=#builderからbeanを使う成功の例>BuilderからBeanを使う(成功の例)</a></li><li><a href=#最後に>最後に</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
-<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script>
-</body></html>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button><div class=pswp__preloader><div class=pswp__preloader__icn><div class=pswp__preloader__cut><div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button><div class=pswp__caption><div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css integrity="sha256-c0uckgykQ9v5k+IqViZOZKc47Jn7KQil4/MP3ySA3F8=" crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css integrity="sha256-SBLU4vv6CA6lHsZ1XyTdhyjJxCjPif/TRkjnsyGAGnE=" crossorigin=anonymous></main><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentcolor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#yamlからbeanを作る>YAMLからBeanを作る</a></li><li><a href=#yamlから複数の設定を読み込みたい時>YAMLから複数の設定を読み込みたい時</a></li><li><a href=#builderからbeanを使う失敗の例>BuilderからBeanを使う(失敗の例)</a></li><li><a href=#applicationcontextproviderを作る>ApplicationContextProviderを作る</a></li><li><a href=#builderからbeanを使う成功の例>BuilderからBeanを使う(成功の例)</a></li><li><a href=#最後に>最後に</a></li></ol></nav></div></section></aside></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.js defer></script>
+<script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script></body></html>
