@@ -1,1 +1,206 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>dependency injection on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/dependency-injection/</link><description>Recent content in dependency injection on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 22 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/dependency-injection/index.xml" rel="self" type="application/rss+xml"/><item><title>newしたインスタンスの中でBeanを使いたい</title><link>https://retheviper.github.io/posts/spring-bean-with-yaml/</link><pubDate>Sun, 22 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-bean-with-yaml/</guid><description>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の以前のポストのようにできます。しかし、今</description></item><item><title>SpringのDIはコンストラクターでしましょう</title><link>https://retheviper.github.io/posts/spring-dependency-injection/</link><pubDate>Mon, 09 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-dependency-injection/</guid><description>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり@AutowiredによるDI1ではないかと思います。初</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>dependency injection on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/dependency-injection/</link><description>Recent content in dependency injection on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 22 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/dependency-injection/index.xml" rel="self" type="application/rss+xml"/><item><title>newしたインスタンスの中でBeanを使いたい</title><link>https://retheviper.github.io/posts/spring-bean-with-yaml/</link><pubDate>Sun, 22 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-bean-with-yaml/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post newしたインスタンスの中でBeanを使いたい" />&lt;p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の&lt;a class="link" href="../java-yaml-for-configuration" >以前のポスト&lt;/a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも&lt;code>@Autowired&lt;/code>を使って呼び出せるというメリットがあります。&lt;/p>
+&lt;p>しかし、そんな便利なDIですが、使い方の難点もあります。例えば、普通にnewして使うインスタンスのなかで&lt;code>@Autowired&lt;/code>は使えない問題があるということです。今回もかなりハマっていたことなのですが、Builderでオブジェクトを作成するようにして、使用者が指定してない値はYAMLから取得したBeanを使いたかったです。でもBuilderだと新しいインスタンスを作ってしまうので、Beanを読み込めなくなっていたのでかなりはまりました。&lt;/p>
+&lt;p>結果的には違う方法をとると、&lt;code>@Autowired&lt;/code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。&lt;/p>
+&lt;h2 id="yamlからbeanを作る">YAMLからBeanを作る&lt;/h2>
+&lt;p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">spring&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">profiles&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">active&lt;/span>: buildingdefault
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでactiveに記載したものを使って、カスタムYAMLファイルを準備します。ファイル名のプレフィックスとしては&lt;code>application-&lt;/code>が入ります。なので今回のファイル名は&lt;code>application-buildingdefault.yml&lt;/code>になりますね。&lt;/p>
+&lt;p>ファイルを作成して、以下のように項目と値を記載します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">settings&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">material&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;cement&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>作成したYAMLファイルはsrc/main/resourceにおきます。そしてこれからはSpringでYAMLを読み込むためのクラスを作成します。&lt;/p>
+&lt;p>SpringでYAMLを読み込み、Beanを作成する方法は二つがあります。一つ目はまず、フィールドにアノテーションをつけてYAMLの項目と紐づくことです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Getter
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">DefaultSettings&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Value&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;${settings.material}&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String material&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>フィールドに&lt;code>@Value&lt;/code>をつけて、アノテーションの引数としてYAMLの項目名を入力します。こうすることでYAMLから読み込まれた値はString形でBeanに取り込まれます。フィールドは必ずStringである必要はなく、intやdoubleなどのプリミティブ型はもちろん、ENUMにも対応しています。Localeならja_JPなどとYAMLに記載しておくと、ちゃんと取り込まれます。&lt;/p>
+&lt;p>YAMLの値をBeanにするもう一つの方法は、フィールドではなくクラスにアノテーションをつけることです。以下のように&lt;code>@ConfigurationProperties&lt;/code>の引数にprefixを指定すると、指定した項目の配下にあるもの全てがフィールドのマッピング対象となります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Data
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@ConfigurationProperties&lt;span style="color:#ff79c6">(&lt;/span>prefix &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;settings&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">DefaultSettings&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String material&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="yamlから複数の設定を読み込みたい時">YAMLから複数の設定を読み込みたい時&lt;/h2>
+&lt;p>YAMLから設定値を読み込む際に、設定を複数を記載して状況に合わせて使いたい場合もあります。もちろんYAMLでは配列での記載ができますし、Springで読み込む時もこれをListにすることができます。なのでどうやって複数の設定をBeanにするかを説明します。&lt;/p>
+&lt;p>YAMLでは以下のように記載します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">settings&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">preset-name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;default&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">material&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;cement&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">preset-name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;cabin&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">material&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;wood&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでpreset-nameは、実際Javaで設定を使う時にそれぞれの設定セットを区別するためのキー的なものです。なくても値を読み込むには問題がないですが、こうやって名前をつけておくとのちにどれがどれかを分かりやすくなりますね。&lt;/p>
+&lt;p>YAMLの記載が終わったら、それぞれの設定セットに合わせてBeanクラスを作成しておきます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Data
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Material&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String presetName&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String material&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>最後に、YAMLを読み込むクラスを作成します。このクラスにBeanのListをフィールドとして記載すると、Springアプリケーションの起動と同時にこれらの設定が読み込まれることを確認できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Data
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@ConfigurationProperties&lt;span style="color:#ff79c6">(&lt;/span>prefix &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;settings&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">MultiSettings&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> List&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>Material&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> presets&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>のちにこのクラスからListを取得して、presetNameで各設定値を探すだけで簡単に使えるようになります。&lt;/p>
+&lt;h2 id="builderからbeanを使う失敗の例">BuilderからBeanを使う(失敗の例)&lt;/h2>
+&lt;p>今までの設定で、普通のSpringアプリケーション内ではBeanをDIして使うことができるようになります。しかし、今回はDIなしてBeanを取得する方法を説明するためのポストになっていますので、その過程を説明します。&lt;/p>
+&lt;p>まず自分がやりたかったことは、先に述べましたが、Builderの中でYAMLの値を読み込んでいるBeanを使うことでした。ここでYAMLに記載した値はデフォルト値として使われて、必要に応じて一部の項目だけbuild()時に上書きしたいです。まず試して、ダメだったコードは以下のようなものです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Building&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> BuildingBuilder&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// DIができない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> DefaultSettings settings&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String material&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">material&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">settings&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getMaterial&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Builderを使うと、まずBuilderのインスタンスを新しく生成するしかないです。そしてnewしたインスタンスの中では&lt;code>@Autowired&lt;/code>で記載していても、DIがまともにできません。実際上のようなコードを書くと、BeanのフィールドがNullになっていることを確認できます。&lt;/p>
+&lt;p>なのでDIのことは忘れて、newしたインスタンスの中でBeanを取得できる方法をとります。&lt;/p>
+&lt;h2 id="applicationcontextproviderを作る">ApplicationContextProviderを作る&lt;/h2>
+&lt;p>ApplicationContextは、SpringでBeanの生成やオブジェクト間の関係設定など様々な機能を担当するインタフェースです。ここで重要なのは、ApplicationContextがSpringアプリケーションを起動する時予め登録されたBeanを生成して管理するということです。つまり、このインタフェースにアクセスできればBeanを取得できるということになります。&lt;/p>
+&lt;p>ただ、ApplicationContextそのものはあくまでインタフェースであるため、インスタンスを取得するためにはその役割をするクラスを作成する必要があります。以下のコードでインスタンスを取れるようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ApplicationContextProvider&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> ApplicationContextAware &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> ApplicationContext context &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">null&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> ApplicationContext &lt;span style="color:#50fa7b">getApplicationContext&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">context&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">setApplicationContext&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>ApplicationContext context&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> BeansException &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">context&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> context&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>構造は簡単で、フィールドにApplicationContextがあって、それに対するGetterとSetterがあるだけです。これで動くのも不思議ですが、Springアプリケーションが動作すると自動的にApplicationContextのインスタンスがSetterを通じてフィールドにセットされます。ただ、このクラスのインスタンをnewしては使えなくなるのでフィールドとGetterはstaticにしておきます。&lt;/p>
+&lt;h2 id="builderからbeanを使う成功の例">BuilderからBeanを使う(成功の例)&lt;/h2>
+&lt;p>それでは、ApplicationContextのインスタンスを取得できるようになりましたので、Builderを修正します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Building&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> BuildingBuilder&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> DefaultSettings settings&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">settings&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> ApplicationContextProvider&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getApplicationContext&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">getBean&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>DefaultSettings&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>さっき作成したApplicationContextProviderクラスからApplicationContextを取得して、さらにgetBean()を呼び出します。このgetBean()に引数として取得したいBeanのクラスを渡すと、そのBeanのインスタンスを取得することができます。もちろんコンストラクターではなく、フィールドそのものに書くこともできます。そうする場合は以下のようになりますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Building&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> BuildingBuilder&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> DefaultSettings settings &lt;span style="color:#ff79c6">=&lt;/span> ApplicationContextProvider&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getApplicationContext&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">getBean&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>DefaultSettings&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">BuildingBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>修正したコードを動かしてみると、BeanのフィールドがNullではなくちゃんとYAMLから読み込んだ値が入っていることを確認できます。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。&lt;/p></description></item><item><title>SpringのDIはコンストラクターでしましょう</title><link>https://retheviper.github.io/posts/spring-dependency-injection/</link><pubDate>Mon, 09 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-dependency-injection/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post SpringのDIはコンストラクターでしましょう" />&lt;p>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり&lt;code>@Autowired&lt;/code>によるDI&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>ではないかと思います。初めてSpringに接したときはオブジェクトが&lt;code>new&lt;/code>なしでも動くと言うことが何ともいえない不思議なことに見えました。これがデザインパターンの一つであるということを知ってからはますますすごいなぁと思いましたね。やはり良いコードを書くためには、様々な方面での工夫が必要なものですね。&lt;/p>
+&lt;p>とにかく、こうも重要で便利なDIですが、最近Spring Bootを触りながら気になったことがありました。今までは当たり前のように、&lt;code>@Autowired&lt;/code>はフィールドに宣言していましたが、今回の案件ではコンストラクターにつけている場合がありました。なぜ一部はフィールドにつけ、一部はコンストラクターにつけるんだろう？と思いましたね。結果的には全てのアノテーションをコンストラクターにつけることになりましたが、それが特にフィールドにつける場合との違いを理解させたわけではないので、少し調べてみました。&lt;/p>
+&lt;p>結論からいうと、大概の場合に&lt;code>@Autowired&lt;/code>はフィールドよりはコンストラクターにつけた方がいいらしいです。そしてこれを(フィールドやコンストラクターに&lt;code>@Autowired&lt;/code>をつけることを)、それぞれ「フィールドインジェクション」と「コンストラクターインジェクション」と呼ぶらしいです。では、これらをコードを持って説明していきましょう。&lt;/p>
+&lt;h2 id="field-injection">Field Injection&lt;/h2>
+&lt;p>まずインジェクションのために以下のようなコンフィギュレーションクラス&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>を定義したとしましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Mapper&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> ModelMapper &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Mapper mapper &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> ModelMapper&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでは&lt;a class="link" href="http://modelmapper.org/" target="_blank" rel="noopener"
+>ModelMapper&lt;/a>を使ってみます。ModelMapperに関しては、以前のポストにも書きましたが、互いにマッチングするGetter/SetterのあるBean同士のマッピングを自動で行ってくれる便利なライブラリーです。&lt;/p>
+&lt;p>こうしてSpringでBeanを登録し、Autowiredアノテーションをフィールドにつけるサービスクラスの例が以下です。これをフィールドインジェクションと呼びます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ItemServiceImpl&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> ItemService &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> Mapper mapper&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>自分が最初にSpring Frameworkについて学んだ時はこのようなフィールドインジェクトションが一般的でした。しかし、フィールドインジェクションでは致命的な問題があリます。ここでフィールドがNullだった場合もプログラムは動作するということです。クラスの動作に必要な要件が整ってないのにもかかわらず、プログラムが動作してしまうのはバグを呼ぶこととなりますね。なのでフィールドインジェクションはよくないです。&lt;/p>
+&lt;h2 id="setter-injection">Setter Injection&lt;/h2>
+&lt;p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ItemServiceImpl&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> ItemService &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> Mapper mapper&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">setMapper&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Mapper mapper&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">mapper&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> mapper&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Setterによるインジェクションの問題は、フィールドインジェクションと同じです。Setterで必要なオブジェクトが注入されたかどうかと関係なくプログラムは動く可能性がありますね。この問題を解決できるのが、次に紹介するコンストラクターインジェクションです。&lt;/p>
+&lt;h2 id="constructor-injection">Constructor Injection&lt;/h2>
+&lt;p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ItemServiceImpl&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> ItemService &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> Mapper mapper&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">ItemServiceImpl&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Mapper mapper&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">mapper&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> mapper&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コンストラクターによるインジェクションの良い点は、先に述べたような問題が発生する可能性をブロックできるということです。これはSpringというよりJavaの言語仕様の話ですが、コンストラクターで引数の要件が満たされてないクラスはインスタンスを生成できませんね。そしてNullを注入しない限り、NullPointerExceptionは発生しなくなります。&lt;/p>
+&lt;p>また、コンストラクターインジェクションだと、循環参照&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>の問題を事前に防ぐことができるというメリットがあります。フィールドインジェクションやセッターインジェクションでは実際のコードが呼ばれるまでは問題を発見することができませんが、コンストラクターインジェクションで循環参照が発生する場合はSpringアプリケーションを起動する時に警告が出力されます。&lt;/p>
+&lt;p>また、フィールドインジェクションの場合はそのクラスの単体テストができないという問題もあります。Autowiredアノテーションがついているフィールドに対してオブジェクトを注入できる方法がないですので。Setterを使うと一旦注入はできるようになりますが、あえてSetterを使う理由はないですね。&lt;/p>
+&lt;p>コンストラクターインジェクションが良いもう一つの理由は、フィールドをfinal宣言できるということです。フィールドにfinalをつけることでクラス内でオブジェクトが変更されることを防止できるので、より安全になります。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。&lt;/p>
+&lt;p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>Dependency Injection(依存性の注入)。ネット上に詳しい説明が多いので深くは入りませんが、簡単に概念を説明するとオブジェクトを外部から生成してコードに入れることでオブジェクトの依存性をコードから独立させることを意味します。注入されたオブジェクトはコードに依存してないので、どこで呼ばれても同じものとして機能することができます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2" role="doc-endnote">
+&lt;p>Configurationアノテーションをつけると自動的にSpring内で設定クラスとして認識されます。ここでオブジェクトをBeanとして定義すると、DIができるようになります。以前はxmlファイルに記入しておく場合もありました。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:3" role="doc-endnote">
+&lt;p>循環参照とは、複数のオブジェクトが互いを参照していることを意味します。例えばAクラスのインスタンスを生成する時にBを参照することとなっていて、BクラスもAクラスを参照することとなっていると、どちらかのインスタンスを作成する時に互いの参照を繰り返す無限ループに落ちてしまいます。この無限ループの果てはStackOverflowですね。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item></channel></rss>

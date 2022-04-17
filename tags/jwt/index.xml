@@ -1,1 +1,621 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>jwt on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/jwt/</link><description>Recent content in jwt on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 02 Aug 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/jwt/index.xml" rel="self" type="application/rss+xml"/><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>前回、JWTとともにSpring Securityでの実現方法についてポストを書きましたが、JWTを使ってAccess Tokenのみを発行した</description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分か</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>jwt on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/jwt/</link><description>Recent content in jwt on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 02 Aug 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/jwt/index.xml" rel="self" type="application/rss+xml"/><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
+&lt;p>そもそもJWTを使った認証認可は、JWTがISO標準ではあるものの、正解と言った実装方式がないらしいです。なので以下で紹介するAccess Tokenのみの発行に伴う問題と、それを補完するための戦略は概念だけを紹介して行きます。&lt;/p>
+&lt;h2 id="access-token">Access Token&lt;/h2>
+&lt;p>Access Tokenのみを使う場合は、最初の認証以降、サーバでは秘密キーを利用してリクエストに載せられたTokenを確認するため、データベースやストレージなどのI/Oが必要なくなるため高速で処理ができます。ただ、Tokenはリクエストを送るクライアント側が持っているため、強制的にセッションを終了させることができません。なので、ログアウトの処理をするためにはクライアント側からToken情報を削除するしかないですね。&lt;/p>
+&lt;p>Access Tokenを使った認証方式はこういう特徴を持っているため、クライアント側がTokenを持っているため、これをもし第三者に乗っ取られた時はサーバサイドからそれを判断できる術がありません。こういう問題を防ぐため、Tokenを発行する際はあらかじめ期限を設定することで、一定の時間がすぎるとTokenの有効期間が満了するようにして、再利用できなくしています。&lt;/p>
+&lt;h3 id="tokenの期限設定のジレンマ">Tokenの期限設定のジレンマ&lt;/h3>
+&lt;p>Tokenの期限をあらかじめ設定する場合、有効期限をどう設定するかの問題があります。短くした場合は、Tokenを乗っ取られた場合でもすぐにTokenを使えなくなるため安全性を担保できますが、逆にユーザは頻繁にログインし直さないと行けなくなります。逆に長くした場合は、ユーザはログインし直さなくてもサービスを長期間利用できるものの、乗っ取られたTokenも長く使えるようになりますね。&lt;/p>
+&lt;h2 id="refresh-token">Refresh Token&lt;/h2>
+&lt;p>Refresh Tokenは、満了したAccess Tokenの有効期限を更新するための別のTokenです。サーバは認証時にクライアント側にAccess TokenとRefresh Tokenをともに発行します。ここでAccess Tokenの期限は30分くらいの短い期間に設定して、Refresh Tokenは1ヶ月ほどの長い期間に設定します。&lt;/p>
+&lt;p>クライアント側でログイン後に30分がすぎて、Access Tokenの期限が満了した場合にRefresh Tokenでサーバに新しいAccess Tokenの発行を依頼します。サーバはクライアントのリクエストに乗ってあるRefresh Tokenを検証し、問題なければAccess Tokenを再発行します。これでAccess Tokenを乗っ取られたも、すぐに満了し、ユーザはRefresh Tokenを持って有効期限の自動更新ができるので毎回ログインする必要がなくなります。また、サーバサイドでRefresh Tokenを検証するデータを持っているので、もし問題がある場合はRefresh Tokenを満了させることもできます。&lt;/p>
+&lt;p>ただ、Refresh Tokenを使った場合でも完璧では言えません。サーバが検証するためにRefresh Tokenに対応するデータを別のデータベースやストレージに保存する必要があるので、追加的なI/Oが発生し得るという問題はあります。また、Refresh Tokenを用いたAccess Tokenの更新のためにはサーバとクライアント側の両方に機能を追加する必要がありますね。あと、Access Tokenと同様にクライアント側がRefresh Tokenを保存する必要があるのでこれをどう保存するかを考える必要があります。&lt;/p>
+&lt;h2 id="sliding-session">Sliding Session&lt;/h2>
+&lt;p>Sliding Sessionは、セッションを継続して利用しているユーザがいる場合、自動でAccess Tokenを更新してくれる仕組みのことです。リクエストごとに新しいAccess Tokenを発行する方法がありますが、特定のリクエストに限って処理する方法もあります。例えば、ユーザが長い時間を送ると予想されるページ(問い合わせの作成)や、次に何かのアクションが予想されるページ(ショッピングカートにアイテムを追加する)の場合があるでしょう。他には、Access TokenのIAT(トークン発行時間)を確認して新しいAccess Tokenの発行を要請する場合もあるらしいですね。&lt;/p>
+&lt;p>ただ、Sliding SessionでAccess Tokenを更新する場合、そもそもの有効期限が長く設定されていると無限に近くセッションが延長され、ユーザが全くログインしなおさなくてもサービスを利用できることになるので注意が必要です。逆に、ユーザがあまり長い時間の作業を行わない場合はSliding Sessionそのものの必要性がなくなる可能性もあります。&lt;/p>
+&lt;h2 id="refresh-token--sliding-session">Refresh Token + Sliding Session&lt;/h2>
+&lt;p>最後は、Refresh TokenとSliding Sessionを同時に使った方法です。普通のSliding Sessionを適用した方法との違いは、Access TokenではなくRefresh Tokenを更新するということです。Refresh Tokenを更新することにより、Access Tokenを頻繁に更新する必要がなくなりますß。またRefresh Tokenが更新されるためアクセス回数の少ないユーザでも比較的ログインを頻繁にする必要がなくなりますね。Refresh TokenとSliding Sessionのメリットを適切に融合させた戦略と言えます。&lt;/p>
+&lt;p>ただ、この方式でも問題が全くないとは言えません。サーバからRefresh Tokenの有効期限を満了させない限り、ユーザはリソースにアクセスできるので、もしPCやスマホなどの機器が乗っ取られた場合は対応できません。なのでアカウントのパスワードを周期的にリセットさせるか、特定のリソースにアクセスする場合は再び認証させるなどの方法が必要となります。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>認証はWebアプリケーションにとってもっとも重要で、当たり前な機能となっていますが、セキュリティのため強化して行くとユーザの使用性に悪影響が出てしまうという問題を持っているものです。なので色々な方法論があり、さまざまなWebアプリケーションではそれぞれ違う方法を使って脆弱性に対応していますが、どれもメリット・デメリットがあるので正解と言える物はないのかも知れません。&lt;/p>
+&lt;p>また、JWTのPayloadは暗号化されないため(ただのbase64文字列)、JWTを乗っ取られた時にその中身を見れるという問題もあるらしいです。これを補完するために&lt;a class="link" href="https://developer.okta.com/blog/2020/07/23/introducing-jpaseto" target="_blank" rel="noopener"
+>PASETO&lt;/a>という物も提案されているらしいですが、これがまたJWTほど亜補給される稼働かはわからない状態ですね。&lt;/p>
+&lt;p>あと、そもそもの認証方式の問題ですが、量子コンピュータが一般に補給されたら、&lt;a class="link" href="https://www.nttdata.com/jp/ja/data-insight/2018/0611" target="_blank" rel="noopener"
+>従来の方式による暗号の解析はすぐにできる&lt;/a>ようになるとも言われているので、暗号化という考え方そのものが変わる可能性もあるかも知れません。そうなると既存のアプリも全体を作り直さなくてはならないことになるでしょう。&lt;/p>
+&lt;p>セキュリティは難しいものです。暗号化とともに、ユーザが便利に使える設計、戦略を適切に選定するためには色々と工夫が必要と感じます。&lt;/p></description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTによるREST APIのログインを実現する" />&lt;p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。&lt;/p>
+&lt;p>他にもいろいろな方法があるのかも知れませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。&lt;/p>
+&lt;h2 id="jwtとは">JWTとは&lt;/h2>
+&lt;p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準&lt;a class="link" href="https://tools.ietf.org/html/rfc7519" target="_blank" rel="noopener"
+>RFC 7519&lt;/a>です。JWTのデータは署名されているためこの伝達されるデータの送信元の特定や途中でデータが入れ替えされなかったか(改ざんされてないか)の検証などができるので、多くの場合にユーザの認証で使われます。&lt;/p>
+&lt;p>このようにJWTの中には署名や暗号化などに必要なデータは全て含まれているので、サーバサイドではJWTを受け取ることでデータのバリデーションチェックができるなど自己完結性があって、既存のSessionを使った方法とは別にStatelessな方法としてユーザの認証と認可を可能にします。なので今回紹介する、REST APIでのログインのために適している認証方式といえますね。&lt;/p>
+&lt;h2 id="jwtでのログインシナリオ">JWTでのログインシナリオ&lt;/h2>
+&lt;p>まずJWTを使ったログインの場合、クライアントからログインに必要なクレデンシャル(IDやパスワードなど)をサーバに送ると、サーバからはユーザの情報に基づいてJWTを発行して返します。クライアントはこの情報をリクエスト毎に載せてサーバに伝達し、サーバではJWTのバリデーションを行なってからレスポンスを返すようになります。&lt;/p>
+&lt;p>ここでJWTとして作られたJWTをクライアント側に送る時やクライアントがリクエストを送る時、レスポンスやリクエストのHTTP Headerに載せることになります。なぜSessionではなくHeaderに載せるかについては&lt;a class="link" href="../../../05/30/spring-rest-api-how-to-login" >このポスト&lt;/a>を参考にしてください。&lt;/p>
+&lt;p>ログインに成功したあとは、Sessionを使う場合と同じく認証させているかをチェックして各URLへのアクセスを認可するようになりますね。ここはSpring Securityが担当するようになります。&lt;/p>
+&lt;h2 id="jwtとspring-securityによるログイン">JWTとSpring Securityによるログイン&lt;/h2>
+&lt;p>では、以上のシナリオをどう実現できるかを考えてみます。まず、ログイン要請を受けるコントローラとメソッドを用意する必要がありますね。そして、そのコントローラからはサービスクラスから入力されたクレデンシャルを検証してもらいます。検証できたら、その情報を元にJWTのJWTを作る必要がありますね。&lt;/p>
+&lt;h3 id="spring-securityの設定jwtを使う前">Spring Securityの設定(JWTを使う前)&lt;/h3>
+&lt;p>まずはREST APIでの認証認可を簡単にSpring Securityで実装します。Spring Securityそのものだけでもかなり膨大な量を勉強しなければならないのですが、ここではまず、DBに登録されているユーザの情報を取得し、そのユーザのロールによってアクセスできるURLを制限するという機能だけを実現します。(他にも、ログインとはあまり関係のないクラスのコードは省略しています)&lt;/p>
+&lt;h4 id="entityクラス">Entityクラス&lt;/h4>
+&lt;p>まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。&lt;/p>
+&lt;p>以下のコードは、UserDetailsクラスをSpring Data JPA基準のエンティティとして作成した例です。ここからユーザ名(username)とロール(roles)をJWTに載せて認証と認可に使うことにします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Data
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Entity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">User&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> UserDetails &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Id
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @GeneratedValue&lt;span style="color:#ff79c6">(&lt;/span>strategy &lt;span style="color:#ff79c6">=&lt;/span> GenerationType&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">IDENTITY&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">long&lt;/span> id&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ名(一般的にID)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String username&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザアカウントが満了されているかの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> accountNonExpired&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザアカウントがロックされているかの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> accountNonLocked&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザアカウントのクレデンシャルが満了されているかの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> credentialsNonExpired&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザアカウントが活性化されているかの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> enabled&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 認可のためのユーザのロール
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @ElementCollection&lt;span style="color:#ff79c6">(&lt;/span>fetch &lt;span style="color:#ff79c6">=&lt;/span> FetchType&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">EAGER&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> List&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> roles &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> ArrayList&lt;span style="color:#ff79c6">&amp;lt;&amp;gt;();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザの認可情報を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Collection&lt;span style="color:#ff79c6">&amp;lt;?&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> GrantedAuthority&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#50fa7b">getAuthorities&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">roles&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">stream&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">map&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SimpleGrantedAuthority&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">new&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">collect&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Collectors&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">toUnmodifiableList&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="serviceクラス">Serviceクラス&lt;/h4>
+&lt;p>UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための&lt;code>loadUserByUsername&lt;/code>しかないので、これを適切にRepositoryから取得できるように実装します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">UserServiceImpl&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> UserDetailsService &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// UserDetailsを取得できるRepository
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> UserRepository repository&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">UserServiceImpl&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>UserRepository repository&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">repository&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> repository&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 認証後にユーザ情報を取得するためのメソッド
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> UserDetails &lt;span style="color:#50fa7b">loadUserByUsername&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String username&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> UsernameNotFoundException &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">repository&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">findByUsername&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>username&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="configurationクラス">Configurationクラス&lt;/h4>
+&lt;p>認可のためのConfigurationクラスです。ここでは&lt;code>USER&lt;/code>というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを&lt;code>ROLE_USER&lt;/code>として保存するようにしておくと良いです。&lt;/p>
+&lt;p>また、今回作るのはREST APIであり、JWTによる認証と認可を行うことになるので、いくつかのデフォルト設定を変えておきます。例えば&lt;a class="link" href="https://ja.wikipedia.org/wiki/Basic%E8%AA%8D%E8%A8%BC" target="_blank" rel="noopener"
+>Basic Auth&lt;/a>と&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%95%E3%82%A9%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%AA" target="_blank" rel="noopener"
+>CSRF&lt;/a>の設定や、セッション設定などがあります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> WebSecurityConfigurerAdapter &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> AuthenticationManager &lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">configure&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> HttpSecurity httpSecurity&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> httpSecurity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Basic認証を使わない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">httpBasic&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// CSRF設定を使わない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">csrf&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// セッションはStatelessなので使わない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">sessionManagement&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">sessionCreationPolicy&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SessionCreationPolicy&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">STATELESS&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// USERではないとどのURLでもアクセスできない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authorizeRequests&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">anyRequest&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">hasRole&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;USER&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでSpring Securityを使うための必要最低限の準備は終わりました。他にユーザのCRUDのためのServiceやRepositoryは適宜作成してあるという前提として、次に進めましょう。&lt;/p>
+&lt;h3 id="jwtの依存関係の追加">JWTの依存関係の追加&lt;/h3>
+&lt;p>次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。&lt;/p>
+&lt;p>Spring(Java)で使えるJWTのライブラリはいくつかありますが、JWT自体が標準なのでどちらを選んでも基本は同じです。ただ、ライブラリ毎にJWTの仕様にどこまで対応しているのかは違う場合があるので、公式サイトから&lt;a class="link" href="https://jwt.io/#libraries-io" target="_blank" rel="noopener"
+>対応しているライブラリのリスト&lt;/a>を確認してどれを使うかを選びましょう。このポストでは&lt;code>JSON Web Token Support For The JVM&lt;/code>を使った場合での実装方法を紹介します。&lt;/p>
+&lt;p>Mavenの場合は以下のように依存関係を追加します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-xml" data-lang="xml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">&amp;lt;dependency&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;lt;groupId&amp;gt;&lt;/span>io.jsonwebtoken&lt;span style="color:#ff79c6">&amp;lt;/groupId&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;lt;artifactId&amp;gt;&lt;/span>jjwt&lt;span style="color:#ff79c6">&amp;lt;/artifactId&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;lt;version&amp;gt;&lt;/span>0.9.1&lt;span style="color:#ff79c6">&amp;lt;/version&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">&amp;lt;/dependency&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Gradleの場合の場合は以下となります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>dependencies &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> implementation &lt;span style="color:#f1fa8c">&amp;#39;io.jsonwebtoken:jjwt:0.9.1&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="jwtを提供するクラスを作る">JWTを提供するクラスを作る&lt;/h3>
+&lt;p>依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。&lt;/p>
+&lt;h4 id="jwtの仕様">JWTの仕様&lt;/h4>
+&lt;p>JWTを作る前に、まず簡単にJWTがどんな構造を持っているかを見ていきましょう。JWTは&lt;code>Header&lt;/code>、&lt;code>Payload&lt;/code>、&lt;code>Signature&lt;/code>という三つの要素で構成されています。それぞれの要素はBase64の文字列としてエンコードして、つなげることで一つのJWTが構成されます。&lt;/p>
+&lt;h5 id="headerの構成">Headerの構成&lt;/h5>
+&lt;p>Headerではこのトークンがどのようなもので、どのアルゴリズムでエンコードされているかを表す情報を載せるようになります。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>id&lt;/th>
+&lt;th>意味&lt;/th>
+&lt;th>詳細&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>typ&lt;/td>
+&lt;td>Token Type&lt;/td>
+&lt;td>JWTのタイプ(=JWT)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>alg&lt;/td>
+&lt;td>Hashing Algoritym&lt;/td>
+&lt;td>エンコードする時のアルゴリズム&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h5 id="payloadの構成">Payloadの構成&lt;/h5>
+&lt;p>Payloadはnameとvalueのペアで構成された複数の情報単位で構成されている、いわばBodyのようなもので、ここに載せる個々の情報単位たちをClaimと呼びます。今回のログインではこのClaimにユーザのIDとロール、そしてトークンが発行された期間を載せることにします。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>id&lt;/th>
+&lt;th>意味&lt;/th>
+&lt;th>詳細&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>jti&lt;/td>
+&lt;td>JWT ID&lt;/td>
+&lt;td>JWTの識別子&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>sub&lt;/td>
+&lt;td>subject&lt;/td>
+&lt;td>JWTのユニークなキー&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>iss&lt;/td>
+&lt;td>issuer&lt;/td>
+&lt;td>JWTを発行者&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>aud&lt;/td>
+&lt;td>audience&lt;/td>
+&lt;td>JWTの利用者&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>iat&lt;/td>
+&lt;td>issued at&lt;/td>
+&lt;td>JWTが発行された時間&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>nbf&lt;/td>
+&lt;td>not before&lt;/td>
+&lt;td>JWTの開始時間&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>exp&lt;/td>
+&lt;td>expiration time&lt;/td>
+&lt;td>JWTの満了時間&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h5 id="sigunature">Sigunature&lt;/h5>
+&lt;p>SignatureではHeaderとPayloadをエンコードしたあと、更に任意のシークレットキーを持ってエンコードします。これによって、サーバ側ではクライアントが送ってきたJWTをSignatureをデコードしてHeaderとPayloadを取得できるようになります。&lt;/p>
+&lt;p>Header、Payload、Signature順で正しく作成したJWTは、&lt;a class="link" href="https://jwt.io" target="_blank" rel="noopener"
+>JWTの公式サイト&lt;/a>から検証できます。以下のようにJWTの構造と格納しているデータを確認してデバッグができるので、興味のある方はぜひ試してみてください。&lt;/p>
+&lt;p>&lt;figure
+class="gallery-image"
+style="
+flex-grow: 187;
+flex-basis: 449px"
+>
+&lt;a href="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure.png" data-size="2372x1266">
+&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure.png"
+width="2372"
+height="1266"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_huf809874e8a8efce303d1d2bbb99d4ac4_242873_480x0_resize_box_3.png 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_huf809874e8a8efce303d1d2bbb99d4ac4_242873_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="Structure of JWT">
+&lt;/a>
+&lt;figcaption>Structure of JWT&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;h3 id="token-providerクラスの実装">Token Providerクラスの実装&lt;/h3>
+&lt;p>では、JWTがどんな情報により構成されているかがわかったので、必要な情報を載せて実際のJWTを作成するクラスを作りましょう。ここでHeader、Payload、Signatureの全部を埋める必要はなく、最低限の情報だけ使うことにします。&lt;/p>
+&lt;p>まずトークンを作成するメソッドを作ります。ここで作成されるJWTのPayloadに載せるClaimは、ユーザ名とロールに限定します。また、JWTが発行された時間と満了時間を設定して、期間外では使えないようにします。そして最後にカスタムシークレットキーを設定してSignatureを作成することにします。&lt;/p>
+&lt;p>他には、トークンを読み込んでDBのユーザ情報を取得するメソッド、リクエストのHeaderからトークンを取得するメソッド、トークンの有効期間を検証するメソッド、トークンにのせたユーザ名(ID)を取得するメソッドなども作っておきます。(こちらは別途クラスで切っても良さそうな気はします)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">JWTProvider&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Signatureのエンコードに使うシークレットキー
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String TOKEN_SECRET_KEY &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;This is secrect!&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンの有効期間(1時間)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> &lt;span style="color:#8be9fd">long&lt;/span> TOKEN_VAILD_DURATION &lt;span style="color:#ff79c6">=&lt;/span> 1000L &lt;span style="color:#ff79c6">*&lt;/span> 60L &lt;span style="color:#ff79c6">*&lt;/span> 60L&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ情報を取得するためのサービスクラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> UserDetailsService service&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">JWTProvider&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>UserDetailService service&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">service&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> service&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// UserオブジェクトからJWTを作成する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> String &lt;span style="color:#50fa7b">createToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>User user&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Claimとしてユーザ名とロールを載せる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> Claims claims &lt;span style="color:#ff79c6">=&lt;/span> Jwts&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">claims&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">setSubject&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>user&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getId&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> claims&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">put&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;roles&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> user&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getRoles&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンの開始時間と満了時間を決める
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> Date iat &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> Date&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Date exp &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> Date&lt;span style="color:#ff79c6">(&lt;/span>start&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getTime&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> TOKEN_VAILD_DURATION&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// JWTの作成
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">return&lt;/span> Jwts&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">builder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setClaims&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>claims&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setIssuedAt&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>iat&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setExpiration&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>exp&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">signWith&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SignatureAlgorithm&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">HS256&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> TOKEN_SECRET_KEY&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">compact&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンからユーザ情報を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Authentication &lt;span style="color:#50fa7b">getAuthentication&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String token&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> UserDetails userDetails &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">service&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">loadUserByUsername&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getSubject&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>token&lt;span style="color:#ff79c6">));&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> UsernamePasswordAuthenticationToken&lt;span style="color:#ff79c6">(&lt;/span>userDetails&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> userDetails&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getAuthorities&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// リクエストのHeaderからトークンを取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> String &lt;span style="color:#50fa7b">resolveToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> HttpServletRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> request&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getHeader&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;X-AUTH-TOKEN&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンの有効期間を検証する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> &lt;span style="color:#50fa7b">validateToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String token&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> Jws&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>Claims&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> claims &lt;span style="color:#ff79c6">=&lt;/span> Jwts&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">parser&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">setSigningKey&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">secretKey&lt;/span>&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">parseClaimsJws&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>token&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">!&lt;/span>claims&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getBody&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">getExpiration&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">before&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">new&lt;/span> Date&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">catch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>Exception e&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">false&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンからユーザ名を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pubic String &lt;span style="color:#50fa7b">getSubject&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String token&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> Jwts&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">parser&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">setSigningKey&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">secretKey&lt;/span>&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">parseClaimsJws&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>token&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">getBody&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">getSubject&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="カスタムfilterクラスの実装">カスタムFilterクラスの実装&lt;/h3>
+&lt;p>次に、ログインするときにリクエストを検証するためのFilterクラスを作成します。最初ユーザがログインすると、このクラスでは先に作成したJWTProviderを使って、Headerからトークンを取得、有効期間の検証を行った後、問題なければDBからユーザ情報を取得してSpring Securityの認証情報(Authentication)としてセットするようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">JWTAuthenticationFilter&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> GenericFilterBean &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンを検証するためのProvider
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTProvider provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">JWTAuthenticationFilter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>JWTProvider provider&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインに対するフィルタリングを行う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">doFilter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> ServletRequest request&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> ServletResponse response&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> FilterChain filterChain&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> IOException&lt;span style="color:#ff79c6">,&lt;/span> ServletException &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String token &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">resolveToken&lt;/span>&lt;span style="color:#ff79c6">((&lt;/span>HttpServletRequest&lt;span style="color:#ff79c6">)&lt;/span> request&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>token &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#ff79c6">null&lt;/span> &lt;span style="color:#ff79c6">&amp;amp;&amp;amp;&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">validateToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>token&lt;span style="color:#ff79c6">))&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> Authentication auth &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getAuthentication&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>token&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SecurityContextHolder&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getContext&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">setAuthentication&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>auth&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> filterChain&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">doFilter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">,&lt;/span> response&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="spring-securityにjwtでのログイン設定を追加する">Spring SecurityにJWTでのログイン設定を追加する&lt;/h3>
+&lt;p>では、JWTを作成して検証するための準備が終わったので、これからはSpring Securityでこのクラスたちを使って認証と認可を行うための設定をする版ですね。どれが定番だとかという訳ではないですが、どちらも好みに合わせて(もしくは要件に合わせて)使えるのではないかと思い、三つの方法を用意しました。&lt;/p>
+&lt;h4 id="formloginを使う場合">FormLoginを使う場合&lt;/h4>
+&lt;p>Spring SecurityのFormLoginを利用してログインのためのURLと、ログイン後のJWT作成を全て設定しておきたい場合の実装です。クライアント側ではログインのためのクレデンシャルをPOSTのFormデータとして送るようになります。&lt;/p>
+&lt;p>ここではログインを処理するためのURLとクレデンシャルのためのパラメータなどを設定して、ログインに成功したらトークンを作成して返すための&lt;code>AuthenticationSuccessHandler&lt;/code>を設定することになります。&lt;/p>
+&lt;h5 id="authenticationsuccesshandlerの作成">AuthenticationSuccessHandlerの作成&lt;/h5>
+&lt;p>まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">JWTAuthenticationSuccessHandler&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> AuthenticationSuccessHandler &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンを作成するためのProvider
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> JWTProvider provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">JWTAuthenticationSuccessHandler&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>JWTProvider provider&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">onAuthenticationSuccess&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HttpServletResponse response&lt;span style="color:#ff79c6">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Authentication auth&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> IOException&lt;span style="color:#ff79c6">,&lt;/span> ServletException &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// すでにレスポンスで情報を返した場合は何もしない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>response&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">isCommitted&lt;/span>&lt;span style="color:#ff79c6">())&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインに成功したユーザ情報を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> User user &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>User&lt;span style="color:#ff79c6">)&lt;/span> auth&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getPrincipal&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Headerにトークンを作成して載せる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setHeader&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;X-AUTH-TOKEN&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">createToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>user&lt;span style="color:#ff79c6">));&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// HTTP Statusは200 OK
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setStatus&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpStatus&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">OK&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">value&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定">Spring Securityの設定&lt;/h5>
+&lt;p>では、ログインに成功したときのHandlerクラスを作成したので、Spring Securityの設定を変えていきます。必要なのは&lt;code>loginProcessingUrl()&lt;/code>(ログインの処理をするためのPOST通信が行われるURLとHanlderの設定で、ユーザ名のパラメータ名やパスワードのパラメタ名はデフォルトと違う場合にだけ必要となります。そしてFilterはデフォルト設定だと&lt;code>UsernamePasswordAuthenticationFilter&lt;/code>が先に実行されるので、先ほど作成した&lt;code>JWTAuthenticationFilter&lt;/code>を使うための設定をします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> WebSecurityConfigurerAdapter &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインが成功した場合の処理のためのHandler
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTAuthenticationSuccessHandler successHandler&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン以降の認証認可のためのFilter
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>JWTAuthenticationSuccessHandler successHandler&lt;span style="color:#ff79c6">,&lt;/span> JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">successHandler&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> successHandler&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">filter&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> filter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> AuthenticationManager &lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">configure&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> HttpSecurity httpSecurity&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> httpSecurity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">httpBasic&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">csrf&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">sessionManagement&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">sessionCreationPolicy&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SessionCreationPolicy&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">STATELESS&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// formLoginを使う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">formLogin&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// POSTでクレデンシャルをもらい、ログイン処理を行うURL(UserDetailsServiceを使うことになる)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">loginProcessingUrl&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/web/login&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン処理ようのURLには認証認可なしでアクセスできる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">permitAll&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ名のパラメータ(デフォルトはusername)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">usernameParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザパスワードのパラメータ(デフォルトはpassword)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">passwordParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;pass&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインに成功したら実行されるsuccessHandlerの指定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">successHandler&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">successHandler&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authorizeRequests&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">anyRequest&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">hasRole&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;ROLE_USER&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// デフォルトのFilter設定を変える
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">addFilterBefore&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">filter&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> UsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="jsonを使えるfilterを使う場合">JSONを使えるFilterを使う場合&lt;/h4>
+&lt;p>Spring SecurityのFormLoginを使う場合、ログインのためのクレデンシャルはFormデータである必要があります。しかし、REST APIならばデータのやりとりはJSONが基本ですね。なのでクレデンシャルもJSONで送るようにしたいのですが、Spring Securityではそのようなメソッドを提供していません。&lt;/p>
+&lt;p>こういう場合は、カスタムUsernamePasswordAuthenticationFilterクラスを作ってJSONをパースする必要があります。FormLoginを使う場合に比べて少し複雑になりますが、REST APIらしくやってみましょう。FromLoginでの実装ができると、こちらはFilterをもう一つ追加するだけの感覚で実装ができます。&lt;/p>
+&lt;h5 id="jsonusernamepasswordauthenticationfilterの作成">JsonUsernamePasswordAuthenticationFilterの作成&lt;/h5>
+&lt;p>クレデンシャルを確認するSpringのデフォルトのFilterクラスはUsernamePasswordAuthenticationFilterというもので、これを継承したカスタムクラスを作り、そこからJSONをパースして使うようにします。以下の実装は、FormデータとJSONの両方に対応している例です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">JsonUsernamePasswordAuthenticationFilter&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> UsernamePasswordAuthenticationFilter &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Headerからコンテントタイプを取得するための定数
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String CONTENT_TYPE &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Content-Type&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// JSONデータを保存するためのMap
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> Map&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">,&lt;/span> String&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> jsonRequest&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ名を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> String &lt;span style="color:#50fa7b">obtainUsername&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> getParameter&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">,&lt;/span> getUsernameParameter&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// パスワードを取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> String &lt;span style="color:#50fa7b">obtainPassword&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> getParameter&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">,&lt;/span> getPasswordParameter&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// JSONもしくはFormデータのクレデンシャルを取得し、Authenticationとして載せる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Authentication &lt;span style="color:#50fa7b">attemptAuthentication&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">,&lt;/span> HttpServletResponse response&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> AuthenticationException &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>headerContentTypeIsJson&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">))&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ObjectMapper mapper &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> ObjectMapper&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">jsonRequest&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> mapper&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">readValue&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getReader&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">lines&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">collect&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Collectors&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">joining&lt;/span>&lt;span style="color:#ff79c6">()),&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">new&lt;/span> TypeReference&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>Map&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">,&lt;/span> String&lt;span style="color:#ff79c6">&amp;gt;&amp;gt;()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">});&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">catch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>IOException e&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> RuntimeException&lt;span style="color:#ff79c6">(&lt;/span>e&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> String username &lt;span style="color:#ff79c6">=&lt;/span> obtainUsername&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#ff79c6">null&lt;/span> &lt;span style="color:#ff79c6">?&lt;/span> obtainUsername&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> String password &lt;span style="color:#ff79c6">=&lt;/span> obtainPassword&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#ff79c6">null&lt;/span> &lt;span style="color:#ff79c6">?&lt;/span> obtainPassword&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UsernamePasswordAuthenticationToken authRequest &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> UsernamePasswordAuthenticationToken&lt;span style="color:#ff79c6">(&lt;/span>username&lt;span style="color:#ff79c6">,&lt;/span> password&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> setDetails&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">,&lt;/span> authRequest&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getAuthenticationManager&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">authenticate&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>authRequest&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// リクエストからパラメータ(ユーザ名とパスワード)を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String &lt;span style="color:#50fa7b">getParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">,&lt;/span> String parameter&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>headerContentTypeIsJson&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">))&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> jsonRequest&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">get&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>parameter&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> request&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>parameter&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// HeaderからコンテントタイプがJSONかどうかを判定する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd">boolean&lt;/span> &lt;span style="color:#50fa7b">headerContentTypeIsJson&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpServletRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> request&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getHeader&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>CONTENT_TYPE&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">equals&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>MediaType&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">APPLICATION_JSON_VALUE&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="authenticationsuccesshandlerの作成-1">AuthenticationSuccessHandlerの作成&lt;/h5>
+&lt;p>ここはFormLoginの場合と同じです。詳細については&lt;a class="link" href="#AuthenticationSuccessHandler%e3%81%ae%e4%bd%9c%e6%88%90" >こちらを&lt;/a>参考にしてください。&lt;/p>
+&lt;h5 id="spring-securityの設定-1">Spring Securityの設定&lt;/h5>
+&lt;p>ここでは、作成したカスタムUsernamePasswordAuthenticationFilterにFilterProcessUrlと、AuthenticationManager、AuthenticationSuccessHandlerを設定して、デフォルトのフィルタ設定を変えるようになります。この設定ではFormLoginが要らなくなリます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> WebSecurityConfigurerAdapter &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインが成功した場合の処理のためのHandler
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTAuthenticationSuccessHandler successHandler&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン以降の認証認可のためのFilter
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>JWTAuthenticationSuccessHandler successHandler&lt;span style="color:#ff79c6">,&lt;/span> JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">successHandler&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> successHandler&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">filter&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> filter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> AuthenticationManager &lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">configure&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> HttpSecurity httpSecurity&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> httpSecurity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">httpBasic&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">csrf&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">sessionManagement&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">sessionCreationPolicy&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SessionCreationPolicy&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">STATELESS&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// FormLoginは使わない
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">formLogin&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authorizeRequests&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">anyRequest&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">hasRole&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;ROLE_USER&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 認証前にJWTのFilterを設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">addFilterBefore&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">filter&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> UsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// UsernamePasswordAuthenticationFilterはカスタムクラスに代替
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">addFilterAt&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>getJsonUsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">(),&lt;/span> UsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// カスタムUsernamePasswordAuthenticationFilterの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> JsonUsernamePasswordAuthenticationFilter &lt;span style="color:#50fa7b">getJsonUsernamePasswordAuthenticationFilter&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> JsonUsernamePasswordAuthenticationFilter jsonFilter &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> JsonUsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログインを処理するURLの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> jsonFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setFilterProcessesUrl&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/web/login&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// AuthenticationManagerの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> jsonFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setAuthenticationManager&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// AuthenticationSuccessHandlerの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> jsonFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setAuthenticationSuccessHandler&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">successHandler&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> jsonFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setUsernameParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> jsonFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setPasswordParameter&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;pass&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">catch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>Exception e&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> RuntimeException&lt;span style="color:#ff79c6">(&lt;/span>e&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> jsonFilter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="ログイン用のcontrollerを使う場合">ログイン用のControllerを使う場合&lt;/h4>
+&lt;p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。&lt;/p>
+&lt;p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかも知れません。&lt;/p>
+&lt;h5 id="controllerの作成">Controllerの作成&lt;/h5>
+&lt;p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@RestController
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@RequestMapping&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;api/v1/web&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">SignApiController&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// クレデンシャルを検証するためのサービスクラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> UserService service&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// トークンを作成するためのProvider
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTProvider provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">SignApiController&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>MemberService service&lt;span style="color:#ff79c6">,&lt;/span> JWTProvider provider&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">service&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> service&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Formデータでクレデンシャルをもらい、認証を行う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @PostMapping&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/login&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">login&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>@Validated @RequestBody LoginMemberForm form&lt;span style="color:#ff79c6">,&lt;/span> HttpServletResponse response&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// クレデンシャルからユーザ情報を取得
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> User user &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">service&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getUser&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>form&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getId&lt;/span>&lt;span style="color:#ff79c6">(),&lt;/span> form&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getPassword&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 取得した情報でトークンを作成
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> String token &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">createToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>user&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Headerにトークンを作成して載せる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setHeader&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;X-AUTH-TOKEN&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">createToken&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>user&lt;span style="color:#ff79c6">));&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// HTTP Statusは200 OK
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">setStatus&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>HttpStatus&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">OK&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">value&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定-2">Spring Securityの設定&lt;/h5>
+&lt;p>Controllerを使った場合は、認可認可なしでもログイン用のURLにアクセスできる設定と、Filterを使うための設定を追加します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">extends&lt;/span> WebSecurityConfigurerAdapter &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン以降の認証認可のためのFilter
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">SecurityConfig&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>JWTAuthenticationFilter filter&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">provider&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> provider&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> AuthenticationManager &lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authenticationManagerBean&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">protected&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">configure&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> HttpSecurity httpSecurity&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> httpSecurity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">httpBasic&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">csrf&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">disable&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">sessionManagement&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">sessionCreationPolicy&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>SessionCreationPolicy&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">STATELESS&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">authorizeRequests&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン処理ようのURLには認証認可なしでアクセスできる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">antMatchers&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/web/login/&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">permitAll&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">anyRequest&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">hasRole&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;ROLE_USER&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">and&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// デフォルトのFilter設定を変える
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">addFilterBefore&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">filter&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> UsernamePasswordAuthenticationFilter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト">テスト&lt;/h3>
+&lt;p>今まで実装したログインのテストは、CURLもしくは&lt;a class="link" href="https://www.postman.com" target="_blank" rel="noopener"
+>Postman&lt;/a>などのツールで簡単にできます。&lt;/p>
+&lt;p>例えば、FormLoginを使った場合のログインはこちらになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -i -X POST &lt;span style="color:#f1fa8c">&amp;#34;http://localhost:8080/api/v1/web/login&amp;#34;&lt;/span> -d &lt;span style="color:#f1fa8c">&amp;#34;id=user&amp;#34;&lt;/span> -d &lt;span style="color:#f1fa8c">&amp;#34;pass=1234&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Postmanを使ったJSONでのログインテストはこちらになります。(X-AUTH-TOKENでJWTが帰ってきたのを確認できます!)&lt;/p>
+&lt;p>&lt;figure
+class="gallery-image"
+style="
+flex-grow: 253;
+flex-basis: 608px"
+>
+&lt;a href="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login.png" data-size="1926x760">
+&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login.png"
+width="1926"
+height="760"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hubd688caa454b02975c5e2a4fff069012_136173_480x0_resize_box_3.png 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hubd688caa454b02975c5e2a4fff069012_136173_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="JWT Postman Login">
+&lt;/a>
+&lt;figcaption>JWT Postman Login&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…&lt;/p>
+&lt;p>でも、まだこれで完全な設定ができた訳ではありません。ここではSuccessHandlerのみを作成しましたが、場合によってはログインに失敗した場合の&lt;code>AuthenticationFailureHandler&lt;/code>が必要になる可能性もあります。また、これはあくまでログインに関するポストなので扱ってはなかったのですが、認証認可できてないURLへのアクセスに対するException Handlingも必要です。また、JWTを使った認証の場合、クライアントがトークンを持ってしまうのでサーバ側からログアウトを制御できないという点があり、クライアント側の実装ではそこに対しての対策も考えなければなりません。&lt;/p>
+&lt;p>が、今回はとりあえず最小限の目標は達成できたということで、いったんここまでとなります。では、また！&lt;/p></description></item></channel></rss>

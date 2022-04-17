@@ -1,1 +1,774 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>webflux on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/webflux/</link><description>Recent content in webflux on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/webflux/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>前回、WebFluxではFunctional Endpointを使うべきかというポストを書いたことがありますが、今回はController/S</description></item><item><title>WebFluxではFunctional Enpointを使うべきか</title><link>https://retheviper.github.io/posts/spring-webflux-router/</link><pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-router/</guid><description>以前、Spring WebFluxに関するポストを書いたことがあって、そこで少しだけMVCパターン(Controller/Service)とF</description></item><item><title>Spring WebFlux、少し触ってみてからの話</title><link>https://retheviper.github.io/posts/spring-webflux-and-nonblocking/</link><pubDate>Sun, 20 Dec 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-and-nonblocking/</guid><description>今まではずっとSpring MVCを使ってきたので、最近はKotlin + Spring WebFluxという組み合わせで簡単なアプリを作ってみているところで</description></item><item><title>Spring WebFluxって何？</title><link>https://retheviper.github.io/posts/spring-webflux/</link><pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux/</guid><description>Springが初めて発表されたのが2002年なので、およそ20年に近い時間が経ちました。今はJavaと言えば当たり前のようにSpringを使</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>webflux on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/webflux/</link><description>Recent content in webflux on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/webflux/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
+&lt;p>実際の業務でWebFluxを使っているわけではないので、さまざまなパターンがあるかなとは思いますが、この&lt;code>Functional Endpoint&lt;/code>を使う場合に考慮すべきものが、&lt;code>Router Function&lt;/code>(以下&lt;code>Router&lt;/code>)と&lt;code>Handler Function&lt;/code>(以下&lt;code>Handler&lt;/code>)をどう分けるかについての問題かと思います。&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は概念的には別のものではありますが、実装としては一つのクラスにまとめでもアプリは問題なく動くので、フレームワークの仕様や思想というよりかは、アプリのアーキテクチャに関する内容に近いますね。&lt;/p>
+&lt;p>なので、今回は&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分けた場合と分けない場合について、いくつかの観点から考えてみたいと思います。&lt;/p>
+&lt;h2 id="routerとhandlerは分離するべきか">RouterとHandlerは分離するべきか&lt;/h2>
+&lt;p>Spring MVCの場合、&lt;code>Controller&lt;/code>と&lt;code>Service&lt;/code>を明確に分けるのが常識のようになっています。アーキテクチャとしてもそうですが、フレームワークの思想（デザインの観点）としてもそうですね。&lt;/p>
+&lt;p>こういう前例があるので、同じくSpring Frameworkに属するWebFluxの場合でも、&lt;code>Functional Endpoint&lt;/code>という新しい概念を導入するとしても、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分ける必要があると思いがちかなと思います。一見、&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係が成立するようにも見えて、ネットで検索できるサンプルコードも多くがそのような構造で書かれています。&lt;/p>
+&lt;p>しかし、実際のアプリを&lt;code>Functional Endpoint&lt;/code>を持って書くとしたら、いくつか考えなければならないことがあると思います。例えば、そもそも&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>はそれぞれ&lt;code>Controller&lt;/code>と&lt;code>Service&lt;/code>に一対一の対応関係であるという前提は確かであるか？もしそうでなければ、あえてMVCのパターンに合わせる必要があるのか？実装においてはどう影響するのか？などがあるかと思います。なので、今回はこれらの観点から&lt;code>Functional Endpoint&lt;/code>について述べていきます。&lt;/p>
+&lt;h2 id="対応関係について">対応関係について&lt;/h2>
+&lt;p>Springの&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-fn-overview" target="_blank" rel="noopener"
+>公式ドキュメント&lt;/a>では、WebFluxの&lt;code>Functional Endpoint&lt;/code>の紹介において以下のようなサンプルコードを提示しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> repository: PersonRepository = &lt;span style="color:#ff79c6">..&lt;/span>.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> handler = PersonHandler(repository)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> route = coRouter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> accept(APPLICATION_JSON).nest {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>getPerson)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>listPeople)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> POST(&lt;span style="color:#f1fa8c">&amp;#34;/person&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>createPerson)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonHandler&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> repository: PersonRepository) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">listPeople&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">createPerson&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getPerson&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>公式のサンプルとして&lt;code>Handler&lt;/code>が別のクラスになっているのを見ると、やはり&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係が成立するようにも見えます。&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/RestController.html" target="_blank" rel="noopener"
+>@RestController&lt;/a>や&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/stereotype/Service.html" target="_blank" rel="noopener"
+>@Service&lt;/a>と違って、&lt;code>@Router&lt;/code>や&lt;code>@Handler&lt;/code>というアノテーションは存在しないことに注目する必要があります。これはつまり、Springというフレームワークの思想としては&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を必ず分ける必要はない、ということを意味しているのではないでしょうか。&lt;/p>
+&lt;p>なので、少なくともアプリケーションのアーキテクチャという観点からして&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係が成立する、という結論を出すのは難しいのではないかと思います。&lt;/p>
+&lt;p>では、実際&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>をあえてアノテーションを使ってDIをするとしたら、どうなるのでしょうか。サンプルとしては、以下のような形が一般的かなと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonRouter&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> handler: PersonHandler) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">route&lt;/span>(): RouterFunction&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> coRouter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> accept(APPLICATION_JSON).nest {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>getPerson)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>listPeople)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> POST(&lt;span style="color:#f1fa8c">&amp;#34;/person&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>createPerson)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonHandler&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> repository: PersonRepository) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">listPeople&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">createPerson&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getPerson&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>クラスそのものを&lt;code>@Component&lt;/code>として登録する必要がある&lt;code>Contoller&lt;/code>に対して、&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/RouterFunction.html" target="_blank" rel="noopener"
+>RouterFunction&lt;/a>は&lt;code>Functional Interface&lt;/code>なのでそれを実装したメソッドを&lt;code>@Bean&lt;/code>として登録する必要があります。そしてSpringで&lt;code>@Bean&lt;/code>をアプリケーションに登録するのは一般的に&lt;code>@Congifuration&lt;/code>が担当するので自然にRouterのアノテーションもそうなります。&lt;code>Handler&lt;/code>は普通に&lt;code>@Component&lt;/code>として登録することになりますね。&lt;/p>
+&lt;p>こうなった場合、クラスやその実装を見て&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分離しているのはわかりますが、アノテーションだけだと違和感を感じられますね。実装は簡単なのでそれぞれに対応するアノテーションを作るのが難しいわけでもないようですが、なぜこのような構造になっているのでしょうか。&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-programming-models" target="_blank" rel="noopener"
+>公式のドキュメント&lt;/a>では、以下のような説明があります。&lt;/p>
+&lt;blockquote>
+&lt;p>The big difference with annotated controllers is that the application is in charge of request handling from start to finish versus declaring intent through annotations and being called back.&lt;/p>
+&lt;/blockquote>
+&lt;p>つまり、「アノテーションをつけたContoller」と「Functional Endpoint」の違いは、前者が「アノテーションでコールバックと意図を表す」に対して、後者は「リクエストのハンドリングを開始から終了まで担当する」ということです。プログラミングモデルとしてこのような観点の差があるので、アノテーションがないのは当たり前なのかもしれません。そして結果的に、&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係は、少なくともプログラミングモデルという観点では当てはならないと考えられます。&lt;/p>
+&lt;h2 id="責任の分散という側面で">責任の分散という側面で&lt;/h2>
+&lt;p>アノテーションの実装を見ると、&lt;code>@Controller&lt;/code>と&lt;code>@Service&lt;/code>を分けているのがフレームワークのアーキテクチャや思想によるものであることがより明確になります。それぞれのアノテーションの実装は、以下の通りです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Target&lt;span style="color:#ff79c6">(&lt;/span>value&lt;span style="color:#ff79c6">=&lt;/span>TYPE&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Retention&lt;span style="color:#ff79c6">(&lt;/span>value&lt;span style="color:#ff79c6">=&lt;/span>RUNTIME&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Documented
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> @interface Controller
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Target&lt;span style="color:#ff79c6">(&lt;/span>value&lt;span style="color:#ff79c6">=&lt;/span>TYPE&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Retention&lt;span style="color:#ff79c6">(&lt;/span>value&lt;span style="color:#ff79c6">=&lt;/span>RUNTIME&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Documented
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> @interface Service
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>両方とも実装が同じであるので、極端的にいうと&lt;code>Controller&lt;/code>に&lt;code>@Service&lt;/code>をつけても機能的には同一ということになります。そして&lt;code>@Service&lt;/code>では、以下のようなコメントでこのアノテーションが存在する理由をあくまで「デザインパターンに基盤を置いている」ことを明示しています。&lt;/p>
+&lt;blockquote>
+&lt;p>Indicates that an annotated class is a &amp;ldquo;Service&amp;rdquo;, originally defined by Domain-Driven Design (Evans, 2003) as &amp;ldquo;an operation offered as an interface that stands alone in the model, with no encapsulated state.&amp;rdquo;
+May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo; (in the Core J2EE patterns sense), or something similar. This annotation is a general-purpose stereotype and individual teams may narrow their semantics and use as appropriate.&lt;/p>
+&lt;/blockquote>
+&lt;p>なので、アプリケーションデザインの観点からすると&lt;code>Controller&lt;/code>はリクエストを受信、レスポンスを返す、エンドポイントを&lt;code>Service&lt;/code>につなぐという義務だけを持ち、&lt;code>Service&lt;/code>はビジネスロジックを処理する義務を持つと考えられます。同じ観点から考えると、アノテーションはないものの、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>もまた同じ義務を持つように書くこともできるでしょう。&lt;/p>
+&lt;p>ただ、問題は「リクエストのハンドリングを開始から終了まで担当する」という定義です。先程のサンプルコードをよく見ると、Handlerのメソッドはどれも&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerRequest.html" target="_blank" rel="noopener"
+>ServerRequest&lt;/a>を引数として、戻り値は&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerResponse.html" target="_blank" rel="noopener"
+>ServerResponse&lt;/a>になっています。これはつまり、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>をあえて別のクラスとして分割するとしても、リクエストとレスポンスまでを&lt;code>Handler&lt;/code>で処理することを意味します。&lt;/p>
+&lt;p>ここで「&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>の場合と同じく、&lt;code>Handler&lt;/code>の引数と戻り値だけを変えて良いのでは？」と考えられます。しかし、それこそフレームワークの思想に反することです。&lt;code>ServerRequest&lt;/code>と&lt;code>ServerResponse&lt;/code>のJavaDocでは、以下の通り「&lt;code>ServerRequest&lt;/code>と&lt;code>ServerResponse&lt;/code>は&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/HandlerFunction.html" target="_blank" rel="noopener"
+>HandlerFunction&lt;/a>でハンドリングする」ことを明示しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * Represents a server-side HTTP request, as handled by a {@code HandlerFunction}.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * &amp;lt;p&amp;gt;Access to headers and body is offered by {@link Headers} and
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * {@link #body(BodyExtractor)}, respectively.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @author Arjen Poutsma
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @author Sebastien Deleuze
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @since 5.0
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">interface&lt;/span> &lt;span style="color:#50fa7b">ServerRequest&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * Represents a typed server-side HTTP response, as returned
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * by a {@linkplain HandlerFunction handler function} or
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * {@linkplain HandlerFilterFunction filter function}.
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> *
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @author Arjen Poutsma
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @author Juergen Hoeller
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @author Sebastien Deleuze
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * @since 5.0
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">interface&lt;/span> &lt;span style="color:#50fa7b">ServerResponse&lt;/span> {
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のことでわかるように、WebFluxでは&lt;code>ServerRequest&lt;/code>と&lt;code>ServerResponse&lt;/code>は&lt;code>HandlerFunction&lt;/code>で扱うようにデザインされています。なので、既存の&lt;code>Service&lt;/code>のように、&lt;code>Handler&lt;/code>がビジネスロジック「のみ」を扱うというのはそれが実装として可能かどうか以前の問題になるのです。&lt;/p>
+&lt;p>ただ、「責任の分散」という観点からして、責任によってクラスを分けるという発想は間違っているわけではないですね。なのでビジネスロジックを担当するクラスを&lt;code>Handler&lt;/code>と分離して運用するケースは考えられますが、必ずしもクラスを分ける基準が&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>である必要はないのではないかと思われます。&lt;/p>
+&lt;h2 id="テストの観点で">テストの観点で&lt;/h2>
+&lt;p>JavaでJUnitなどを用いてユニットテストを作る場合、テスト自体はユースケース単位で作成しますが、それらのテストはクラス単位でまとめるというケースが多いかなと思います。なので同じ観点でユニットテストを書く場合、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>が分けられているとしたら当然ユニットテストもその単位で分けられるでしょう。&lt;/p>
+&lt;p>ただ、こうする場合の問題は、テスト自体があまり意味を持たなくなる可能性があるということです。まず&lt;code>Router&lt;/code>は単純にエンドポイントと&lt;code>Handler&lt;/code>をつなぐ役割しか持たなくなるので、そのテストも「想定通りの&lt;code>HadlerFunction&lt;/code>を呼び出しているのか」に限るものになります。そして&lt;code>Handler&lt;/code>の場合、&lt;code>ServerRequest&lt;/code>を受信して&lt;code>ServerResponse&lt;/code>を発するので、テストが非常に難しくなるという問題があります。&lt;/p>
+&lt;p>なぜ&lt;code>ServerRequest&lt;/code>を受信して&lt;code>ServerResponse&lt;/code>を発するのが問題になるかというと、&lt;code>ServerRequest&lt;/code>のインスタンスを生成するのが難しく、&lt;code>ServerResponse&lt;/code>の場合でもレスポンスボディーを抽出するのが難しいからです。なので、&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/reactive/server/WebTestClient.html" target="_blank" rel="noopener"
+>WebTestClient&lt;/a>で行うことになるかと思いますが、&lt;code>WebTestClient&lt;/code>を使う場合はエンドポイントとHTTPメソッドなどを利用して実際のAPIを呼び出すことになるので、結果的に&lt;code>Handler&lt;/code>のテストをするつもりが&lt;code>Router&lt;/code>のテストまでふくむしかないということになります。こうするとクラス単位でテストケースをまとめることが難しいだけでなく、&lt;code>Router&lt;/code>のみのテストも実質的には意味をなくすということになります。&lt;/p>
+&lt;h2 id="ではどうすればいいか">ではどうすればいいか&lt;/h2>
+&lt;p>今まで論じた3つの観点からすると、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は別のクラスにする理由もあまりなく、むしろ別クラスに色々と問題が生じるように見えます。しかし、これが必ずしもエンドポイントに対するルーティングとビジネスロジックを分離する必要はない、ということではないかと思います。先に述べた通り、クラスを分ける基準を&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>にしないだけで良いかなと思います。例えば、以下のようなコードがあるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonRouter&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> repository: PersonRepository) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">route&lt;/span>(): RouterFunction&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> coRouter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person/{id}&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ServerResponse.ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repository.findById(&lt;span style="color:#ff79c6">it&lt;/span>.pathVariable(&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>).toLong())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { record &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PersonDto(record.id, record.name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ).awaitSingle()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Handler&lt;/code>で、&lt;code>Body&lt;/code>を作る箇所以外はビジネスロジックと言えるものがあまりありません。なので、ここでは&lt;code>Body&lt;/code>だけを分離して別のクラス（&lt;code>Service&lt;/code>）に一任しても良さそうです。例えば以下のようにです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonRouter&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> service: PersonService) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">route&lt;/span>(): RouterFunction&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> coRouter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/person/{id}&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ServerResponse.ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(service.getPersonById(&lt;span style="color:#ff79c6">it&lt;/span>.pathVariable(&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>).toLong()))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .awaitSingle()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PersonService&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> repository: PersonRepository) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getPersonById&lt;/span>(id: Long): Mono&amp;lt;PersonDto&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repository.findById(id)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { PersonDto(&lt;span style="color:#ff79c6">it&lt;/span>.id, &lt;span style="color:#ff79c6">it&lt;/span>.name) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうすると、&lt;code>Router&lt;/code>から直接&lt;code>Repository&lt;/code>にアクセスこともなくなり、今まで挙げていたさまざまな問題も解消できるようになりますね。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>ここで提示した方法でビジネスロジックを分けるのは可能だとして、その方法をとった場合に残る疑問はあります。これは果たして&lt;code>Functional&lt;/code>なのか？&lt;code>Functional Endpoint&lt;/code>は&lt;code>Lambda-based&lt;/code>と説明されてあるが、&lt;code>Lambda&lt;/code>が使われないので設計意図とは違う形になってないか？そもそもSpring MVCとは違うコンセプトのフレームワークなので既存とは違うアプローチが必要なのでは？などなど。&lt;/p>
+&lt;p>これらの問題を判断するのはなかなか難しいですが、個人的には新しい技術だからといって常に新しい方法論を適用するということは難しく、既存の良い体系があるのならそれに従うのもそう間違っていることとは思いません。Springの公式ドキュメントでは「すでに問題なく動いているSpring MVCアプリケーションにあえてWebFluxを導入する必要はない(If you have a Spring MVC application that works fine, there is no need to change)」と述べていますが、これと同じく、既存の検証されてあるアーキテクチャがあるのならばそれをそのまま適用するもの悪くないのではと思います。まぁ、そもそもWebFluxを導入するところでMVCパターンを使うとしたらこういうことを気にする理由すら無くなるのですが…むしろこのようなプログラミングモデルが増えていくと今後は新しいアーキテクチャが生まれそうな気もしますね。今回のポストを書きながらはそういういうものを感じました。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>WebFluxではFunctional Enpointを使うべきか</title><link>https://retheviper.github.io/posts/spring-webflux-router/</link><pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-router/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxではFunctional Enpointを使うべきか" />&lt;p>以前、&lt;a class="link" href="../spring-webflux/" >Spring WebFluxに関するポストを書いたこと&lt;/a>があって、そこで少しだけMVCパターン(&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>)と&lt;code>Functional Endpoint&lt;/code>(&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>)に関して触れました。結論だけ先に述べますと、Functional Endpointの導入はMVCパターンは長く使われている良いパターンでありますが、性能や関数型プログラミングには適してないのという問題があるので、それを改善するためのものだといえます。&lt;/p>
+&lt;p>さて、その説明だけだと、Spring WebFluxを使う際にはなるべくFunctional Endpointを使うべきな気もします。しかし、実際はどうでしょうか？例えば、従来のSpring MVCと同じくController/Serviceを使う場合は本当にRouter/Handlerを使う時と比べ性能が劣るのか？また、Functional Endpointを使う際に考慮すべき、「MVCパターンにはなかった問題」はないか？といったことを考えられます。&lt;/p>
+&lt;p>なので、今回はその二つのパターンを用いて、Spring WebFluxによるサーバサイドアプリケーションを実装するときに考えたいことを少しまとめてみました。&lt;/p>
+&lt;h2 id="プログラミングのパラダイムとして">プログラミングのパラダイムとして&lt;/h2>
+&lt;p>SpringのMVCパターンは、アノテーションによるメタプログラミングとオブジェクト指向といった昔ながらの考え方に基づいたパラダイムに近いといえます。もちろん、AOPやDIといったSpring Framework特有の特徴はありますが、&lt;a class="link" href="https://www.reactive-streams.org" target="_blank" rel="noopener"
+>Reactive Streams&lt;/a>の実現体である&lt;code>Mono&lt;/code>/&lt;code>Flux&lt;/code>で書かれたWebFluxのコードと比べたら、まだ伝統的な書き方に近いという感覚はありますね。&lt;/p>
+&lt;p>ここでオブジェクト指向と関数型のうち、どれが良いかという議論はしません。また、Javaは元々オブジェクト指向の言語としてデザインされましたが、1.8以降はFunctional Interfaceの導入である程度関数型プログラミングができるようになりましたし、Kotlinでもそれは大きく変わらないことです。なので、Spring MVCとSpring WebFluxのうちどれかを選ぶということがコードをオブジェクト指向として書くか、関数型として書くかという結論にもなりません。&lt;/p>
+&lt;p>しかし、Spring WebFluxでは、MVCパターンとFunctional Endpointのどれかを選べるという点からして、どちらかのパラダイムに寄せた書き方はできるというのも事実です。ここでどれを取るかを判断するには、コードを書く人同士の合意がもっとも重要なのではないかと思います。なぜかというと、結局プログラミングのパラダイムというものは何よりもプログラミングの「効率」のために発展してきたからです。&lt;/p>
+&lt;p>なので、ここでの判断基準は「如何に読みやすいか」「如何に早く成果を出せるか」など、実利的なものとなるべきでしょう。例えば、すでにサービスとして機能しているアプリケーションの同時実行性能を向上させたい場合は、MVCパターンとして書いた方がすぐにサービスを立ち上げられるので良いと思ったら、それで理由は十分かと思います。もしくは、すでにFunctional Endpointに慣れているプログラマが多い場合は積極的にそれを導入するとかですね。つまり、私の観点からすると、プログラミングのパラダイムは実務者の立場からすると効率により選択するべきものではないかと思います。&lt;/p>
+&lt;p>では、Contorller/ServiceのパターンとRouter/Handlerのパターンの実際はどう違うのかを、コードを通じて見ていきたいと思います。&lt;/p>
+&lt;h3 id="mvcパターンで書く場合">MVCパターンで書く場合&lt;/h3>
+&lt;p>Spring WebFluxのMVCパターン、つまりContoller/Serviceのパターンは、その名の通り既存のSpring MVCと比べあまり変わらない感覚で書くことができます。なので、例えば以下のようなコードを書くとしたら、これだけではSpring MVCとの違いがあまりわからないくらいですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@RestController
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">HelloController&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> service: HelloService) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @GetMapping(&lt;span style="color:#f1fa8c">&amp;#34;/hello&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">hello&lt;/span>(): ResponseEntity =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ResponseEntity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(service.getHello())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">HelloService&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getHello&lt;/span>(): String = &lt;span style="color:#f1fa8c">&amp;#34;Hello Spring WebFlux&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、Spring WebFluxでは、DB接続を含め完全なノンブロッキングを実現するためには[R2DBC]のようなノンブロッキング対応のAPIを使う必要があります。これはつまり、&lt;code>Reactive Stream&lt;/code>を使う必要があるとのことであって、必然的にその実現体であるMono/Fluxを使う必要があるということです。&lt;/p>
+&lt;p>なので、とりあえずRepositoryからMono/Fluxを取得し、Reactive Stream固有の書き方に合わせてコードを書いていくしかないということになります。問題は、Reactive Streamはその名前から普通にJavaのStreamの感覚で扱えば良い印象ですが、実際の処理はそう簡単じゃないということです。例えば、JPAやMyBatisのような既存のブロッキングベースのAPIを使う場合は、Serviceのメソッドでは以下のようなコードを書くことになりますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// ユーザIDでユーザ情報とメール送信履歴を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMemberWithMailRecord&lt;/span>(memberId: Int): MemberWithMailRecord {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ情報を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> member = memberRepository.getMember(id = memberId) &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find member&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザが作成したメール送信履歴を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> mailRecord = mailRecordRepository.getMailRecord(memberId = memberId) &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find mailRecord&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ情報とメール送信履歴を合わせて返却
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">return&lt;/span> MemberWithMailRecord(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> member = member,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailRecord = mailRecord
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし、Mono/Fluxを返すAPIを使う場合は、以下のようなコードになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMemberWithMailRecord&lt;/span>(memberId: Int): Mono&amp;lt;MemberWithMailRecord&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> memberRepository.getMember(id = memberId)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .switchIfEmpty(Mono.error(RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find member&amp;#34;&lt;/span>)))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .zipWith(mailRecordRepository.getMailRecord(memberId = memberId).switchIfEmpty(Mono.error(RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find mailRecord&amp;#34;&lt;/span>)))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { MemberWithMailRecord(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> member = &lt;span style="color:#ff79c6">it&lt;/span>.t1,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailRecord = &lt;span style="color:#ff79c6">it&lt;/span>.t2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>やっていることは同じでも、果たしてこれが書きやすく、読みやすいコードであるかどうかは悩ましいですね。他にもFluxで取得したデータをListに変えたい場合、取得したMonoのデータでさらにMonoを取得したい場合など、より複雑な処理が必要な場面ではますます書き方は複雑になります。&lt;/p>
+&lt;p>幸い、Kotlinには&lt;a class="link" href="https://kotlinlang.org/docs/coroutines-overview.html" target="_blank" rel="noopener"
+>Coroutines&lt;/a>があるので、このような複雑な書き方をより簡単に書くことはできます。Corutinesを適用したら、Mono/Fluxを使う場合でも上記のコードは以下のようになりますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMemberWithMailRecord&lt;/span>(memberId: Int): MemberWithMailRecord {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> member = memberRepository.getMember(id = memberId).awaitFirstOrNull() &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find member&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> mailRecord = mailRecordRepository.getMailRecord(memberId = memberId).awaitFirstOrNull() &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find mailRecord&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> MemberWithMailRecord(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> member = member,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailRecord = mailRecord
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Coroutinesを使う場合はスコープの指定が必要となるのが一般的ですが、実際はControllerのメソッドまでを&lt;code>suspend&lt;/code>として定義しておくと良いみたいです。ただ、既存のプロジェクトをSpring MVCからWebFluxに移行する場合にこうやって多くの処理をsuspendメソッドにすると、ユニットテストの方を直すのが大変になる可能性もあるのでそこは要注意です。&lt;/p>
+&lt;h3 id="functional-endpointで書く場合">Functional Endpointで書く場合&lt;/h3>
+&lt;p>続いて、Functional Endpontを使う場合のコードです。MVCパターンの問題としてアノテーションがあげられていますが、Router/Handlerでもアノテーションを使うことはできますし、アプリケーションのアーキテクチャによっては必然的にクラスを分けてアノテーションで管理することになるのが一般的かなと思います。なので、そのようなケースではRouterを&lt;code>@Bean&lt;/code>として登録したり、Handlerも&lt;code>@Component&lt;/code>として定義する場合もあります。そういう場合は、以下のようなコードになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">HelloRouter&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> handler: HelloHanlder) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">hello&lt;/span>(): router {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/hello&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>getHello)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">HelloHandler&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getHello&lt;/span>(request: ServerRequest): Mono&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ServerResponse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(Mono.Just(&lt;span style="color:#f1fa8c">&amp;#34;Hello Spring WebFlux&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Functional Endpointを使う場合の特徴は、RouterはあくまでエンドポイントとHandlerをつなぐ役割をするだけなので、Handlerで&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerRequest.html" target="_blank" rel="noopener"
+>ServerRequest&lt;/a>を受け取り&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerResponse.html" target="_blank" rel="noopener"
+>ServerResponse&lt;/a>を返す処理までを書くことになるということです。MVCパターンではRestControllerの戻り値としてResponseEntityや自分で定義したクラスを自由に指定でるし、Serviceではビジネスロジックだけを担当するパターンが多いのを考えるとかなり独特であるといえます。&lt;/p>
+&lt;p>このようにServerRequestとServerResponseを使うため、HandlerはServiceと比べビジネスロジック部分が一回層が深くなった形になります。ServerResponseのbodyでロジックを書いて、それを返す形ですね。例えば以下のようなコードになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>(request: ServerRequest): Mono&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ServerResponse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(memberRepository.getMember(id = request.PathVariable(&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .switchIfEmpty(Mono.error(RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find member&amp;#34;&lt;/span>)))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .zipWith(mailRecordRepository.getMailRecord(memberId = request.PathVariable(&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>)).switchIfEmpty(Mono.error(RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find mailRecord&amp;#34;&lt;/span>)))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { MemberWithMailRecord(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> member = &lt;span style="color:#ff79c6">it&lt;/span>.t1,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailRecord = &lt;span style="color:#ff79c6">it&lt;/span>.t2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この場合でもでもCoroutinesを使うことはもちろんできます。Corutinesを使う場合は、以下のような書き方ができるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>(request: ServerRequest): Mono&amp;lt;ServerResponse&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> member = memberRepository.getMember(id = memberId).awaitFirstOrNull() &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find member&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> mailRecord = mailRecordRepository.getMailRecord(memberId = memberId).awaitFirstOrNull() &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> RuntimeException(&lt;span style="color:#f1fa8c">&amp;#34;Can&amp;#39;t find mailRecord&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> ServerResponse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .bodyValueAndAwait(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Mono.just(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberWithMailRecord(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> member = &lt;span style="color:#ff79c6">it&lt;/span>.t1,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailRecord = &lt;span style="color:#ff79c6">it&lt;/span>.t2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="性能">性能&lt;/h2>
+&lt;p>MVCパターンの問題としてあげられるものの一つとして、アノテーションがあります。アノテーションを使うということは、必然的にリフレクションを使うことになるので、自然に性能の低下にもつながるという話ですね。これだけみると、WebFluxではMVCパターンよりもFunctional Endpointを使ったほうが性能でも有利であるように見えます。しかし実際はどうでしょうか？&lt;/p>
+&lt;p>&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-programming-models" target="_blank" rel="noopener"
+>Springの公式ドキュメント&lt;/a>では、Functional Enddpointのことを&lt;code>lightweight(軽量)&lt;/code>とは表現しているものの、それ以外に性能がどうという話は一切述べてないです。多くの場合、性能の比較はSpring MVCとSpring WebFluxを対象としていて、WebFluxでのMVCパターンとFunctional Endpointのケースはあまり探せませんでした。なので、ここでは簡単にベンチマークを行うことで二つのパターンでの性能の違いを検証してみました。&lt;/p>
+&lt;p>ベンチマークツールとしては、Jmeterを使うこともできましたが、短いコマンドで測定ができるのもあり、今回は&lt;a class="link" href="https://httpd.apache.org/docs/2.4/en/programs/ab.html" target="_blank" rel="noopener"
+>Apache HTTP server benchmarking tool&lt;/a>を使ってテストを実施しています。&lt;/p>
+&lt;h3 id="使ったコード">使ったコード&lt;/h3>
+&lt;p>性能測定として知りたいのは「実装パターンで性能が変わるか」ということなので、あえてDB接続は排除しました。比較のために作ったサンプルアプリケーションでは、単純にデータを生成する共通のロジックと、それを返すだけのContoller/Service, Router/Hanlderのセットで構成されています。&lt;/p>
+&lt;h4 id="共通">共通&lt;/h4>
+&lt;p>データを生成するロジックそのものは共通で、単純にループでListを生成するようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 固定値のデータを生成し返すクラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">object&lt;/span> &lt;span style="color:#50fa7b">DataCreationUtil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 1970年1月1日から2021年12月31日まで
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">var&lt;/span> data: List&amp;lt;Person&amp;gt; = (&lt;span style="color:#bd93f9">0.&lt;/span>.&lt;span style="color:#bd93f9">18992&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Person(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>.toLong(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#f1fa8c">&amp;#34;Person&lt;/span>&lt;span style="color:#f1fa8c">${it}&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> birth = LocalDate.ofEpochDay(&lt;span style="color:#ff79c6">it&lt;/span>.toLong()),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> joined = LocalDate.ofEpochDay(&lt;span style="color:#ff79c6">it&lt;/span>.toLong() + &lt;span style="color:#bd93f9">10000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.toList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 生成されるデータ
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Person&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> id: Long,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> name: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> birth: LocalDate,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> joined: LocalDate
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="controllerserviceの実装">Controller/Serviceの実装&lt;/h4>
+&lt;p>MVCパターンについてはコードだけでも十分わかると思いますので、説明は割愛します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@RestController
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PerformanceTestController&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> service: PerformanceTestService
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @GetMapping(&lt;span style="color:#f1fa8c">&amp;#34;/performance-controller&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getData&lt;/span>(): ResponseEntity&amp;lt;List&amp;lt;Person&amp;gt;&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ResponseEntity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(service.getData())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Service
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PerformanceTestService&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getData&lt;/span>(): List&amp;lt;Person&amp;gt; = service.getData()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの実装">Router/Handlerの実装&lt;/h4>
+&lt;p>Functional Endpointでは、MVCパターンと比べ処理と言えるものは全部Handlerの方に書かれてある、という違いがあります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PerformanceTestRouter&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> handler: PerformanceTestHandler) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">route&lt;/span>() = router {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/performance-router&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>getData)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">PerformanceTestHandler&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getData&lt;/span>(request: ServerRequest): Mono&amp;lt;ServerResponse&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ServerResponse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .ok()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(MediaType.APPLICATION_JSON)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(Flux.fromIterable(DataCreationUtil.&lt;span style="color:#ff79c6">data&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト結果">テスト結果&lt;/h3>
+&lt;p>テストは以下のような条件で実施しました。&lt;/p>
+&lt;ul>
+&lt;li>ユーザ数は5000, ユーザごとのリクエストは50に設定&lt;/li>
+&lt;li>ワームアップ時間を考慮して、パターンごとにテストを分ける
+&lt;ul>
+&lt;li>サーバの再起動後にテストを実施&lt;/li>
+&lt;li>テストは10回ループ&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>実際に使ったスクリプトは以下のようなものです。サーバの起動後にこれを実行し、10回のループが終わったら再起動後にFunctional Endpointのテストを実施しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#!/bin/bash
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">for&lt;/span> i in &lt;span style="color:#ff79c6">{&lt;/span>1..10&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ab -n &lt;span style="color:#bd93f9">5000&lt;/span> -c &lt;span style="color:#bd93f9">50&lt;/span> http://localhost:8080/performance-controller
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">done&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、こうやってもやはりテスト結果では周回ごとに偏差があったので、ここでは中間値に当てはまる結果を紹介します。その結果は、以下の通りになりますが、あらかじめ結論だけ先に言いますとMVCパターンでもFunctional Endpointでもその性能の違いというものは「誤差範囲以内」と表現しても良いかなと思います。&lt;/p>
+&lt;h4 id="controllerserviceの結果">Controller/Serviceの結果&lt;/h4>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Hostname: localhost
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Port: &lt;span style="color:#bd93f9">8080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Document Path: /performance-controller
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Document Length: &lt;span style="color:#bd93f9">1440242&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Concurrency Level: &lt;span style="color:#bd93f9">50&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time taken &lt;span style="color:#ff79c6">for&lt;/span> tests: 24.989 seconds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Complete requests: &lt;span style="color:#bd93f9">5000&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Failed requests: &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Total transferred: &lt;span style="color:#bd93f9">7201590000&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>HTML transferred: &lt;span style="color:#bd93f9">7201210000&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Requests per second: 200.09 &lt;span style="color:#ff79c6">[&lt;/span>&lt;span style="color:#6272a4">#/sec] (mean)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time per request: 249.892 &lt;span style="color:#ff79c6">[&lt;/span>ms&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>mean&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time per request: 4.998 &lt;span style="color:#ff79c6">[&lt;/span>ms&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>mean, across all concurrent requests&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Transfer rate: 281433.26 &lt;span style="color:#ff79c6">[&lt;/span>Kbytes/sec&lt;span style="color:#ff79c6">]&lt;/span> received
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Connection Times &lt;span style="color:#ff79c6">(&lt;/span>ms&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> min mean&lt;span style="color:#ff79c6">[&lt;/span>+/-sd&lt;span style="color:#ff79c6">]&lt;/span> median max
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Connect: &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span> 1.4 &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#bd93f9">11&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Processing: &lt;span style="color:#bd93f9">29&lt;/span> &lt;span style="color:#bd93f9">248&lt;/span> 79.8 &lt;span style="color:#bd93f9">242&lt;/span> &lt;span style="color:#bd93f9">516&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Waiting: &lt;span style="color:#bd93f9">24&lt;/span> &lt;span style="color:#bd93f9">192&lt;/span> 60.8 &lt;span style="color:#bd93f9">185&lt;/span> &lt;span style="color:#bd93f9">442&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Total: &lt;span style="color:#bd93f9">29&lt;/span> &lt;span style="color:#bd93f9">249&lt;/span> 79.4 &lt;span style="color:#bd93f9">243&lt;/span> &lt;span style="color:#bd93f9">516&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Percentage of the requests served within a certain &lt;span style="color:#8be9fd;font-style:italic">time&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>ms&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 50% &lt;span style="color:#bd93f9">243&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 66% &lt;span style="color:#bd93f9">275&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 75% &lt;span style="color:#bd93f9">295&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 80% &lt;span style="color:#bd93f9">309&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 90% &lt;span style="color:#bd93f9">354&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 95% &lt;span style="color:#bd93f9">394&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 98% &lt;span style="color:#bd93f9">430&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 99% &lt;span style="color:#bd93f9">449&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 100% &lt;span style="color:#bd93f9">516&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>longest request&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの結果">Router/Handlerの結果&lt;/h4>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Hostname: localhost
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Port: &lt;span style="color:#bd93f9">8080&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Document Path: /performance-router
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Document Length: &lt;span style="color:#bd93f9">1440257&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Concurrency Level: &lt;span style="color:#bd93f9">50&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time taken &lt;span style="color:#ff79c6">for&lt;/span> tests: 25.541 seconds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Complete requests: &lt;span style="color:#bd93f9">5000&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Failed requests: &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Total transferred: &lt;span style="color:#bd93f9">7201775000&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>HTML transferred: &lt;span style="color:#bd93f9">7201285000&lt;/span> bytes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Requests per second: 195.76 &lt;span style="color:#ff79c6">[&lt;/span>&lt;span style="color:#6272a4">#/sec] (mean)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time per request: 255.410 &lt;span style="color:#ff79c6">[&lt;/span>ms&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>mean&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Time per request: 5.108 &lt;span style="color:#ff79c6">[&lt;/span>ms&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>mean, across all concurrent requests&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Transfer rate: 275360.22 &lt;span style="color:#ff79c6">[&lt;/span>Kbytes/sec&lt;span style="color:#ff79c6">]&lt;/span> received
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Connection Times &lt;span style="color:#ff79c6">(&lt;/span>ms&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> min mean&lt;span style="color:#ff79c6">[&lt;/span>+/-sd&lt;span style="color:#ff79c6">]&lt;/span> median max
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Connect: &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span> 3.2 &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#bd93f9">151&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Processing: &lt;span style="color:#bd93f9">33&lt;/span> &lt;span style="color:#bd93f9">253&lt;/span> 80.4 &lt;span style="color:#bd93f9">246&lt;/span> &lt;span style="color:#bd93f9">612&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Waiting: &lt;span style="color:#bd93f9">28&lt;/span> &lt;span style="color:#bd93f9">194&lt;/span> 59.8 &lt;span style="color:#bd93f9">184&lt;/span> &lt;span style="color:#bd93f9">475&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Total: &lt;span style="color:#bd93f9">39&lt;/span> &lt;span style="color:#bd93f9">254&lt;/span> 80.0 &lt;span style="color:#bd93f9">247&lt;/span> &lt;span style="color:#bd93f9">613&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Percentage of the requests served within a certain &lt;span style="color:#8be9fd;font-style:italic">time&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>ms&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 50% &lt;span style="color:#bd93f9">247&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 66% &lt;span style="color:#bd93f9">286&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 75% &lt;span style="color:#bd93f9">302&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 80% &lt;span style="color:#bd93f9">312&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 90% &lt;span style="color:#bd93f9">361&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 95% &lt;span style="color:#bd93f9">398&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 98% &lt;span style="color:#bd93f9">441&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 99% &lt;span style="color:#bd93f9">459&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 100% &lt;span style="color:#bd93f9">613&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>longest request&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ドキュメンテーション">ドキュメンテーション&lt;/h2>
+&lt;p>次にドキュメンテーションの観点からすると、Functional Endpointはまだ導入するには早い気がします。ここでいうドキュメンテーションは、JavaDocやKdocのようなコメントのことではなく、最近よく使われる&lt;a class="link" href="https://swagger.io" target="_blank" rel="noopener"
+>Swagger&lt;/a>のことを指します。&lt;/p>
+&lt;p>最近は&lt;a class="link" href="http://springfox.github.io/springfox" target="_blank" rel="noopener"
+>SpringFox&lt;/a>などを使うと簡単にAPIのドキュメンテーションが可能ですが、Functional Endpointだとそう簡単にはできません。すでに理由がわかる方もいらっしゃるかと思いますが、Routerには引数としてエンドポイントとHandlerの処理を渡しているだけで、Handlerは引数がServerRequest、戻り値はServerResponseに固定されてあるのが理由です。&lt;/p>
+&lt;p>もちろん、ServerRequestとServerResponseを使う場合でもそれを自分の欲しいデータとして扱うことはできます。例えば、リクエストからパラメータを取る方法は以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Path Variableで渡されたIDを持ってユーザ情報を取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Path Variableを取得する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> id = request.pathVariable(&lt;span style="color:#f1fa8c">&amp;#34;id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Request Bodyで渡されたデータを元に新しいユーザを作成する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">suspend&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">createMember&lt;/span>(request: ServerRequest): ServerResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Request Bodyをクラスにマッピングする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> form = request.bodyToMono(MemberCreateForm&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span>.java).awaitFirst()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、SpringFoxのように自動でAPIのドキュメンテーションを行ってくれるような便利なAPIは、おそらくリフレクションを使っています。なので、Handlerで実際はどんな処理が行われているかを判断するのは難しいでしょう。&lt;/p>
+&lt;p>幸い、この問題はSpringの開発者も認識しているようで、&lt;a class="link" href="https://springdoc.org" target="_blank" rel="noopener"
+>springdoc-openapi&lt;/a>を使うとFunctional EndpointでもAPIのドキュメンテーションは可能になります。ただ、この場合でも現時点ではやはり問題があります。なぜなら、これはAPIのドキュメンテーションを自動化するものではなく、「ドキュメンテーションのための手段を提供する」だけだからです。なので、以下のように、RouterやHandlerに関して一つ一つアノテーションを指定する必要があります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@RouterOperations(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> value =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> [
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> RouterOperation(
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> path = &amp;#34;/api/v1/members&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> beanClass = MemberHandler::class,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> beanMethod = &amp;#34;listMember&amp;#34;,
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#50fa7b"> method = [RequestMethod.GET]&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> produces = [MediaType.APPLICATION_JSON_VALUE]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RouterOperation(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path = &lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanClass = MemberHandler&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanMethod = &lt;span style="color:#f1fa8c">&amp;#34;getMember&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> method = [RequestMethod.GET],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> produces = [MediaType.APPLICATION_JSON_VALUE]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RouterOperation(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path = &lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanClass = MemberHandler&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanMethod = &lt;span style="color:#f1fa8c">&amp;#34;createMember&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> method = [RequestMethod.POST],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> produces = [MediaType.APPLICATION_JSON_VALUE]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RouterOperation(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path = &lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanClass = MemberHandler&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanMethod = &lt;span style="color:#f1fa8c">&amp;#34;updateMember&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> method = [RequestMethod.PUT],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> produces = [MediaType.APPLICATION_JSON_VALUE]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RouterOperation(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path = &lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanClass = MemberHandler&lt;span style="color:#ff79c6">::&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> beanMethod = &lt;span style="color:#f1fa8c">&amp;#34;deleteMember&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> method = [RequestMethod.DELETE],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> produces = [MediaType.APPLICATION_JSON_VALUE]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">routeMember&lt;/span>() = coRouter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members&amp;#34;&lt;/span>) { handler.listMember() }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GET(&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>getMember)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> POST(&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>createMember)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PUT(&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>updateMember)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DELETE(&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#ff79c6">::&lt;/span>deleteMember)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ご覧の通り、ドキュメンテーションのためのアノテーションが実際のコードよりも長くなっています。Functional EndpointでもSwaggerを利用できる手段ができたのは良いことですが、MVCパターンと比べやはり不便ではありますね。なので、ドキュメンテーションが大事であるなら、まだFunctional Pointを使うべきではないかも知れません。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今回は、Spring WebFluxのMVCパターン及びFunctional Endpointをコードの書き方、性能、ドキュメンテーションという観点から比較してみました。Spring WebFluxも発表されたのが2017年なので、もう今年で5年目になりますが、まだまだMVCパターンに比べては色々と補完すべき点が多い印象です。自分の場合はWebFluxのメインコンセプトであるノンブロッキングや関数型プログラミングを活かすためにはやはりFunctional Endpointを選んだ方が良さそうな気はしていますが、まだあえてそうする必要はないのではないか、という感覚です。特にエンタプライズのアプリケーションを書くことになるとますますそうでしょう。もちろん、そもそもWebFluxそのものを導入すべきかということから考える必要がありますが。&lt;/p>
+&lt;p>それでも、やはりFunctional Endpointという実装方式には色々と可能性があると思います。Spring WebFluxでなくても、最近のウェブフレームワークでは多く採用されているものですからね。例えばTechEmpowerの&lt;a class="link" href="https://www.techempower.com/benchmarks" target="_blank" rel="noopener"
+>ベンチマーク&lt;/a>でJavaのフレームワークのうちではもっとも性能がよかった&lt;a class="link" href="https://jooby.io" target="_blank" rel="noopener"
+>jooby&lt;/a>でもMVCパターンとFunctional Endpointとよく似たScript Routeパターンに対応していますし、JetBrainsで開発しているKotlin用のウェブフレームワークである&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
+>Ktor&lt;/a>ではMVCパターンなしで、同じくFunctional Endpointとよく似たRoutingにのみ対応しています。なので、他にも&lt;a class="link" href="https://expressjs.com/ja" target="_blank" rel="noopener"
+>Express&lt;/a>や&lt;a class="link" href="https://github.com/gin-gonic/gin" target="_blank" rel="noopener"
+>Gin&lt;/a>のようなフレームワークでも似たようなAPIの実装方法を提供しているので、余裕があったら個人的に試してみて慣れるのも良い勉強になるかも知れません。また、関数型プログラミングはこれからも幅広く使われそうなので、これを持って練習してみるのも良いかも知れませんね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Spring WebFlux、少し触ってみてからの話</title><link>https://retheviper.github.io/posts/spring-webflux-and-nonblocking/</link><pubDate>Sun, 20 Dec 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-and-nonblocking/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post Spring WebFlux、少し触ってみてからの話" />&lt;p>今まではずっとSpring MVCを使ってきたので、最近はKotlin + Spring WebFluxという組み合わせで簡単なアプリを作ってみているところです(Spring WebFluxそのものについての紹介は、前回のポストでしているのでここでは割愛します)。Spring WebFluxが紹介されたのももう3年前のことなので(あと少しで、4年になりますね)、もうかなりの時間が経ちますが、実際はあまり幅広く使われてはいないのが現状ではないかと思います。なのでネットで調べてもあまり参考できそうなものがなかったりしますね。&lt;/p>
+&lt;p>これはおそらくSpring WebFluxが本格的に導入するにはまだ色々と考えるべきところがあるからでしょう。例えば、フレームワークとしてまだまだ成熟している技術ではないということがあります。まだ、このフレームワークの核心となるReactorの書き方に慣れていない人が多い(Reactiveといいつつ、&lt;a class="link" href="https://github.com/ReactiveX/RxJava" target="_blank" rel="noopener"
+>RxJava&lt;/a>ともまた微妙に違いますしね)という面も考慮しなくてはならないです。会社の立場からしたら、このようにまだ新しい技術をすぐに取り入れるということはリスクもあり、エンジニアの学習コストも考えなくてはいけないという面からあまりメリットがないです。&lt;/p>
+&lt;p>そして前回紹介した通り、パフォーマンスの面からしても既存のSpring MVCプロジェクトをSpring WebFluxに変えるだけではあまり得しないという問題があります。なら、新規プロジェクトから導入して良いのでは？と思われる可能性もあると思いますが、スタートアップやベンチャー企業などではそもそもJVM言語を使和ないケースが多いので(勝手なイメージかも知れませんが、そのような企業はやはりPythonやRuby、JavaScriptが多いと思います)、そもそも考慮の対象になっていないのかも知れません。また、もしJVM言語に慣れているエンジニアがいるからSpring WebFluxは導入できるとしても、やはり前述した「検証されてない」と「学習コストがかかる」という問題からは自由ではないですね。&lt;/p>
+&lt;p>少なくともこれらの理由からエンタープライズレベルでは、まだSpring WebFluxの導入は難しいかと思います。ただ、おそらくSpringの未来はWebFluxにあるので、これからだんだんWebFluxを中心に開発が行われる可能性もあるので、今からでもReactorの書き方になれる必要があるのかも知れません。また、Springという一つのフレームワークの観点からでなくても、非同期による同時処理性能の向上は、多数のユーザの利用する頻度の高いWebアプリケーションの開発においては重要な要素であるので、少なくともその概念、思想、そしてコードの書き方には慣れる必要があるかも知れません。そういう意味で、自作アプリをSpring WebFluxで書いてみた経験とそこから感じたことを述べたいと思います。&lt;/p>
+&lt;h2 id="spring-webfluxのアプリを書くということ">Spring WebFluxのアプリを書くということ&lt;/h2>
+&lt;p>Spirng WebFluxは既存のController + Serviceというパターンでもコードを書くことができます。なので、一見みると既存のSpring MVCで作られたプロジェクトと並行して運用したり、既存のコードを少し書き換えるだけで簡単にWebFluxに移行できそうなイメージを与えていると思います。が、実際はそうでもないような気がします。まず私の場合、簡単なCRUDのサンプル(GitHubのリポジトリは&lt;a class="link" href="https://github.com/retheviper/springwebfluxsample" target="_blank" rel="noopener"
+>こちら&lt;/a>)を作ってみてから、これを応用して&lt;a class="link" href="https://chouseisan.com" target="_blank" rel="noopener"
+>調整さん&lt;/a>のマイナークロンを作ってみようとしました。&lt;/p>
+&lt;p>ここで、サンプルではSpring Data JPAを使っていましたが、WebFluxで本格的なノンブロッキングのアプリを書いてみたいと思ったので、&lt;a class="link" href="https://r2dbc.io/" target="_blank" rel="noopener"
+>R2DBC&lt;/a>を導入してDBアクセスも非同期で構成することにしました。なぜかというと、非同期の処理の中に一つでも同期の処理が発生するとしたら、それだけでももはや非同期ではなくなるからです。なのでORMもそれに合わせてR2DBCを使う必要がる、とのことです。&lt;/p>
+&lt;p>幸い、R2DBCは使い方としてもSpring Data JPAやSpring Data JDBCとそう変わらない感覚で、Interface形式のRepositoryを作り、DTO形式のオブジェクト(Kotlinなら、Data classで十分でした)を作るだけでDBとのマッピングは簡単にできました。あとJPAに比べ、アノテーションの数が少なくなっているだけなのでテーブルとしてオブジェクトを定義するのも簡単です(&lt;code>@Id&lt;/code>をつけるのみで終わります)。そしてSpring Data JDBCとは違って、メソッド名から自動でクエリを生成してくれるというところもあったので、最初は楽だと思いました。でも、やはり初めて触っている技術で、そうなんでもうまくいくはずがありません。一つ、問題にあってしまいました。&lt;/p>
+&lt;h3 id="joinができない">Joinができない&lt;/h3>
+&lt;p>個人的にはどんな技術でも、やはりある程度の時間がたち、安定期に入る前までは既存の技術に比べ圧倒的な優位にあり、すぐに乗り換えるべきと言えなくするところ(つまり、レガシーを捨てがたくする要素)が必ずしも一つ以上は存在すると思います。そういう意味からすると、Spring Data R2DBCが既存のORMを今すぐ代替するには十分ではないと言える部分は、自動でJoinを行う方法がない(テーブル間の関係をあらかじめオブジェクトとして定義することができない)というところと言えるのではと思います。&lt;/p>
+&lt;p>Spring Data JPAやJDBCを使う場合、アノテーションを使うことで簡単にテーブル間の関係(&lt;a class="link" href="https://docs.oracle.com/javaee/6/api/javax/persistence/OneToOne.html" target="_blank" rel="noopener"
+>@OneToOne&lt;/a>など)を定義できて、テーブルの関係をコード内で簡単に定義できます。しかし、これがまだR2DBCでは対応していない機能となっています。こういう状況では、リポジトリに&lt;code>@Query&lt;/code>アノテーションをつけて直接Joinが含まれたSQLを書いたメソッドを定義するか、二つのオブジェクトをアプリケーションの中で組み合わせるかの方法があるかと思います。&lt;/p>
+&lt;p>ここで前者の場合、コードカバレッジとして取れない部分になってしまうので(そして、個人的には性能が良いとしても、あまりクエリが複雑になりそうなものはメンテの観点からよく思ってないので)、後者の方法を取ることにしました。オブジェクトとリポジトリが1:1になって、後でテーブルに修正が発生してもそのテーブルに当てはまるオブジェクトを直すだけで済むので、より簡単な方法だと思ったからです。しかし、その決定にも問題はありました。R2DBCが返すSQLの実行結果としてのオブジェクトは、オブジェクトそのままではなく、&lt;code>Mono&lt;/code>か&lt;code>Flux&lt;/code>であったからです。&lt;/p>
+&lt;h4 id="blockのジレンマ">block()のジレンマ&lt;/h4>
+&lt;p>リポジトリから取得したオブジェクトが&lt;code>Mono&lt;/code>や&lt;code>Flux&lt;/code>なので、またどうやって二つのオブジェクトを組み合わせるか(Joinさせるか)を考える必要があります。&lt;/p>
+&lt;p>一番簡単な方法としては、&lt;code>Mono&lt;/code>や&lt;code>Flux&lt;/code>をブロッキングして使う方法がありますね。すでに&lt;code>Mono&lt;/code>や&lt;code>Flux&lt;/code>には&lt;code>block()&lt;/code>というメソッドが用意されてあって、同期のコードの中で使うことも可能になっています。例えばSpring MVCでもRestTemplateよりWebClientを使うことが推奨されているので、非同期と同期のの共存が不可能なわけでも、おかしいわけでもないです。&lt;/p>
+&lt;p>ただ問題は、そのような方法を取ると非同期のメリットがなくなるということです。なぜなら非同期が見せてくれる素晴らしい同時処理性能は、どこか一つの箇所でもブロッキングが挟むと、結局は同期コードになってしまうからです。それなら今までのSpring MVCとORMでよくて、あえてWebFluxやR2DBCを使う必要が無くなりますね。なので別の方法を試してみることにしました。&lt;/p>
+&lt;h4 id="mono--monoもしくはflux--flux">Mono + MonoもしくはFlux + Flux&lt;/h4>
+&lt;p>やはりここで取るべき方法は、非同期に相応しい処理方法を探すことでしょう。なので調べた結果、二つの&lt;code>Mono&lt;/code>もしくは&lt;code>Flux&lt;/code>を配列のようなオブジェクトとして結合して扱う方法があるということがわかりました。答えは意外と簡単で、&lt;code>zipWith()&lt;/code>というメソッドを使うことで二つの&lt;code>Mono&lt;/code>か&lt;code>Flux&lt;/code>をつなげることができます。つなげた&lt;code>Mono&lt;/code>もしくは&lt;code>Flux&lt;/code>は、Kotlin基準でタプルになるのであとは&lt;code>map()&lt;/code>からタプルのインデックス(繋ぎ元が&lt;code>t1&lt;/code>、繋ぎ先が&lt;code>t2&lt;/code>となります)を指定して使うだけです。例えば、以下のコードは&lt;code>Paticipant&lt;/code>というオブジェクトをリポジトリから取得したあと、さらに&lt;code>CandidateParticipants&lt;/code>を取得して結合する例です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getParticipant&lt;/span>(participantId: Long): Mono&amp;lt;ParticipantDto&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repository.findById(participantId)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .zipWith(candidateParticipantHandler.getåCandidateParticipantsByParticipantsId(participantId).collectList())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { mapDto(&lt;span style="color:#ff79c6">it&lt;/span>.t1, &lt;span style="color:#ff79c6">it&lt;/span>.t2) }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、このような方式を使ってテーブルをJoinするためには、二つのMonoとFluxを取得できる環境である必要があります。なのでSelectを発行するメソッド(Get系のAPIなど)なら、オブジェクトにテーブル間の関係を上手く設計して反映する必要があります。つまり、一つのキーでJoin対象の全てのオブジェクトを取得できるようにする必要があるということになります。最初のオブジェクトを取得したあと、そのオブジェクトが持つまたのキーで紹介したら良いのでは？と思ったこともありますが、残念ながら私の知る限りは簡単にできそうにないです。なぜなら、そのような方法を取るには以下の手順が必要になるからです。&lt;/p>
+&lt;ol>
+&lt;li>キーを持ってJoin元のテーブルを照会、データを&lt;code>Mono&lt;/code>もしくは&lt;code>Flux&lt;/code>として取得する&lt;/li>
+&lt;li>取得した&lt;code>Mono&lt;/code>もしくは&lt;code>Flux&lt;/code>の&lt;code>map()&lt;/code>を呼び出し、更なるキーを抽出、Join先のテーブルを照会する&lt;/li>
+&lt;li>Join元とJoin先のテーブルを組み合わせる&lt;/li>
+&lt;/ol>
+&lt;p>一見問題なさそうですが、&lt;code>Join先のテーブルを紹介する&lt;/code>段階で、またの&lt;code>Mono&lt;/code>もしくは&lt;code>Flux&lt;/code>を取得してしまうので、それからどうやって元のオブジェクトを取り出すかが問題となります。ここでまた&lt;code>block()&lt;/code>を使うと、今までやってきたことたちが台無しとなってしまうわけです。なので、かなり不便でありながら、コードを持ってのテーブルのJoinは、現時点ではこのような方法しかないのではと思っているところです。&lt;/p>
+&lt;h2 id="これがベストか">これがベストか&lt;/h2>
+&lt;p>こうやって、WebFluxで疑問となった問題は、なんとか解決することはできました。しかし、個人的にはこのようなやり方に違和感があります。そして、その理由をProject LoomのリーダであるRon Pressleの&lt;a class="link" href="https://www.infoq.com/presentations/continuations-java/" target="_blank" rel="noopener"
+>説明&lt;/a>から探すことができました。彼の話によると、今の非同期プログラミングは以下の三つの問題を持っています。&lt;/p>
+&lt;h3 id="コントロールフローを見失いやすい">コントロールフローを見失いやすい&lt;/h3>
+&lt;p>非同期でコードを書いていると、どんなロジックと目的でコードを書いていたか忘れてしまうような気がする時があります。それはおそらく、アプリケーションの本来の目的を達成するための「ビジネスロジック」よりも、「ノンブロッキングのお作法」の方を気にかけることが多くなるからですね。非同期でコードを書いていると、簡単な条件分岐や繰り返してもかなりコードが複雑になり、一体どのような処理をしようとしたか、その制御の流れを見失いやすくなります。Javaだけやっていた自分にはあまり実感がないですが、JavaScirptで非同期のコードを書いた経験のある方にはこれが理解できるでしょう。(あの有名な、コールバックヘル問題とかがあるし…)&lt;/p>
+&lt;p>例えばこのポストでも紹介した通り、二つのテーブルをJoinするために、何をしているかをみてください。同期だったら、最初からJoinしたデータを取得するか、二つのオブジェクトを順番に宣言して処理するだけ済む話ですね。このように簡単な処理でも非同期に変えようとすると、そのコードで何をしたいかよりも、まず非同期の形式に合わせたコードを書くことになるので、「一体何をしようとしているのか」という、そもそもの目的がわからなくなる場合があるという話です。&lt;/p>
+&lt;h3 id="コンテキストを見失ってしまう">コンテキストを見失ってしまう&lt;/h3>
+&lt;p>非同期だと、例外が発生した時に、スタックトレースを追うのが非常に難しくなります。なぜなら、同期の場合は一つのスレッドが一つのリクエストを処理するため、何が実行されどんな結果になったのかを追跡するためにはそのスレッドの残した履歴を見るだけで十分です。しかし、非同期だと、一つのリクエストが複数のスレッドを渡りながら処理されるため、一つのスレッドの履歴を追うだけでは一体どんなことが起こっているかわからなくなるからです。&lt;/p>
+&lt;h3 id="コードの伝染">コードの伝染&lt;/h3>
+&lt;p>非同期でコードを書くことになると、結局はアプリケーション全体から同期という概念を排除する結論に至るかも知れません。なぜなら、先に述べました通り、非同期の処理の中で一つでも同期の処理が混ざっているとしたら、それだけでも全体の処理が同期になっちゃうからです。なので、同期と非同期を一つのアプリの中で共存させるのはかなり難しくなり、結果的には非同期のコードに他のコードが「伝染」されるようなことが起きてしまうケースが発生します。例えばWebFluxの例では、同期のコードと混ぜて使うこともほぼ不可能に近いので、あえてオブジェクトを&lt;code>Mono&lt;/code>や&lt;code>Flux&lt;/code>に入れ(非同期に変え)、&lt;code>zipWith()&lt;/code>でタプルとして結び、&lt;code>map()&lt;/code>や&lt;code>flatMap()&lt;/code>で処理するという形になるしかなくなります。そしてその逆の方法を取るとしたら(&lt;code>block()&lt;/code>で&lt;code>Mono&lt;/code>の中身を持ち出すなど)、もはや最初から同期でコードを書いた方が良いということになってしまうという問題があります。&lt;/p>
+&lt;h2 id="それでも非同期は必要">それでも非同期は必要&lt;/h2>
+&lt;p>以上のことは、おそらく非同期に触れてみた人なら誰でも一度は触れてみた問題であり、共感する人も多いのではないかと思います。しかし、このような不便さがあるにもかかわらず、依然として非同期プログラミングの必要性はあります。特に、今のトレンドだと多くのWebアプリケーションで同時処理性能が重要となっていますので、尚更です。実際&lt;a class="link" href="%28https://support.google.com/analytics/answer/4589209?hl=ja%29" >グーグルアナリティクス&lt;/a>は、KissMetricsを引用して「ページのレスポンスが 1 秒遅れると、コンバージョン数が 7% 減少する」、「47% の消費者は 2 秒以内にウェブページが読み込まれることを期待している」と行っているくらいですが、このような要求に対応できるのはやはり非同期としか言えません。なので、JavaScriptやC#のような言語では&lt;code>async&lt;/code>/&lt;code>await&lt;/code>/&lt;code>promise&lt;/code>などを試し、Kotlinで&lt;a class="link" href="https://kotlinlang.org/docs/reference/coroutines-overview.html" target="_blank" rel="noopener"
+>Coroutine&lt;/a>というものを導入するなど、なんとしても非同期の短所を補完するという努力をしているところですね。&lt;/p>
+&lt;p>特に、Javaの場合はOSのスレッドを直接使用するので、同時に処理できるリクエストは数千くらいにすぎません。なので、このスレッド基盤という言語そのものの限界を克服するため今まで多くの非同期ライブラリが作られてきました。しかし、ライブラリにはやはり限界があったので、JVMレベルでの対応が検討されているところです。それが先ほど紹介しました、&lt;a class="link" href="https://cr.openjdk.java.net/~rpressler/loom/Loom-Proposal.html" target="_blank" rel="noopener"
+>Project Loom&lt;/a>というものです。&lt;/p>
+&lt;h3 id="project-loomという答え">Project Loomという答え&lt;/h3>
+&lt;p>Project Loomでは、既存のスレッドをFiberという仮想・軽量スレッドとして切り分け、同時処理性能をあげると同時に、「非同期プログラミングを同期プログラミングの感覚でできるように」して、今までのように非同期か同期かによってコードが変わるような現象を無くすのが目的です。Fiberは数百万まで生成できるというし、使い方としても既存のスレッドどあまり変わらないので、コードの修正も少なくなります。それに、同期の感覚で書いても内部的に&lt;code>async&lt;/code>/&lt;code>await&lt;/code>を使ったかのように処理されるので、コールバックヘルのような問題も無くなりますね。&lt;/p>
+&lt;p>また、KotlinのCoroutineはあくまでコンパイラレベルの対応なので、上述した3つの問題のうち、「コンテキストを見失う」、「コードの伝染」という問題は根本的に解決できませんが、Project LoomはJVMレベルの対応なので、これらの問題が全部解消されるというメリットもあります。そして既存の同期APIを非同期に変えることで、クライアントコードとしてはあまり変わることなくすぐに適応できるのも魅力的ですね。&lt;/p>
+&lt;p>多くの場合に「非同期の性能」は欲しくても、多くのプログラマが「同期の書き方」に慣れているという現実からして、Proejct Loomが正式リリースされるとしたら既存のCoroutineや&lt;code>async&lt;/code>/&lt;code>await&lt;/code>/&lt;code>promise&lt;/code>、Reactice Streamを使ったプロジェクトの多くがFiberを使ったコードに変わるのではないかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>どんな分野でも、過渡期にあるものがもっとも混乱しやすく、辛いものです。そしてプログラミングにおいては、非同期プログラミングというパラダイムが、まさにそうなのではないかと思います。多くの天才たちが言語、ライブラリ、フレームワークとしうさまざまな方面から非同期プログラミングの短所を克服しようと努力してきて、やがてその結実が見えてくるような気がします。Reactive Steamの思想、「反応型」という概念は個人的に嫌いではないですが、それが今までのプログラミングに比べあまりにも変わった書き方になってくるので、個人的には「特定の目的のため、完全に違う言語も学ぶのと同じくらいの努力が必要となるが、その効率の悪さを甘んずるほどのメリットがあるか」とも思います。それはおそらく、まだ自分が本格的に非同期のコードを書いてみたことがないのでそう思うだけなのかも知れませんが。でも、これもProject Loomのように、同期の感覚で非同期プログラミングができるような技術があると解決される問題でしょう。&lt;/p>
+&lt;p>ただ、まだProject Loomは完成した技術ではなく、開発途中のものなので、のちに限界や問題が見つかる可能性もありますね。そして将来的にWebFluxなどで採用されるとしても、リリースのタイミングがわからないので、それまではReactive StreamやCoroutineを使うしかないので、のちにLoomのリリースに合わせて既存のコードを全部書き換えるというのも無理な話です。なるべく早く出て欲しいのですが、まだ2年以内のリリースはないみたいなので、今の姿とは全く違うものになる可能性もありますね。&lt;/p>
+&lt;p>だとしても、JVM自体が代わり、非同期プログラミングがより楽なるということは魅力的なものです。最近はKotlinにハマっていますが、こうやって変わっていくJavaを見るのも楽しいことですね。また新しい世界が見えてきそうな気分です。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Spring WebFluxって何？</title><link>https://retheviper.github.io/posts/spring-webflux/</link><pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post Spring WebFluxって何？" />&lt;p>Springが初めて発表されたのが2002年なので、およそ20年に近い時間が経ちました。今はJavaと言えば当たり前のようにSpringを使っていて、Spring MVCやMaven、propertiesのような煩雑な環境構築と初期設定の問題も、Spring Bootが登場したおかげでだいぶマシになりましたね。特に自分の場合がそうですが、Spring Boot、Gradle、yamlを使ってXMLは一つもないアプリをよく書いていて、なんでも楽と思います。&lt;/p>
+&lt;p>こうも発展を成し遂げているSpringですが、実は数年前から、そもそものSpring MVCの問題を改善したいという声があり、Spring 5.0からはMVCとは全く違う、新しいフレームワークが登場していました。それが今回紹介します、Spring WebFluxです。&lt;/p>
+&lt;h2 id="spring-webfluxはmvcと何が違うか">Spring WebFluxはMVCと何が違うか&lt;/h2>
+&lt;p>最初から作り直したフレームワークなので、根本的な部分から違うところが多いので、理論的なだと以下のキーワードをあげられますでしょう。&lt;/p>
+&lt;ul>
+&lt;li>非同期、ノンブロッキング、反応型&lt;/li>
+&lt;/ul>
+&lt;p>私の(コードモンキーの)レベルからしたら、実際のコードのレベルで体感するMVCとの違いは以下です。&lt;/p>
+&lt;ul>
+&lt;li>MonoとFlux&lt;/li>
+&lt;li>Controller/Serviceの代わりにFunction&lt;/li>
+&lt;li>TomcatよりNetty&lt;/li>
+&lt;li>JPA/JDBCよりR2DBC&lt;/li>
+&lt;li>新しい抽象化クラス&lt;/li>
+&lt;/ul>
+&lt;p>では、これらの違いについて、一つ一つみていきたいと思います。&lt;/p>
+&lt;h2 id="理論的な話">理論的な話&lt;/h2>
+&lt;h3 id="非同期ノンブロッキング反応型">非同期、ノンブロッキング、反応型&lt;/h3>
+&lt;p>Spring WebFluxは&lt;a class="link" href="https://github.com/reactor/reactor-core" target="_blank" rel="noopener"
+>Project Reactor&lt;/a>に基づいて作られていて、その根幹となる考え方は&lt;a class="link" href="https://www.reactive-streams.org" target="_blank" rel="noopener"
+>Reactive Stream&lt;/a>だそうです。Reactive Streamは標準APIであり、Java 9から&lt;code>java.util.concurrent.Flow&lt;/code>として導入されています。&lt;/p>
+&lt;p>Reactive Streamはデザインパターン的にはObserverと似ています。簡単にいうと、何かのイベントが発生した時に「通知してくれ」と頼んで、データをもらうということです。この「通知してくれ」と頼む行為のことをSubscription(購読)といい、データを発行するPublisherと購読するSubscriberの間でSubscriptionのやり取りで行われます。こういうイベント基盤のプログラムを作ることが、いわゆる「反応型」だそうです。&lt;/p>
+&lt;p>そしてReactive StreamではこのSubscriptionのやり取りが、非同期・ノンブロッキングで行われるらしいです。ということは、コードが実行された時点か終わるまでまつ必要がなく、その間に他のことができるということです。なので同じ数の同じタスクを実行するときは同期・ブロッキングと比べあまり性能面での違いはないのですが&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>、スレッド数がボトルネックとなる場合だと、非同期・ノンブロキングの方が早くなります。&lt;/p>
+&lt;p>理論的な話は、深くまで踏み入るとキリが無くなるので、実際のコードではどんな違いがあるのか？をみていきましょう。&lt;/p>
+&lt;h2 id="コードのレベルでの話">コードのレベルでの話&lt;/h2>
+&lt;h3 id="monoとflux">MonoとFlux&lt;/h3>
+&lt;p>Spring WebFluxだと、コントローラのメソッドに戻り値(レスポンス)としてMonoとFluxを使うということです。Spirng MVCなら、文字列でJSPファイルを指定したり、REST APIならJSONとして返すオブジェクトを指定していましたね。もちろんMonoとFluxもJSONオブジェクトとして出力されるのですが、作り方が少し独特です。&lt;/p>
+&lt;p>Spring WebFluxの根幹となる考え方がReactive Streamであると先に述べましたね。そしてReactive StreamをWebFlux側で実装したものが、MonoとFluxになります。Monoは&lt;code>0か1か&lt;/code>、Fluxは&lt;code>0かNか&lt;/code>の違いだそうですが、必ずしもCollection=Fluxにする必要はなくて、Monoとして扱うことßもできます。&lt;/p>
+&lt;p>Reactive Streamは、名前からしてJava 1.8のStream APIとなんらかの関係があるようにも見えます。実際、データの作成と消費の時点が違うのですが&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>、似たような名のメソッドや、Lambdaで完成していくところは似ています。すでに&lt;a class="link" href="https://github.com/ReactiveX/RxJava" target="_blank" rel="noopener"
+>RxJava&lt;/a>や&lt;a class="link" href="https://github.com/jOOQ/jOOL" target="_blank" rel="noopener"
+>JOOL&lt;/a>などに慣れているなら、書き方的にはまあり問題なく適応できそうですが、そうでない方には適応が難しいかもしれません。&lt;/p>
+&lt;p>例えば、GETで、リクエストを受けたら1秒後にレスポンスを返す簡単なメソッドを実装するとしましょう。Spring MVCによるREST APIだと、以下のようになるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@GetMapping
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@ResponseStatus&lt;span style="color:#ff79c6">(&lt;/span>HttpStatus&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">OK&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> String &lt;span style="color:#50fa7b">getTest&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Thread&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">sleep&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>1000&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;task completed by mvc&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">catch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>InterruptedException e&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;task failed by mvc&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>WebFluxでは、以下のようにMonoを作成して返します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@GetMapping
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@ResponseStatus&lt;span style="color:#ff79c6">(&lt;/span>HttpStatus&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">OK&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Mono&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#50fa7b">getTest&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> Mono&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">delay&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Duration&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">ofMillis&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>1000&lt;span style="color:#ff79c6">)).&lt;/span>&lt;span style="color:#50fa7b">then&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Mono&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">just&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;task completed by Mono&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">));&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>最近はなんでも宣言的な言語やフレームワークなどが増えているので(例えばFlutterやSwiftUIがそんな感じですね)、こういう書き方は珍しくもないですが、伝統的な命令型プログラミングに慣れている方には少し辛い書き方になるかもしれません。私自身も、StreamやLambdaは好きなものの、ネストしていく命令型とメソッドチェインで長くなる宣言型のどちらがいいか確信がないです…&lt;/p>
+&lt;h3 id="controllerserviceの代わりにfunction">Controller/Serviceの代わりにFunction&lt;/h3>
+&lt;p>WebFluxのコード上でのもう一つの特徴は、ControllerとServiceの代替となるクラスを作ることができるということです。もちろん従来通りControllerとServiceクラスを利用することもできますが、どうせなら新しいものが使ってみたくなりますね。&lt;/p>
+&lt;p>SpringでController/Serviceを作るということは、つまりアノテーションによる「メタプログラミング」に依存して開発するというです。確かにアノテーションは便利であって、Springではアノテーションでなんでもできるような感じもしますね。しかし、アノテーションによる開発では以下のような問題があります。&lt;/p>
+&lt;ul>
+&lt;li>コンパイラで検証できない&lt;/li>
+&lt;li>コードの行為を規定しない&lt;/li>
+&lt;li>継承、拡張のルールに標準がない&lt;/li>
+&lt;li>理解できない、誤解しやすいコードをを生み出す可能性がある&lt;/li>
+&lt;li>テストが極めて難しい&lt;/li>
+&lt;li>カスタマイズが難しい&lt;/li>
+&lt;/ul>
+&lt;p>なぜかというと、アノテーションを使うということは結局Reflectionに依存するということになるからです。Reflectionを使っているとランタイムでバイトコードが生成されてしまうので、コンパイルタイムにできることがあまりないですね。Reflectionは確かに強力な道具ですが、他にも問題はあります。例えばパフォーマンスは低下し、デバッグも難しいです。こういう問題があるのでJavaのコードをネイティブにコンパイルしてくれるという&lt;a class="link" href="https://www.graalvm.org" target="_blank" rel="noopener"
+>GraalVM&lt;/a>ではReflectionに対応していないのかもしれないですね。&lt;/p>
+&lt;p>とにかく、このような問題を解決するためにWebFluxで新しく導入されたのは、&lt;code>Function&lt;/code>です。はい、言葉通り、関数です。既存のControllerに対応する&lt;code>Router&lt;/code>とServiceに対応する&lt;code>Handler&lt;/code>を作り、関数型モデルとして(Functinalに)コードを書くことができます。もちろんFunctionalに書くとしても、アノテーションは使えます(むしろアノテーションなしではだめです…)。例えば以下のような書き方になります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@Configuration
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Router&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Bean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> RouterFunction&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>ServerResponse&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#50fa7b">route&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> Handler handler&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> nest&lt;span style="color:#ff79c6">(&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/api/v1/web/members&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">),&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> RouterFunctions&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">route&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>GET&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">),&lt;/span> handler&lt;span style="color:#ff79c6">::&lt;/span>listMember&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">andRoute&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>POST&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;/&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">),&lt;/span> handler&lt;span style="color:#ff79c6">::&lt;/span>createMember&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>@Component
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Handler&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> MemberRepository repository&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#50fa7b">Handler&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> MemberRepository repository&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">repository&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> repository&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Mono&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>ServerResponse&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#50fa7b">listMember&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> ServerRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> ok&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">contentType&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>MediaType&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">APPLICATION_JSON&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">body&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Flux&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">fromIterable&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>repository&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">findAll&lt;/span>&lt;span style="color:#ff79c6">()),&lt;/span> Member&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> Mono&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>ServerResponse&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#50fa7b">createMember&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> ServerRequest request&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> ok&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">contentType&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>MediaType&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">APPLICATION_JSON&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">body&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>request&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">bodyToMono&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Member&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">flatMap&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>member &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Mono&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">fromCallable&lt;/span>&lt;span style="color:#ff79c6">(()&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> repository&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">save&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>member&lt;span style="color:#ff79c6">))&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">then&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Mono&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">just&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>member&lt;span style="color:#ff79c6">))),&lt;/span> Member&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>関数型になってわかりやすくなったような、難しくなったような…&lt;/p>
+&lt;h3 id="tomcatよりnetty">TomcatよりNetty&lt;/h3>
+&lt;p>Spring WebFluxのデフォルトのアプリケーションサーバはNettyです。簡単に推論できる理由ですが、&lt;a class="link" href="https://netty.io" target="_blank" rel="noopener"
+>Netty&lt;/a>の方が最初からノンブロッキングという考え方に基づいて作られているからでしょう。Tomcatはもちろん同期、ブロッキングなので、Nettyと比較すると以下のような違いがあるらしいです。&lt;/p>
+&lt;ul>
+&lt;li>Tomcat：リクエストとスレッドは1:1&lt;/li>
+&lt;li>Netty：リクエストとスレッドはN:1&lt;/li>
+&lt;/ul>
+&lt;p>もちろん、Spring MVCみたいにNettyの代わりにTomcatを使うこともできます。例えばGradleでは以下のような書きます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>dependencies &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> implementation&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;org.springframework.boot:spring-boot-starter-webflux:2.3.3.RELEASE&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exclude &lt;span style="color:#8be9fd;font-style:italic">group:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;org.springframework.boot&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">module:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;spring-boot-starter-reactor-netty&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> implementation&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;org.springframework.boot:spring-boot-starter-tomcat:2.3.3.RELEASE&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="jpajdbcよりr2dbc">JPA/JDBCよりR2DBC&lt;/h3>
+&lt;p>これもアプリケーションサーバと同じような話です。JPA/JDBCなど、従来のORMはブロッキングなのでノンブロッキングに対応する&lt;a class="link" href="https://r2dbc.io" target="_blank" rel="noopener"
+>R2DBC&lt;/a>に変えましょう、ということです。NIOがそうであったように、ブロッキングでもR2DBCを使うと場合によってはパフォーマンスの向上を図ることもできるらしいです。&lt;/p>
+&lt;h3 id="新しい抽象化クラス">新しい抽象化クラス&lt;/h3>
+&lt;p>WebFluxでは、Spring MVCで使っていた抽象化クラスも変わっています。これも同じく、関数型としての書き方とノンブロッキングに対応するためですね。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>種別&lt;/th>
+&lt;th>Spring MVC&lt;/th>
+&lt;th>Spring WebFlux&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>リクエスト&lt;/td>
+&lt;td>HttpServletRequest&lt;/td>
+&lt;td>ServerHttpRequest&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>レスポンス&lt;/td>
+&lt;td>HttpServletResponse&lt;/td>
+&lt;td>ServerHttpResponse&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>他のAPIをコール&lt;/td>
+&lt;td>RestTemplate&lt;/td>
+&lt;td>WebClient&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>WebClientの場合は、RestTemplateが&lt;code>deprecated&lt;/code>に変更されるので、Spring MVCを使う場合でも導入を考える必要はあります。実際Spring MVCで使う場合でもResttemplateに比べてパフォーマンスが向上される場合もあると言われています。&lt;/p>
+&lt;h2 id="どこに使えばいい">どこに使えばいい？&lt;/h2>
+&lt;p>さて、さっくりWebFluxの特徴をみてみましたが、どうでしょうか。書き方もかなり違っていて、Servlet基盤のMVCとは全く違うReactorに基盤しているので、Spring WebFluxの導入はかなり悩ましいことです。実際Spring MVCと同時に使うこともできず(無理矢理Dependencyを追加しても、MVCが優先され、WebFluxの機能は動作しなかったりもします)、Spring Securityなど他のフレームワークもSpring WebFluxのために作りなおったものに変えなくては行けないので、既存のシステムやSpring MVCに基づいて整備したライブラリなどがたくさんある場合はその影響範囲が測定できません。&lt;/p>
+&lt;p>そして性能面でも、ノンブロッキングが強いのは、「指定されたスレッド数を超えるリクエストがある場合」という条件下の話です。ノンブロッキングに変えたからって、単一スレッドでの性能が上がるわけでもないということですね。&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>&lt;/p>
+&lt;p>ただし、以下のような場合はWebFluxの導入を考えられます。&lt;/p>
+&lt;ol>
+&lt;li>完全新規サービスをはなから作る&lt;/li>
+&lt;li>複数のサービスがあり、サービス同士での呼び出しが多い場合(マイクロサービス)&lt;/li>
+&lt;li>BFF&lt;sup id="fnref:4">&lt;a href="#fn:4" class="footnote-ref" role="doc-noteref">4&lt;/a>&lt;/sup>の場合&lt;/li>
+&lt;/ol>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>簡単に整理しようとしていた内容が、いつの間にかかなり長くなりましたが…おかげで色々と勉強はできたと思います。WebFluxが登場してからもすでに数年が経っていて、RestTemplateがdeprecatedになる予定であるように、究極的には全体をWebFlux基盤に移行する必要が生じる日がいつか来るかもしれません。なんでも最近は非同期、関数型、反応型というキーワードがすごく流行っていますし。&lt;/p>
+&lt;p>静的タイプの言語が最初に生まれて、動的タイプの言語も生まれ、TypeScriptのように静的な世界にまた戻るような現象が起きているのを見ると、また関数型から命令型に移行する日もいつか来る可能性があるのかな、と思ったりもします。ただ、こういうパラダイムはどれが絶対というわけではないので、優秀なプログラマならどれも適時適切に使いこなせるようにならないと、という気もします。エンジニアとしての勉強の道は本当に終わりがないですね。&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>実際は、スレッド数によるボトルネックのない状態だと、関数型の方が少し遅いらしいです。実際は関数型のAPIの実装の方が複雑だからですね。ただ、この違いはコードの読みやすさや実装のしやすさなどを考慮した時は、十分トレードオフとして考慮できるくらいの差のようです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2" role="doc-endnote">
+&lt;p>Streamは同期なので、データを生産と消費が一緒に行われます。しかし、Reactive Streamではデータの生産がすぐ消費までつながるとは言い切れません。非同期だからです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:3" role="doc-endnote">
+&lt;p>むしろ、単一スレッドでの処理は、WebFluxの方がMVCに比べ少し遅いという話もあります。forループに比べStreamが遅い理由と似ているような気がしますが…&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:4" role="doc-endnote">
+&lt;p>Back-end For Front-endの略。マイクロサービスの一種で、複数のエンドポイントをまとめて固有のオブジェクトを生み出すバックエンド。フロントエンドは一つのエンドポイントを呼び出すだけでことが済みます。&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item></channel></rss>

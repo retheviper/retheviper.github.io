@@ -1,1 +1,207 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gradle on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/gradle/</link><description>Recent content in gradle on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Nov 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/gradle/index.xml" rel="self" type="application/rss+xml"/><item><title>Gradleのdependenciesはどう書くべきか</title><link>https://retheviper.github.io/posts/gradle-dependencies/</link><pubDate>Mon, 04 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-dependencies/</guid><description>現代のプログラミングは、半分インターネットでなされていると言っても過言ではないでしょう。言語やMWの公式ガイドラインだけではなく、ウェブ上の</description></item><item><title>Gradleでマルチプロジェクトを作る</title><link>https://retheviper.github.io/posts/gradle-multi-project/</link><pubDate>Sun, 20 Oct 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-multi-project/</guid><description>もともと自分が学んでいたのはMavenを利用したSpring MVCのプロジェクトを作る方法でしたが、最近はGradleで管理されるSprin</description></item><item><title>Gradleからコマンドライン引数を渡す</title><link>https://retheviper.github.io/posts/gradle-command-line/</link><pubDate>Tue, 17 Sep 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-command-line/</guid><description>最近仕事で作っているのは、固有ライブラリーです。ただ思っていたことと違ったのは、まず完全自作ではなく既存のライブラリーを改良するような物であ</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gradle on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/gradle/</link><description>Recent content in gradle on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Nov 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/gradle/index.xml" rel="self" type="application/rss+xml"/><item><title>Gradleのdependenciesはどう書くべきか</title><link>https://retheviper.github.io/posts/gradle-dependencies/</link><pubDate>Mon, 04 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-dependencies/</guid><description>&lt;img src="https://retheviper.github.io/images/gradle.jpg" alt="Featured image of post Gradleのdependenciesはどう書くべきか" />&lt;p>現代のプログラミングは、半分インターネットでなされていると言っても過言ではないでしょう。言語やMWの公式ガイドラインだけではなく、ウェブ上の数多くのコミュニティで情報を得られる時代ですからね。そしてMavenやGradleのように、依存関係の管理自体がネットに繋がっていることを前提としているものもあります。私もそういうトレンドから離れてはなく、自分が書いているコードで問題が発生するととりあえず検索で調べてみる方です。時間はかかっても、大概はそうすることで解決できますね。&lt;/p>
+&lt;p>しかし、そんな便利ながらもネットで知識を求める行動にはリスクもあります。果たしてその情報が正しいかという問題ですね。まずコーディングに関する情報だと、私の基準では2年以上立っているものなら信じがたいものとなります。当時はそれが正解だったとしても、今はそうではない可能性がありますので。例えば同じライブラリーを使っているとしても、バージョンアップによりパッケージの構成が変わったり、メソッドのシグニチャーが変わったりしますが、ネットにある全ての情報がそのような変更まで全部反映しているとは思えません。実際動いたというコードが書かれているとしても、そのコードはあくまで普通のテキストであって、現在コンパイルして動かすことのできるものでもないですしね。&lt;/p>
+&lt;p>今回の主題である&lt;code>Gradleのdependenciesをどう書くべきか&lt;/code>というのも、そういう意味でのものです。私自身も今まで依存関係を書くときは、公式で提案しているコードやブログなどを参照してコピペしていました。しかし、そうしていると同じライブラリーでも&lt;code>complie&lt;/code>だったり&lt;code>implementation&lt;/code>だったり&lt;code>runtime&lt;/code>だったりしていて、かなり混乱するものでした。結局どんな書き方をとるとしてもその結果は同じように見えるのに、こうして区分している理由は何かと思いました。&lt;/p>
+&lt;p>そして結局、その疑問の答えは自分がとある問題に直面することで得られました。なので今回はただ単に理論の話ばかりではなく、問題が起こり得る場所とその解決法についてのものでもあります。&lt;/p>
+&lt;h3 id="compile-implementation">compile? implementation?&lt;/h3>
+&lt;p>ネットでGradleで依存関係を書く方法を調べると、同じライブラリーでもその書き方が&lt;code>compile&lt;/code>だったり&lt;code>implementation&lt;/code>だったりしますね。現時点でそのうちどれを使ってもまず動きはするので、一見何の問題も内容に感じされます。&lt;/p>
+&lt;p>しかし、問題は&lt;code>compile&lt;/code>です。このキーワードは多分、依存関係を表現する最も古い記述法です。実際の検索結果が一番多いような気もしますね。意味的にも、&lt;code>このライブラリーをコンパイル時に使う&lt;/code>のような感覚なのでわかりやすいと思います。&lt;/p>
+&lt;p>ただ、Gradleの&lt;a class="link" href="https://docs.gradle.org/4.7/userguide/java_plugin.html#sec:java_plugin_and_dependency_management" target="_blank" rel="noopener"
+>4.7バージョンのJava Library Plugin&lt;/a>のDependency managementタブを参照すると、compileは&lt;code>Deprecated&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>と書いてあります。このポストを書く時点での安定化バージョンは5.6で、今後6.0が予定されているのでこちらはなるべく使わない方が良さそうです。&lt;/p>
+&lt;p>&lt;a class="link" href="https://docs.gradle.org/5.6.4/userguide/java_library_plugin.html#sec:java_library_separation" target="_blank" rel="noopener"
+>公式の文書を参照&lt;/a>すると、&lt;code>compile&lt;/code>は&lt;code>implementation&lt;/code>と&lt;code>api&lt;/code>の二つに分けられたらしいです。つまり、これからはcompileの代わりにそのどちらかを選ぶのが望ましいということですね。&lt;/p>
+&lt;h2 id="implementationとapi">implementationとapi&lt;/h2>
+&lt;p>既存の&lt;code>compile&lt;/code>だと、必ず「依存関係の伝播」が発生していたらしいです。つまり、Aというライブラリーを使って新しくBというライブラリーを作成したとしましょう。そしてまた、Bに依存するCを作成します。こういった場合、CではBを依存することだけでAにも触れられるようになります。このような状況は、場合によってはまあり望ましくないことになる可能性もありますね。Aをラッピングして、仕様を絞る目的としてBを作成したとしてもCからAを直接扱うことができますから。これはJavaのカプセル化の観点からしてもあまり望ましくないです。&lt;/p>
+&lt;p>&lt;code>implementation&lt;/code>では、この依存関係の伝播に制約をかけています。つまり、BからAに依存するとき、&lt;code>compile&lt;/code>ではなく&lt;code>implementation&lt;/code>で記述するとCからAを直接参照できなくなるということです。この理由から、最近は多くの場合に&lt;code>compile&lt;/code>の代わりに&lt;code>impelementation&lt;/code>を使うことを推奨しているらしいですね。&lt;/p>
+&lt;p>それに対して&lt;code>api&lt;/code>では従来通り依存関係の伝播が発生します。BがAに依存しているとき、完全なラッピングではなく、CからAも参照させたいならこちらを使うべきですね。実際、業務でライブラリーをいくつか作っていましたが、一部では大元のライブラリーを参照させる必要があるものもありました。この場合に&lt;code>implementation&lt;/code>を使うとCからのAに対する直接的な参照がGradleとしては認識できなくなったらしく、コンパイルでのエラーが発生することもありました。なのでdependenciesの記述では、自分が作成しているものの性質を正しく理解し記述方法を決めるということも大事ですね。&lt;/p>
+&lt;p>これらの関係を簡単な図として表現すると、このようになります。&lt;/p>
+&lt;p>&lt;figure
+>
+&lt;a href="https://retheviper.github.io/gradle_implementation_api.png" >
+&lt;img src="https://retheviper.github.io/gradle_implementation_api.png"
+loading="lazy"
+alt="Gradle Implemenatation API">
+&lt;/a>
+&lt;figcaption>Gradle Implemenatation API&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>これでシンプルに、Gradleのdependenciesはどう書くべきかについて述べてみました。実際は&lt;code>implementation&lt;/code>と&lt;code>api&lt;/code>意外にもランタイムのみ参照の&lt;code>runtimeOnly&lt;/code>やテスト用の&lt;code>testImplementation&lt;/code>など、様々な記述方法があるので、状況と場合によっては柔軟な対応が必要かと思います。ただ、大抵の場合は依存関係を整理し、&lt;code>implementation&lt;/code>と&lt;code>api&lt;/code>の使い分けを確かにすることが最も重要なことなのではないでしょうか。&lt;/p>
+&lt;p>また、先に述べたように、ネットから得られた情報がAPIの更新事項を確かに反映しているかのチェックも重要ですね。古い情報だと今のコードでは問題を起こす可能性がありますので。そういう意味では、このポストも時間がたてばいつか正しくない情報となる可能性はあります。いや、このポストだけでなく、もしかしたらこのブログ全体で私が書いている情報の全てがそうなのかも知れません。&lt;/p>
+&lt;p>コードを書きながら、ネットの情報を参照するときは常にそれが書かれた日付を確認し、公式のドキュメントと見比べる必要があるのではないかと思います。勉強も最新化の方針で！&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>Deprecatedは、「オススメしない」という意味です。プログラミングの世界では、何らかの問題があったり必要が無くなったりするなどの理由でこれからなくなる可能性の高い関数を指す言葉となっています。実際、EclipseではJavaの関数に&lt;code>@Deprecated&lt;/code>をつけると関数名に打ち消し線が現れることを確認できます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item><item><title>Gradleでマルチプロジェクトを作る</title><link>https://retheviper.github.io/posts/gradle-multi-project/</link><pubDate>Sun, 20 Oct 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-multi-project/</guid><description>&lt;img src="https://retheviper.github.io/images/gradle.jpg" alt="Featured image of post Gradleでマルチプロジェクトを作る" />&lt;p>もともと自分が学んでいたのはMavenを利用したSpring MVCのプロジェクトを作る方法でしたが、最近はGradleで管理されるSpring Bootプロジェクトを触っています。最初はGradleを単純にMavenと似たような依存関係用のツールだとしか思ってなかったですが、直接タスクを作ったりJarをビルドしたり色々挑戦してみてからそう単純なものではないということに気付きました。&lt;/p>
+&lt;p>その中でも最も良いと思ったのは、それぞれ違う機能を持つ個別のプロジェクトをマルチプロジェクトという概念で管理できることでした。OOPの観点からしてクラスやパッケージだけを分けるのではなく、プロジェクト単位の分け方によってより維持保守に長けているアプリケーションを作られるのではないか、と思います。&lt;/p>
+&lt;p>なのでここではまず簡単にGradleのマルチプロジェクトが何であり、その作り方について簡単に説明したいと思います。&lt;/p>
+&lt;h2 id="gradle-multi-project">Gradle Multi Project&lt;/h2>
+&lt;p>Graldeのマルチプロジェクトは、その名の通り複数のプロジェクトで構成されているプロジェクトのことを意味します。具体的には全ての起点となるルートプロジェクトがあり、その配下に複数のGradleプロジェクトが入っている形になります。ルートプロジェクトの配下で管理されるプロジェクトたちはサブプロジェクトといいます。&lt;/p>
+&lt;p>こういうマルチプロジェクトの作り方は今回紹介する方法とはまた違うものもあるらしく、プロジェクトのフォルダ構成にも違いがあるようです。&lt;/p>
+&lt;p>ただ、マルチプロジェクトは複数プロジェクトの管理を簡単にさせるということにその目的があると思いますので、一つのリポジトリ単位で管理できるようにルートプロジェクトの中にサブプロジェクトが入っている形を採用します。これは実際自分が仕事で書いているSpring Bootプロジェクトの構成でもあります。&lt;/p>
+&lt;p>また、ここで紹介しているのはEclipseを基準にした説明となります。(他のIDEはまだ詳しくないので…)&lt;/p>
+&lt;h2 id="root-project">Root Project&lt;/h2>
+&lt;p>全てのサブプロジェクトを含む大元となるルートプロジェクトを作ります。一般的なGradleプロジェクトをまず作成します。ただ&lt;code>build.gradle&lt;/code>はこれからサブプロジェクトに使う予定なので、コピーしておきましょう。あとはいらなくなったファイルとフォルダを削除します。ここで残すファイルとフォルダは以下だけです。&lt;/p>
+&lt;ul>
+&lt;li>gradle(フォルダ)&lt;/li>
+&lt;li>build.gradle&lt;/li>
+&lt;li>gradlew&lt;/li>
+&lt;li>gradlew.bat&lt;/li>
+&lt;/ul>
+&lt;p>以上のファイルとフォルダを残したら、次は&lt;code>build.gradle&lt;/code>ファイルを修正します。ルートプロジェクトはサブプロジェクトの管理だけをしていて、必要なタスクやプラグイン、依存関係の設定はサブプロジェクトで記述します。なのでなるべくシンプルにしましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>subprojects &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repositories &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mavenCentral&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでやっていることは、サブプロジェクトのリポジトリ指定だけですが、同じやり方でサブプロジェクトの&lt;code>build.gradle&lt;/code>に共通記述しなければならないことはなんでも入れていいです。例えばプラグインとかがあるでしょう。&lt;/p>
+&lt;p>次に、&lt;code>settings.gradle&lt;/code>ファイルを作成します。このファイルはルートプロジェクトとサブプロジェクトを紐付け、プロジェクト名を決める役割をします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>include &lt;span style="color:#f1fa8c">&amp;#39;core&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>include &lt;span style="color:#f1fa8c">&amp;#39;web&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;TestProject&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;-&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>include&lt;/code>と書いたものはサブプロジェクトで、&lt;code>rootProject.name&lt;/code>はその名の通りルートプロジェクト名を意味します。他にも命名できる方法はありますが、あくまでルートプロジェクト名がこのプロジェクト全体を意味するもので、サブプロジェクトはそのうちの一つの機能単位という感覚て命名しています。&lt;/p>
+&lt;p>&lt;code>rootProject.children.each { it.name = rootProject.name + '-' + it.name } &lt;/code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> p &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> p&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;${rootProject.name}-${p.name}&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この命名法によりそれぞれのサブプロジェクトは&lt;code>TestProject-core&lt;/code>や&lt;code>TestProject-web&lt;/code>のように命名されます。&lt;/p>
+&lt;p>こう構成したプロジェクトをEclipseのパッケージエクスプローラからみると、以下のように見えるようになります。&lt;/p>
+&lt;ul>
+&lt;li>TestProject&lt;/li>
+&lt;li>TestProject-core&lt;/li>
+&lt;li>TestProject-web&lt;/li>
+&lt;/ul>
+&lt;p>あとでもしサブプロジェクトを追加する必要があるとしたら、ルートプロジェクトの&lt;code>include&lt;/code>を記述することで自動的に&lt;code>TestProject-...&lt;/code>という風にサブプロジェクト名が付けられることとなります。&lt;/p>
+&lt;h2 id="sub-project">Sub Project&lt;/h2>
+&lt;p>ルートプロジェクトの準備が終わったら次は、子要素のサブプロジェクトを作ります。サブプロジェクトは普通のGradleプロジェクトでも良く、ルートプロジェクトの配下に置くだけで使えるようになりますが、ここでは空のフォルダを作成して作る方法を紹介します。&lt;/p>
+&lt;p>まずルートプロジェクトの配下にサブプロジェクトとして使うフォルダを作ります。フォルダ名をサブプロジェクト名として使う予定なので、適したフォルダ名を選びます。ここでフォルダ名はルートプロジェクトの&lt;code>settings.gradle&lt;/code>で記述した&lt;code>include&lt;/code>と一致しなければならないです。例えば上のルートプロジェクトでは&lt;code>core&lt;/code>と&lt;code>web&lt;/code>をすでに書いているので、それに合わせて&lt;code>core&lt;/code>と&lt;code>web&lt;/code>のフォルダを作成します。&lt;/p>
+&lt;p>フォルダを作成したら、その中にルートプロジェクトを作成した時コピーしておいた&lt;code>build.gradle&lt;/code>を置いて編集します。今回はEclipseを基準にJavaプロジェクトを生成するので以下のようなプラグインが必要です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>plugins &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id &lt;span style="color:#f1fa8c">&amp;#39;eclipse&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ファイルを保存してルートプロジェクトから&lt;code>gradlew tasks&lt;/code>を実行すると、ide節に&lt;code>eclipse&lt;/code>があります。こちらのタスクを実行します。コマンドラインだと&lt;code>gradlew eclipse&lt;/code>を入力することで実行できます。もちろんEclipse上でも実行できますが、更新に時間がかかる場合があるのでコマンドラインの方をお勧めします。&lt;/p>
+&lt;p>このタスクを実行することで、作成したフォルダの中にEclipseプロジェクトとして機能するための準備ができます。あとは普通のJavaプロジェクトのようにソースフォルダ(src/main/java)を生成し、パッケージを作成してサブプロジェクトの中を埋めていきます。&lt;/p>
+&lt;p>もしマルチプロジェクトがEclipse上で正しく認識されない場合は、プロジェクトを右クリックしてリフレッシュしたり、Gradleメニューから&lt;code>Gradleプロジェクトのリフレッシュ&lt;/code>を実行してください。&lt;/p>
+&lt;h2 id="sub-project-dependency">Sub Project Dependency&lt;/h2>
+&lt;p>この方法で作成したマルチプロジェクトでは、サブプロジェクト同士で依存することもできます。例えば&lt;code>web&lt;/code>プロジェクトの起動に&lt;code>core&lt;/code>プロジェクトで作成したクラスを読み込む必要があるときは、&lt;code>web&lt;/code>の&lt;code>build.gralde&lt;/code>で以下のように記述すると&lt;code>core&lt;/code>のクラスをインポートできるようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>dependencies &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> implementation &lt;span style="color:#50fa7b">project&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;:TestProject-core&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただこの場合、&lt;code>web&lt;/code>の起動時に一度&lt;code>core&lt;/code>プロジェクトをコンパイルすることになるのでテスト時に&lt;code>core&lt;/code>側の修正事項は即反映されないので注意しましょう。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>まだEclipse上でGradleのマルチプロジェクトの生成を簡単にできる方法がなく、このような多少不便な方法でしかプロジェクトの作成ができないというところが不便ですね。のちに追加されるかも知れませんが…&lt;/p>
+&lt;p>でもまずはマルチプロジェクトを構成する方法とその構造がどんなものかが理解できれば、これから活用できる道が増えていくのはでないかと思います。特にプロジェクトの規模が大きくなればなるほど、こういう管理の仕方だ必要になるのではないでしょうか。&lt;/p>
+&lt;p>それでは皆さんもぜひ、Gradleのマルチプロジェクトを試してみてください！&lt;/p></description></item><item><title>Gradleからコマンドライン引数を渡す</title><link>https://retheviper.github.io/posts/gradle-command-line/</link><pubDate>Tue, 17 Sep 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-command-line/</guid><description>&lt;img src="https://retheviper.github.io/images/gradle.jpg" alt="Featured image of post Gradleからコマンドライン引数を渡す" />&lt;p>最近仕事で作っているのは、固有ライブラリーです。ただ思っていたことと違ったのは、まず完全自作ではなく既存のライブラリーを改良するような物であるという点。そして二つ目はSpring Bootで作られているということです。Spring bootは今回初めて触れましたが、以前Spring MVCでWebサイトを作ってみた経験はありました。ただSpringはWebアプリケーションを作るためのフレームワークなので、これを持ってライブラリーを作ったり、Webページのないアプリケーションを作るということは想像もしたことがなかったです。&lt;/p>
+&lt;p>それが仕事で両方の使い道に触れることがあって、まだ世の中自分の知らないものばかりだなと思いました。プログラミングとは言語やフレームワークを使えるかどうかの問題だけでなく、どう活用してどんな物を作るかの問題も含めて考えなければならない物ですね。そして画面はなくてもMainクラスを作ることでJarから独立実行ができて、インポートしてはライブラリーとして使える独特？なしようとなりました。そしてもちろんそうするためには少し準備は必要となりました。&lt;/p>
+&lt;p>表題では短くなりましたが、今回の主題であり仕事での要件は実際はこういう物でした。&lt;/p>
+&lt;h2 id="gradleのtaskで実行するspring-bootアプリケーションにして起動時にはコマンドライン引数を渡す">Gradleのtaskで実行するSpring bootアプリケーションにして、起動時にはコマンドライン引数を渡す&lt;/h2>
+&lt;p>こうして書いてみると複雑のようですが、実際はそこまで難しい概念ではないと思います。まずGradleはMavenのようなライブラリー管理ツールとして知られていて、&lt;code>gradlew&lt;/code>に様々なオプションをつけることでJarのビルド、テストなどの行為ができますね。ここでしたいのは、そんなGradleでできるタスク(オプション)を追加することです。そして追加されたタスクを実行すると、Spring Bootプロジェクトとして作成されているライブラリーのMainクラスを起動させることです。&lt;/p>
+&lt;p>ただ、皆さんにもわかるように、Sping BootプロジェクトでMainクラスが用意されていると、普通に&lt;code>java -jar project.jar&lt;/code>という風にコマンドラインから起動させることができます。なのになぜあえてGraleのタスクに入れようとしたかというと、以下のような理由があります。&lt;/p>
+&lt;h3 id="マルチプロジェクト構造となっている">マルチプロジェクト構造となっている&lt;/h3>
+&lt;p>現在の設計で、ライブラリー全体のプロジェクトは複数のサブプロジェクトを含むマルチプロジェクトとなっています。これでちゃんと伝わるか分かりませんが、とにかく表で表現すると以下のようになっています。&lt;/p>
+&lt;pre tabindex="0">&lt;code>rootproject
+┣ target
+┣ generator
+┗ runtime
+&lt;/code>&lt;/pre>&lt;p>簡単に説明しますと、現在のライブラリーはgeneratorというサブプロジェクトを利用して(runtimeはその時generatorから参照します)targetプロジェクトのコードを操作します。ここで最終的にgeneratorとruntimeはJarとして提供され、使用者はこのライブラリーでの処理を適用したいプロジェクトをtargetの位置に置いて使うことになります。こうなった場合に、コマンドラインからruntimeに依存しているgeneratorのJarを起動してtargetのソースファイルを操作するように指定するのはかなり面倒臭い作業となりますね。これを自動化したかったです。&lt;/p>
+&lt;h3 id="起動時に渡したい引数が多い">起動時に渡したい引数が多い&lt;/h3>
+&lt;p>Gradleのタスクとして実行したかったもう一つの理由は、ライブラリーが処理を行うために必要な引数の種類が7つくらいがあって、これを全部覚えるのは難しいからです。それにタイポにより処理に失敗する可能性も上がりますね。ここで思ったのが&lt;code>.bat&lt;/code>ファイルを用意していて、使用者がそれを修正したらいいだけの話ではないかと一瞬思いましたが、やはりあまり良い方法ではなかったです。Gradle自体も今はそうなっていますが、別途のファイルを用意するということは、OSごとにそのファイルを作成する必要があるということですね。使用者がどんな環境で実行するかわからないのでとりあえず&lt;code>.bat&lt;/code>と&lt;code>.sh&lt;/code>の両方を準備する必要がありますね。&lt;/p>
+&lt;p>それに、このライブラリーがWindowsやLinuxでしか使用されないだろうと言い切れないので、そういう場合はより変数は多くなります。そうなるといちいちOSや環境に合わせて、コマンドライン引数を渡すための方法を作らなければならないですね。わざわざそんなことをするよりは、Gradleのタスクとして用意し(もちろん引数はファイルに記載して読み込まれるように)、環境のことはGradleにお任せした方がコードの管理や便宜性という面からして良さげな気がしました。統一感もあって、使用者にも良い印象になりそうですしね。&lt;/p>
+&lt;h2 id="target-buildgradle">[target] build.gradle&lt;/h2>
+&lt;p>まずはタスクを実行したいtargetプロジェクトの方から始めましょう。Gradleプロジェクトは基本的に&lt;code>build.gradle&lt;/code>というファイルを持ち、このファイルを修正することで依存関係やプラグインなど様々な設定ができますね。同じく、カスタムタスクを追加したい場合もこちらに追加したいタスクの内容を記載します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>apply &lt;span style="color:#8be9fd;font-style:italic">from:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;default.gradle&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// このファイルを読み込むという意味
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>task &lt;span style="color:#50fa7b">taskname&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">type:&lt;/span> GradleBuild&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// タスク名とタイプの設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> group &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;application&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// gradlew tasks コマンドから、applicationタブにこのタスクが追加される
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> description &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;run program&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// このタスクの説明
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> dir &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;../generator&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// タスクの実行基準位置
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> tasks &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">[&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;bootRun&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#6272a4">// 実行する内容
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> startParameter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">projectProperties&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">[&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">args:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;${defaultArgs}&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#6272a4">// コマンドライン引数としてdefaultArgsを読み込む
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;code>default.gradle&lt;/code>を読み込んでいる理由は、そのファイルにデフォルト値を記載しておき、タスクを実行する時に読み込んだ値をコマンドライン引数として使うためです。最後の行で&lt;code>defaultArgs&lt;/code>と書いてありますが、これがデフォルト値を変数にしたものです。こうやってファイルを分離することで実際の使用者がこのタスクを実行するときは、&lt;code>default.gradle&lt;/code>を修正して引数として渡される値だけを調節することになります。&lt;/p>
+&lt;h2 id="target-defaultgradle">[target] default.gradle&lt;/h2>
+&lt;p>次に、&lt;code>build.gradle&lt;/code>でタスクを実行する時に読み込まれるファイルの設定は以下のようになります。ここでは読み込まれる対象としての設定と、変数の形で宣言したコマンドライン引数を記載するだけです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>ext &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// 読み込まれる対象と表記
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> defaultArgs &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;-arg1 value -arg2 value&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// arg1とarg2の二つの引数がある場合
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こちらは簡単ですね。引数名が書いてあるので順番は関係なく、あとはそれぞれの値を変えるだけでよくなります。&lt;/p>
+&lt;h2 id="generator-buildgradle">[generator] build.gradle&lt;/h2>
+&lt;p>それでは続いて、タスクで実行される側の設定です。 targetのタスクでgeneratorを&lt;code>bootRun&lt;/code>すると指定していたので、それに合わせて&lt;code>bootRun&lt;/code>時の挙動を設定します。例えば引数をどんな形で受け取るか、メインクラスはどれかという設定ですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>bootRun &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// bootRun時の挙動
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>project&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">hasProperty&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;args&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">))&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> args project&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">args&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">split&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;\\s+&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#6272a4">// コマンドライン引数がある場合、空白を基準に分割する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>jar &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// Jarとしての設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> manifest &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> attributes &lt;span style="color:#f1fa8c">&amp;#39;Main-Class&amp;#39;&lt;/span>&lt;span style="color:#ff79c6">:&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;com.package.Main&amp;#39;&lt;/span> &lt;span style="color:#6272a4">// メインクラスのクラスパス(パッケージとクラス名)の指定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コマンドライン引数を分割する理由は、皆さんも予想しているとは思いますが、Javaのメインメソッドは普通文字列の配列として引数を受け入れるからです。こうやって分割しておくと実際の処理で引数のパースが簡単になりますね。&lt;/p>
+&lt;p>ここまでこればGradleの設定は終わりです。あとはJavaでのメインクラスの設定です。&lt;/p>
+&lt;h2 id="generator-mainjava">[generator] Main.java&lt;/h2>
+&lt;p>generatorのJarを実行した時に呼ばれるメインクラスを作ります。ここでは一般的なJavaのメインメソッドと、Spring bootとしてのメインクラスの作法、JCommanderでコマンドライン引数をパースするための作法、Lombokが混在していますのでそれぞれに対する知識のない方には少し難しいコードになっているかも知れません。&lt;/p>
+&lt;p>ただ、実行されている時の動作としては単純なものになっているので、Springのアノテーションにある程度慣れている方ならすぐに理解できると思います。まずコードは以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@SpringBootApplication &lt;span style="color:#6272a4">// Spring bootとしてのメインクラスにつける
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>@EnableAutoConfiguration&lt;span style="color:#ff79c6">(&lt;/span>exclude &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> DataSourceAutoConfiguration&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span> &lt;span style="color:#ff79c6">})&lt;/span> &lt;span style="color:#6272a4">// H2関連エラーが出たので付けました
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">Main&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> CommandLineRunner &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Autowired
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> CoreProcessClass coreProcessClass&lt;span style="color:#ff79c6">;&lt;/span> &lt;span style="color:#6272a4">// @Componentとなっている実際の処理クラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">run&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String&lt;span style="color:#ff79c6">...&lt;/span> args&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">throws&lt;/span> Exception &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// CommandLineRunnerを継承するして実行時の動作をオーバーライドする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> CommandLineOptions options &lt;span style="color:#ff79c6">=&lt;/span> CommandLineOptions&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">parse&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>args&lt;span style="color:#ff79c6">);&lt;/span> &lt;span style="color:#6272a4">// パースと同時にBeanを生成
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> coreProcessClass&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">startProcess&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>options&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getArg1&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> options&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getArg2&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span> &lt;span style="color:#6272a4">// 本処理開始
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">main&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String&lt;span style="color:#ff79c6">[]&lt;/span> args&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SpringApplication&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">run&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Main&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> args&lt;span style="color:#ff79c6">);&lt;/span> &lt;span style="color:#6272a4">// メインメソッドとしては引数を渡すだけ
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Data
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">CommandLineOptions&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// コマンドライン引数をパースするクラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// JCommanderを使用した引数の設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> @Parameter&lt;span style="color:#ff79c6">(&lt;/span>names &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;-arg1&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> description &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;File&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> required &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">true&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> converter &lt;span style="color:#ff79c6">=&lt;/span> ArgumentsToFileConverter&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">class&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#6272a4">// 引数は文字列なので、コンバータクラスを使う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> File arg1&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Parameter&lt;span style="color:#ff79c6">(&lt;/span>names &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;-arg2&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> description &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;String&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> required &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">true&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#6272a4">// 普通の文字列の場合
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> String arg2&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#50fa7b">CommandLineOptions&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> CommandLineOptions &lt;span style="color:#50fa7b">parse&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String&lt;span style="color:#ff79c6">...&lt;/span> args&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// 実際のパースを行うメソッド
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">try&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> CommandLineOptions options &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> CommandLineOptions&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> JCommander&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">newBuilder&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">addObject&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>options&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">acceptUnknownOptions&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">true&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">build&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">parse&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>args&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> options&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span> &lt;span style="color:#ff79c6">catch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>ParameterException e&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> e&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">getJCommander&lt;/span>&lt;span style="color:#ff79c6">().&lt;/span>&lt;span style="color:#50fa7b">usage&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> e&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ArgumentsToFileConverter&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">implements&lt;/span> IStringConverter&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>File&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> &lt;span style="color:#6272a4">// JCommanderで引数をオブジェクトに変えるためのクラス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Override
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> File &lt;span style="color:#50fa7b">convert&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">final&lt;/span> String argument&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> File&lt;span style="color:#ff79c6">(&lt;/span>argument&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;a class="link" href="http://jcommander.org" target="_blank" rel="noopener"
+>JCommander&lt;/a>を使うことでコマンドラインのパースは簡単にできます。ここでいうパースは単純に文字列だけを意味することではなく、必須項目としての指定(ない場合は例外となる)やオブジェクト変換などの様々なことができるという意味です。例えば引数として渡した文字列があるものはファイルパスだとしたら、それを読み込んでFileオブジェクト化したり複数の引数をListとして取得することもできます。&lt;/p>
+&lt;p>そしてパースしたオブジェクトを、本処理で使われるオブジェクトに渡すだけで終わり。意外と簡単に終わりますね。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>実は、今まで説明した内容は自分で考えて作り出したものではないです。最初はGradleタスクを作るために導入した&lt;a class="link" href="../java-conflict-of-module" >ライブラリーの問題&lt;/a>があってなかなか仕事が進まなく、すでに出来上がっていたものを参考にしたものにすぎません。でもここであえて紹介するのは、皆さんに共有する価値があると思ったからです。&lt;/p>
+&lt;p>特にサーバーで動くアプリケーションを作る場合はやはりコマンドラインで起動させる場合が多いですし、環境によっては引数で違う値を渡す必要があるかもしれません。そのような時に、このようにファイルから引数を渡して実行するタスクを作成して環境ごとに設定を変えたり違うファイルを読むようにするとかなり便利そうですね。なので皆さんにもぜひ紹介したいと思いました。&lt;/p>
+&lt;p>そして個人的には、今は自分も先輩方の成したものから学ぶばかりですが、いつかはこんな考え方もあるんだと後輩に伝えられたらいいなと思わせる、大事な経験でした。これから先はまだまだ遠いですね！&lt;/p></description></item></channel></rss>

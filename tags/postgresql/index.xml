@@ -1,1 +1,304 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>postgresql on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/postgresql/</link><description>Recent content in postgresql on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 30 Jun 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/postgresql/index.xml" rel="self" type="application/rss+xml"/><item><title>PythonでDBの処理がしたい</title><link>https://retheviper.github.io/posts/python-blob-to-binary/</link><pubDate>Sun, 30 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-blob-to-binary/</guid><description>あまり詳しくない上に、何か新しいプログラムを作り出すこととは少し距離があるなと思ってDBにはあまり興味を持ってなかった私ですが、ITの業界で</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>postgresql on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/postgresql/</link><description>Recent content in postgresql on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 30 Jun 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/postgresql/index.xml" rel="self" type="application/rss+xml"/><item><title>PythonでDBの処理がしたい</title><link>https://retheviper.github.io/posts/python-blob-to-binary/</link><pubDate>Sun, 30 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-blob-to-binary/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post PythonでDBの処理がしたい" />&lt;p>あまり詳しくない上に、何か新しいプログラムを作り出すこととは少し距離があるなと思ってDBにはあまり興味を持ってなかった私ですが、ITの業界で働きながらDBと接しないのは難しいことです。そしてそうやって接するDBはまた優しくない課題になってきますね。この度の仕事でも主にPythonを使ってスクリプトを書いたものの、そのタスクのメインとなるものはDBとの連携でした。なので今回のポストではどうやってPythonでDBに繋ぎ、SQL文を発行し、そのデータを扱ったかについて述べたいと思います。&lt;/p>
+&lt;p>今回私に与えられたタスクは、DBからバイナリーのデータを抽出して、それをAWSのS3&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>にアップロードするスクリプトを作ることでした。また、アップロードが終わった時点でテーブルを更新する必要がありますが、抽出の対象となるDBと更新の対象となるDBがそれぞれ違うものでした。片方はOracleで片方はPostgreSQL。そしてロガーを入れ各DBやS3の接続に失敗するなどの時にはログで分かるようにしたり、DBの接続情報を外出しにして外部ファイルから読み込むようにするなどの条件がありました。ロガーについては[前回のポスト](../../../06/15/python-logger/で述べましたので、今回は省略とさせていただきます。他にバイナリーデータを抽出するには引数を受け、最終更新日を確認した上でそれより後のファイルを保存する、S3にアップロードする際はテーブルのカラムからパス名を決める、画像のアップロードの後には最終更新日を更新する、などの条件がありました。&lt;/p>
+&lt;p>要略すると、今回作るスクリプトの仕様は以下となります。&lt;/p>
+&lt;ol>
+&lt;li>コマンドラインで引数を受ける&lt;/li>
+&lt;li>引数からPostgreSQLのテーブル(1)を参照し、引数に当たる作業の最終更新日を取得する&lt;/li>
+&lt;li>OcaleDBのテーブルから最終更新日以後のバイナリーデータをSELECTしてJPGファイルとして保存する&lt;/li>
+&lt;li>PostgreSQLのテーブル(2)からファイルの保存先のパスとなるカラムを取得する。&lt;/li>
+&lt;li>S3へJPGファイルごとのフォルダーに画像をアップロードする&lt;/li>
+&lt;li>PostgreSQLのテーブル(3)にアップロードされたJPGファイルの情報を記録する&lt;/li>
+&lt;li>PostgreSQLのテーブル(1)最終更新日を更新する&lt;/li>
+&lt;li>正常終了したらexitコード0となり、例外が発生するとexitコード9を出力して終了する&lt;/li>
+&lt;/ol>
+&lt;p>PostgreSQLの場合は参照するテーブルが多く、処理の順番があるので少し複雑にも感じられますが、まずはDBとの連動を試しみスクリプトを組むことにしました。&lt;/p>
+&lt;h2 id="pythonでdbを連動する">PythonでDBを連動する&lt;/h2>
+&lt;p>案外、PythonでDBに接続することはそんな難しいことではなかったです。それぞれ違うモジュールを使っていてコマンドにも違いがあるわけですが、検索してみると例題が多かったですね。Oracleの場合はホスト名、ポート、サービス名、ユーザー名、パスワードを用意します。使うモジュールは&lt;code>cx_Oracle&lt;/code>です。&lt;/p>
+&lt;p>PostgreSQLの場合は、&lt;code>psycopg2&lt;/code>を使います。接続に必要となる情報はホスト名、ポート、DB名、ユーザー名、パスワードです。ただし、モジュールは両方&lt;code>pip&lt;/code>からインストールできますが、psycopg2の場合はライブラリー依存性があるのでAmazon Linuxを基準に&lt;code>postgresql-develop&lt;/code>をyumからインストールする必要があります。他は触れたことがないのでよくわかりませんが、CentOSも同様かと。psycopg2のインストールに問題が生じたらエラーメッセージを確認して、必要なPosgreSQLのライブラリーをインストールしましょう。&lt;/p>
+&lt;p>二つのDBに接続するための手順には少し違いがありますが、接続した後の処理は同じです(本当はSQL文の文法も少し違うようですが…)。それではOracleとPostgreSQLの接続方法と接続以後の処理を分けて説明しましょう。&lt;/p>
+&lt;h3 id="接続oracleの場合">接続(Oracleの場合)&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> cx_Oracle
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>tns &lt;span style="color:#ff79c6">=&lt;/span> cx_Oracle&lt;span style="color:#ff79c6">.&lt;/span>makedsn(&lt;span style="color:#f1fa8c">&amp;#39;ホスト名&amp;#39;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#39;ポート&amp;#39;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#39;サービス名&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect &lt;span style="color:#ff79c6">=&lt;/span> cx_Oracle&lt;span style="color:#ff79c6">.&lt;/span>connect(&lt;span style="color:#f1fa8c">&amp;#39;ユーザー名&amp;#39;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#39;パスワード&amp;#39;&lt;/span>, tns)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>cx_Oracleの&lt;code>makedsn&lt;/code>にホスト名、ポート、サービス名を入れます。そしてその情報を&lt;code>connect&lt;/code>を使う際にユーザー名、パスワードと共に入れます。これでOracleの接続設定は終わりです。&lt;/p>
+&lt;h3 id="接続postgresqlの場合">接続(PostgreSQLの場合)&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> psycopg2
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect &lt;span style="color:#ff79c6">=&lt;/span> psycopg2&lt;span style="color:#ff79c6">.&lt;/span>connect(&lt;span style="color:#f1fa8c">&amp;#39;host=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ホスト名&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; port=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ポート&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; dbname=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;DB名&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; user=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ユーザー名&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; password=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;パスワード&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>PostgreSQLの場合はより簡単です。Linuxで使うコマンドラインツールの&lt;code>psql&lt;/code>みたいに、接続に必要な情報を文字列として並び&lt;code>connect&lt;/code>すれば終了です。&lt;/p>
+&lt;h3 id="db処理の共通部分">DB処理の共通部分&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 実際DBに接続してカーソルを取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cursor &lt;span style="color:#ff79c6">=&lt;/span> connect&lt;span style="color:#ff79c6">.&lt;/span>cursor()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># カーソルからSQL文の実行&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(&lt;span style="color:#f1fa8c">&amp;#39;発行したいSQL文&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># SQL文を実行した結果を取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 一件だけの結果が必要な時&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchone()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 結果を1000件づつフィッチして処理したい場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchmany(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 結果を全部フェッチしたい場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchall()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># カーソルをクローズする&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cursor&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># SQL文をコミットする(INSERT/UPDATEなどの変動)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect&lt;span style="color:#ff79c6">.&lt;/span>commit()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># コネクションを切る&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>接続したあとはカーソルを取得し、そのカーソルでSQL文を発行します。SQL文の実行結果を取得するには&lt;code>fecth&lt;/code>を使いますが、処理したい結果の規模によって三つの選択肢があります。あと、大量のデータを処理したい場合はなるべく&lt;code>fetchall&lt;/code>よりは&lt;code>fetchmany&lt;/code>でフェッチサイズを指定して使う方が良いらしいです。データが多すぎると性能に影響が出ますので。フェッチまで終わって取得した結果は、Pythonでは一つのレコードを配列にして、それらを集めたリストになります。コードで言いますと以下のような形となります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># &amp;#39;SELECT column_1, column2 FROM TABLE&amp;#39;の場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchmany(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">for&lt;/span> row &lt;span style="color:#ff79c6">in&lt;/span> result: &lt;span style="color:#6272a4"># 結果は1000件のリストとなる&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> row[&lt;span style="color:#bd93f9">0&lt;/span>] &lt;span style="color:#6272a4"># column_1の内容が出力される&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> row &lt;span style="color:#6272a4"># column_2の内容が出力される&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでDBの連動の基礎は終わりです。それでは早速、スクリプトのコードをいかに公開します。&lt;/p>
+&lt;h2 id="画像ファイルをs3へアップロードするコード">画像ファイルをS3へアップロードするコード&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># -*- coding: UTF-8 -*-&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> os&lt;span style="color:#ff79c6">,&lt;/span> sys&lt;span style="color:#ff79c6">,&lt;/span> cx_Oracle&lt;span style="color:#ff79c6">,&lt;/span> psycopg2&lt;span style="color:#ff79c6">,&lt;/span> json&lt;span style="color:#ff79c6">,&lt;/span> boto3&lt;span style="color:#ff79c6">,&lt;/span> datetime&lt;span style="color:#ff79c6">,&lt;/span> shutil
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>function_code &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;引数で受け取る&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 以下、DB環境情報(DBConnection.confから読み込む)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>HOST_POST &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;PostgreSQLの接続ホスト名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>PORT_POST &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;PostgreSQLの接続ポート&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>DB_NAME_POST &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;PostgreSQLのDM名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>USER_POST &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;PostgreSQLのユーザ名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>PWD_POST &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;PostgreSQLのパスワード&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>HOST_ORAC &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Oracleの接続ホスト名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>PORT_ORAC &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Oracleの接続ポート&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVICE_NAME &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Oracleのサービス名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>USER_ORAC &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Oracleのスキーマ名&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>PWD_ORAC &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Oracleのパスワード&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># コマンドライン引数&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#ff79c6">=&lt;/span> sys&lt;span style="color:#ff79c6">.&lt;/span>argv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 環境関連変数&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>imageFolder &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/tmp/images&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 差分連携のための前処理&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">GetProcdate&lt;/span>(args):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> function_code
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> function_code &lt;span style="color:#ff79c6">=&lt;/span> args[&lt;span style="color:#bd93f9">1&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># PostgreSQL接続&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Starting Job. The function Code is: &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> function_code)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect &lt;span style="color:#ff79c6">=&lt;/span> psycopg2&lt;span style="color:#ff79c6">.&lt;/span>connect(&lt;span style="color:#f1fa8c">&amp;#39;host=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> HOST_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; port=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> PORT_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; dbname=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> DB_NAME_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; user=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> USER_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; password=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> PWD_POST)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor &lt;span style="color:#ff79c6">=&lt;/span> connect&lt;span style="color:#ff79c6">.&lt;/span>cursor()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">except&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Unable to connect PostgreSQL. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selectSQL &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;SELECT last_date FROM date_table WHERE function_code=&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">%s&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">%&lt;/span> (function_code,)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(selectSQL)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchone()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 結果があった場合最終更新日を変数として保存&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (result &lt;span style="color:#ff79c6">is&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">None&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> last_date &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; No data matches with &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> function_code &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 次の処理へ移行&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GetImageFromTable(last_date)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># OracleにSQL文を発行してファイルを読み込み保存&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">GetImageFromTable&lt;/span>(last_date):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> imageFolder
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># Oracle接続開始&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> tns &lt;span style="color:#ff79c6">=&lt;/span> cx_Oracle&lt;span style="color:#ff79c6">.&lt;/span>makedsn(HOST_ORAC, PORT_ORAC, SERVICE_NAME)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect &lt;span style="color:#ff79c6">=&lt;/span> cx_Oracle&lt;span style="color:#ff79c6">.&lt;/span>connect(USER_ORAC, PWD_ORAC, tns)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor &lt;span style="color:#ff79c6">=&lt;/span> connect&lt;span style="color:#ff79c6">.&lt;/span>cursor()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">except&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Unable to connect Oracle DB. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># Oracleのテーブルから商品画像ファイル取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(&lt;span style="color:#f1fa8c">&amp;#34;SELECT image_data, image_name FROM WHERE &amp;gt;=(:last_date)&amp;#34;&lt;/span>, {&lt;span style="color:#f1fa8c">&amp;#39;last_date&amp;#39;&lt;/span>: last_date})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># フォルダがなかったら作成・あったら削除&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>exists(imageFolder):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> shutil&lt;span style="color:#ff79c6">.&lt;/span>rmtree(imageFolder)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os&lt;span style="color:#ff79c6">.&lt;/span>mkdir(imageFolder)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 1000件づつ取り出し&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">while&lt;/span> &lt;span style="color:#ff79c6">True&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> rows &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchmany(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 結果がない場合はループから出る&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">len&lt;/span>(rows) &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 画像ファイル置き場に画像ファイル保存(イメージネーム.jpg)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> image &lt;span style="color:#ff79c6">in&lt;/span> rows:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileNameS &lt;span style="color:#ff79c6">=&lt;/span> imageFolder &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(image[&lt;span style="color:#bd93f9">1&lt;/span>]) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;.jpg&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> imageFile &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(fileNameS, &lt;span style="color:#f1fa8c">&amp;#39;wb+&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> imageFile&lt;span style="color:#ff79c6">.&lt;/span>write(image[&lt;span style="color:#bd93f9">0&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>read())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> imageFile&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> counter &lt;span style="color:#ff79c6">=&lt;/span> counter &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 保存されたファイルの数をカウント&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileCount &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">len&lt;/span>([name &lt;span style="color:#ff79c6">for&lt;/span> name &lt;span style="color:#ff79c6">in&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>listdir(imageFolder) &lt;span style="color:#ff79c6">if&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>isfile(os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>join(imageFolder, name))])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; As result: &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(fileCount) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; files were written.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Finished job. Closing connection.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FileUploadToS3()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># S3へ画像ファイルを格納&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">FileUploadToS3&lt;/span>():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># グローバル変数取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> imageFolder
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> function_code
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ファイル名リスト(イメージネーム)取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> files &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>listdir(imageFolder)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> item_cd_list &lt;span style="color:#ff79c6">=&lt;/span> [os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>splitext(f)[&lt;span style="color:#bd93f9">0&lt;/span>] &lt;span style="color:#ff79c6">for&lt;/span> f &lt;span style="color:#ff79c6">in&lt;/span> files &lt;span style="color:#ff79c6">if&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>isfile(os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>join(imageFolder, f))]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># PostgreSQL接続&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect &lt;span style="color:#ff79c6">=&lt;/span> psycopg2&lt;span style="color:#ff79c6">.&lt;/span>connect(&lt;span style="color:#f1fa8c">&amp;#39;host=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> HOST_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; port=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> PORT_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; dbname=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> DB_NAME_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; user=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> USER_POST &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; password=&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> PWD_POST)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor &lt;span style="color:#ff79c6">=&lt;/span> connect&lt;span style="color:#ff79c6">.&lt;/span>cursor()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">except&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Unable to connect PostgreSQL. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 結果確認用のファイル数カウンター&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileCount &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> item_cd &lt;span style="color:#ff79c6">in&lt;/span> item_cd_list:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># アイテム管理用テーブルからコードと一致するレコード取得⇒ファイル格納パス用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selectSQL1 &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;SELECT file_path1, file_path2, file_path3 FROM item_table WHERE item_cd=&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">%s&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">%&lt;/span> (&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(item_cd),)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(selectSQL1)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> resultMaster &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchone()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 一致するレコードがなかった場合でも処理続行&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> resultMaster &lt;span style="color:#ff79c6">is&lt;/span> &lt;span style="color:#ff79c6">None&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Result was 0. continue job.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 結果から必要な情報を取得し変数に保存&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> image_id &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(resultMaster[&lt;span style="color:#bd93f9">2&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(resultMaster[&lt;span style="color:#bd93f9">0&lt;/span>]) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(resultMaster[&lt;span style="color:#bd93f9">1&lt;/span>]) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(resultMaster[&lt;span style="color:#bd93f9">2&lt;/span>]) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># アイテムイメージ管理用テーブルからコードと一致するレコード取得⇒分岐処理&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selectSQL2 &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;SELECT * FROM WHERE image_table image_id=&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">%s&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;;&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">%&lt;/span> (image_id,)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(selectSQL2)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result &lt;span style="color:#ff79c6">=&lt;/span> cursor&lt;span style="color:#ff79c6">.&lt;/span>fetchone()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> uploadToS3(item_cd, path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileCount &lt;span style="color:#ff79c6">=&lt;/span> fileCount &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Processing file upload.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 作業完了日時を更新&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> updateProcSQL &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;UPDATE date_table SET last_date = CURRENT_TIMESTAMP WHERE function_code=&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">%s&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">%&lt;/span> (function_code,)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>execute(updateProcSQL)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 作業終了&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; As result: &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(fileCount) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; files were uploaded.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Finished job. Closing connection and quit.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cursor&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect&lt;span style="color:#ff79c6">.&lt;/span>commit()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connect&lt;span style="color:#ff79c6">.&lt;/span>close()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># S3へ画像ファイルをアップロード&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">uploadToS3&lt;/span>(item_cd, path):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> imageFolder
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Upload image files to AWS S3.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> bucket_name &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;image&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> s3 &lt;span style="color:#ff79c6">=&lt;/span> boto3&lt;span style="color:#ff79c6">.&lt;/span>resource(&lt;span style="color:#f1fa8c">&amp;#39;s3&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># サーバーに保存されたファイルを指定したパスに保存(file_path1/file_path2/file_path3/1_1_YYYYMMDD.jpg)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> s3&lt;span style="color:#ff79c6">.&lt;/span>Bucket(bucket_name)&lt;span style="color:#ff79c6">.&lt;/span>upload_file(imageFolder &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> item_cd &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;.jpg&amp;#39;&lt;/span>, path &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/1_1_&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> datetime&lt;span style="color:#ff79c6">.&lt;/span>datetime&lt;span style="color:#ff79c6">.&lt;/span>today()&lt;span style="color:#ff79c6">.&lt;/span>strftime(&lt;span style="color:#f1fa8c">&amp;#39;%Y%m&lt;/span>&lt;span style="color:#f1fa8c">%d&lt;/span>&lt;span style="color:#f1fa8c">%H%M%S&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;.jpg&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Image file uploaded. (Item code: &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> item_cd &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;)&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">except&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Unable to upload files. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># コネクション情報を入力ファイルから読み込む&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">getDBConnection&lt;/span>():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># DBConnection接続情報ファイルのパスを取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pwd &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>dirname(os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>abspath(__file__))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> dbConnection &lt;span style="color:#ff79c6">=&lt;/span> pwd&lt;span style="color:#ff79c6">.&lt;/span>rsplit(&lt;span style="color:#f1fa8c">&amp;#34;/&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">1&lt;/span>)[&lt;span style="color:#bd93f9">0&lt;/span>] &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/env/DBConnection.conf&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ファイルがない場合異常終了&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#ff79c6">not&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>exists(dbConnection)):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Please check DBConnection.conf. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ファイルを読み込む&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> connectionInfo &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(dbConnection, &lt;span style="color:#f1fa8c">&amp;#39;r&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> lines &lt;span style="color:#ff79c6">=&lt;/span> connectionInfo&lt;span style="color:#ff79c6">.&lt;/span>readlines()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># グローバル変数として保存するための宣言&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> HOST_POST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> PORT_POST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> DB_NAME_POST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> USER_POST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> PWD_POST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> HOST_ORAC
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> PORT_ORAC
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> SERVICE_NAME
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> USER_ORAC
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> PWD_ORAC
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 条件と一致するデータがある場合変数に保存&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> line &lt;span style="color:#ff79c6">in&lt;/span> lines:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#8be9fd;font-style:italic">len&lt;/span>(line) &lt;span style="color:#ff79c6">&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span> &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;POSTGRESQL&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> line &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ORACLE&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> line):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result &lt;span style="color:#ff79c6">=&lt;/span> line&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;=&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;HOST_POST&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HOST_POST &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;PORT_POST&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PORT_POST &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;DB_NAME_POST&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DB_NAME_POST &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;USER_POST&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> USER_POST &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;PWD_POST&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PWD_POST &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;HOST_ORAC&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> HOST_ORAC &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;PORT_ORAC&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PORT_ORAC &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;SERVICE_NAME&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SERVICE_NAME &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;USER_ORAC&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> USER_ORAC &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;PWD_ORAC&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> result[&lt;span style="color:#bd93f9">0&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PWD_ORAC &lt;span style="color:#ff79c6">=&lt;/span> result[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>replace(&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>,&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 起動部&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> __name__ &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;__main__&amp;#39;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> getDBConnection()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 引数がない場合は異常終了処理分岐&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#8be9fd;font-style:italic">len&lt;/span>(args) &lt;span style="color:#ff79c6">&amp;lt;&lt;/span> &lt;span style="color:#bd93f9">2&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;&amp;gt;&amp;gt; Please check arguement. quitting.&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> GetProcdate(args)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>DBConnectionファイルを読み込む処理に関してはより良い書き方があるのではないかと思います…が、Python特有のGetter/Setterの書き方にあまり慣れてないゆえ、自分が理解できるコードとして書いた結果がこうです。グローバル変数がメソッド内で&lt;code>global&lt;/code>宣言をしないと使えないというところがJavaに慣れていた自分にはかなり新鮮でした。逆にグローバル変数をそれぞれ違うメソッドではなるべく使うなという意味もあるような気もします。&lt;/p>
+&lt;p>あとはファイル書き込みがテキストだけでなく、バイナリーデータの場合も簡単にかけるということが魅力的ですね。Javaだったらストリームやバッファーをはじめとしてかなり複雑な書き方になっていただろうと思いますが(しかも私はテキストしか扱ったことがないので、同じやり方でバイナリーまでかけるかどうかわかりません)、Pythonではモジュールのインポートもなしで簡単にできますね。もちろん性能を考えるとJavaでかいた方がよかったかも知れませんが、こういう簡単さんがやっぱり生産性の向上に役立つのではないかと思います。&lt;/p>
+&lt;p>あと、やはりPythonはLinux親和的な構造が魅力的だと思います。処理の結果を判別するために&lt;code>sys.exit()&lt;/code>を設定すると終了コードを簡単に確認できますし、&lt;code>sys.args&lt;/code>を通じてコマンドラインから引数を受け入れることもできます。簡単かつLinux親和的なので、Linuxでのスクリプト処理が必要な場合はシェルスクリプトよりもPythonを用いる方が良いのでは、と思うようになりました。性能もシェルより良いところもあるという話もありますしね。&lt;/p>
+&lt;p>結果的にPythonを褒めるようなポストとなりましたが、私としてはプログラミングの初心者もしくはLinuxサーバーからスクリプトを組むことの多い開発者に魅力的な言語と思うので、皆さんにもぜひPythonを使って欲しいです。楽しく、楽に開発しましょう！&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>Simple Storage Serviceの略で、その名の通りOSにマウントして普通のディスクのように使えるサービスだそうです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item></channel></rss>

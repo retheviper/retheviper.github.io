@@ -1,1 +1,294 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>exposed on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/exposed/</link><description>Recent content in exposed on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 26 Jul 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/exposed/index.xml" rel="self" type="application/rss+xml"/><item><title>ExposedでOneToManyをどうマッピングするか</title><link>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</link><pubDate>Mon, 26 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</guid><description>DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにすると</description></item><item><title>Ktorを触ってみた</title><link>https://retheviper.github.io/posts/ktor-first-impression/</link><pubDate>Sun, 18 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-first-impression/</guid><description>サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSprin</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>exposed on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/exposed/</link><description>Recent content in exposed on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 26 Jul 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/exposed/index.xml" rel="self" type="application/rss+xml"/><item><title>ExposedでOneToManyをどうマッピングするか</title><link>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</link><pubDate>Mon, 26 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</guid><description>&lt;img src="https://retheviper.github.io/images/exposed.jpg" alt="Featured image of post ExposedでOneToManyをどうマッピングするか" />&lt;p>DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにするとしたら、この会員情報のテーブルに配送先のカラムを追加するよりは、配送先のテーブルを分離して別に管理した方がデータの持ち方としては合理的で安全なはずです。そして分離した配送先のテーブルは、会員情報のテーブルとN:1の関係になるのが一般的でしょう。&lt;/p>
+&lt;p>ただ、データの持ち方が優先的なDBと、そのデータを処理して形にするアプリケーションでは事情が違いますね。例えば上記の通り、一つの会員情報のレコードに対して複数の配送先のレコードが存在し得る場合、SQLでデータを表現すると、以下のような形になるはずです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>|-----------|-------------|-----------------|
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| member.id | member.name | mailing.address |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>|-----------|-------------|-----------------|
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| 1 | John | Tokyo |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| 1 | John | New York |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| 1 | John | Beijing |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| 2 | Simpson | Osaka |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>| 2 | Simpson | Nagoya |
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>|-----------|-------------|-----------------|
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかしアプリケーションではこのような形でデータを扱うことはあまりないですね。一つのレコードに対して複数のレコードが含まれるということは、Kotlinだと以下のように表現するのが一般的かと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Member&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> id: Int,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> name: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> mailingAdress: List&amp;lt;String&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そして普通は、このようなオブジェクトをJSONの形にしてREST APIのレスポンスとして使う場合が多いですね。なので、先程のレコードをJSONにした場合は以下のようになるはずです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;members&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;id&amp;#34;&lt;/span>: &lt;span style="color:#bd93f9">1&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;mailingAddress&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Tokyo&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;New York&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Beijing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;id&amp;#34;&lt;/span>: &lt;span style="color:#bd93f9">2&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;Simpson&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;#34;mailingAddress&amp;#34;&lt;/span>: [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Osaka&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Nagoya&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで問題は、オブジェクトをJSONに変えることはそう難しくないのですが（&lt;a class="link" href="https://github.com/FasterXML/jackson" target="_blank" rel="noopener"
+>Jackson&lt;/a>, &lt;a class="link" href="https://github.com/google/gson" target="_blank" rel="noopener"
+>Gson&lt;/a>, &lt;a class="link" href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener"
+>Kotlin Serialization&lt;/a>のようなライブラリがすでにありますし）&lt;/p>
+&lt;p>では、このような場合、DBから取得したレコードをどうやってオブジェクトにマッピングしたら良いのでしょう。JPAのようなORMを使う場合、クラスにテーブル間の関係を表すフィールドとアノテーションを適切に使うことでレコードへのマッピングは自動に行われますが、&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
+>jOOQ&lt;/a>や&lt;a class="link" href="https://querydsl.com" target="_blank" rel="noopener"
+>Querydsl&lt;/a>, &lt;a class="link" href="https://github.com/JetBrains/Exposed" target="_blank" rel="noopener"
+>Exposed&lt;/a>, &lt;a class="link" href="https://www.ktorm.org" target="_blank" rel="noopener"
+>Ktorm&lt;/a>のようなORMで、DSLを使ってSQLを書く場合はデータのマッピングを手動で行う必要があります。そして取得したデータは行の配列という形になるので、どうマッピングしたら（効率が）いいかは少し悩ましいところです。&lt;/p>
+&lt;p>なので、今回はExposedのDSLを使って取得したOne to Manyのレコードを、コード上でどうやってオブジェクトにマッピングするかについて考えたことを述べたいとお思います。&lt;/p>
+&lt;h2 id="テーブルごとにselectする">テーブルごとにSelectする&lt;/h2>
+&lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> member = Member.select { Member.id eq id }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .first()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .let {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = row[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = row[Member.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role = listOf(row[Mailing.role])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// MailingテーブルをSelectし、リストにする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> mailingAddress = Mailing
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { Mailing.memberId eq member.id }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// オブジェクトのコピーを作り配送先のデータをマッピング
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> member.copy(mailingAddress = mailingAddress)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>もっとも簡単で、コードとしてもわかりやすい方法ではありますが、トランザクションの観点からするとあまりよくない方法ですね。Exposedでは、&lt;code>transaction&lt;/code>ブロックに包むことでトランザクションの単位を制御できるものの、一回で済ませるクエリの発行が複数になるという問題があります。ここではMemberテーブルを照会するたびにMailingテーブルも照会することになるので1回のクエリが追加されているだけですが、もしMemberテーブルに1:Nの関係となっているテーブルが増えれば増えるほどクエリの発行数も増えることになるでしょう。そして今回は一つのレコードに対してのコードとなっていますが、照会対象のMemberテーブルのレコードが増えれば増えるほど発行されるクエリの数も多くなります。&lt;/p>
+&lt;p>また、オブジェクトのインスタンスを作っておいて、わざわあコピーするというのもあまり効率が良いとは言えません。これもまたクエリの数が増える問題と同じく、照会対象のレコードが増えれば増えるほど生成されるオブジェクトのインスタンスも増えることになるという訳ですね。なので、全く性能や効率を考えてないコードと言えます。&lt;/p>
+&lt;h2 id="joinしてマッピングする">joinしてマッピングする&lt;/h2>
+&lt;p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり&lt;code>join&lt;/code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の&lt;a class="link" href="https://vmm.dev/ja/cci/cci-0.md" target="_blank" rel="noopener"
+>Big O記法&lt;/a>で表現すると、前者は&lt;code>O(N^2)&lt;/code>であり、これは&lt;code>O(1)&lt;/code>と表現できるはずです。&lt;/p>
+&lt;p>ならばデータを取得する際に、クエリとしては&lt;code>join&lt;/code>を使うのが理想的なのはわかりますが、問題はそうやって取得したデータをどう加工するかです。先に述べましたが、取得したデータのうち重複するものがあるからですね。そしてこれが重複しているかどうかはクエリを実行した結果を取得して、確認するまではわかりません。&lt;/p>
+&lt;p>ここで考えられる方法は三つほどありますので、一つづつ紹介していきます。&lt;/p>
+&lt;h3 id="reduce">reduce&lt;/h3>
+&lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// とりあえずオブジェクトにマッピングする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> MemberDto(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.reduce { acc, memberDto &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// オブジェクトを一つに集約させる（mailingAddressは累計）
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> acc.copy(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = acc.mailingAddress + memberDto.mailingAddress
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このやり方で考えられる問題は、まず行数分のオブジェクトのインスタンスが作られるということです。このクエリとして取得しようとしているMemberのレコードは一つのみですが、そのレコードに紐づくMailingのレコードが多ければ多いほど件数は増え、当然生成されるオブジェクトの数も多くなります。また、マッピングだけでなく、&lt;code>reduce&lt;/code>でもオブジェクトをコピーしているので、やはり行数分のオブジェクトが生成されていると考えられます。オブジェクトのインスタンス数は行数x2になる訳ですね。&lt;/p>
+&lt;p>そしてもう一つの問題は、Memberのレコードを複数取得する場合、全部一つのオブジェクトにまとまってしまうという問題がありますね。なので、このやり方だと一つのレコードを取得する場合のみしか適応できなくなります。&lt;/p>
+&lt;h3 id="groupby">groupBy&lt;/h3>
+&lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyはMemberオブジェクトのマッピング、valueではMailingのレコードを集約
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .groupBy({
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, { &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address] })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyのオブジェクトにMailingのレコードを設定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .map { (key, value) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> key.copy(mailingAddress = value)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この方法だと、今まで照会した他の方法で考えられる問題をだいぶ解消できそうな気がしますね。ただ、気になるのは、&lt;code>groupBy&lt;/code>の引数がLambdaであることです。引数として関数を渡すということは、ループしながらその関数を実行することになるという意味なので、&lt;code>reduce&lt;/code>の時と同じ量のインスタンスが作られる可能性がありそうですね。なので、&lt;code>groupBy&lt;/code>の実装を見ていきたいと思います。中のコードは、以下の通りです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">inline&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>, &lt;span style="color:#50fa7b">K&lt;/span>, &lt;span style="color:#50fa7b">V&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">Iterable&lt;/span>&amp;lt;T&amp;gt;.groupBy(keySelector: (T) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> K, valueTransform: (T) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> V): Map&amp;lt;K, List&amp;lt;V&amp;gt;&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> groupByTo(LinkedHashMap&amp;lt;K, MutableList&amp;lt;V&amp;gt;&amp;gt;(), keySelector, valueTransform)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>groupBy&lt;/code>の実装では、&lt;code>groupByTo&lt;/code>という関数に自分の引数と、作られるMapのインスタンスを渡しているだけですね。では、さらに&lt;code>groupByTo&lt;/code>の中身を見ていきましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">inline&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">T&lt;/span>, &lt;span style="color:#50fa7b">K&lt;/span>, &lt;span style="color:#50fa7b">V&lt;/span>, &lt;span style="color:#50fa7b">M&lt;/span> : &lt;span style="color:#50fa7b">MutableMap&lt;/span>&amp;lt;&lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#50fa7b">K&lt;/span>, &lt;span style="color:#50fa7b">MutableList&lt;/span>&amp;lt;&lt;span style="color:#50fa7b">V&lt;/span>&amp;gt;&amp;gt;&amp;gt; &lt;span style="color:#50fa7b">Iterable&lt;/span>&amp;lt;T&amp;gt;.groupByTo(destination: M, keySelector: (T) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> K, valueTransform: (T) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> V): M {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> (element &lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#ff79c6">this&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> key = keySelector(element)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> list = destination.getOrPut(key) { ArrayList&amp;lt;V&amp;gt;() }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> list.add(valueTransform(element))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> destination
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで確かになっていることは、やはり最初のCollectionの要素数分、&lt;code>keySelector&lt;/code>と&lt;code>valueTransform&lt;/code>を実行しているということです。Mapに変えることになるので、&lt;code>reduce&lt;/code>の時とは違ってMemberレコードがいくつあっても一つに集約されるような事態は起こらないと考えられますが、依然としてオブジェクトのインスタンスが複数できてしまうという問題はあります。なので、また他の方法を探してみましょう。&lt;/p>
+&lt;h3 id="map">Map&lt;/h3>
+&lt;p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、&lt;code>compute&lt;/code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。&lt;/p>
+&lt;p>トランザクションとは関係のないMapをまず宣言し、Selectしたデータに対して&lt;code>compute&lt;/code>を実行することにします。&lt;code>compute&lt;/code>では指定したkey（Memberのidなど）がMapの中にない場合にMemberのインスタンスを作成するようにして、すでにある場合はそのオブジェクトにMailingのデータを追加するようにすれば良いでしょう。そしてループが終わったらMapのvalueのみを取得すると良いですね。&lt;/p>
+&lt;p>以上のことを、コードで表すと以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// オブジェクトをまとめるためのMap（keyはMember.id）
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> helperMap = mutableMapOf&amp;lt;Int, MemberDto&amp;gt;()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (Member.id eq id) and (Mailing.memberId eq Mailing.id)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .forEach {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> helperMap.compute(&lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value) { key, value &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullではない場合、コピーしてmailingAddressを累計
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> value&lt;span style="color:#ff79c6">?.&lt;/span>copy(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = value.mailingAddress + &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullの場合はインスタンスを作る
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> ) &lt;span style="color:#ff79c6">?:&lt;/span> MemberDto(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = key,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.let {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueをListに変換
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> helperMap.map { &lt;span style="color:#ff79c6">it&lt;/span>.value }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>いかがでしょうか。これで重複するデータなく、インスタンスの作成も最低限に抑えることができたかと思います。もちろん、mailingAddressを追加するたびにコピーが発生するという問題はありますが、ここは専用のsetterなどを作っておくことで回避できると思います。&lt;/p>
+&lt;p>一つ注意しなくてはならないのは、ここで使っているMapをフィールドとして宣言したりするとデータの整合性やアプリケーションのメモリ使用量に響くということです。なので必ずメソッドの中でのみMapのインスタンスが作成されるようにする必要があります。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。&lt;/p>
+&lt;p>ただ、ORMでどうやってデータを取得するかの問題だけでなく、ここで扱った「重複するデータをどう違う形のデータに加工するか」の問題は、必ずしもDBからレコードを取得する場合のみのことに限らないので（例えば他のAPIを読んだ結果としてもそんなデータはあり得ますね）、色々方法を考えておく必要はありそうです。今の時点ではMapを利用した方法がもっとも良さそうな気がしますが、他にもっと効率的な方法があるかも知れませんしね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Ktorを触ってみた</title><link>https://retheviper.github.io/posts/ktor-first-impression/</link><pubDate>Sun, 18 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-first-impression/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post Ktorを触ってみた" />&lt;p>サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSpringが多いかと思います。理由としては会社ごとの事情というものもあるはずですが、一般的な理由としてはJavaエンジニアにとってKotlinは馴染みやすい物であっても、フレームワークの場合はそうでなく、Springほど検証されたフレームワークはないからということからでしょう。いまだにStrutsを使っていて、Springに移行しようとするところもありますしね。&lt;/p>
+&lt;p>KotlinはJavaと完璧（に近い）互換性があるので、Javaで書かれてあるアプリをそのままKotlinに移行しても大した問題はありません。Javaより生産性が高い上にSpringだけでなくJackson、Apache POI、JUnit、Jacocoなどの数多くのライブラリをそのまま使えるのは確かにメリットであって、企業側としてKotlinの導入を検討する理由は確かにそこにあると思います。Javaエンジニアはその数が多いので、エンジニアを募集し安くなるというところもメリットの一つと言えるでしょう。&lt;/p>
+&lt;p>ただ、Kotlinを使う場合に長期的にはKotlinで書かれたライブラリやフレームワークを導入することを検討した方が良いかもしれません。コンパイルした結果として生成されるByte codeがJavaと全く一緒だとしても、そもそものソースコードが違う言語なので、使う側のコード（クライアントコード）としては不便なところがあったり、Kotlinに最適化されてない場合もある可能性があるからです。また、KotlinはJVMだけでなく、ネイティブにコンパイルすることもできるので、ネイティブなアプリを作りたい場合はJavaに依存しないAPIを選ぶ必要があるでしょう。&lt;/p>
+&lt;p>ということで、今回はJetBrains制のウェブフレームワーク、Ktorと、Ktorと一緒に使えるORMのExposedを少し触ってみて、Springと比べながら紹介したいと思います。&lt;/p>
+&lt;h2 id="ktor">Ktor&lt;/h2>
+&lt;p>Ktorは、JetBrainsで開発しているマイクロサービス向けの軽量ウェブフレームワークです。&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
+>公式ホームページ&lt;/a>の紹介にも色々書いてありますが、特にSpringと比べて以下の特徴があるかと思います。&lt;/p>
+&lt;h3 id="軽量">軽量&lt;/h3>
+&lt;p>Springも軽量とは言われているものの、起動が遅いので、実装する側としてはあまり軽量だという感覚はないです。Springで書かれたアプリケーションの起動が遅いのは、起動時にさまざまなアノテーションを読み込み、DIや設定などを完璧に終わらせているというフレームワークそのもののアーキテクチャに起因しているのではないかと思います。なのでDIされるオブジェクトをLate initにするなどで起動速度を短縮させるテクニックなどが知られていますね。&lt;/p>
+&lt;p>しかし、Ktorは起動がかなり早いです。同一規模のアプリをSpringとKtorの両方で作成してベンチマークした訳ではないので正確な数値に関しては割愛しますが、体験だと数倍は早いですね。例えば、In memoryタイプのH2と基本的なCRUDを実装したSpring WebFluxアプリケーションの場合、自分のPCで起動に2.7秒ほどかかりました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>2021-07-18 15:08:25.150 INFO &lt;span style="color:#bd93f9">29047&lt;/span> --- &lt;span style="color:#ff79c6">[&lt;/span>main&lt;span style="color:#ff79c6">]&lt;/span> c.r.s.SpringWebfluxSampleApplicationKt : Started SpringWebfluxSampleApplicationKt in 2.754 seconds &lt;span style="color:#ff79c6">(&lt;/span>JVM running &lt;span style="color:#ff79c6">for&lt;/span> 3.088&lt;span style="color:#ff79c6">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>同じ構成でKtorのアプリを実装した場合、起動には1秒もかからなかったです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>2021-07-18 15:09:29.683 &lt;span style="color:#ff79c6">[&lt;/span>main&lt;span style="color:#ff79c6">]&lt;/span> INFO ktor.application - Application started in 0.747 seconds.
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはおそらく基本的にDIをしなく、アノテーションをあまり使わない（Reflectionを使わない）構造やKtorそのものはREST APIを作成するための必要最低限の機能だけを揃っているのが理由かと思われます。&lt;/p>
+&lt;p>アプリの起動が早いというのは、テストにかかる時間を短縮させられるという面でもメリットといえますが、サーバレスなアプリにも適しているということにもなるでしょう。私もAWSのLambdaやAzureのFunctionsなどを触った経験がありますが、この場合にJavaやKotlinの使用を考慮したことはありません。サーバレスの場合、アプリが常に稼働中ではないので、リクエストが発生したたびにアプリを起動しなければならないです。なので起動の遅いSpringはそもそもの考慮対象にならなかったですね。Ktorを使う場合は起動速度が大幅に短縮できるので、JVMの起動速度が許されるというならば、サーバレスアーキテクチャで導入を検討できるレベルになっていると思います。&lt;/p>
+&lt;h3 id="拡張可能">拡張可能&lt;/h3>
+&lt;p>Ktorが軽量であることとも繋がる話ですが、必要な機能があればプラグイン（モジュール）を追加したり、自分で実装する必要はあります。コードとしては、以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> embeddedServer(Netty, port = &lt;span style="color:#bd93f9">8080&lt;/span>, host = &lt;span style="color:#f1fa8c">&amp;#34;127.0.0.1&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(CORS)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(Compression)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(Sessions) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cookie&amp;lt;MyCookie&amp;gt;(&lt;span style="color:#f1fa8c">&amp;#34;MY_COOKIE&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(ContentNegotiation) { &lt;span style="color:#6272a4">// kotlinx.serialization
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.start(wait = &lt;span style="color:#ff79c6">true&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>なので、Ktorの導入直後はモジュールの管理や開発のスピード感という側面ではマイナスになる部分もあるかなと思います。特にまだSpring Securityでは基本的に提供している&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%83%AD%E3%83%BC%E3%83%AB%E3%83%99%E3%83%BC%E3%82%B9%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E5%88%B6%E5%BE%A1" target="_blank" rel="noopener"
+>Role-Based Authorization&lt;/a>などの機能が公式プラグインとして提供されてないので自前の処理を書くしかないという部分もあります。個人的には、モジュール化そのものは慣れたらメリットになる可能性の方が高いと思いますが、導入初期としてはSpringに比べ不利なところなのではないかと思います。&lt;/p>
+&lt;p>特にKtorはDIに対応していなく、JetBrains公式のモジュールもないので、DIをするためには&lt;a class="link" href="https://github.com/IVIanuu/injekt" target="_blank" rel="noopener"
+>Injekt&lt;/a>, &lt;a class="link" href="https://kodein.org/Kodein-DI/?6.3/ktor" target="_blank" rel="noopener"
+>Kodein&lt;/a>, &lt;a class="link" href="https://insert-koin.io" target="_blank" rel="noopener"
+>Koin&lt;/a>などをディペンデンシーとして追加する必要があります。ただ、アーキテクチャによってはDIが必要なく、&lt;code>object&lt;/code>で代替することもできると思いますので、どんなアーキテクチャにするかはよく考えて決める必要があるかなと思います。&lt;/p>
+&lt;h3 id="coroutine対応">Coroutine対応&lt;/h3>
+&lt;p>Spring WebFluxもそうでしたが、最近は多くのウェブフレームワークに非同期・ノンブロッキング対応が行われていますね。PaaSが普及され簡単にインフラの構築ができ、ハードウェアが安くなった今でもソフトウェアで性能を改善できる箇所があるならそれは十分価値があると思っています。だとすると、非同期・ノンブロッキング対応のフレームワークを導入するということも良い選択ではないかと思います。&lt;/p>
+&lt;p>Ktorではルーティングの実装として、&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/-route/index.html" target="_blank" rel="noopener"
+>Route&lt;/a>の&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/route.html" target="_blank" rel="noopener"
+>route&lt;/a>、もしくは&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/get.html" target="_blank" rel="noopener"
+>get&lt;/a>, &lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/post.html" target="_blank" rel="noopener"
+>post&lt;/a>, &lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/put.html" target="_blank" rel="noopener"
+>put&lt;/a>, &lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/delete.html" target="_blank" rel="noopener"
+>delete&lt;/a>などのfunctionを呼び出すことになります。これはSpring WebFluxのRouter/Hanlder Functionとよく似ていますね。コードで表すと、以下のようなものです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>routing {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;/hello&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respondText(&lt;span style="color:#f1fa8c">&amp;#34;Hello&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そしてこのHttpメソッドごとの関数のbodyを実装することになりますが、これが基本的に&lt;code>suspend&lt;/code>となっています。これはつまり、実装する側で特に意識しなくてもコードは非同期になるということですね。Spring WebFluxの場合も、Coroutineを使うと簡単に実装ができましたが、&lt;code>suspend&lt;/code>すら意識しなくて良いというところはKtorならではのメリットなのではという気がします。&lt;/p>
+&lt;h3 id="テスト">テスト&lt;/h3>
+&lt;p>&lt;code>ktor-server-test-host&lt;/code>や&lt;code>kotlin-test&lt;/code>、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、&lt;code>Get&lt;/code>をのレスポンスをテストするためには以下のようなコードを書くことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Test
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> withTestApplication(Application&lt;span style="color:#ff79c6">::&lt;/span>module) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> handleRequest(HttpMethod.Get, &lt;span style="color:#f1fa8c">&amp;#34;api/v1/web/members/&lt;/span>&lt;span style="color:#f1fa8c">$id&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>).apply {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.status(),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = HttpStatusCode.OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.content,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = Json.encodeToString(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberResponse(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = id,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userId = userId,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = name
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="exposed">Exposed&lt;/h2>
+&lt;p>Ktorで使える、Kotlinで書かれたORMは代表的に&lt;a class="link" href="https://github.com/JetBrains/Exposed" target="_blank" rel="noopener"
+>Exposed&lt;/a>があります。Javaの&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
+>jOOQ&lt;/a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInUsa: List&amp;lt;User&amp;gt; = transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.select {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.map {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.id],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> country = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.country]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.filter {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.country = Country.USA
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInGermany: List&amp;lt;User&amp;gt; = transaction {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User.find { (UserTable.country eq Country.GERMANY) and (UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>)}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで&lt;a class="link" href="https://www.liquibase.org" target="_blank" rel="noopener"
+>Liquibase&lt;/a>や&lt;a class="link" href="https://flywaydb.org" target="_blank" rel="noopener"
+>Flyway&lt;/a>でDBの形状管理をやっていたことが多かったのですが、個人的に実際のDBとアプリケーションのテーブル定義に乖離があるケースを考えるとこうやってコードの中に定義した方が、データのオーナーという観点からもかなり良いのではないかと思います。特に、頻繁なテーブル定義の修正があったり、マイクロサービスが多いケースではかなり開発が便利になるのではないかと思います。&lt;/p>
+&lt;p>Exposedのテーブル定義は、以下のようにできます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">object&lt;/span> &lt;span style="color:#50fa7b">Member&lt;/span> : IntIdTable() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> userId: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;user_id&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> name: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;name&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> password: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;password&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">255&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> deleted: Column&amp;lt;Boolean&amp;gt; = bool(&lt;span style="color:#f1fa8c">&amp;#34;deleted&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> createdBy: Column&amp;lt;String&amp;gt; = varchar(&lt;span style="color:#f1fa8c">&amp;#34;created_by&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> createdDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#f1fa8c">&amp;#34;created_date&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> lastModifiedBy: Column&amp;lt;String&amp;gt; = varchar(&lt;span style="color:#f1fa8c">&amp;#34;last_modified_by&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> lastModifiedDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#f1fa8c">&amp;#34;last_modified_date&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そして実際発行されるSQLは以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-sql" data-lang="sql">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">CREATE&lt;/span> &lt;span style="color:#ff79c6">TABLE&lt;/span> &lt;span style="color:#ff79c6">IF&lt;/span> &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">EXISTS&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;MEMBER&amp;#34;&lt;/span> (ID &lt;span style="color:#8be9fd;font-style:italic">INT&lt;/span> AUTO_INCREMENT &lt;span style="color:#ff79c6">PRIMARY&lt;/span> &lt;span style="color:#ff79c6">KEY&lt;/span>, DELETED &lt;span style="color:#8be9fd;font-style:italic">BOOLEAN&lt;/span> &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, CREATED_BY &lt;span style="color:#8be9fd;font-style:italic">VARCHAR&lt;/span>(&lt;span style="color:#bd93f9">16&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, CREATED_DATE DATETIME(&lt;span style="color:#bd93f9">9&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, LAST_MODIFIED_BY &lt;span style="color:#8be9fd;font-style:italic">VARCHAR&lt;/span>(&lt;span style="color:#bd93f9">16&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, LAST_MODIFIED_DATE DATETIME(&lt;span style="color:#bd93f9">9&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, USER_ID &lt;span style="color:#8be9fd;font-style:italic">VARCHAR&lt;/span>(&lt;span style="color:#bd93f9">16&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;NAME&amp;#34;&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">VARCHAR&lt;/span>(&lt;span style="color:#bd93f9">16&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>, PASSWORD &lt;span style="color:#8be9fd;font-style:italic">VARCHAR&lt;/span>(&lt;span style="color:#bd93f9">255&lt;/span>) &lt;span style="color:#ff79c6">NOT&lt;/span> &lt;span style="color:#ff79c6">NULL&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで、JPAやR2DBCの場合、Auditableクラスを定義して、エンティティがそれを継承することでカラムを共有したり、Spring Securityに連携することができましたが、Exposedでも似たようなことができました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">abstract&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Audit&lt;/span> : IntIdTable() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> deleted: Column&amp;lt;Boolean&amp;gt; = bool(&lt;span style="color:#f1fa8c">&amp;#34;deleted&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> createdBy: Column&amp;lt;String&amp;gt; = varchar(&lt;span style="color:#f1fa8c">&amp;#34;created_by&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> createdDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#f1fa8c">&amp;#34;created_date&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> lastModifiedBy: Column&amp;lt;String&amp;gt; = varchar(&lt;span style="color:#f1fa8c">&amp;#34;last_modified_by&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> lastModifiedDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#f1fa8c">&amp;#34;last_modified_date&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">object&lt;/span> &lt;span style="color:#50fa7b">Member&lt;/span> : Audit() { &lt;span style="color:#6272a4">// Auditのカラムも含めてテーブルが作成される
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> userId: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;user_id&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> name: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;name&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">16&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> password: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#f1fa8c">&amp;#34;password&amp;#34;&lt;/span>, length = &lt;span style="color:#bd93f9">255&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>MyBatisなどに慣れている場合は少し適応に時間が必要かもしれませんが、基本的にはテーブルの定義を除くとほぼSQLの発行をKotlinのコードで書くことになるという感覚なので、便利になるかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>以上で、簡単なCRUDアプリをKtor + Exposedで実装してみた後の感想と紹介を少し書いてみました。まとめると、かなりサクサクコードを書けて性能も良いので、マイクロサービスに特化している構成ではないかと思いました。また、冒頭に述べた通り、ピュアなKotlin制のフレームワークであることも良いですね。Ktorの紹介でもKotlin Multiplatformに基づいていてどのプラットフォームにもアプリをデプロイできると強調していますので、色々なところで活用ができるかと思います。&lt;/p>
+&lt;p>まだSpringと他のJavaライブラリに比べ足りないモジュールや機能もありますが、Exposed以外でも&lt;a class="link" href="https://www.ktorm.org" target="_blank" rel="noopener"
+>Ktorm&lt;/a>のようなORMがあるなどKotlin制のライブラリの開発も進めていて、IntellijでもKtorのサポートは強力なので今後も発展を期待できそうであります。個人的にまだ仕事で使うことには無理があっても、自作アプリなどを作りたい時は導入をぜひ検討したいと思いました。Kotlinでできることがだんだん増えてきていて、嬉しいですね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item></channel></rss>

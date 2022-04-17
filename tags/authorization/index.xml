@@ -1,1 +1,208 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>authorization on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/authorization/</link><description>Recent content in authorization on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 09 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/authorization/index.xml" rel="self" type="application/rss+xml"/><item><title>KtorでRole-based Authorizationを実装する</title><link>https://retheviper.github.io/posts/ktor-role-based-authorization/</link><pubDate>Mon, 09 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-role-based-authorization/</guid><description>前回、Ktorを紹介しながら、KtorにはまだRole-based Authorizationに対応してないので、自前でそのような機能を実装す</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>authorization on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/authorization/</link><description>Recent content in authorization on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 09 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/authorization/index.xml" rel="self" type="application/rss+xml"/><item><title>KtorでRole-based Authorizationを実装する</title><link>https://retheviper.github.io/posts/ktor-role-based-authorization/</link><pubDate>Mon, 09 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-role-based-authorization/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post KtorでRole-based Authorizationを実装する" />&lt;p>前回、Ktorを紹介しながら、Ktorにはまだ&lt;code>Role-based Authorization&lt;/code>に対応してないので、自前でそのような機能を実装する必要がある、と述べました。Ktorはまだ歴史が短く、SpringやDjango、Railsのように幅広く使われているフレームワークでもないので、おそらく他に比べ実のアプリケーションを作るにあたっては必要な機能が十分でない可能性がありますね。なので、こうやって必要な機能がない場合は直接その機能を実装するしかないです。&lt;/p>
+&lt;p>幸い、Ktorでは機能を&lt;a class="link" href="https://ktor.io/docs/plugins.html" target="_blank" rel="noopener"
+>Plugin&lt;/a>といい、モジュール単位で追加できるため、必要な機能を実装するのもそのPluginを作ることでできるようになります。ただ、モジュールを利用するということは、機能単位の管理がやりやすくなるものの、そのモジュールはどうやって機能するか、また、どういうお作法が必要となるかを知る必要がありますね。&lt;/p>
+&lt;p>今回はネット上に公開されてある&lt;a class="link" href="https://medium.com/@shrikantjagtap99/role-based-authorization-feature-in-ktor-web-framework-in-kotlin-dda88262a86a" target="_blank" rel="noopener"
+>記事&lt;/a>を参考にしながら、KtorのRole-based Authorizationを&lt;code>Plugin&lt;/code>として実装してみました。そこで、今回のポストではこういう自作の&lt;code>Plugin&lt;/code>がどうやってKtorの機能として動作するか、どうやって実装するのかについて述べたいと思います。&lt;/p>
+&lt;h2 id="role-based-authorizationとは">Role-based Authorizationとは&lt;/h2>
+&lt;p>まずは、そもそも&lt;code>Role-based Authorization&lt;/code>とは何か、からですね。これは、ウェブアプリケーションでよく言われている「認可」の方式のうち、ユーザの&lt;code>Role&lt;/code>（役割）に基づいて、APIの実行を制御するものです。例えばECサイトの場合、商品に対して問い合わせをするのは認証されたユーザなら誰でもできるべきですが、「お知らせを書く」や「商品の在庫数を変更する」などの機能はその権限を持つユーザ（Admin）に限定すべきですね。なので、ここで「一般ユーザ」と「管理者」などの&lt;code>Role&lt;/code>を設け、APIに対してのリクエストが発生した際にその&lt;code>Role&lt;/code>をまず確認し、その権限のあるユーザのみがAPIを実行できるようにする、というのが&lt;code>Role-based Authorization&lt;/code>の基本的な概念です。&lt;/p>
+&lt;p>これを実現するために既存のアプリに導入する必要のあるものは、大きく分けて&lt;code>Role&lt;/code>の概念と、それを元にリクエストをフィルタリングする機構の二つです。前者の場合はどんなロールがあり、どういう形でユーザに紐付けるかを考えればいいだけなので、テーブルやカラムを追加して既存のユーザの情報と紐づけるだけですみます。しかし、後者はまずフレームワークでどうやってリクエストをフィルタするか、まずその構造から理解する必要がありますね。なんので、まずはKtorでリクエストを扱う方法に対して紹介したいと思います。&lt;/p>
+&lt;h2 id="pipelineとfeature">PipelineとFeature&lt;/h2>
+&lt;p>Ktorの特徴のうち、最も重要と言えるものは、&lt;a class="link" href="https://ktor.io/docs/pipelines.html" target="_blank" rel="noopener"
+>Pipeline&lt;/a>の概念です。この&lt;code>Pipeline&lt;/code>に対して、公式では以下のように説明しています。&lt;/p>
+&lt;blockquote>
+&lt;p>The pipeline is a structure containing a sequence of functions (blocks/lambdas) that are called one after another, distributed in phases topologically ordered, with the ability to mutate the sequence and to call the remaining functions in the pipeline and then return to current block.&lt;/p>
+&lt;/blockquote>
+&lt;p>この説明だけでは理解が難しいものですが、要するに、Ktorにおいての処理の単位のことを指していると言ってもよいものです。&lt;code>Pipeline&lt;/code>ではAPIのコールからレスポンスまで一連の流れとしての処理を定義することができます。なので&lt;code>Pipeline&lt;/code>として実現されている代表的な機能は&lt;code>Router&lt;/code>、リクエストに対してのハンドリングを定義する機能（Springの&lt;code>Controller&lt;/code>に対応するもの）となります。&lt;/p>
+&lt;p>また、&lt;code>Pipeline&lt;/code>は拡張できるものなので、その形式に合わせて新しい&lt;code>Pipeline&lt;/code>を実装することでモジュール(公式の表現では&lt;code>Plugin&lt;/code>)を実現するのもできます。これらのモジュールを実装し、アプリケーションにインストールすることで、そのモジュールの機能を利用できるようになるのがKtorの特徴です。例えば、kotlin公式のJSON Mapperである&lt;a class="link" href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener"
+>kotlinx.serialization&lt;/a>をアプリケーションに追加するためには以下のようなコードを書きます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Application&lt;/span>.main() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(ContentNegotiation) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで呼び出している&lt;code>install&lt;/code>関数の実装を見ると、以下のようになっています。&lt;code>feature&lt;/code>(モジュール)と、そのモジュールの設定となる&lt;code>configure&lt;/code>が引数になっているのがわかります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">P&lt;/span> : &lt;span style="color:#50fa7b">Pipeline&lt;/span>&amp;lt;*, &lt;span style="color:#50fa7b">ApplicationCall&lt;/span>&amp;gt;, &lt;span style="color:#50fa7b">B&lt;/span> : &lt;span style="color:#50fa7b">Any&lt;/span>, &lt;span style="color:#50fa7b">F&lt;/span> : &lt;span style="color:#50fa7b">Any&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">P&lt;/span>.install(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> feature: ApplicationFeature&amp;lt;P, B, F&amp;gt;,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: B.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit = {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>): F
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>先ほどの&lt;code>kotlinx.serialization&lt;/code>をインストールするために使っていたコードでは、&lt;code>feature&lt;/code>として&lt;code>ContentNegotiation&lt;/code>を渡し、その設定として&lt;code>json&lt;/code>を使うという設定をしているのだなという推測ができますね。実際、&lt;code>ContentNegotiation&lt;/code>の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には&lt;code>Configuration&lt;/code>というクラスと、&lt;code>ApplicationFeature&lt;/code>を継承した&lt;code>companion object&lt;/code>を中に持っているのがわかります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">ContentNegotiation&lt;/span> &lt;span style="color:#ff79c6">internal&lt;/span> &lt;span style="color:#ff79c6">constructor&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> registrations: List&amp;lt;ConverterRegistration&amp;gt;,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> acceptContributors: List&amp;lt;AcceptHeaderContributor&amp;gt;,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> checkAcceptHeaderCompliance: Boolean = &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * Configuration type for [ContentNegotiation] feature
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Configuration&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> * Implementation of an [ApplicationFeature] for the [ContentNegotiation]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"> */&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> Feature : ApplicationFeature&amp;lt;ApplicationCallPipeline, Configuration, ContentNegotiation&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ...
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記の実装でわかるように、&lt;code>Pipeline&lt;/code>として機能するためにはモジュールの設定のための&lt;code>Configuration&lt;/code>というクラスと、モジュールとして機能するための&lt;code>ApplicationFeature&lt;/code>を継承した&lt;code>companion object&lt;/code>が必要であることがわかります。なので、この構造を持ったクラスを定義できれば、自作のモジュールをアプリケーションに実装できるということがわかりますね。&lt;/p>
+&lt;h2 id="pluginの実装">Pluginの実装&lt;/h2>
+&lt;p>では、実際に&lt;code>Pipeline&lt;/code>として、リクエストに対する認可を判定する機能を作るとしましょう。まずはロールを定義します。&lt;code>enum&lt;/code>が良さそうですね。ここではシンプルに管理者と一般ユーザの2種を作ってみます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">enum&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Role&lt;/span>(&lt;span style="color:#ff79c6">val&lt;/span> value: String) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ADMIN(&lt;span style="color:#f1fa8c">&amp;#34;ADMIN&amp;#34;&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> USER(&lt;span style="color:#f1fa8c">&amp;#34;USER&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これらのロールは、テーブルなどで管理する必要もありますが、ログイン中のユーザ情報から取得する必要もありますね。認可のためには、ログイン中のユーザにとあるロールが与えられているかどうかの確認が必要となるからです。なので、&lt;code>io.ktor.auth.Principal&lt;/code>を継承したユーザの情報もクラスとして作り、ログインに成功した時はこのクラスにユーザのロールを格納することにします（方法は認可とは関係ないのでここでは割愛させてください）。以下はユーザの情報を格納するための簡単な例です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">UserPrincipal&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> username: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> roles: Set&amp;lt;Role&amp;gt; = emptySet()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) : Principal
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>次に、ロールでアクセスを制限する関数を作ります。&lt;code>Router&lt;/code>のエンドポイントに、どのロールの場合にアクセスできるかを指定するようなイメージです。例えば以下のような形で使えたらいいかと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Application&lt;/span>.main() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> routing {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 管理者のみアクセスできる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(Role.ADMIN) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;/admin&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(&lt;span style="color:#f1fa8c">&amp;#34;This is admin page&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 一般ユーザがアクセスできる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(Role.USER) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;/user&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(&lt;span style="color:#f1fa8c">&amp;#34;This is user page&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Router&lt;/code>の使い方でわかるように、&lt;code>Pipeline&lt;/code>でのコードブロック（関数）はネストが可能なのでこのように一つのレイヤーを挟むのも可能です。ここで追加した&lt;code>withRole&lt;/code>という関数でロールを確認し、APIにアクセスできるかどうかを判定するようにしたら良いでしょう。&lt;/p>
+&lt;h3 id="authorizedrotueselectorの実装">AuthorizedRotueSelectorの実装&lt;/h3>
+&lt;p>まずは&lt;code>RouteSelector&lt;/code>を実装します。これは、&lt;code>routing&lt;/code>の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AuthorizedRouteSelector&lt;/span>() : RouteSelector() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">evaluate&lt;/span>(context: RoutingResolveContext, segmentIndex: Int) = RouteSelectorEvaluation.Constant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="child-routeの実装">child routeの実装&lt;/h3>
+&lt;p>先に実装した&lt;code>AuthorizedRouteSelector&lt;/code>を利用して、実際に&lt;code>child route&lt;/code>として機能する関数を作ります。この&lt;code>child route&lt;/code>は&lt;code>Router&lt;/code>の下にネストすることになるので、&lt;code>Route&lt;/code>の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Route&lt;/span>.withRole(&lt;span style="color:#ff79c6">val&lt;/span> role: Role, build: Route.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit): Route {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> authorizedRoute = createChild(AuthorizedRouteSelector())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> application.feature(RoleBaseAuthorizer).interceptPipeline(&lt;span style="color:#ff79c6">this&lt;/span>, role)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> build()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> authorizedRoute
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで実装しているものは、まず&lt;code>AuthorizedRouteSelector&lt;/code>で&lt;code>child route&lt;/code>を作り、その後&lt;code>Pipeline&lt;/code>をインターセプトして、ユーザが指定したロールに該当するかどうかを判定します。問題なければ&lt;code>build&lt;/code>を実行させますが、これがネストしている&lt;code>child route&lt;/code>になります。最後に、エンドポイントをネストできるように先ほど作成した&lt;code>child route&lt;/code>のインスタンスを返します。&lt;/p>
+&lt;p>&lt;code>Pipeline&lt;/code>をインターセプトする時に呼び出している&lt;code>RoleBaseAuthorizer&lt;/code>は、別途クラスとして作ることにします。これを&lt;code>Feature&lt;/code>として作ることになります。&lt;/p>
+&lt;h3 id="認可処理のモジュールの実装">認可処理のモジュールの実装&lt;/h3>
+&lt;p>では、本格的に認可の処理を担当するモジュール（&lt;code>Feature&lt;/code>）を実装することにします。先に述べた通り、&lt;code>Configuration&lt;/code>と&lt;code>Feature&lt;/code>を内部に持ったクラスを作ります。ここで&lt;code>Configuration&lt;/code>は、ログイン中のユーザからどうやってロールの情報を取得するかの設定ができるクラスにします。こうすることで、以下のようなことが可能になるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Application&lt;/span>.main() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// RoleBaseAuthorizerをFeatureとしてインストール
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> install(RoleBaseAuthorizer) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン中のユーザの情報からロールを取得する方法をConfigurationとして指定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> getRoles { (&lt;span style="color:#ff79c6">it&lt;/span> &lt;span style="color:#ff79c6">as&lt;/span> UserPrincipal).roles }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Configuration&lt;/code>では、ログイン中のユーザ情報となる&lt;code>UserPrincipal&lt;/code>から&lt;code>roles&lt;/code>を取得する、という関数を渡します。これを持って、&lt;code>RoleBaseAuthorizer&lt;/code>では&lt;code>withRole&lt;/code>関数で指定したロールとユーザのロールを比較するようにします。&lt;/p>
+&lt;p>認可のモジュールの設定方法のイメージができたので、次に&lt;code>RoleBaseAuthorizer&lt;/code>を実装します。例えば以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">RoleBaseAuthorizer&lt;/span>(config: Configuration) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Configuration&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">var&lt;/span> userRoles: (Principal) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Set&amp;lt;Role&amp;gt; = { emptySet() }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン中のユーザの情報からロールの取得方法をセット
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getRoles&lt;/span>(roles: (Principal) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Set&amp;lt;Role&amp;gt;) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userRoles = roles
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> getRoles = config.userRoles
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">interceptPipeline&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline: ApplicationCallPipeline,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role: Role
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Pipelineの位置付け
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline.insertPhaseAfter(Authentication.ChallengePhase, AuthorizationPhase)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// インターセプト時の処理
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pipeline.intercept(AuthorizationPhase) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン中のユーザの情報を取得
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> principal = call.authentication.principal&amp;lt;UserPrincipal&amp;gt;()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#ff79c6">throw&lt;/span> AuthorizationException(&lt;span style="color:#f1fa8c">&amp;#34;Missing principal&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ユーザ情報からロールを取得
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> roles = getRoles(principal)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (roles.none { role }) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ログイン中のユーザのロールに、アクセス可能なロールが含まれてない場合の処理
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> Feature : ApplicationFeature&amp;lt;ApplicationCallPipeline, Configuration, RoleBaseAuthorizer&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> key = AttributeKey&amp;lt;RoleBaseAuthorizer&amp;gt;(&lt;span style="color:#f1fa8c">&amp;#34;RoleBaseAuthorizer&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> AuthorizationPhase = PipelinePhase(&lt;span style="color:#f1fa8c">&amp;#34;Authorization&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">install&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline: ApplicationCallPipeline,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: Configuration.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ): RoleBasedAuthorization {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> configuration = Configuration().apply(configure)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> RoleBaseAuthorizer(configuration)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>先に説明した通り、&lt;code>Configuration&lt;/code>ではユーザのロール情報を取得する関数を設定し、保存します。そして&lt;code>interceptPipeline&lt;/code>では、その関数を持って&lt;code>Pipeline&lt;/code>をインターセプトし、ロールの検証を行うようにします。&lt;/p>
+&lt;p>また、&lt;code>interceptPipeline&lt;/code>では、引数として渡された&lt;code>Pipeline&lt;/code>の位置付けを設定する必要があります。上記のコードでは、「認証の後」に位置付けしています。その後のロジックは、色々な方法があると思いますので、ここでは割愛させていただきます。&lt;/p>
+&lt;p>他に、&lt;code>Feature&lt;/code>の場合は、&lt;code>RoleBaseAuthorizer&lt;/code>が独立したモジュールとして使える設定を行います。単純に名前をつけてインスタンスを返すような、お作法的なものですね。&lt;/p>
+&lt;p>ここまでの実装が終わったら、一通り認可に関するモジュールの作成は終わります。ただ、&lt;code>interceptPipeline&lt;/code>の処理としてユーザのロールが、APIにアクセスできない場合の処理として考えられることは二つほどあります。&lt;/p>
+&lt;h4 id="レスポンスを返して終了">レスポンスを返して終了&lt;/h4>
+&lt;p>まず考えられる方法は、適当なレスポンスを返し、そこで処理を終了させることです。この場合、以下のように実装ができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> (roles.none { role }) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// レスポンスを返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> call.respond(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = HttpStatusCode.Forbidden,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> message = &lt;span style="color:#f1fa8c">&amp;#34;permission not granted: &lt;/span>&lt;span style="color:#f1fa8c">$role&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Pipelineの終了
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> finish()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで注意すべきことは、レスポンスを返すだけで&lt;code>Pipeline&lt;/code>は終わらないということです。レスポンスを返し処理を止めたい場合は必ず&lt;code>finish()&lt;/code>を呼び出して、&lt;code>Pipeline&lt;/code>を終了させましょう。&lt;/p>
+&lt;h4 id="exceptionを投げる">Exceptionを投げる&lt;/h4>
+&lt;p>もう一つの方法は、例外を投げる方法ですね。例えば以下のようにします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 認可されてない場合の例外
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AuthorizationException&lt;/span>(&lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> message: String) : Exception(message)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> (roles.none { role }) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> AuthorizationException(&lt;span style="color:#f1fa8c">&amp;#34;permission not granted: &lt;/span>&lt;span style="color:#f1fa8c">$role&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>例外を投げる場合は、当然&lt;code>Pipeline&lt;/code>の処理が止まることになりますが、アプリケーションのログでも例外になるのであまり良くないですね。幸い、KtorにもSpringの&lt;code>ExceptionHandler&lt;/code>のような機能があるので、それを活用したら適切な例外のハンドリングが可能になります。例えば以下のようなことができますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 認可されてない場合のレスポンス
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AuthFailedResponse&lt;/span>(&lt;span style="color:#ff79c6">val&lt;/span> reason: String)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 例外のハンドリング
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>install(StatusPages) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exception&amp;lt;Throwable&amp;gt; { cause &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">when&lt;/span> (cause) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 認可の場合の処理
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">is&lt;/span> AuthorizationException &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = HttpStatusCode.Forbidden,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> message = AuthFailedResponse(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reason = cause.message
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでアプリケーションのログも綺麗になりますし、他の例外処理に対しても&lt;code>when&lt;/code>の分岐を増やすだけで対応ができるようになります。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>最初に思っていたことよりも膨大な内容を扱うことになったので、いつもより説明が大雑把な気もしますが、これで&lt;code>Pipeline&lt;/code>とそれを応用した自作モジュールの実装についての説明は一通りできたかなと思います。なので、これを応用すれば、他のモジュールを追加するのもそう難しくなさそうな気がしますね。深堀すると色々また出そうな気がしますが、それについては機会があればまた今度のポストのネタにしましょう。（正直あまり詳しくありませんので…）&lt;/p>
+&lt;p>個人的には、このようにRole-based Authorizationの機能を作りながら知った。一連の処理を&lt;code>Pipeline&lt;/code>という単位で扱うという概念ががかなり新鮮で、良いと思いました。処理に対してのインターセプトはSpringでもできるのですが、処理の流れ自体を一つの単位として扱えるならより色々なことができそうな気もしますね。まだKtorに触れたばかりなので、詳しいことはもっと時間をかけてゆっくり調べる必要がありそうですが。&lt;/p>
+&lt;p>確かなのは、Ktorはかなり魅力的なフレームワークであるということです。最初はSpringなど、既存の有名なフレームワークと比べ色々と機能が足りない認証だったのですが、こうやって簡単にモジュールを作れるとしたら意外と問題ないかもしれない、という気がします。もちろんそれでも、プロダクションレベルのものを作るにはまだ色々と検証が必要そうな認証はありますが。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item></channel></rss>

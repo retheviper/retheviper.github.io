@@ -1,1 +1,592 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>linux on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/linux/</link><description>Recent content in linux on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 01 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/linux/index.xml" rel="self" type="application/rss+xml"/><item><title>ルーターにSSL証明書を入れる</title><link>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</link><pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</guid><description>実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単</description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処</description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、Tera termを使ったことはなかったで</description></item><item><title>macOSでもショートカットが使いたい</title><link>https://retheviper.github.io/posts/linux-mac-shortcut/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-mac-shortcut/</guid><description>お知らせ macOSがCatalina(10.15)になってから、ターミナルの基本シェルがbashからzshに変わりました。なのでこのポストを</description></item><item><title>知っていれば便利なLinuxのコツ</title><link>https://retheviper.github.io/posts/linux-command-tips/</link><pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-command-tips/</guid><description>小学校の頃初めてMS-DOSに触れ、その後ずっとWindowsのPCを使っていたので私はLinuxにそう詳しくないです。CLI1にはGUIと</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>linux on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/linux/</link><description>Recent content in linux on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 01 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/linux/index.xml" rel="self" type="application/rss+xml"/><item><title>ルーターにSSL証明書を入れる</title><link>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</link><pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post ルーターにSSL証明書を入れる" />&lt;p>実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単にマシンスペックだけでなく、ファームウェアレベルで提供している機能も少し違います。例えばAiMeshといった機能はRT-AC58Uでは対応していません。&lt;/p>
+&lt;p>そしてこないだファームウェアをアップデートすると、管理ページにWANからアクセスするにはhttpsしかできないという制約ができました。RT-AC68Uの場合は&lt;a class="link" href="https://letsencrypt.org" target="_blank" rel="noopener"
+>Let&amp;rsquo;s encrypt&lt;/a>でSSL証明書&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を作成して更新まで自動で行われる機能を持っているので特に問題はないですが、残念ながらRT-AC58Uはそうではないです。なのでいつもブラウザからRT-AC58Uの管理ページに接続すると証明書がおかしいと怒られます。&lt;/p>
+&lt;p>これから修正される可能性もなくはないと思いますが、最近は&lt;a class="link" href="https://ja.wikipedia.org/wiki/IEEE_802.11#IEEE_802.11ax" target="_blank" rel="noopener"
+>802.11ax&lt;/a>に対応した新型が続々と登場しているので、もう古くなってしまったRT-AC58Uのファームウェアバージョンアップがいつまで続くかわからない状態です。そして毎回証明書がおかしいと怒られるのをみると少し不安になりますね。&lt;/p>
+&lt;p>実家と家のルーターの場合、ソフトウェアそのものはそう変わらないだろうと思って調べてみたらやはりそうでしたので、手動でもSSL証明書を入れられる方法がありそうな気がしました。もっと調べてみるとOSはLinuxであって、結論から言うと58Uにも証明書を入れることは成功しました。&lt;/p>
+&lt;p>今回はそのSSL証明書をRT-AC58Uに適用させるまでの方法を記載します。&lt;/p>
+&lt;h2 id="システム構成">システム構成&lt;/h2>
+&lt;p>現在のシステム構成図を絵で表現するとこちら。&lt;/p>
+&lt;p>&lt;figure
+class="gallery-image"
+style="
+flex-grow: 369;
+flex-basis: 886px"
+>
+&lt;a href="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization.png" data-size="1563x423">
+&lt;img src="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization.png"
+width="1563"
+height="423"
+srcset="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu4d7c17b8995ca9372043a18e221797e6_44022_480x0_resize_box_3.png 480w, https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu4d7c17b8995ca9372043a18e221797e6_44022_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="構成図">
+&lt;/a>
+&lt;figcaption>構成図&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;p>ここでやりたいことは、DDNS&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>を登録したルーターにSSL証明書を入れ、httpsで接続した管理ページで怒られないようにすることです。これを試した理由のもう一つはのちにこのルーターの下にホームサーバーとして機能するLinuxのマシンもおきたいからでもあります。ホームサーバーにはのちに簡単なWebアプリケーションを置いて運用する予定で、今回試したことが成功したら同じ仕組みでそちらにもSSL証明書を適用できると思います。&lt;/p>
+&lt;p>それでは、自分がどうやってSSL証明書を作成してルーターにアップロードし、適用したかを述べていきます。&lt;/p>
+&lt;h2 id="ルーターの設定1">ルーターの設定(1)&lt;/h2>
+&lt;p>ルーターではまず、DDNS設定が必要です。ASUS社のルーターの場合、Chromeなどのブラウザーから&lt;code>http://router.asus.com&lt;/code>を入力するとローカルのルーターの管理ページにアクセスできます。そして「詳細設定」メニューから「WAN]を選び、さらにDDNSのタブに入って好みのアドレスとして登録します。ASUS社のルーターはasuscomm.comという無料のサーバーを提供しているのでそちらを使いましょう。DDNSの登録ができたら、「管理」メニュー配下の「システム」タブで「WANからの接続を許可」を「はい」にしておきます。私は家から接続するために事前に実家のルーターで予めDDNSの設定をしておきました。&lt;/p>
+&lt;p>DDNSでの管理ページ接続設定が終わったら、次はルーターへのSSH接続を設定します。こちらも同じく「管理」ページから設定することができます。SSHを接続設定が終わったらテストをして、なるべく公開鍵でアクセスできるようにして、ポート番号も変えておきましょう。SSHのポートを変えた場合は、ターミナルでは以下のコマンドでアクセスできます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># SSHのポートが2022の場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ssh -p &lt;span style="color:#bd93f9">2022&lt;/span> retheviper@javaman.asuscomm.com
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>SSH時のIDとアドレスは管理ページのIDとDDNSで登録したものとなります。ここまでできたらSSL証明書を作成するためのルーター側の準備はまず終わります。&lt;/p>
+&lt;h2 id="macでの設定1">macでの設定(1)&lt;/h2>
+&lt;p>ルーターのOSはLinuxとなっていますが、やはり重要なコマンドがいくつか足りていないです。代表的にパッケージ管理用の&lt;code>yum&lt;/code>や&lt;code>apt&lt;/code>、&lt;code>dnf&lt;/code>のどちらも搭載されていなく、CPUの性能も怪しいので重要な作業はまずmacで行うことにしました。&lt;/p>
+&lt;p>また、SSL証明書自体はRT-AC68Uで対応しているLet&amp;rsquo;s encryptを使います。こちらは有効期間が90日にすぎないですが、発給も更新も無料となっているのでこういう簡単な作業で使うには最適です。&lt;/p>
+&lt;p>まず、ターミナルでLet&amp;rsquo;s encryptをインストールします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ brew install letsencrypt
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>インストールが終わったら、&lt;code>certbot&lt;/code>コマンドで証明書を作成できます。ただ、証明書を作成する前にDDNSを登録して置く必要があります。私はすでにルーターで提供している機能でドメインを登録してあるので、それをそのまま使います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo certbot certonly --manual
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コマンドを入力すると以下のような画面が出力されます。ただ、自分は何回か同じコマンドを実行しているので初めての実行で出力される画面は少し違う可能性はあります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Saving debug log to /var/log/letsencrypt/letsencrypt.log
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Plugins selected: Authenticator manual, Installer None
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Please enter in your domain name&lt;span style="color:#ff79c6">(&lt;/span>s&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>comma and/or space separated&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>Enter &lt;span style="color:#f1fa8c">&amp;#39;c&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>to cancel&lt;span style="color:#ff79c6">)&lt;/span>: &lt;span style="color:#ff79c6">[&lt;/span>ドメイン&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ルーターで使っているDDNSのドメインを入力してエンターを押下すると次の画面へ。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Obtaining a new certificate
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Performing the following challenges:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>http-01 challenge &lt;span style="color:#ff79c6">for&lt;/span> &lt;span style="color:#ff79c6">[&lt;/span>ドメイン&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>NOTE: The IP of this machine will be publicly logged as having requested this
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>certificate. If you&lt;span style="color:#f1fa8c">&amp;#39;re running certbot in manual mode on a machine that is not
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f1fa8c">your server, please ensure you&amp;#39;&lt;/span>re okay with that.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Are you OK with your IP being logged?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">(&lt;/span>Y&lt;span style="color:#ff79c6">)&lt;/span>es/&lt;span style="color:#ff79c6">(&lt;/span>N&lt;span style="color:#ff79c6">)&lt;/span>o: Y
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>IPが記録されることに同意しますかという質問が表示されます。同意するしかないので&lt;code>Y&lt;/code>を入力。すると以下の画面が現れます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Create a file containing just this data:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>コード&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>And make it available on your web server at this URL:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>httpアドレス&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Press Enter to Continue
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この画面で一旦作業を止め、画面に表示されるコードとURLはコピーしておきましょう。あとでここに戻ってきます。&lt;/p>
+&lt;h2 id="pcでの設定">PCでの設定&lt;/h2>
+&lt;p>先ほど出力された画面は、「このURLにリクエストを送るので、このコードがレスポンスとして取得できるようにしてください」という意味です。なので一時的にサーバーを立てて、レスポンスできるようにしておく必要があります。&lt;/p>
+&lt;p>ただ単にサーバー上でアクセスできるファイルを作る方法もありますが、別の方法を試すことにしました。準備するものはルーターに繋がっているPC上でレスポンスの提供ができるサーバーを立てること。ルーターの性能が十分であればルーターでやっても良いのですが、自分のRT-AC58UはPythonをダウンロードして圧縮ファイルを解凍するだけでもしばらく死んでいました。ここではPCにNode.jsを使って簡単サーバーを作ってみます。他にPythonやRubyなどを使っても構いません。これはあくまで自分が最速でサーバーを立てられる方法がNode.jsだっただけです。&lt;/p>
+&lt;p>実家のPCはWindowsなので、&lt;a class="link" href="https://nodejs.org" target="_blank" rel="noopener"
+>公式ホームページ&lt;/a>からNode.jsをダウンロードしてインストールします。また、expressを使ってサーバーを構築することにします。インストールが終わったらコマンドラインからnpmを使えるようになリます。以下のコードでexpressのスタータープロジェクトを作ることができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cmd" data-lang="cmd">&lt;span style="display:flex;">&lt;span>&amp;gt; mkdir node
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;gt; cd node
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;gt; npm install express
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このあとはVSCodeなどのテキストエディタを使って、以下のコードを作成します。ファイル名は&lt;code>app.js&lt;/code>にして、先ほどexpressをインストールしたフォルダに保存します。先ほどコピーしておいたURLとコードはは忘れずに入力しておきましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-javascript" data-lang="javascript">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> express &lt;span style="color:#ff79c6">=&lt;/span> require(&lt;span style="color:#f1fa8c">&amp;#39;express&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> , http &lt;span style="color:#ff79c6">=&lt;/span> require(&lt;span style="color:#f1fa8c">&amp;#39;http&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> , app &lt;span style="color:#ff79c6">=&lt;/span> express()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> , server &lt;span style="color:#ff79c6">=&lt;/span> http.createServer(app);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>app.get(&lt;span style="color:#f1fa8c">&amp;#39;/[コピーしておいたhttpアドレス]&amp;#39;&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">function&lt;/span> (req, res) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> res.send(&lt;span style="color:#f1fa8c">&amp;#39;コピーしておいたコード&amp;#39;&lt;/span>);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> });
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>server.listen(&lt;span style="color:#bd93f9">80&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">function&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> console.log(&lt;span style="color:#f1fa8c">&amp;#39;Express server listening on port &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> server.address().port);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>});
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ファイルを保存したらコマンドラインから実行して、サーバーを起動します。以下のコマンドで実行できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-cmd" data-lang="cmd">&lt;span style="display:flex;">&lt;span>&amp;gt; node app.js
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>サーバーが起動したら、ローカルからアクセスできるか確認します。ブラウザーでURLを入力してみて、ちゃんとコードが表示されるかを確認できたらPCでの設定は終わりです。&lt;/p>
+&lt;h2 id="macでの設定2">macでの設定(2)&lt;/h2>
+&lt;p>PCでサーバーを起動している状態でmacに戻ります。エンターを押下するとサーバーとの通信が始まって、結果として以下の画面が出力されます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Waiting &lt;span style="color:#ff79c6">for&lt;/span> verification...
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Cleaning up challenges
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>IMPORTANT NOTES:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - Congratulations! Your certificate and chain have been saved at:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> /etc/letsencrypt/live/javaman.asuscomm.com/fullchain.pem
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Your key file has been saved at:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> /etc/letsencrypt/live/javaman.asuscomm.com/privkey.pem
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Your cert will expire on 2020-02-14. To obtain a new or tweaked
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version of this certificate in the future, simply run certbot
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> again. To non-interactively renew *all* of your certificates, run
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;certbot renew&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - If you like Certbot, please consider supporting our work by:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Donating to ISRG / Let&amp;#39;s Encrypt: https://letsencrypt.org/donate
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Donating to EFF: https://eff.org/donate-le
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>SSL認証書の作成が無事完了しました。この画面からは認証書が保存された位置と、満了日を確認できます。また、cerbot renewを入力すると更新ができるということを教えてくれます。&lt;/p>
+&lt;p>SSL証明書を作成したので、あとはルーターにコピーして適用するだけです。まず画面に表示されたパスに入って、以下のファイルをコピーしておきましょう。&lt;/p>
+&lt;ul>
+&lt;li>cert.pem&lt;/li>
+&lt;li>key.pem&lt;/li>
+&lt;/ul>
+&lt;p>コピーができたら、ルーターに接続します。&lt;/p>
+&lt;h2 id="ルーターでの設定2">ルーターでの設定(2)&lt;/h2>
+&lt;p>SSHでルーターに接続して以下のパスに移動します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /tmp/etc
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ディレクトリー内のファイルをみると、先ほどコピーしておいたファイルと同じものが置かれてあるのを確認できます。viでファイルをあけ、先ほどコピーしておいたもので上書きします。&lt;/p>
+&lt;p>cert.pemとkey.pemの上書きが終わったら、次にルーター内でのプロセス目録を確認します。すでに管理ページがhttpdsのサービスとして実行されているため、新しい証明書を適用するためには一回サービスを終了して再実行する必要があります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ps
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のコマンドを入力すると、現在実行中のプロセスの目録が出力されます。そのうち、&lt;code>httpds -s -i br0 -p 8443&lt;/code>があればそれを終了させます。8443は管理ページで指定したデフォルトのポート番号です。プロセスの左に出力されるのがプロセスのID(PID)なので覚えておきましょう。その後は以下のコマンドを入力します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># PIDが562の場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">kill&lt;/span> &lt;span style="color:#bd93f9">562&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># プロセスの再実行&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ /usr/sbin/httpds -s -i br0 -p &lt;span style="color:#bd93f9">8443&lt;/span> &amp;amp;
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>&amp;amp;&lt;/code>を入力しないと他のコマンドを入力できなくなるので注意しましょう。入力が終わり、もう一度&lt;code>ps&lt;/code>を入力してちゃんとプロセスが起動していたらこちらでの設定は終わり。&lt;code>exit&lt;/code>を押してsshから抜け出した後は、ブラウザからルーターの管理ページに接続して証明書で怒られるかを確認します。今までの過程で特に問題なかったら、問題ないはずです。&lt;/p>
+&lt;p>ただ一つ、注意しなければならないことはルーターの再起動です。自分は週に一回は再起動するようにしていますが、こういう場合はせっかく入れたSSL証明書の値が初期化されるみたいです。なので再起動はなるべくしないか、再起動後には証明書を入れ直す必要があります。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>以上のことで特に問題がなかったら、WANからルーターの管理ページにアクセスしても証明書がおかしいと怒られるようなことはなくなります。これで安心して外からの管理ができますね！&lt;/p>
+&lt;p>ただ、これで全てが完璧になったわけではないです。残りのタスクは以下です。&lt;/p>
+&lt;ul>
+&lt;li>証明書の更新はどうするか&lt;/li>
+&lt;li>ルーターの再起動にどう対応するか&lt;/li>
+&lt;/ul>
+&lt;p>Let&amp;rsquo;s encryptで作成してもらった証明書は有効期間が90日なので、のちに更新する必要があります。更新自体はcertbotのコマンドを打つだけで簡単に終わりますが、更新後の処理(ルーターにアップロードする、アプリケーションを再起動する)が必要となりますね。こちらは&lt;code>crontab&lt;/code>でスケジューリングすると何んとかなりそうですが、残念ながらルーターにはコマンドとして入ってなかったです。&lt;/p>
+&lt;p>ルーターが再起動した時もどう対応できるかは検証対象ですね。最初はscpでファイルを上書き、httpsdプロセスも再起動するようなシェルスクリプトを作ることで対応できるかと思ったら、権限問題があったりするのでより簡単にできる方法はないか考えています。&lt;/p>
+&lt;p>ま、結果的にLinuxでサーバー構築ができたらWANからルーターの管理ページに接続するようなことはなくなる可能性もなくはないですが。とにかく何かわかったらまたポストとして書くことにしましょう。&lt;/p>
+&lt;p>それでは、皆さんもぜひ、SSL証明書で安全かつ快適なWeb生活を！&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>SSL証明書とは、このサーバーは信頼できるかを証明してくれる電子文書のことです。SSL証明書を適用することによりhttpsでの通信は第三者の攻撃より守られます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2" role="doc-endnote">
+&lt;p>Dynamic Domain Name Systemの略で、家庭用のルーターはIPアドレスが動的に変わることが多いですが、これを文字列のホスト名とつなげてくれる便利なサービスです。ルーターのIPアドレスがどうかわろうが、DDNSの設定ができていたらいつでも同じURLからルーターにアクセスできます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Linuxのシステムサービスを作る" />&lt;p>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処理をするかの問題でもありますが、今回は簡単に「実行」の面で書いてみたいと思います。簡単にいうと、誰かが止めるまではずっと実行され続けるようなプログラムをLinuxではどう実現したらいいかの話です。&lt;/p>
+&lt;p>CentOSやRHELでは、&lt;code>service&lt;/code>というコマンドがあります。&lt;code>yum&lt;/code>のようなパッケージ管理プログラムを使って、様々なプログラムをインストールしていくとその中には一回だけの実行で終わらず、メモリー常に常住させる必要のあるものもありますね。以前このブログで紹介したことのある&lt;code>Jenkins&lt;/code>もまたそのようなプログラムの一つです。&lt;/p>
+&lt;p>そのようなプログラムは一回インストールしたら自動的に&lt;code>service&lt;/code>コマンドで動かしたり止めたりすることができるようになりますが、例えば自作したプログラムをそのように動作させることはできるのでしょうか？ユーザーがなんでもできるLinuxならできそうですが。&lt;/p>
+&lt;p>そう思っていたら、ちょうど仕事でJavaアプリケーションをサービスとして登録し、管理する必要があることになりました。私はJenkinsのタスクを管理していたため、実際はJavaアプリケーションがGitにコミットされたらPull→ビルド→実行されているJavaアプリケーションを止めて新しくビルとした物を実行するというタスクが必要となったのです。実際はサービスに触れる必要はなく、ビルドの後にサービスを止めたり再開させたりするシェルコマンドを実行するように仕組んだだけだったのですが、一体これはどう動いてるのか気になりましたので調べてみました。&lt;/p>
+&lt;h2 id="servicedaemonを作ること">Service(Daemon)を作ること&lt;/h2>
+&lt;p>サービスになるものは、&lt;code>Demon&lt;/code>とも呼ぶらしいです。少し調べてみると「システムに常住しながら、とある状態になると自動動作するプログラム」「周期的なサービス要請を処理するために実行され続けるプログラム」「バックグラウンドで動いている」などという定義がありました。これでだいたいどんな性格のプログラムのことを指しているかがわかりますね。&lt;code>Spring&lt;/code>や&lt;code>Node.js&lt;/code>などで作られたWebサーバプログラムとかがこの定義に該当するでしょう。&lt;/p>
+&lt;p>それでは早速、そのサービス(もしくはデーモン)を実現するためにはどうしたらいいかを説明していきたいと思います。準備するものは大きくサービスとして登録したいプログラム、そのプログラムをどんなサービスにするかを書いたサービスの設定ファイル、コマンドでのサービス登録と実行などがあります。仕事では&lt;code>Spring Boot&lt;/code>で作られたプログラムをサービスにしていますが、これの場合は実行するためのシェルスクリプトの設定や外部ファイルの参照なども必要となるので比較的簡単な、&lt;code>Node.js&lt;/code>を使ったプログラムを例として使います。&lt;/p>
+&lt;p>&lt;code>Node.js&lt;/code>の場合、&lt;code>$ node /node/index.js&lt;/code>みたいな簡単なコマンドで実行できますね。これをサービスに登録する場合は以下のようになります。&lt;/p>
+&lt;h2 id="serviceファイルを作成する">serviceファイルを作成する&lt;/h2>
+&lt;p>まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi /etc/systemd/system/NodeServer.service
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>それでは以下のような形で中を書いていきます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># サービスとしての設定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>Unit&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">Description&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> NodeServer &lt;span style="color:#6272a4"># この名称でサービスが登録される&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">After&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> syslog.target network.target &lt;span style="color:#6272a4"># システム起動時の実行の優先順位(syslogとnetworkの後に実行する)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 実行するプログラムの設定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>Service&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">Type&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> simple &lt;span style="color:#6272a4"># 動作の様子を決める・デフォルトはsimple&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">ExecStart&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> /usr/bin/node /node/index.js &lt;span style="color:#6272a4"># node /node/index.jsと同じだがシンボリックリンクなしで記述する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">Restart&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> on-failure &lt;span style="color:#6272a4"># 起動に失敗すると再実行&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">User&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> nodeservice &lt;span style="color:#6272a4"># 実行するユーザー、権限に注意！&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># シンボリックリンクや別名などの設定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>Install&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">WantedBy&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> multi-user.target &lt;span style="color:#6272a4"># どこのフォルダにシンボリックリンクを作るかを指定、これが一般的らしい&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他にも様々なオプションがありますが、基礎的な情報はこのくらいかと。テストのために作成しておいたNode.jsでのWebサーバーはこれで動きました。(と言っても&lt;code>Hello Node.js!&lt;/code>を出力するだけの簡単なものですが…)&lt;/p>
+&lt;p>実際仕事で扱っていたJavaアプリケーションは、PID&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を管理するスクリプトの指定や、止める時実行するシェルスクリプトの指定もありました。例えば&lt;code>ExecStop&lt;/code>を使うとサービスを修理するために実行したいコマンドを、&lt;code>ExecReload&lt;/code>を使うとリロードする時に実行したいコマンドを書くことができるらしいです。シェルスクリプトから実行する場合や状態が変わった時何かの措置が必要な場合に考えられるオプションですね。&lt;/p>
+&lt;p>このようにserviceファイルを作成したら、次はプロセスをシステムサービスに登録して実行します。&lt;/p>
+&lt;h2 id="enable--start-service">Enable &amp;amp; Start Service&lt;/h2>
+&lt;p>先に&lt;code>service&lt;/code>というコマンドを言及しましたが、CentOS7からは&lt;code>systemctl&lt;/code>を使うらしいです。&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>実際、CentOS7では&lt;code>service&lt;/code>だけではシステムサービスの登録は不可能なので&lt;code>systemctl&lt;/code>を使うことになります。このコマンドでできることはサービスの登録や解除、実行と停止、再実行などがあります。まずサービスをシステムサービスに登録すると、システムが起動する時に実行されるようになります。&lt;/p>
+&lt;p>Windowsに例えると、「スタートアップ」にプログラムを登録したり解除することと、タスクマネージャーによってプロセスを管理するような機能が一緒になっている感じですね。&lt;/p>
+&lt;p>こちらはコマンドだけなので、簡単に紹介します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># システムサービスとして登録&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl &lt;span style="color:#8be9fd;font-style:italic">enable&lt;/span> NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl start NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 実行されているサービスの中で検索する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl list-units | grep NodeServer
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># serviceファイルを修正した場合はリロードする&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl daemon-reload
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 停止と再起動&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl stop NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl restart NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># サービスの状態を確認する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl status NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># システムサービスから解除&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ systemctl &lt;span style="color:#8be9fd;font-style:italic">enable&lt;/span> NodeServer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 実行に問題があった場合は以下のコマンドでサービスのログを参照できる&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ journalctl -xe
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>サービスの登録や解除はできなくても、&lt;code>service&lt;/code>コマンドでの制御もできます。ただいずれは消えるかもしれないコマンドなので、なるべく&lt;code>systemctl&lt;/code>に慣れた方が良いかも知れませんね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># serviceでできること&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer start
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer status
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer stop
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer restart
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで私の作った簡単なNode.jsのWebサーバーがシステムサービスとなって、止まることなく動くようになりました。めでたしめでたし。他にも何か自動化のプログラムを作ることになったら有効活用できそうな知識ではないのかと思います。&lt;/p>
+&lt;p>それでは今回のポストはここまで。また会いましょう！&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>Process IDの略で、実行中のプロセスに与えられるIDです。こちらは&lt;code>ps&lt;/code>コマンドで確認できて、PIDからプロセス名を参照したりプロセス名からPIDを参照することもできます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2" role="doc-endnote">
+&lt;p>CentOS7でもserviceは健在ですが、systemctlにリダイレクトされるみたいですね。CentOS6までは/etc/rc.d/init.dからサービスを管理していて、７からはサービスユニットという名称になったらしいです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Tera Termを使う" />&lt;p>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、&lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
+>Tera term&lt;/a>を使ったことはなかったです。でも仕事ではAWSでLinuxのサーバーを立てて使っているのでSSH接続が必要となります。ここで私が初めてしたことはそのSSH接続ができるようにTera termのマクロを作ることでした。それまでは主に文書作業をしていたので、やっとコーディングのようなことができて嬉しく思いましたね。&lt;/p>
+&lt;p>他にも色々良いツールはあるのではないかと思いますが、マクロで簡単にシェルのコマンドが発行できたり、画面のカスタマイズが簡単だということが便利ですね。最近はWindows 10でもターミナルが使えるようになったりWSLというサービスができましたが、まだ会社で支給されるパソコンがWindows 10ではない場合にはこちらの方を使うのが便利だろうと思います。&lt;/p>
+&lt;p>それでは、設計と実際のコードでどうマクロを作ったかを紹介します。&lt;/p>
+&lt;h2 id="マクロの設計">マクロの設計&lt;/h2>
+&lt;p>全てのAWS EC2がそうなのかわかりませんが、今回の案件ではいわゆる「踏み台サーバー」を経由してからEC2サーバーに接続することができています。最初はその概念すらなかったのでなぜこんな構造になるのか疑問でしたが、それぞれのEC2サーバーが直接インターネットに繋がっている訳ではないのでこういう手続きが必要となるらしいです。なのでまず踏み台サーバーに接続し、そこからSSHコマンドを発行しそれぞれのEC2サーバーに接続できるようなマクロを作ります。&lt;/p>
+&lt;p>そして今回はバッチサーバー、WebAPサーバー、CIサーバーという三つの構成となるので踏み台からそれぞれのサーバーに接続できるようにしたいです。また、同時に複数のサーバーで作業する場合を踏まえてサーバーごとのターミナル画面を少しカスタマイズしたいです。少し調べてみると、マクロには接続の手続きを書き、マクロからあらかじめ画面の設定をしておいたINIファイルを読み込むようにすればいいらしいです。またCIサーバーではJenkinsのようなサービスもポートフォワードで使いたいのですが、その設定もこのINIファイルに記録されるみたいなのでマクロからCIサーバーに接続する場合に限定してポートフォワード設定が入ったINIファイルを呼ぶようにしたいです。&lt;/p>
+&lt;p>以上の要件を整理すると、マクロの仕組みは以下となります。&lt;/p>
+&lt;ol>
+&lt;li>リストから接続先を選択する(選択肢は3つ)&lt;/li>
+&lt;li>まず踏み台サーバーに接続し、そこからさらに選択したサーバーへSSH接続する&lt;/li>
+&lt;li>接続が終わると選択したサーバーごとのINIファイルを読み込む&lt;/li>
+&lt;/ol>
+&lt;p>INIファイルの設定はUIからターミナルとウィンドウ、フォント、ポートフォワードを予め設定し、それぞれの接続先に合わせ3つを用意しておきました。あとはマクロから読み込むだけです。では肝心のマクロのコードはどうなかったかというと、以下のようになります。&lt;/p>
+&lt;h2 id="マクロのコード">マクロのコード&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 踏み台ユーザーID／PW
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">USERNAME&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;踏み台ユーサーID&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">PASSWORD&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;踏み台ユーザーPW&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 踏み台サーバーIPアドレス
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">HOSTIP&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ここにIP&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 接続先別作業用ユーザーID
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strdim WORKUSERLIST &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKUSERLIST&lt;span style="color:#ff79c6">[&lt;/span>0&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;バッチサーバーのユーザーID&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKUSERLIST&lt;span style="color:#ff79c6">[&lt;/span>1&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;WebAPサーバーのユーザーID&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKUSERLIST&lt;span style="color:#ff79c6">[&lt;/span>2&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;CIサーバーのユーザーID&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 接続先別作業用ユーザPW
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strdim WORKPWLIST &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKPWLIST&lt;span style="color:#ff79c6">[&lt;/span>0&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;バッチサーバーのユーザーPW&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKPWLIST&lt;span style="color:#ff79c6">[&lt;/span>1&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;WebAPサーバーのユーザーPW&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WORKPWLIST&lt;span style="color:#ff79c6">[&lt;/span>2&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;CIサーバーのユーザーPW&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; サーバーIP
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strdim SERVERipLIST &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERipLIST&lt;span style="color:#ff79c6">[&lt;/span>0&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;バッチサーバーのIP&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERipLIST&lt;span style="color:#ff79c6">[&lt;/span>1&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;WebAPサーバーのIP&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERipLIST&lt;span style="color:#ff79c6">[&lt;/span>2&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;CIサーバーのIP&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; リストに表示されるサーバー名称設定
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strdim SERVERnameLIST &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERnameLIST&lt;span style="color:#ff79c6">[&lt;/span>0&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;バッチサーバー&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERnameLIST&lt;span style="color:#ff79c6">[&lt;/span>1&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;WebAPサーバー&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SERVERnameLIST&lt;span style="color:#ff79c6">[&lt;/span>2&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;CIサーバー&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; サーバー別INIファイル
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strdim INILIST &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INILIST&lt;span style="color:#ff79c6">[&lt;/span>0&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/BatchServer.INI&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INILIST&lt;span style="color:#ff79c6">[&lt;/span>1&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/WebAPServer.INI&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>INILIST&lt;span style="color:#ff79c6">[&lt;/span>2&lt;span style="color:#ff79c6">]&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/CIServer.INI&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 接続先ホスト選択画面
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>listbox &lt;span style="color:#f1fa8c">&amp;#39;サーバーを選択して下さい&amp;#39;&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;決定&amp;#39;&lt;/span> SERVERnameLIST
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> result &amp;gt;&lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#ff79c6">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">SERVERIP&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> SERVERipLIST&lt;span style="color:#ff79c6">[&lt;/span>result&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">WORKUSER&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> WORKUSERLIST&lt;span style="color:#ff79c6">[&lt;/span>result&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">WORKPASSWORD&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> WORKPWLIST&lt;span style="color:#ff79c6">[&lt;/span>result&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">INIFILE&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> INILIST&lt;span style="color:#ff79c6">[&lt;/span>result&lt;span style="color:#ff79c6">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">else&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> end
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>endif
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; INIファイルのパスの読み込み
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>getdir INIPATH
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat INIPATH INIFILE
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 踏み台サーバーへの接続用コマンド組立て + 接続コマンド実行
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">PROXY&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;-proxy=http://proxy.server.com:6000&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">COMMAND&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> PROXY
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND &lt;span style="color:#f1fa8c">&amp;#39; &amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND HOSTIP
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND &lt;span style="color:#f1fa8c">&amp;#39;:22 /ssh /auth=password /user=&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND USERNAME
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND &lt;span style="color:#f1fa8c">&amp;#39; /passwd=&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat COMMAND PASSWORD
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect COMMAND
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;$&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 接続先別SSH接続処理
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">SSHCOMMAND&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;ssh &amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat SSHCOMMAND WORKUSER
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat SSHCOMMAND &lt;span style="color:#f1fa8c">&amp;#39;@&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>strconcat SSHCOMMAND SERVERIP
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sendln SSHCOMMAND
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; 初SSHログイン処理
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Are you sure you want to continue connecting (yes/no)?&amp;#39;&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;&amp;#39;s password: &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">result&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span> &lt;span style="color:#ff79c6">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sendln &lt;span style="color:#f1fa8c">&amp;#39;yes&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;&amp;#39;s password: &amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>elseif &lt;span style="color:#8be9fd;font-style:italic">result&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#bd93f9">2&lt;/span> &lt;span style="color:#ff79c6">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> goto INPUTPWD
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>endif
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>:INPUTPWD
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sendln WORKPASSWORD
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;$&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sendln &lt;span style="color:#f1fa8c">&amp;#39;sudo su -&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;sudo&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sendln WORKPASSWORD
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">wait&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;#&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>restoresetup INIPATH
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;; マクロ終了
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>;&lt;span style="color:#ff79c6">==============================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>end
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="コードの説明">コードの説明&lt;/h2>
+&lt;p>最初は踏み台サーバーに指定しといたユーザーID、PW、IPからコマンドを組み立ててへSSH接続する構造となっています。具現化したものをみるとstconcatで文字列を繋ぎコマンドを叩いています。また仕事ではプロキシサーバーも使っているので踏み台サーバー接続のコマンドに入れていますが、ない場合はそこだけを取り除くことになります。ただ踏み台サーバー接続の後に違うサーバーに接続するのがメインなので、これの前にマクロを起動した時点ではまずリスト画面から接続先の3つのサーバーを選ぶようになっていますね。&lt;/p>
+&lt;p>まず接続先のそれぞれのユーザーID、PW、IP、画面に表示するサーバー名を配列(strdim)として用意します。そして画面にはlistboxで選択できるリストを表示します。listboxで接続先を選択して決定ボタンを押すと、その結果がresultという変数に数字として入力されるのでそれを配列のインデックスとして踏み台サーバー接続のコマンドのように文字列を繋ぎSSH接続を行います。また、同じく配列で接続先ごとのINIファイル名を用意し、getdirからマクロの相対パスを取得、INIファイル名と結合したあとrestoresetupでINIファイルを読み込むようにします。(マクロファイルとINIファイルは同じフォルダーにある前提です)&lt;/p>
+&lt;p>コマンドの発行では、waitを使ってターミナルの反応を待ちます。これはシェルでのexpectと同じ機能をします。いきなりコマンドを連続で発行してもサーバー側の反応とずれると想定通りにならないことを防ぐためです。waitでサーバーに次のコマンドを発行できるかどうかを判断してからsendlnでコマンドを発行するようになっています。このwaitとifを組み立てることで初接続時に「本当に接続しますか？」という文が出力されても対応できるようにマクロを作ることができます。他にはそんなに難しい部分はないと思うので説明はここまでにします。&lt;/p>
+&lt;p>このマクロを&lt;code>.ttl&lt;/code>という拡張子で保存し、Tera termから読み込むかマクロから直接実行するか(Tera termのインストール時にオプションとしてマクロを直接実行できるように設定できます)で終わりです。思ったより簡単ですね！&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>ifとwaitを活用してだいたいなんでもコマンドを発行できるので、ある意味シェルのようなこともできるのがこのTera termのマクロの魅力かと思います。ここのコードではマクロを起動することでrootまで行くようにしていますが、他に作業パスを変えたりとあるシェルスクリプトを実行させたりもできますね。構造的にはターミナルでコマンドを発行するようになっているだけですので。&lt;/p>
+&lt;p>それでは今回のポストはここまで。楽なSSH生活のため、みなさんもぜひTera termを使ってください。&lt;/p></description></item><item><title>macOSでもショートカットが使いたい</title><link>https://retheviper.github.io/posts/linux-mac-shortcut/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-mac-shortcut/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post macOSでもショートカットが使いたい" />&lt;h2 id="お知らせ">お知らせ&lt;/h2>
+&lt;p>macOSがCatalina(10.15)になってから、ターミナルの基本シェルがbashから&lt;a class="link" href="https://ja.wikipedia.org/wiki/Z_Shell" target="_blank" rel="noopener"
+>zsh&lt;/a>に変わりました。なのでこのポストをそのまま適用すると、追加したコマンドを使えない場合があります。&lt;/p>
+&lt;p>すでにBashにコマンドを追加した場合は以下の手順で移行ができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>新規で追加する場合は、下の「プロファイルを作る」節のコマンドの代わりに以下を入力します。そのあとは同じ手順で進めてください。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.zprofile
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以下、前のポストです。&lt;/p>
+&lt;hr>
+&lt;p>パソコンではMS-DOSとWindowsしか使ってみたことのない私がmacを使ってかれこれ一年となります。macといえばやはり高く、Windowsとは全く違う環境なので使いづらいのではないかなと思っていました。動画や音楽の編集には最適だという話もありましたが、自分とは関係のない世界の話でした。&lt;/p>
+&lt;p>そんな私がmacを使うきっかけとなったのは、様々な理由がありますが、開発の仕事をしている今は何よりもUnix系のOSということが最大のメリットとなっているのではないかと思います。仕事ではLinuxを触ることが多いのですが、macのターミナルでのほぼ同じことができますので。&lt;/p>
+&lt;p>ただ、同じくBashを使っているといっても、macとLinuxは完全に同一ではありません。例えばショートカットがそうです。Linuxの便利なショートカットがmacにはないですね。でも調べてみると、やはり方法は存在していました。&lt;/p>
+&lt;p>今回のポストはそのLinuxのショートカットをmacで使うための設定の話です。といっても、自分が研究した訳ではなく、インターネットで拾ってきた情報にすぎませんがね。でもこの設定をみるだけでも様々なコマンドやAliasを勉強できて、かなり貴重な資料ではないかと思います。誰か知りませんが、作った方には敬意を。&lt;/p>
+&lt;h2 id="プロファイルを作る">プロファイルを作る&lt;/h2>
+&lt;p>まずはBashのプロファイルを作ります。ターミナルで以下のように入力します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.bash_profile
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>bash_profile&lt;/code>と&lt;code>bashrc&lt;/code>の違いは、前者がターミナルを開くときすぐ適用される設定なら、後者はターミナルで改めてBashを実行した時に適用される設定という違いがあるらしいです。ただコマンドでわかりますが、現在ユーザーのホームにプロファイルを作るのでユーザーが変わる場合はまた同じことをする必要があります。&lt;/p>
+&lt;h2 id="プロファイルの内容">プロファイルの内容&lt;/h2>
+&lt;p>以下のコードをプロファイルに入れます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#.bash_profile&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">[&lt;/span> -f ~/.bashrc &lt;span style="color:#ff79c6">]&lt;/span>; &lt;span style="color:#ff79c6">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>. ~/.bashrc
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fi&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#============================================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># ALIASES AND FUNCTIONS&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Arguably, some functions defined here are quite big.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># If you want to make this file smaller, these functions can&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#+ be converted into scripts and removed from here.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#============================================================&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Personnal Aliases&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">rm&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;rm -i&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">cp&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;cp -i&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">mv&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;mv -i&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">cl&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;clear&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># -&amp;gt; Prevents accidentally clobbering files.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">mkdir&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;mkdir -p&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">h&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;history&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">j&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;jobs -l&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">which&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;type -a&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> ..&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;cd ..&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Pretty-print of some PATH variables:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">path&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;echo -e ${PATH//:/\\n}&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">libpath&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;echo -e ${LD_LIBRARY_PATH//:/\\n}&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">du&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;du -kh&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Makes a more readable output.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">df&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;df -kTh&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># The &amp;#39;ls&amp;#39; family (this assumes you use a recent GNU ls).&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Add colors for filetype and human-readable sizes by default on &amp;#39;ls&amp;#39;:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">ls&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -h&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lx&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -lXB&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Sort by extension.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lk&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -lSr&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Sort by size, biggest last.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lt&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -ltr&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Sort by date, most recent last.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lc&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -ltcr&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Sort by/show change time,most recent last.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lu&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ls -ltur&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Sort by/show access time,most recent last.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># The ubiquitous &amp;#39;ll&amp;#39;: directories first, with alphanumeric sorting:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">ll&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;ls -alv&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lm&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ll |more&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Pipe through &amp;#39;more&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">lr&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ll -R&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Recursive ls.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">la&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ll -A&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Show hidden files.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">tree&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;tree -Csuh&amp;#39;&lt;/span> &lt;span style="color:#6272a4"># Nice alternative to &amp;#39;recursive ls&amp;#39; ...&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Tailoring &amp;#39;less&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">more&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;less&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">PAGER&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>less
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESSCHARSET&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;latin1&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESSOPEN&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;|/usr/bin/lesspipe.sh %s 2&amp;gt;&amp;amp;-&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># Use this if lesspipe.sh exists.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;-i -N -w -z-4 -g -e -M -X -F -R -P%t?f%f \
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f1fa8c">:stdin .?pb%pb\%:?lbLine %lb:?bbByte %bb:-...&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># LESS man page colors (makes Man pages more readable).&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_mb&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[01;31m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_md&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[01;31m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_me&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[0m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_se&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[0m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_so&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[01;44;33m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_ue&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[0m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">LESS_TERMCAP_us&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">$&amp;#39;\E[01;32m&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Spelling typos - highly personnal and keyboard-dependent :-)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">xs&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;cd&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">vf&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;cd&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">moer&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;more&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">moew&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;more&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">kk&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;ll&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Using in MAC&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">#-------------------------------------------------------------&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">desk&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;cd ~/Desktop&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">alias&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">cl&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;clear&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そして&lt;code>source ~/.bash_profile&lt;/code>を叩き、現在のユーザーに適用すれば終わりです。ユーザーのプロファイルに保存されるので、複数のユーザーを使う場合(rootを含め)はまた同じやり方で適用することを忘れずにしましょう。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>&lt;code>ll&lt;/code>をmacでも使えないかなーという軽い気持ちで調べて得られた情報ですが、まさか&lt;code>ll | more&lt;/code>みたいなものまでAliasの指定ができるとは知らなかったです。またよく&lt;code>cd&lt;/code>を&lt;code>xs&lt;/code>に間違えたりしていますが、それもあえでコマンドとして登録するという発想も斬新ですね。まだまだ知らないコマンドもたくさんありますし、軽い気持ちから始まった作業にしては貴重な情報が得られ他ので嬉しい限りです。これがインターネット時代の恩義というものではないでしょうか。&lt;/p>
+&lt;p>一部はLinuxでも登録すると便利そうなショートカットが多いように見えるので、Linuxを使われる肩がいらっしゃるのならぜひ一度は試してみてくださいとオススメしたいです。では、楽なBashライフをお楽しみください。&lt;/p></description></item><item><title>知っていれば便利なLinuxのコツ</title><link>https://retheviper.github.io/posts/linux-command-tips/</link><pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-command-tips/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post 知っていれば便利なLinuxのコツ" />&lt;p>小学校の頃初めてMS-DOSに触れ、その後ずっとWindowsのPCを使っていたので私はLinuxにそう詳しくないです。&lt;code>CLI&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>には&lt;code>GUI&lt;/code>とは違う感性があると思っていたくらいです。初めてCentOSを仮想マシンでインストールして見たときも、「あ、DOSに似ている」くらいの印象しかなかったです。でも仕事で使いながら思ったより便利ではやいと思いました。さすがサーバーで人気ナンバーワンのマケットシェアを誇るだけはあるんだなと思うくらいです。&lt;/p>
+&lt;p>それで、今回は&lt;code>cd&lt;/code>や&lt;code>mkdir&lt;/code>のような基礎の中の基礎しか知らない私が仕事で肩ごしで学んだコツをいくつか書こうと思います。これも基礎ですが、実際使ってみないとわからないだろうなと思っていたことが多く、コマンドやショートカットは本当に使い方次第だなと思ったのでその整理のためでもあります。&lt;/p>
+&lt;h2 id="tabキーで自動補完">tabキーで自動補完&lt;/h2>
+&lt;p>&lt;code>GUI&lt;/code>に比べ&lt;code>CLI&lt;/code>が難しいと思われる理由は、何よりもコマンドの入力がベースになっているからと思います。ファイルを元のフォルダから違うフォルダに移動するという単純な動作も、GUIではマウスでドラッグすればいいだけのものをCLIではいちいちコマンドを打ちます。そもそも&lt;code>mv&lt;/code>のようなコマンドを知っていなければ成立できないことで、コマンドのオプションでまったく違う結果になったりもしますね。そして何よるも面倒なことは、ファイルやフォルダのパスをいちいち入力しなければならないということです。&lt;/p>
+&lt;p>そしてそれが不便と思ったのは多分私だけじゃなかったみたいです。いつから存在していたのかわからないショートカットですが、なんとtabを押すことで自動補完ができるのでした。これなら長いアルファベットでも、スペースが含まれていても大丈夫です。tabでの自動補完は以下のように動作します。&lt;/p>
+&lt;ol>
+&lt;li>ファイルやフォルダ名を入力する&lt;/li>
+&lt;li>書いている途中でtabキーを押す&lt;/li>
+&lt;li>自動補完でファイルやフォルダ名が完成&lt;/li>
+&lt;li>２つ以上のファイルやフォルダがある場合はリストを出力&lt;/li>
+&lt;/ol>
+&lt;p>例えば &lt;code>/home/retheviper/task01&lt;/code>というフォルダに移動するとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> h &lt;span style="color:#6272a4"># ここでtab&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/r &lt;span style="color:#6272a4"># ここでtab&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/retheviper/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/retheviper/t &lt;span style="color:#6272a4"># ここでtab&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>task01 task02 task03 &lt;span style="color:#6272a4"># tから始まるフォルダが複数存在しているのでリストを出力する&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>かなり便利なショートカットなので覚えておきたいコツです。&lt;/p>
+&lt;h2 id="フォルダ移動と目録の出力関連コマンド">フォルダ移動と目録の出力関連コマンド&lt;/h2>
+&lt;p>現在のフォルダに何が入っているかをみるコマンドは&lt;code>ls&lt;/code>や&lt;code>ll&lt;/code>などがありますね。このコマンドにもう少しコマンドを付け加えることで違うフォルダの内容も出力できます。当たり前なことですが、同じような動作をするために私が主に使っていた方式はこうです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 現在のフォルダの内容を確認&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># /varフォルダがあったため、その中を覗く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> var
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># スタート時点より上のフォルダがみたい&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> ..
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> ..
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし少しの応用でフォルダを変更せずにも違うフォルダを覗くことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 絶対経路を使う&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll /var/lib
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 下のフォルダを覗く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll ./lib
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll lib
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 上のフォルダを覗く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll ../
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># さらに上のフォルダを覗く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ll ../../
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他には、パスが長くて以前の位置に戻るのに時間がかかる場合は、簡単に戻ることもできます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 長いパスのフォルダの中にいる状態&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">pwd&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>/var/lib/jenkins/workspace/job01/git_repository/git
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># また長いパスで全く違う経路のフォルダに入る&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /home/retheviper/todo/task01/awesomeblog
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">pwd&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>/home/retheviper/todo/task01/awesomeblog
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 以前のフォルダに戻りたい&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> -
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">pwd&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>/var/lib/jenkins/workspace/job01/git_repository/git
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、&lt;code>cd -&lt;/code>を使ってフォルダを移動する場合は直前の経路だけに戻れないので注意してください。2回連続で入力すると２つのパスだけを繰り返して往復することになります。&lt;/p>
+&lt;h2 id="ファイル同期ができるrsyncコマンド">ファイル同期ができるrsyncコマンド&lt;/h2>
+&lt;p>Linuxでのファイルコピーは、&lt;code>scp&lt;/code>がもっとも多く使われているようです。でも&lt;code>rsync&lt;/code>コマンドの方がより効率的であるので私はこちらをオススメしたいです。&lt;code>rsync&lt;/code>は単純にファイルをコピーするだけでなく、フォルダやファイルの同期ができます。リモートのフォルダーを同期したい場合も公開鍵による認証を入れておけば、パスワードなしでコピーできるというところがまたいいです。&lt;/p>
+&lt;p>また、同期ができるということは差分を見つけ出すことも可能ということです。すでにコピー先にファイルがあるときはコピー元のファイルを比較し、差分だけを転送するので性能がよりいいです。また、コピー元でファイルが消されている場合はオプションでコピー先のファイルも消すことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># フォルダを同期する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ rsync origin destination
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># コピー元から消されたファイルはコピー先でも消す&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ rsync --delete origin destination
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、他のコマンドでもそうですが、rsyncでコピーの対象を指定するときは&lt;code>/&lt;/code>の有無がかなり重要です。&lt;/p>
+&lt;p>例えばコピー元のフォルダを指定するとき&lt;code>folder&lt;/code>のように書くとそのフォルダごとコピーされますが、&lt;code>folder/&lt;/code>のように指定するとフォルダの下が対象となります。そしてコピー先のフォルダに権限がなかったり所有者名が違うとコピーできないどでご注意を。権限は&lt;code>chmod&lt;/code>、所有者は&lt;code>chown&lt;/code>で変えられます。&lt;/p>
+&lt;p>また、同期したいフォルダに消してはならないフォルダーがある場合は、オプションで指定することもできます。&lt;code>--exclude='folder'&lt;/code>というオプションを入れることで、指定したフォルダーは同期の対象から外されます。このオプションはコピー元からでもコピー先からでも適用されるので、便利ですね。&lt;/p>
+&lt;h2 id="システムのスペックと状態を見る">システムのスペックと状態を見る&lt;/h2>
+&lt;p>仕事で性能テストがあって、特定作業でサーバーのシステム状態をモニタリングする必要がありました。まずサーバーのマシンスペックから確認したいですね。/procフォルダにカーネルで使われる情報が集まっているらしいです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># CPUの詳細情報を見る&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ less /proc/cpuinfo
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># メモリーの詳細情報を見る&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ less /proc/meminfo
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>リアルタイムでCPUやメモリーの使用量をみたい場合は&lt;code>vmstat&lt;/code>を活用します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 現在のステータスを出力する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ vmstat
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># メモリーの使用量を出力する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ vmstat -s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># ディスクの活動を出力する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ vmstat -d
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 1秒単位で更新しながら出力する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ vmstat &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>メモリーとディスク、CPUの使用量をモニタリングできるため覚えておきたいコマンドですね。&lt;/p>
+&lt;h2 id="長い出力を少しづつ見たい">長い出力を少しづつ見たい&lt;/h2>
+&lt;p>&lt;code>ls -al&lt;/code>&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>などのコマンドでとある内容を出力する場合、リストが多すぎて画面に全部表示されない場合があります。こういうときは&lt;code>more&lt;/code>コマンドで出力がターミナルを全部満たした場合、エンターキーを押すことで次のリストを表示することになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -al | more
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p>
+&lt;p>それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p>
+&lt;section class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1" role="doc-endnote">
+&lt;p>私はどっちかというとCUIという言葉に慣れていますが（Character User Interfaceとかの略だと思っていたので）、正確な名称はCommand Line Interfaceの略であるCLIらしいですね。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2" role="doc-endnote">
+&lt;p>&lt;code>ll&lt;/code>は&lt;code>ls -l&lt;/code>のショートカットらしいです。同じ文字を2回入力するだけでも大体の内容を出力してくれるので便利ですね。ただ、&lt;code>ls -al&lt;/code>では隠されているファイルやフォルダも表示してくれます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/section></description></item></channel></rss>
