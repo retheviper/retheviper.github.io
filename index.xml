@@ -1,4 +1,212 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Korean-man in Tokyo</title><link>https://retheviper.github.io/</link><description>Recent content on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 27 Mar 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Kotlinプログラマが見たRust</title><link>https://retheviper.github.io/posts/rust-first-impression/</link><pubDate>Sun, 27 Mar 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/rust-first-impression/</guid><description>&lt;img src="https://retheviper.github.io/images/rust.jpg" alt="Featured image of post Kotlinプログラマが見たRust" />&lt;p>Rustの勉強を始めたい、と思ったのはおよそ2年前のことです。当時はJavaとPythonを主に触っていたので、パフォーマンスがクリティカルな部分では対応しきれない部分があると思い、ネイティブにコンパイルされる言語に触れてみる必要があると思いました。そしてできれば、GCのなくポインタを扱う言語でアプリを書いてみたら、本業と言えるJavaの理解もより深くなるのではないかと思った次第です。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Korean-man in Tokyo</title><link>https://retheviper.github.io/</link><description>Recent content on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 17 Apr 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>JVM言語経験者がGoを触る時のハマりどころ</title><link>https://retheviper.github.io/posts/jvm-to-go/</link><pubDate>Sun, 17 Apr 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jvm-to-go/</guid><description>&lt;img src="https://retheviper.github.io/images/go.jpg" alt="Featured image of post JVM言語経験者がGoを触る時のハマりどころ" />&lt;p>JavaとPython、そして少しのJavaScriptの経験してなかった私が、転職先でGoとKotlinを触って1年が経ちました。最近のプログラミング言語は大体収斂進化している傾向があるので、一つの言語ができれば大体他の言語もできる、もしくは読めるようになると言います。&lt;/p>
+&lt;p>しかし、言語が違うということは、その設計思想が違うということなので、同じ結果を期待して書いたつもりのコードが全く思い通りにならないケースもあります。理由は大きく二つ、「あの言語ではこうだったから、この言語でもそうだろう」という慣性と「これはこの言語の特別な仕様だろう」という思い込みなのではないかと思います。（実際私がそうでしたが）&lt;/p>
+&lt;p>というわけで、今回はJava/Kotlinをバックグラウンドとして持つエンジニアがGoを触るときの落とし穴的な部分を一部紹介したいと思います。あくまで個人的な経験によるものなのですが、これからGoでコードを書くことになる方には少しでも参考になればと思います。&lt;/p>
+&lt;h2 id="time">time&lt;/h2>
+&lt;p>Goでは時間を扱うためのスタンダードライブラリとして&lt;a class="link" href="https://pkg.go.dev/time" target="_blank" rel="noopener"
+>time&lt;/a>が存在していて、以下のように使えます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 現在時間を取得
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>now &lt;span style="color:#ff79c6">:=&lt;/span> time.&lt;span style="color:#50fa7b">Now&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 時間を指定して取得(2022-04-01 12:30:00 +0000 UTC)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>someDay &lt;span style="color:#ff79c6">:=&lt;/span> time.&lt;span style="color:#50fa7b">Date&lt;/span>(&lt;span style="color:#bd93f9">2022&lt;/span>, &lt;span style="color:#bd93f9">4&lt;/span>, &lt;span style="color:#bd93f9">1&lt;/span>, &lt;span style="color:#bd93f9">12&lt;/span>, &lt;span style="color:#bd93f9">30&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, time.UTC)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Java/Kotlinだとこれに対応するAPIとして&lt;a class="link" href="https://docs.oracle.com/javase/jp/8/docs/api/java/time/package-summary.html" target="_blank" rel="noopener"
+>java.time&lt;/a>がありますね。Goと比べて違う点は、「時間」のみでなく、もっと細かい単位でクラスを分けているというところと言えますでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 年度
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>Year year &lt;span style="color:#ff79c6">=&lt;/span> Year&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">now&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 年月
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>YearMonth yearMonth &lt;span style="color:#ff79c6">=&lt;/span> YearMonth&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">now&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 年月日
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>LocalDate date &lt;span style="color:#ff79c6">=&lt;/span> LocalDate&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">now&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 時間
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>LocalDateTime time &lt;span style="color:#ff79c6">=&lt;/span> LocalDateTime&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">now&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、違う点はここだけではありません。当然ながら、言語が違うとライブラリの実装も変わってくるものなので、処理の結果も違うケースがありますね。代表的には、「月」単位の時間を扱う時、実装によってはGoでは意図通りの範囲にならないケースがあります。例えば以下のようなコードがあるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">getOneMonthBefore&lt;/span>(t &lt;span style="color:#ff79c6">*&lt;/span>time.Time) time.Time {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 月に -1 を指定して返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">return&lt;/span> t.&lt;span style="color:#50fa7b">AddDate&lt;/span>(&lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#ff79c6">-&lt;/span>&lt;span style="color:#bd93f9">1&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>一件なんの問題もなさそうなコードですが、一部のケースで以下のような問題が発生します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>date &lt;span style="color:#ff79c6">:=&lt;/span> time.&lt;span style="color:#50fa7b">Date&lt;/span>(&lt;span style="color:#bd93f9">2022&lt;/span>, &lt;span style="color:#bd93f9">3&lt;/span>, &lt;span style="color:#bd93f9">31&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, time.UTC)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>oneMonthBefore &lt;span style="color:#ff79c6">:=&lt;/span> &lt;span style="color:#50fa7b">getOneMonthBefore&lt;/span>(&lt;span style="color:#ff79c6">&amp;amp;&lt;/span>date) &lt;span style="color:#6272a4">// 2022-03-03
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のコードの結果が「2月28日」でなく、「3月3日」になるのは、処理が以下のように行われるからです。&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>2022-03-31&lt;/code>から1ヶ月前の&lt;code>2022-02-31&lt;/code>になる&lt;/li>
+&lt;li>&lt;code>2022-02-31&lt;/code>という日付は存在しないので、2月の末日から日付の補正を行う&lt;/li>
+&lt;li>2月の末日である28日から、31日の差分ほど日付をプラスする&lt;/li>
+&lt;/ol>
+&lt;p>というわけで「基準となる月より先月の日付が少ない場合」にこのような結果を得られるわけです。ただ、月末から1ヶ月前というものは、意図としては&lt;code>2022-02-28&lt;/code>を期待するはずですね。人間の思う処理と、実際のコードが算出する結果が違うというのは十分にあり得る状況ですが、&lt;a class="link" href="https://pkg.go.dev/time#Time.AddDate" target="_blank" rel="noopener"
+>AddDate&lt;/a>のドキュメントでは上記のような処理になるという話は特に言及されてないので誤解する可能性もあるのかなと思います。&lt;/p>
+&lt;p>また、Java/Kotlinで使っている&lt;code>LocalDate&lt;/code>の場合は期待通り&lt;code>2022-02-28&lt;/code>になるので、Java/Kotlinの経験のあるエンジニアが無意識的にこのような問題を起こすコードを書く可能性もあるかなと思います。ちなみに、&lt;code>LocalDate&lt;/code>を使ったコードがGoと違う結果になるのは、&lt;a class="link" href="https://docs.oracle.com/javase/jp/8/docs/api/java/time/LocalDate.html#minusMonths-long-" target="_blank" rel="noopener"
+>minusMonth()&lt;/a>では最後に以下のメソッドを呼び出すからです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> LocalDate &lt;span style="color:#50fa7b">resolvePreviousValid&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#8be9fd">int&lt;/span> year&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#8be9fd">int&lt;/span> month&lt;span style="color:#ff79c6">,&lt;/span> &lt;span style="color:#8be9fd">int&lt;/span> day&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">switch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>month&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 2&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> day &lt;span style="color:#ff79c6">=&lt;/span> Math&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">min&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>day&lt;span style="color:#ff79c6">,&lt;/span> IsoChronology&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">INSTANCE&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">isLeapYear&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>year&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">?&lt;/span> 29 &lt;span style="color:#ff79c6">:&lt;/span> 28&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">break&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 4&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 6&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 9&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 11&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> day &lt;span style="color:#ff79c6">=&lt;/span> Math&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">min&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>day&lt;span style="color:#ff79c6">,&lt;/span> 30&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">break&lt;/span>&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> LocalDate&lt;span style="color:#ff79c6">(&lt;/span>year&lt;span style="color:#ff79c6">,&lt;/span> month&lt;span style="color:#ff79c6">,&lt;/span> day&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>なので、Goでも3月31日から1ヶ月前の日付が2月28日になるという処理を期待したい場合は、以下の二つの方法を考慮した方がいいかなと思います。&lt;/p>
+&lt;ol>
+&lt;li>LocalDateと同じく、閏年と月別の末尾を考慮した処理を足す&lt;/li>
+&lt;li>&lt;code>AddDate()&lt;/code>で得られた月が基準となるtimeと同じ月である場合、先月の末日を返す&lt;/li>
+&lt;/ol>
+&lt;p>前者の場合は月を計算した後、上記の&lt;code>resolvePreviousValid()&lt;/code>と同じ処理を足すことで実現でき、後者の場合は、以下のように末日を取得することが可能なので参考にしてください。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>date &lt;span style="color:#ff79c6">:=&lt;/span> date.&lt;span style="color:#50fa7b">AddDate&lt;/span>(&lt;span style="color:#bd93f9">2022&lt;/span>, &lt;span style="color:#bd93f9">3&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, &lt;span style="color:#bd93f9">0&lt;/span>, time.UTC) &lt;span style="color:#6272a4">// 3月0日を指定すると2月28日になる
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="map">map&lt;/h2>
+&lt;p>Goで変数を宣言する方式は以下の二つがありますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 型だけを宣言
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> intSlice []&lt;span style="color:#8be9fd">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 初期化と共に宣言
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>stringSlice &lt;span style="color:#ff79c6">:=&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">make&lt;/span>([]&lt;span style="color:#8be9fd">string&lt;/span>, &lt;span style="color:#bd93f9">10&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>問題は、宣言の仕方によって要素を足す場合に問題が起こり得るということです。先にsliceの例を見ましょう。&lt;code>var&lt;/code>で宣言した場合でも&lt;code>make()&lt;/code>で初期化した場合でも&lt;a class="link" href="https://pkg.go.dev/builtin#append" target="_blank" rel="noopener"
+>append&lt;/a>を使った要素の追加には問題がありません。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> intSlice []&lt;span style="color:#8be9fd">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// sliceに値を追加する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>intSlice = &lt;span style="color:#8be9fd;font-style:italic">append&lt;/span>(intSlice, &lt;span style="color:#bd93f9">1&lt;/span>) &lt;span style="color:#6272a4">// [1]
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、mapの場合は&lt;code>var&lt;/code>で宣言すると問題が起こる可能性があります。以下のコードは、nil pointerとなります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> stringMap &lt;span style="color:#8be9fd;font-style:italic">map&lt;/span>[&lt;span style="color:#8be9fd">string&lt;/span>]&lt;span style="color:#8be9fd">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>stringMap[&lt;span style="color:#f1fa8c">&amp;#34;A&amp;#34;&lt;/span>] = &lt;span style="color:#f1fa8c">&amp;#34;a&amp;#34;&lt;/span> &lt;span style="color:#6272a4">// panic: assignment to entry in nil map
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これは&lt;code>var&lt;/code>で宣言した変数は基本的にnilになるからですね。nilのmapに要素を追加しようとしたのでエラーが発生するのは当たり前ですが、Goland(Intellij)上では警告も表示されず、コンパイルも無事通るので実際にコードを実行するまでこのコードが動くかどうかはわかりません。むしろ、sliceを先に扱っていたなら、nilでもappendできるので「Goではこれでいいのかな」と思い込みやすいかなと思います。&lt;/p>
+&lt;p>JavaやKotlinでもインスタンスを生成していないMapに対して要素を足すことはできないのですが、ここはJavaやKotlinの週間というよりは「Goの特殊性」と考えてしまうケースだと思いますので、要注意なところなのではないかと思います。&lt;/p>
+&lt;h2 id="switch">switch&lt;/h2>
+&lt;p>Goの&lt;a class="link" href="https://gobyexample.com/switch" target="_blank" rel="noopener"
+>switch&lt;/a>はJavaとよく似ています。ただ、形が似ているだけで、決定的な違いがあります。まずはJavaのswitchから見ていきましょう。以下のようなコードがあるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd">int&lt;/span> i &lt;span style="color:#ff79c6">=&lt;/span> 1&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">switch&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>i&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 0&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">out&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">println&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;zero&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 1&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">out&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">println&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;one&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> 2&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">out&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">println&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;two&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">default&lt;/span>&lt;span style="color:#ff79c6">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">out&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">println&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;else&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Javaのswitchは、&lt;code>break&lt;/code>を明示的に書かない限り、条件が一致するcaseに分岐されたとしても、その下のcaseでも流れてしますね。なので、上記のコードを実行した結果は以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>one
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>two
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>else
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Kotlinでは&lt;code>when&lt;/code>式になり、&lt;code>break&lt;/code>なしでも条件と一致するコードブロックを実行することで処理は終了します。例えば以下のようなコードを書くとしましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> i = &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">when&lt;/span> (i) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">0&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> println(&lt;span style="color:#f1fa8c">&amp;#34;zero&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">1&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> println(&lt;span style="color:#f1fa8c">&amp;#34;one&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">2&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> println(&lt;span style="color:#f1fa8c">&amp;#34;two&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> println(&lt;span style="color:#f1fa8c">&amp;#34;else&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実行した結果はJavaと違うのがわかります。省略されているだけで、一つの枝ごとに処理が&lt;code>break&lt;/code>するからです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>one
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでGoのswitchの場合はどうなるかを見ていきましょう。形上はJavaと似ていますが、結果もそうでしょうか？&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>i &lt;span style="color:#ff79c6">:=&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">switch&lt;/span> i {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;zero&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;one&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">2&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;two&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">default&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;else&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のコードを実行した結果は、Kotlinと同じです。つまり、「one」と出力されるということです。これはGoのswitchもまた、Kotlinと同じく枝ごとに&lt;code>break&lt;/code>するからです。なので、Javaの場合と同じ結果が欲しい場合は、&lt;code>fallthrough&lt;/code>を追加し、次の枝に進むということを明示的に書く必要があります。以下のようにです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>i &lt;span style="color:#ff79c6">:=&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">switch&lt;/span> i {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;zero&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fallthrough&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;one&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fallthrough&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">case&lt;/span> &lt;span style="color:#bd93f9">2&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;two&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fallthrough&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">default&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fmt.&lt;span style="color:#50fa7b">Println&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;else&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Javaの経験がある場合、スタイルが似ているのでつい挙動も同じだろうと思って&lt;code>fallthrough&lt;/code>を省略してしまうというケースもあり得るかなと思います。ここは言語が違うだけ使用も違うということなので、要注意ですね。&lt;/p>
+&lt;h2 id="if">if&lt;/h2>
+&lt;p>Goではif文の条件がおかしいと思われる場合、コンパイルが通りません。例えば以下の例を見てください。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">type&lt;/span> Role &lt;span style="color:#8be9fd">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">const&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SystemAdmin = &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Operator = &lt;span style="color:#bd93f9">2&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Developer = &lt;span style="color:#bd93f9">3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">type&lt;/span> User &lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Name &lt;span style="color:#8be9fd">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Role Role
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// SystemAdminかDeveloperではない場合はエラーを返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">checkRunnableUser&lt;/span>(u User) &lt;span style="color:#8be9fd">error&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> u.Role &lt;span style="color:#ff79c6">!=&lt;/span> SystemAdmin &lt;span style="color:#ff79c6">||&lt;/span> u.Role &lt;span style="color:#ff79c6">!=&lt;/span> Developer {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> errors.&lt;span style="color:#50fa7b">New&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;user is not runnable&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">Test_checkRunnableUser&lt;/span>(t &lt;span style="color:#ff79c6">*&lt;/span>testing.T) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> u &lt;span style="color:#ff79c6">:=&lt;/span> User{Name: &lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, Role: Operator}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> err &lt;span style="color:#ff79c6">:=&lt;/span> &lt;span style="color:#50fa7b">checkRunnableUser&lt;/span>(u)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> err &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#ff79c6">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> t.&lt;span style="color:#50fa7b">Errorf&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;unexpected error: %s&amp;#34;&lt;/span>, err)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のコードをコンパイルしようとする場合、Goland(Intellij)では条件に警告が表示され、コンパイルすると&lt;code>suspect or: u.Role != SystemAdmin || u.Role != Developer&lt;/code>というエラーメッセージが表示されるのを確認できます。エラーメッセージでもわかるように、これはif文の条件が間違っているからですね。「UserのRoleがSystemAdminかDeveloperの場合のみ許容する」という要件を満たすためには、&lt;code>or&lt;/code>ではなく&lt;code>and&lt;/code>を使う必要があります。なので、if文の条件を以下のように修正すると意図通りに動くし、IDE上の警告やコンパイル時のエラーも発生しなくなります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// SystemAdminかDeveloperではない場合はエラーを返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">checkRunnableUser&lt;/span>(u User) &lt;span style="color:#8be9fd">error&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> u.Role &lt;span style="color:#ff79c6">!=&lt;/span> SystemAdmin &lt;span style="color:#ff79c6">&amp;amp;&amp;amp;&lt;/span> u.Role &lt;span style="color:#ff79c6">!=&lt;/span> Developer {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> errors.&lt;span style="color:#50fa7b">New&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;user is not runnable&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">nil&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Javaの場合だと、Intellijでは条件が怪しいという警告は表示されるものの、Kotlinと同じくコンパイル時のエラーは発生しません。なので実行はできるようになりますが、警告の出ている箇所を確認していないと実際に実行してみるまでロジックが間違えていることには気づかなくなりますね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">enum&lt;/span> Role &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SYSTEM_ADMIN&lt;span style="color:#ff79c6">,&lt;/span> OPERATOR&lt;span style="color:#ff79c6">,&lt;/span> DEVELOPER
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>record &lt;span style="color:#50fa7b">User&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>String name&lt;span style="color:#ff79c6">,&lt;/span> Role role&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">checkRunnableUser&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>User user&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#ff79c6">(&lt;/span>user&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">role&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">!=&lt;/span> Role&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">SYSTEM_ADMIN&lt;/span> &lt;span style="color:#ff79c6">||&lt;/span> user&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">role&lt;/span>&lt;span style="color:#ff79c6">()&lt;/span> &lt;span style="color:#ff79c6">!=&lt;/span> Role&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">DEVELOPER&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> &lt;span style="color:#ff79c6">new&lt;/span> IllegalArgumentException&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;user is not runnable&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd">void&lt;/span> &lt;span style="color:#50fa7b">main&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>String&lt;span style="color:#ff79c6">[]&lt;/span> args&lt;span style="color:#ff79c6">)&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> checkRunnableUser&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">new&lt;/span> User&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> Role&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">SYSTEM_ADMIN&lt;/span>&lt;span style="color:#ff79c6">));&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし、問題は同じ処理をKotlinで書いてみると、Intellijで警告が出ることもなく、コンパイルも通るということです。Javaのケースと同じくランタイムでエラーが発生するコードになりますが、警告すら表示されないのでコードを注意深く確認しないと意図通りに動作している理由が何かを見逃しやすくなっているのではないかと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">enum&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Role&lt;/span>(&lt;span style="color:#ff79c6">val&lt;/span> value: Int) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SystemAdmin(&lt;span style="color:#bd93f9">1&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Operator(&lt;span style="color:#bd93f9">2&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Developer(&lt;span style="color:#bd93f9">3&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">User&lt;/span>(&lt;span style="color:#ff79c6">val&lt;/span> name: String, &lt;span style="color:#ff79c6">val&lt;/span> role: Role)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">checkRunnableUser&lt;/span>(user: User) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (user.role &lt;span style="color:#ff79c6">!=&lt;/span> Role.SystemAdmin &lt;span style="color:#ff79c6">||&lt;/span> user.role &lt;span style="color:#ff79c6">!=&lt;/span> Role.Developer) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> IllegalAccessException(&lt;span style="color:#f1fa8c">&amp;#34;user is not runnable&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">main&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> checkRunnableUser(User(name = &lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, role = Role.Operator))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コンパイルタイムでエラーを事前に検知できるという点は確かにGoのコンパイラの方が優秀かなと思います。ただ、KotlinやJavaに慣れている場合、条件がおかしいということに気づくより、「&lt;code>const&lt;/code>を使っているせいか」「switchを使うべきか」など、問題の本質に気づかないようになる可能性もあるのではないかと思います。&lt;/p>
+&lt;p>これは、そもそも正しく条件を書くことが何よりも大事であることでありながら、他の言語で形成された習慣で違う言語のコードを書くと問題を起こし得るということを実例として適切ではないかと思いますね。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>幾つかの例を挙げましたが、まだ自分もGoでアプリを書いた歴も短く、言語に対しての理解も深くないのでこれからも色々と問題に遭遇する可能性はあるのかなと思います。その度はまたこうやってブログに載せていきたいと思います。ブログのネタができるという面では嬉しいですが、失敗からのポストは結局自分が辛くなることなので、うれしくはないですね…&lt;/p>
+&lt;p>とにかくここであげた問題は全て自分が経験したものですが、大事なのは、違う言語に挑戦するときは自分の持つバックグラウンドの知識を活かしながらも、それを偏見にしたいこと、そして先走らないことかなと思いました。Goに限らず、新しいものに触れるときは常に注意しないと、という感じですね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Kotlinプログラマが見たRust</title><link>https://retheviper.github.io/posts/rust-first-impression/</link><pubDate>Sun, 27 Mar 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/rust-first-impression/</guid><description>&lt;img src="https://retheviper.github.io/images/rust.jpg" alt="Featured image of post Kotlinプログラマが見たRust" />&lt;p>Rustの勉強を始めたい、と思ったのはおよそ2年前のことです。当時はJavaとPythonを主に触っていたので、パフォーマンスがクリティカルな部分では対応しきれない部分があると思い、ネイティブにコンパイルされる言語に触れてみる必要があると思いました。そしてできれば、GCのなくポインタを扱う言語でアプリを書いてみたら、本業と言えるJavaの理解もより深くなるのではないかと思った次第です。&lt;/p>
 &lt;p>そこで候補として考えたのがGoとRustです。ただ、Goは世間の評価はともかく、自分の立場からすると少し追求している目標とずれているところがあるなと思いました。特に転職してからGoとKotlinという言語を並行で触っていると、良くも悪くも自分がやりたいことがなんなのかわかってきた気分にもなったのです。&lt;/p>
 &lt;p>そこで、そろそろ次の候補として考えていたRustに触れてみたいと思った次第です。これもまた、世間の評価は置いといて、実際自分に合うかどうかを確認してみたくなりました。最近は色々な言語が扱える&lt;a class="link" href="https://medium.com/@guestposts_92864/what-is-a-polyglot-programmer-and-why-you-should-become-one-e5629bf720c2" target="_blank" rel="noopener"
 >Polyglot Programmer&lt;/a>の時代だという概念もあり、多くのプログラミング言語が互いの良いところを吸収しながらどれも似たようなものになったという評価もありますが、私の場合は、あくまで自分に合うのは何かを探るという感覚としてRustという新しい言語を接してみたいと思っています。&lt;/p>
