@@ -871,23 +871,23 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>簡単に整理しようとしていた内容が、いつの間にかかなり長くなりましたが…おかげで色々と勉強はできたと思います。WebFluxが登場してからもすでに数年が経っていて、RestTemplateがdeprecatedになる予定であるように、究極的には全体をWebFlux基盤に移行する必要が生じる日がいつか来るかもしれません。なんでも最近は非同期、関数型、反応型というキーワードがすごく流行っていますし。&lt;/p>
 &lt;p>静的タイプの言語が最初に生まれて、動的タイプの言語も生まれ、TypeScriptのように静的な世界にまた戻るような現象が起きているのを見ると、また関数型から命令型に移行する日もいつか来る可能性があるのかな、と思ったりもします。ただ、こういうパラダイムはどれが絶対というわけではないので、優秀なプログラマならどれも適時適切に使いこなせるようにならないと、という気もします。エンジニアとしての勉強の道は本当に終わりがないですね。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>実際は、スレッド数によるボトルネックのない状態だと、関数型の方が少し遅いらしいです。実際は関数型のAPIの実装の方が複雑だからですね。ただ、この違いはコードの読みやすさや実装のしやすさなどを考慮した時は、十分トレードオフとして考慮できるくらいの差のようです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Streamは同期なので、データを生産と消費が一緒に行われます。しかし、Reactive Streamではデータの生産がすぐ消費までつながるとは言い切れません。非同期だからです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>むしろ、単一スレッドでの処理は、WebFluxの方がMVCに比べ少し遅いという話もあります。forループに比べStreamが遅い理由と似ているような気がしますが…&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:4" role="doc-endnote">
+&lt;li id="fn:4">
 &lt;p>Back-end For Front-endの略。マイクロサービスの一種で、複数のエンドポイントをまとめて固有のオブジェクトを生み出すバックエンド。フロントエンドは一つのエンドポイントを呼び出すだけでことが済みます。&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>MyBatisよりJPAが使いたい</title><link>https://retheviper.github.io/posts/spring-data-jpa/</link><pubDate>Fri, 10 Jul 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-data-jpa/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post MyBatisよりJPAが使いたい" />&lt;p>個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文はなるべく最低限のCRUDに制限し、必要な作業は全てアプリにて処理するような実装をしたほうが設計として望ましい形だと思っています。なぜかというと、システム全体の性能、アプリのDBに対しての独立性、処理の容易さという観点からそちらの方が優れていると思っているからです。&lt;/p>
+&lt;/div></description></item><item><title>MyBatisよりJPAが使いたい</title><link>https://retheviper.github.io/posts/spring-data-jpa/</link><pubDate>Fri, 10 Jul 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-data-jpa/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post MyBatisよりJPAが使いたい" />&lt;p>個人的に、クエリーやDBのプラグインなど、DBそのものによるデータの整形はあまりよくないと思っていて、なんからの「処理」が入る場合にSQL文はなるべく最低限のCRUDに制限し、必要な作業は全てアプリにて処理するような実装をしたほうが設計として望ましい形だと思っています。なぜかというと、システム全体の性能、アプリのDBに対しての独立性、処理の容易さという観点からそちらの方が優れていると思っているからです。&lt;/p>
 &lt;p>まず性能ですが、DBサーバとAPサーバが物理的に同じ性能のマシンを使っているとしたら、実際は最適化されたクエリーでパフォーマンスをあげることは十分できますね。しかし、勝利すべきデータやリクエストが増えると必ずしもそうとは言えません。Webアプリケーションでユーザ数が増えるとスケールアウト&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>やスケールアップ&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>を考慮することになりますが、スケールアウトする場合の場合にDBへの依存が強いアプリは問題を起こす可能性があります。APサーバは複数を利用してもアプリの動作には変わりがありませんが、DBサーバの場合は台数が増えるとデータの整合性という新しい問題が出てきますね。どのDBにも同じデータが保存されていることを保証したいなら、DBサーバをスケールアウトするよりはAPサーバをスケールアウトした方が良いと思います。なのでこの場合はアプリにデータの「処理」を任せた方が望ましいですね。&lt;/p>
 &lt;p>次にアプリのDBに対しての独立性ですが、最近は費用の高い&lt;a class="link" href="https://www.oracle.com/database/technologies" target="_blank" rel="noopener"
 >Oralce&lt;/a>から無料の&lt;a class="link" href="https://www.postgresql.org" target="_blank" rel="noopener"
@@ -1012,20 +1012,20 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>自分の場合、Springでアプリケーションを作りながらなるべく&lt;code>XML&lt;/code>を排除しJavaのコードだけで全てを管理したかったため、クエリーを自動生成してくれるというところで惹かれていましたが、実際に使ってみると使い方も簡単で(癖はあると思いますが)、テーブルが途中で変わっても簡単に直せるというところがかなり魅力的なものですね。占有率としては標準ということもあり、JPAが他のORMと比べよく使われているようですが、自分みたいにMyBatisしか扱ったことのない方には一度触れてみて損はないかと思います。&lt;/p>
 &lt;p>JPAの他にも紹介したようにSpring Dataだけでもいろいろなライブラリが存在していてそれぞれの思想が違うので、やっと一つを少しわかったくらいではまだまだ先が遠いような気もしていますね。でもこうやって、一つのライブラリが作られた経緯や思想を調べるだけでも得られる知識は多く、どれも無駄にはならないと思われるくらい新鮮なものなので、意味のあることとなっていると思います。またこうやって情報を集めつつ、それが誰かにとっては貴重な情報になるといいですね。今後もいろいろ調べてブログに載せて行きます。では、また！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>サーバの台数を増やすこと。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>サーバのマシンパワーをあげること。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>スレッドプールが小さすぎたり、一つのリクエストに対して処理時間が長すぎてボトルネックになるケースなど&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>REST APIでのSpring Securityの例外ハンドリングを実装する</title><link>https://retheviper.github.io/posts/spring-rest-api-security-handling/</link><pubDate>Wed, 17 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-security-handling/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post REST APIでのSpring Securityの例外ハンドリングを実装する" />&lt;p>前回はREST APIでのログインの方式と、JWTを使った認証認可について説明しました。でも、アプリケーション全体のセキュリティという観点からするとログインができたということだけで全てが終わったわけではないです。例えばエラーハンドリングがありますね。&lt;/p>
+&lt;/div></description></item><item><title>REST APIでのSpring Securityの例外ハンドリングを実装する</title><link>https://retheviper.github.io/posts/spring-rest-api-security-handling/</link><pubDate>Wed, 17 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-security-handling/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post REST APIでのSpring Securityの例外ハンドリングを実装する" />&lt;p>前回はREST APIでのログインの方式と、JWTを使った認証認可について説明しました。でも、アプリケーション全体のセキュリティという観点からするとログインができたということだけで全てが終わったわけではないです。例えばエラーハンドリングがありますね。&lt;/p>
 &lt;p>Spring SerucityのConfigurationクラス(&lt;code>WebSecurityConfigurerAdapter&lt;/code>の継承クラス)を作成しておいて、ロールによってアクセスできるURLをの制限をかけておくことだけで認可されてないリクエストに対してエラーを出してくれますが、カスタムクラスで独自のエラーハンドリングをしたい場合もあリますね。&lt;/p>
 &lt;p>なので、今回はログインの以外に、REST APIでの認証認可周りで必要となるSpring Securityの設定を紹介したいと思います。ここで紹介するのは以下のようになります。&lt;/p>
 &lt;ol>
@@ -2511,17 +2511,17 @@ properties.password=ENC(askygdq8PHapYFnlX6WsTwZZOxWInq+i)
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。&lt;/p>
 &lt;p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Dependency Injection(依存性の注入)。ネット上に詳しい説明が多いので深くは入りませんが、簡単に概念を説明するとオブジェクトを外部から生成してコードに入れることでオブジェクトの依存性をコードから独立させることを意味します。注入されたオブジェクトはコードに依存してないので、どこで呼ばれても同じものとして機能することができます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Configurationアノテーションをつけると自動的にSpring内で設定クラスとして認識されます。ここでオブジェクトをBeanとして定義すると、DIができるようになります。以前はxmlファイルに記入しておく場合もありました。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>循環参照とは、複数のオブジェクトが互いを参照していることを意味します。例えばAクラスのインスタンスを生成する時にBを参照することとなっていて、BクラスもAクラスを参照することとなっていると、どちらかのインスタンスを作成する時に互いの参照を繰り返す無限ループに落ちてしまいます。この無限ループの果てはStackOverflowですね。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item></channel></rss>
+&lt;/div></description></item></channel></rss>

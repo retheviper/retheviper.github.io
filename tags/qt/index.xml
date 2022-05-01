@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>qt on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/qt/</link><description>Recent content in qt on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 01 May 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/qt/index.xml" rel="self" type="application/rss+xml"/><item><title>PyQtで字幕翻訳ツールを作ってみた</title><link>https://retheviper.github.io/posts/python-qt-app/</link><pubDate>Sun, 01 May 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-qt-app/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post PyQtで字幕翻訳ツールを作ってみた" />&lt;p>最近友人がYoutubeのチャンネルを始めました。主に海外のYoutubeのチャンネルにアップされてあるドラマのメイキングやインタビュー動画などに字幕をつけて配信するというチャンネルですが、そこで毎回字幕を作るのはかなりめんどくさい作業なので、ちょっとしたコマンドaliasとして作成して提供することにしました。元の動画には原語の字幕がついていて、編集用ツールでそれを読み込むことができるらしいので動画だけでなく字幕もダウンロードするコマンドを作成しています。これなら翻訳した字幕ファイルを編集ツールで読み込んで使えるので、かなり作業量が減りました。&lt;/p>
+&lt;p>ただ、チャンネルの登録者数が増えながら、中には色々な国からの人もいたようで、友人から「自動翻訳を使って多国語の字幕を追加できる手段が欲しい」という依頼が来ました。簡単なツールを作れば良さそうだったので、早速ツールを作って公開することになったので、今回はそのツールを作った話をしたいと思います。&lt;/p>
+&lt;h2 id="設計">設計&lt;/h2>
+&lt;p>まずは友人の要望と、技術スタック、アプリの基本設計を行いました。といっても、複雑なことはあまりしたくなかったので、（友人の）やりたいことをベースに、自分がやってみたいことを混ぜたくらいのレベル感です。&lt;/p>
+&lt;h3 id="字幕">字幕&lt;/h3>
+&lt;p>&lt;a class="link" href="https://youtube-dl.org/" target="_blank" rel="noopener"
+>youtube-dl&lt;/a>や&lt;a class="link" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener"
+>yt-dlp&lt;/a>を使ってYouTubeの動画をダウンロードする際、元の動画に字幕がついてある場合はオプションを追加することで字幕も落とせます。Youtubeで字幕をダウンロードすると、多くの場合ファイル形式が&lt;a class="link" href="https://developer.mozilla.org/ja/docs/Web/API/WebVTT_API" target="_blank" rel="noopener"
+>WebVTT&lt;/a>になるので、とりあえず&lt;code>.vtt&lt;/code>形式のファイルに対応する必要があると思いました。他のフォーマットまで対応するには時間がかかりそうだったので、まずはこれのみにします。&lt;/p>
+&lt;p>幸い、実際の字幕ファイルを落としてみたところ、フォーマットはシンプルで(&lt;a class="link" href="https://ja.wikipedia.org/wiki/SubRip" target="_blank" rel="noopener"
+>SubRip&lt;/a>とほぼ一緒)、翻訳は字幕が表示される時間の次の行の文字列と、その行のインデックスとともに取ればなんとか入れ替えができそうな気がしました。実際のファイルは以下のようなフォーマットで作成されています。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-vtt" data-lang="vtt">WEBVTT
+00:01.000 --&amp;gt; 00:04.000
+液体窒素を絶対に飲まないでください。
+00:05.000 --&amp;gt; 00:09.000
+- それはあなたの胃に穴をあけます。
+- あなたは死ぬ可能性があります。
+&lt;/code>&lt;/pre>&lt;h3 id="言語翻訳api">言語翻訳API&lt;/h3>
+&lt;p>翻訳についてはGoogle翻訳もありますが、友人の要請によって&lt;a class="link" href="https://papago.naver.com/" target="_blank" rel="noopener"
+>Papago&lt;/a>を使うことにしました。幸いAPIを無料で利用できて、PythonのサンプルコードやAPIの詳細も提供されていたのであまり利用は難しくはい感じでした。事前にPostmanでAPIを実行してみてからこちらを採用することにしました。&lt;/p>
+&lt;h3 id="技術">技術&lt;/h3>
+&lt;p>まずPythonで作ることにしました。この規模の小さいアプリは、Kotlinがメインの私でもPythonで書きたいと思っています。JVMだと起動が遅くなるのもあり、テキストを扱うだけでCPUの処理がクリティカルな作業でもないためパフォーマンスを考慮する必要もあまりありません。そして既にPythonでファイルを読み込んだり、ファイルを編集するなど色々とCLI用のツールを作っていたので「ファイルを読み込んで、編集して、保存する」という最重要の機能がすぐに実装できそうと思いました。&lt;/p>
+&lt;p>ただ、自分が使うものならCLI上でも十分使えますが、友人が使うものなのGUIを実装することにしました。Pythonは&lt;code>.py&lt;/code>ファイルで渡すと、Pythonとスクリプトのdependencyのインストールが必要となるなどエンジニアではない人が触るには不便なところがあるので、成果物は&lt;a class="link" href="https://pyinstaller.org/en/stable/" target="_blank" rel="noopener"
+>PyInstaler&lt;/a>などで実行できるバイナリにします。&lt;/p>
+&lt;p>GUIに関しては&lt;a class="link" href="https://pysimplegui.readthedocs.io/en/latest/" target="_blank" rel="noopener"
+>PySimpleGUI&lt;/a>を使ったことがありますが、今回は違うフレームワークを使ってみたいと思いました。PythonのGUIフレームワークといえば&lt;a class="link" href="https://docs.python.org/ja/3/library/tkinter.html" target="_blank" rel="noopener"
+>tkinter&lt;/a>や&lt;a class="link" href="https://kivy.org" target="_blank" rel="noopener"
+>Kivy&lt;/a>、&lt;a class="link" href="https://www.wxpython.org/" target="_blank" rel="noopener"
+>wxPython&lt;/a>、&lt;a class="link" href="https://www.libavg.de/site/" target="_blank" rel="noopener"
+>Libavg&lt;/a>など様々なものがあるのですが、中でも&lt;a class="link" href="https://www.qt.io/" target="_blank" rel="noopener"
+>Qt&lt;/a>がPythonだけでなく色々と使われているので、PythonのコードだけでなくC++のコードでも参考できる例が多いのではないかと思い&lt;a class="link" href="https://wiki.python.org/moin/PyQt" target="_blank" rel="noopener"
+>PyQt&lt;/a>の方を選びました。&lt;/p>
+&lt;p>プロダクションレベルのものを作るならまた色々と基準を持って検討してみたかも知れませんが、このような趣味レベルのコードを書く場合はなるべく手軽に書ける、サンプルの多いものを選ぶのがちょうど良いかもですね。効率というのも大事なので。&lt;/p>
+&lt;h2 id="コード">コード&lt;/h2>
+&lt;h3 id="ファイル読み込み">ファイル読み込み&lt;/h3>
+&lt;p>まずはファイルを読み込むところから始めます。&lt;code>.vtt&lt;/code>ファイルはヘッダーに字幕の情報（言語コードなど）が書かれていて、その次からは字幕が表示される時間と字幕の文字列が繰り返されます。&lt;/p>
+&lt;p>素直に全行を読み込んでも良いかもですが、翻訳のAPIを呼び出すときに一日で利用できる文字数の制限というのがあったので、極力リクエストにのせるデータは減らしたかったです。なので、後で入れ替えするためのもとのファイルのデータと、翻訳のためAPIのリクエストパラメータにのせる二つのデータにわけで読み込むようにしました。いかがそのコードです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># get original contents from vtt file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">get_content&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> source
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(file_path, &lt;span style="color:#f1fa8c">&amp;#39;r&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> file&lt;span style="color:#ff79c6">.&lt;/span>readlines()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, line &lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">enumerate&lt;/span>(original_contents):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> content &lt;span style="color:#ff79c6">=&lt;/span> line&lt;span style="color:#ff79c6">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> source &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;:&amp;#39;&lt;/span>)[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;--&amp;gt;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content &lt;span style="color:#ff79c6">and&lt;/span> content &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> original_contents, exported_contents
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>APIのパラメータには元の言語(source)と、翻訳したい言語(target)が必要となるので、Global変数として字幕のヘッダにある言語情報を&lt;code>source&lt;/code>に格納、翻訳したい行はインデックスと文字列をdictionaryとして格納します。そして最終的に元のデータと、翻訳対象のデータを返します。&lt;/p>
+&lt;h3 id="翻訳apiの呼び出し">翻訳APIの呼び出し&lt;/h3>
+&lt;p>抽出したデータのうち、翻訳対象のデータを渡してAPIを呼び出す部分です。APIには「1秒当たり10件のリクエストを許容」するという制約があり、翻訳した文字列を一行づつ送って翻訳してもらいながら、リクエストごとに120msを待つようにしました。基本的には&lt;a class="link" href="https://docs.python-requests.org/en/latest/" target="_blank" rel="noopener"
+>Requests&lt;/a>を使ってPOSTしているだけですが、もしエラーが返ってきたときはalertを表示してアプリを即終了するようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># send translate request to papago and get translated message&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">send_request&lt;/span>(self, contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> headers &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Id&amp;#39;&lt;/span>: client_id,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Secret&amp;#39;&lt;/span>: client_secret,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Content-Type&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;application/x-www-form-urlencoded; charset=UTF-8&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> contents&lt;span style="color:#ff79c6">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> payload &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;text&amp;#39;&lt;/span>: content,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;source&amp;#39;&lt;/span>: source,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;target&amp;#39;&lt;/span>: target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response &lt;span style="color:#ff79c6">=&lt;/span> requests&lt;span style="color:#ff79c6">.&lt;/span>post(api_url, headers&lt;span style="color:#ff79c6">=&lt;/span>headers, data&lt;span style="color:#ff79c6">=&lt;/span>payload)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>status_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">200&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> body &lt;span style="color:#ff79c6">=&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_text: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> body[&lt;span style="color:#f1fa8c">&amp;#39;message&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;result&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;translatedText&amp;#39;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> translated_text
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># wait for API&amp;#39;s limitation(only 10 request per second allowed)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sleep(&lt;span style="color:#bd93f9">0.12&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> msgBox &lt;span style="color:#ff79c6">=&lt;/span> QMessageBox()&lt;span style="color:#ff79c6">.&lt;/span>critical(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Error&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response&lt;span style="color:#ff79c6">.&lt;/span>json()[&lt;span style="color:#f1fa8c">&amp;#39;errorMessage&amp;#39;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> buttons&lt;span style="color:#ff79c6">=&lt;/span>QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> msgBox &lt;span style="color:#ff79c6">==&lt;/span> QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">255&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> translated_contents
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの保存">ファイルの保存&lt;/h3>
+&lt;p>ロジックとしてはここが最後です。元のファイルのある場所に翻訳された字幕ファイルを保存するために、元のファイルのパス、翻訳したものに入れ替えるための元のデータ、そしてAPIで翻訳した結果のデータを渡します。&lt;/p>
+&lt;p>基本的に翻訳したデータにはインデックスがkeyとして入っているので、そのキーを持って元のデータを入れ替えていきます。ここでヘッダには元の言語のコードが入っているので、翻訳した言語のコードに入れ替えます。そしてファイル名にも同じく言語のコードが入っているので、これもまた変えておきます。&lt;/p>
+&lt;p>全てのデータが入れ替えられ、ファイル名を決めたら保存して終了です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># write translated contents to file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">write_result&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>], translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents &lt;span style="color:#ff79c6">=&lt;/span> original_contents&lt;span style="color:#ff79c6">.&lt;/span>copy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> translated_contents&lt;span style="color:#ff79c6">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target) &lt;span style="color:#ff79c6">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content &lt;span style="color:#ff79c6">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> root &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>dirname(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_name &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>basename(file_path)&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target_file_path &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>join(root, file_name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(target_file_path, &lt;span style="color:#f1fa8c">&amp;#39;w&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file&lt;span style="color:#ff79c6">.&lt;/span>writelines(contents)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルドロップダウン">ファイルドロップダウン&lt;/h3>
+&lt;p>せっかくGUIを使っているので、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QListWidget.html" target="_blank" rel="noopener"
+>QListWidget&lt;/a>にファイルをDrag &amp;amp; Dropすると勝手にファイル名が画面に表示され、翻訳対象にもなるようにしたかったです。ここはあまり自分がQtに詳しくないので、ネットで検索したものを流用しました。&lt;/p>
+&lt;p>基本的にはファイルをDrag &amp;amp; Dropすると、拡張子が&lt;code>.vtt&lt;/code>の場合にリストに追加されます。ここでファイルのフルパスを得ることができるのですが、画面上はファイル名だけを見えるようにして、フルパスは別のグローバル変数に格納するようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># drop down file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">FileListView&lt;/span>(QListWidget):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> __init__(self, parent&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#ff79c6">None&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>(FileListView, self)&lt;span style="color:#ff79c6">.&lt;/span>__init__(parent)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>setAcceptDrops(&lt;span style="color:#ff79c6">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragEnterEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragMoveEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dropEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> url &lt;span style="color:#ff79c6">in&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>urls():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_path &lt;span style="color:#ff79c6">=&lt;/span> url&lt;span style="color:#ff79c6">.&lt;/span>toLocalFile()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> file_path&lt;span style="color:#ff79c6">.&lt;/span>endswith(&lt;span style="color:#f1fa8c">&amp;#39;.vtt&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path) &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file path to list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>append(&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file name to file list view&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>addItem(file_path&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span>)[&lt;span style="color:#ff79c6">-&lt;/span>&lt;span style="color:#bd93f9">1&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイル削除">ファイル削除&lt;/h3>
+&lt;p>リストにファイルを追加したら削除したい場合もあるかと思ったので、リストからファイルを選択してボタンを押すとリストから消えるようにしたかったです。これは以下のようなコードで実現しています。ボタンをクリックすると、リストで選択したものが消え、翻訳対象（フルパス）からも消えるようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create remove button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_remove_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Remove file&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>remove_file)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> button
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># remove file from file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">remove_file&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> original_files
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> selected_item &lt;span style="color:#ff79c6">in&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>selectedIndexes():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> index &lt;span style="color:#ff79c6">=&lt;/span> selected_item&lt;span style="color:#ff79c6">.&lt;/span>row()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>takeItem(index)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>pop(index)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="言語選択">言語選択&lt;/h3>
+&lt;p>元の字幕ファイルの言語はヘッダから抽出できるのですが、どの言語に翻訳したいかは自分で選べるようにしました。ここは翻訳APIの使用を参考にして、翻訳可能な言語のコードをdictionaryとしています。あえてdictionaryとしている理由は、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QComboBox.html" target="_blank" rel="noopener"
+>QComboBox&lt;/a>のアイテムは画面に見えるものなので実際の言語名にしたかったからです。アイテムがdictionaryのキーとなっているので、選択したアイテムに対応するvalueが翻訳したい言語となるようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># languages&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>supported_language_code: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Korean&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ko&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;English&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;en&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Japanese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ja&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(China)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-CN&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(Taiwan)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-TW&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Vietnamese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;vi&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Indonesian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;id&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Thailand&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;th&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;German&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;de&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Russian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ru&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Spanish&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;es&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;French&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;fr&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create drop down menu&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_target_language_selector&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label &lt;span style="color:#ff79c6">=&lt;/span> QLabel()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Select target language&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector &lt;span style="color:#ff79c6">=&lt;/span> QComboBox()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>addItems(supported_language_code&lt;span style="color:#ff79c6">.&lt;/span>keys())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>textActivated&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>set_target_language)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> label, selector
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># set translate target language when dropdown menu selected&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">set_target_language&lt;/span>(self, selectd: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> supported_language_code
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target &lt;span style="color:#ff79c6">=&lt;/span> supported_language_code[selectd]
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="翻訳ボタン">翻訳ボタン&lt;/h3>
+&lt;p>最後に翻訳ボタンを追加して、実際の翻訳はボタンを押下した時に行われるようにしました。ボタンを押すと、翻訳対象のファイルのパスをループしながらデータの読み込み、元の言語と翻訳したい言語が違うと翻訳APIの呼び出し、結果の保存という作業を行うようになっています。念の為処理が行われる間はこのボタンを非活性化するという処理も追加しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create translate button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_translate_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Translate&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>translate_files)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># read vtt file and do translate&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">translate_files&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> file_path &lt;span style="color:#ff79c6">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents, exported_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>get_content(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> target:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>send_request(exported_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>write_result(file_path, original_contents, translated_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実際作ったツールで重要な部分は以上で、全体のソースコードは&lt;a class="link" href="https://github.com/retheviper/PythonTools/blob/master/PapagoVtt/papago_vtt.py" target="_blank" rel="noopener"
+>こちらから&lt;/a>確認できます。&lt;/p>
+&lt;h2 id="改善したい">改善したい&lt;/h2>
+&lt;p>こうやってとりわけ欲しい機能は実現できたのですが、まだ自分がPyQtに慣れてないのもあり、ロジック上でも少し改善したいところは残っていますので、いくつかを挙げてみました。&lt;/p>
+&lt;h3 id="テキストをまとめて翻訳する">テキストをまとめて翻訳する&lt;/h3>
+&lt;p>翻訳APIの仕様上、リクエストは1秒で10回となっているため、&lt;code>sleep&lt;/code>を入れて一つのリクエスト毎に120msを待つようになっています。I/Oが発生することを考慮するともっと間隔を短くしてよかったかもしれませんが、そもそもの問題は、読み込んだファイルのデータから一行づつ翻訳のリクエストを送っているところです。短い動画でも字幕は数百行となるケースがあるので、こうなった場合は全体の翻訳が終わるまで処理にかなり時間がかかってしまいますね。&lt;/p>
+&lt;p>なので、最初はリクエストパラメータに翻訳したいデータを全て送る（dictionaryのvalueを一つのstrにjoinして）方法も考えてみましたが、APIの仕様として明示されてないだけで、リクエストパラメータのサイズには制限があるようでした。だとすると、翻訳したいデータをいくつかのchunkに分けて送るという方法があると思いますが、こうなった場合は最後にファイルを保存するときに入れ替えるデータの行をどうやって判断するか、それをうまく処理するための方法が悩ましくなります。&lt;/p>
+&lt;p>この処理のためファイルを翻訳するまでの時間がかなり長くなるので、いつかは解消したいものですが、翻訳した結果をうまくまとめて保存できる方法が思いつくまでは少し時間がかかりそうです。&lt;/p>
+&lt;h3 id="プログレスバーを追加する">プログレスバーを追加する&lt;/h3>
+&lt;p>今の作りだと、シングルスレッドであるため、一つのファイルに対して処理が行われている間は画面が固まってしまうという問題があります。そもそも処理が遅いので、かなり長い時間を固まっていますが、これはUXの観点ではあまり良くないですね。また、処理がどこまで終わっているかもわからないので、プログレスバーを追加して、一つのファイルおよび全体のリストでどれぐらいの処理が行われているかを視覚化したいと思っています。&lt;/p>
+&lt;p>ただ、プログレスバーを追加する場合、スレッドをわけ、さらに何を基準にプログレスバーを動いていくかというロジックを考えなければならないので、そこもまた時間がかかりそうですね。&lt;/p>
+&lt;h3 id="ボタンの非活性化">ボタンの非活性化&lt;/h3>
+&lt;p>翻訳対象のファイルが追加される前と処理の途中ではボタンを非活性化したいのですが、これもまだうまく実装されていません。処理中に画面が固まってしまうからか、処理の前後でボタンを非活性化するという処理も思い通りにならなかったのでこちらも直したいと思っています。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今回はGUIを中心に色々と新しいチャレンジができたので、かなり面白い作業となっています。そしてやはり元がサーバサイドだからか、UI/UXの観点では考慮しきれなかった問題が出てきたり、画面を実装するためにも色々と試行錯誤があったのでこれは良い勉強になっています。PythonとPyQtが優秀だったのでできたものなのですが、これをまたJetpack Composeなどで書き換えてみるとどうなるかなという好奇心もありますね。やはり、普段やってみてないことに挑戦してみるのは自分がエンジニアとして成長するための良い糧となるような気がします。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item></channel></rss>

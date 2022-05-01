@@ -60,14 +60,14 @@
 &lt;p>ファイル取得部は&lt;code>glob&lt;/code>オプションで簡単にできたことに比べ少し複雑になっています。&lt;code>os.walk()&lt;/code>で起点のディレクトリを指定してパスとファイル名を取得します。ただ&lt;code>os.walk()&lt;/code>だとファイル名とパスは分離されるのでそれをつなぐ作業が必要ですね。そこで処理するファイルのリストに入れたり消したりする処理を加えます。これで以前の&lt;code>glob&lt;/code>と似たような挙動ができます。&lt;/p>
 &lt;p>そして&lt;code>rsplit('_', 1)&lt;/code>で、まず&lt;code>From_PostgreSQL_01&lt;/code>という文字列は&lt;code>From_PostgreSQL&lt;/code>と&lt;code>01&lt;/code>に1回だけ分割されます。そして分割された文字列は配列になるので[0]を指定すると意図通り&lt;code>From_PostgreSQL_01&lt;/code>が&lt;code>From_PostgreSQL&lt;/code>に代替されます。また&lt;code>find&lt;/code>を&lt;code>findall&lt;/code>に変えただけで条件に一致する全エレメントをファイル内で探してリストにしてくれます。その中でループ処理するだけですね。これがわからなかった時は以前のコードにさらにループをかけたりして失敗していましたが、意外と簡単な解決策があったものです。&lt;/p>
 &lt;p>これで完成されたコードは意図通りに動いてくれました。あとで変動があっても少しだけ変えればいいので個人的には満足しています。より綺麗な書き方はあるかも知れませんがね。そして教訓として、いつもテストは大事だなということを改めて覚えられました。常に確認と確認です。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>&lt;code>rsplit&lt;/code>と&lt;code>split&lt;/code>の違いは、方向です。前者が文字列の右側を基準に分割するなら、後者は左側からです。今回は文字列の末尾の連番を取りたいので、&lt;code>rsplit&lt;/code>を選びました。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Pythonでxmlファイルを操作する(1)</title><link>https://retheviper.github.io/posts/python-xml-modifier-1/</link><pubDate>Sun, 09 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-xml-modifier-1/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post Pythonでxmlファイルを操作する(1)" />&lt;p>IT関係の仕事を選び、最も良いと思うところはやはり色々な状況に置かれることによって得られる経験が多いということではないかと思います。なぜかというと、独学だけでは言語の基礎文法はわかっても実際のコーディングではどう設計したらいいか、どんなモジュール(ライブラリーを含め)を使ったらいいかわからない場合があるからです。そもそも何を作ればいいかわからない場合が多いですね。大分類としてはウェブアプリケーションか、バッチで動くコードかということなどがあり、細かくはどんなDBを使って、どんな作業をしたいか(結合する対象など)の詳細を一人で全部想定することはかなり難しい作業ではないかと思います。しかし仕事ではある程度要件が決まっているので、その結合の方法と必要な作業がわかればあとは頑張るだけですから。目標設定が何よりも重要だということはまさにこれのことかも知れません。&lt;/p>
+&lt;/div></description></item><item><title>Pythonでxmlファイルを操作する(1)</title><link>https://retheviper.github.io/posts/python-xml-modifier-1/</link><pubDate>Sun, 09 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-xml-modifier-1/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post Pythonでxmlファイルを操作する(1)" />&lt;p>IT関係の仕事を選び、最も良いと思うところはやはり色々な状況に置かれることによって得られる経験が多いということではないかと思います。なぜかというと、独学だけでは言語の基礎文法はわかっても実際のコーディングではどう設計したらいいか、どんなモジュール(ライブラリーを含め)を使ったらいいかわからない場合があるからです。そもそも何を作ればいいかわからない場合が多いですね。大分類としてはウェブアプリケーションか、バッチで動くコードかということなどがあり、細かくはどんなDBを使って、どんな作業をしたいか(結合する対象など)の詳細を一人で全部想定することはかなり難しい作業ではないかと思います。しかし仕事ではある程度要件が決まっているので、その結合の方法と必要な作業がわかればあとは頑張るだけですから。目標設定が何よりも重要だということはまさにこれのことかも知れません。&lt;/p>
 &lt;p>なので今回も仕事で任されたことです。要件はこうです。とあるツールを使って開発をしています。このツールではGUIでマップ上にアイコンを配置し、そのアイコンが一つの作業単位となっています。そしてアイコンとアイコンを結び、各アイコンにとある行動を設定することで全体なワークフローが出来上がる構造となっています。例えばDBのアイコンに接続先のDBの情報と発行するSQL文を入力し、ファイル出力のアイコンに繋ぐとそれを実行した時にDBからSQL文を実行した結果がファイルとして保存されます。このツールで作られたワークフローはxmlファイルとして保存されます。&lt;/p>
 &lt;p>問題は、開発環境と本場環境での設定が違うところがあるということです。主にこのツールを通してやっている作業はDB関係のものですが、開発環境と本場環境でそれぞれDBの接続先情報が違います。そしてそのDBの接続先の設定はxmlファイルに保存されているので、開発の終わったxmlファイルを本場環境にデプロイするときはただのコピーでは不完全なので「DBの接続先情報を書き換える」作業が必要です。この作業をどう実装したから今回のポストのテーマとなります。&lt;/p>
 &lt;h2 id="事前準備">事前準備&lt;/h2>
@@ -149,14 +149,14 @@
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>コードの量もそんなに長くないし、ちゃんとパーシングで要素を捉えているのでシェルスクリプトに比べ安全な書き方になっています。それにタグによってコンポーネントを区別しているので、コンポーネントを数に変動があってもそのまま使えるという長所がありますね。タグに名前空間があると初期設定と書き込み直前にその処理が必要となるので少し面倒な部分はありますが&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>、確かにシェルスクリプトに比べ維持補修の面で手間がかからなくなったので満足できるコードを書けたと思います。速度も直接測定してみた訳ではないですが、相当早かったです(ただ単にPythonは遅いだろうという自分の偏見が問題だったかも知れません)。いやーPythonいいですね。&lt;/p>
 &lt;p>何よりもメインの関数やクラスを省略しても、本当にスクリプトぽい書き方でもちゃんと意図通りに動くということが素晴らしいですね。これからもLinux環境で簡単な反復作業を自動化したいという場合には、皆さんもぜひPythonを使ってみてくださいとオススメしたいくらいです。とても簡単な言語なので、これからもどんどん使って色々やってみたいなと思います。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>例えば、yumで問題が発生しています。これはyumの実行環境を変える方法(/usr/bin/yumの設定を参照してください)もありますが、どれがPython2を使うかいちいち確認はできないのであまりおすすめしたくはない方法です。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>特に最後の方の&lt;code>ET.register_namespace()&lt;/code>がないと、名前空間が勝手に変わってしまいます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item></channel></rss>
+&lt;/div></description></item></channel></rss>

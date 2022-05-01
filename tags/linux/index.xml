@@ -143,17 +143,17 @@ alt="構成図">
 &lt;p>ルーターが再起動した時もどう対応できるかは検証対象ですね。最初はscpでファイルを上書き、httpsdプロセスも再起動するようなシェルスクリプトを作ることで対応できるかと思ったら、権限問題があったりするのでより簡単にできる方法はないか考えています。&lt;/p>
 &lt;p>ま、結果的にLinuxでサーバー構築ができたらWANからルーターの管理ページに接続するようなことはなくなる可能性もなくはないですが。とにかく何かわかったらまたポストとして書くことにしましょう。&lt;/p>
 &lt;p>それでは、皆さんもぜひ、SSL証明書で安全かつ快適なWeb生活を！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>SSL証明書とは、このサーバーは信頼できるかを証明してくれる電子文書のことです。SSL証明書を適用することによりhttpsでの通信は第三者の攻撃より守られます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Dynamic Domain Name Systemの略で、家庭用のルーターはIPアドレスが動的に変わることが多いですが、これを文字列のホスト名とつなげてくれる便利なサービスです。ルーターのIPアドレスがどうかわろうが、DDNSの設定ができていたらいつでも同じURLからルーターにアクセスできます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Linuxのシステムサービスを作る" />&lt;p>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処理をするかの問題でもありますが、今回は簡単に「実行」の面で書いてみたいと思います。簡単にいうと、誰かが止めるまではずっと実行され続けるようなプログラムをLinuxではどう実現したらいいかの話です。&lt;/p>
+&lt;/div></description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Linuxのシステムサービスを作る" />&lt;p>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処理をするかの問題でもありますが、今回は簡単に「実行」の面で書いてみたいと思います。簡単にいうと、誰かが止めるまではずっと実行され続けるようなプログラムをLinuxではどう実現したらいいかの話です。&lt;/p>
 &lt;p>CentOSやRHELでは、&lt;code>service&lt;/code>というコマンドがあります。&lt;code>yum&lt;/code>のようなパッケージ管理プログラムを使って、様々なプログラムをインストールしていくとその中には一回だけの実行で終わらず、メモリー常に常住させる必要のあるものもありますね。以前このブログで紹介したことのある&lt;code>Jenkins&lt;/code>もまたそのようなプログラムの一つです。&lt;/p>
 &lt;p>そのようなプログラムは一回インストールしたら自動的に&lt;code>service&lt;/code>コマンドで動かしたり止めたりすることができるようになりますが、例えば自作したプログラムをそのように動作させることはできるのでしょうか？ユーザーがなんでもできるLinuxならできそうですが。&lt;/p>
 &lt;p>そう思っていたら、ちょうど仕事でJavaアプリケーションをサービスとして登録し、管理する必要があることになりました。私はJenkinsのタスクを管理していたため、実際はJavaアプリケーションがGitにコミットされたらPull→ビルド→実行されているJavaアプリケーションを止めて新しくビルとした物を実行するというタスクが必要となったのです。実際はサービスに触れる必要はなく、ビルドの後にサービスを止めたり再開させたりするシェルコマンドを実行するように仕組んだだけだったのですが、一体これはどう動いてるのか気になりましたので調べてみました。&lt;/p>
@@ -215,17 +215,17 @@ alt="構成図">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer restart
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで私の作った簡単なNode.jsのWebサーバーがシステムサービスとなって、止まることなく動くようになりました。めでたしめでたし。他にも何か自動化のプログラムを作ることになったら有効活用できそうな知識ではないのかと思います。&lt;/p>
 &lt;p>それでは今回のポストはここまで。また会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Process IDの略で、実行中のプロセスに与えられるIDです。こちらは&lt;code>ps&lt;/code>コマンドで確認できて、PIDからプロセス名を参照したりプロセス名からPIDを参照することもできます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>CentOS7でもserviceは健在ですが、systemctlにリダイレクトされるみたいですね。CentOS6までは/etc/rc.d/init.dからサービスを管理していて、７からはサービスユニットという名称になったらしいです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Ansibleでサーバーを構築する</title><link>https://retheviper.github.io/posts/ansible-server-automation/</link><pubDate>Fri, 05 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ansible-server-automation/</guid><description>&lt;img src="https://retheviper.github.io/images/ansible.jpg" alt="Featured image of post Ansibleでサーバーを構築する" />&lt;p>この度は&lt;a class="link" href="https://www.ansible.com/" target="_blank" rel="noopener"
+&lt;/div></description></item><item><title>Ansibleでサーバーを構築する</title><link>https://retheviper.github.io/posts/ansible-server-automation/</link><pubDate>Fri, 05 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ansible-server-automation/</guid><description>&lt;img src="https://retheviper.github.io/images/ansible.jpg" alt="Featured image of post Ansibleでサーバーを構築する" />&lt;p>この度は&lt;a class="link" href="https://www.ansible.com/" target="_blank" rel="noopener"
 >Ansible&lt;/a>を少し、使ってみる機会がありました。&lt;code>Ansible&lt;/code>もまた一つの自動化ツールで、あらかじめタスクを指定することで複数の環境で適用できるという意味ではJenkinsと似たようなものでした。ただ違う点は、Jenkinsは主にデプロイとリリース、テストなどの自動化に特化しているのに対し、Ansibleはサーバーの自動構築にその目的があるということです。&lt;/p>
 &lt;p>つまり、Ansibleを使えば複数の環境を同じくセッティングできます。例えば私の経験した範囲では「開発」→「内結」→「外結」という流れになっていて、それぞれで使う環境が変わっていました。段階が変わるたびに同じくサーバーを構築するのは時間の無駄で、セッティングすべき項目が増えると人の手では様々な面でミスが起こり得るので、Ansibleで自動化したいというのが今回のタスク。&lt;/p>
 &lt;p>ちょっと調べてみると、Ansibleでは&lt;code>Playbook&lt;/code>と呼ばれるYAMLファイル&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を使ってサーバーの設定を行います。深く入るとより複雑な動きもできるようですが、基本は接続先の情報(hostsファイル)とセッティングの値を保存したYAMLで起動します。できることはフォルダーやユーザーの作成、&lt;code>yum&lt;/code>によるプログラムのインストール、シェルコマンド実行、ファイル転送などができて、うまく設定ができたら複数のサーバーを分散して使う時などに有効活用できそうな印象でした。&lt;/p>
@@ -350,14 +350,14 @@ alt="構成図">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>どうでしたか。最近はなんでも自動化が進んでいて、JenkinsとAnsibleがあればサーバー構築から作成物のデプロイまで簡単にできる環境を構築できるので、ますます生産性が上がりそうな気がします。まだ手動でサーバーの構築をやっている方にはぜひ一度使ってみてくださいとオススメしたいですね。&lt;/p>
 &lt;p>それでは今回のポストはここで終わり。また会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>データフォーマットの一種で、その構造がJSONとかなり似ています。ただJSONと比べてみるとよりマークアップ言語に近い感じですね。多少癖はあるものの、JSONよりは直観的な表現ができます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Tera Termを使う" />&lt;p>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、&lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
+&lt;/div></description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Tera Termを使う" />&lt;p>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、&lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
 >Tera term&lt;/a>を使ったことはなかったです。でも仕事ではAWSでLinuxのサーバーを立てて使っているのでSSH接続が必要となります。ここで私が初めてしたことはそのSSH接続ができるようにTera termのマクロを作ることでした。それまでは主に文書作業をしていたので、やっとコーディングのようなことができて嬉しく思いましたね。&lt;/p>
 &lt;p>他にも色々良いツールはあるのではないかと思いますが、マクロで簡単にシェルのコマンドが発行できたり、画面のカスタマイズが簡単だということが便利ですね。最近はWindows 10でもターミナルが使えるようになったりWSLというサービスができましたが、まだ会社で支給されるパソコンがWindows 10ではない場合にはこちらの方を使うのが便利だろうと思います。&lt;/p>
 &lt;p>それでは、設計と実際のコードでどうマクロを作ったかを紹介します。&lt;/p>
@@ -711,14 +711,14 @@ alt="構成図">
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -al | more
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p>
 &lt;p>それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>私はどっちかというとCUIという言葉に慣れていますが（Character User Interfaceとかの略だと思っていたので）、正確な名称はCommand Line Interfaceの略であるCLIらしいですね。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>&lt;code>ll&lt;/code>は&lt;code>ls -l&lt;/code>のショートカットらしいです。同じ文字を2回入力するだけでも大体の内容を出力してくれるので便利ですね。ただ、&lt;code>ls -al&lt;/code>では隠されているファイルやフォルダも表示してくれます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item></channel></rss>
+&lt;/div></description></item></channel></rss>

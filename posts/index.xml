@@ -1,4 +1,235 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 17 Apr 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>JVM言語経験者がGoを触る時のハマりどころ</title><link>https://retheviper.github.io/posts/jvm-to-go/</link><pubDate>Sun, 17 Apr 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jvm-to-go/</guid><description>&lt;img src="https://retheviper.github.io/images/go.jpg" alt="Featured image of post JVM言語経験者がGoを触る時のハマりどころ" />&lt;p>JavaとPython、そして少しのJavaScriptの経験してなかった私が、転職先でGoとKotlinを触って1年が経ちました。最近のプログラミング言語は大体収斂進化している傾向があるので、一つの言語ができれば大体他の言語もできる、もしくは読めるようになると言います。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 01 May 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>PyQtで字幕翻訳ツールを作ってみた</title><link>https://retheviper.github.io/posts/python-qt-app/</link><pubDate>Sun, 01 May 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-qt-app/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post PyQtで字幕翻訳ツールを作ってみた" />&lt;p>最近友人がYoutubeのチャンネルを始めました。主に海外のYoutubeのチャンネルにアップされてあるドラマのメイキングやインタビュー動画などに字幕をつけて配信するというチャンネルですが、そこで毎回字幕を作るのはかなりめんどくさい作業なので、ちょっとしたコマンドaliasとして作成して提供することにしました。元の動画には原語の字幕がついていて、編集用ツールでそれを読み込むことができるらしいので動画だけでなく字幕もダウンロードするコマンドを作成しています。これなら翻訳した字幕ファイルを編集ツールで読み込んで使えるので、かなり作業量が減りました。&lt;/p>
+&lt;p>ただ、チャンネルの登録者数が増えながら、中には色々な国からの人もいたようで、友人から「自動翻訳を使って多国語の字幕を追加できる手段が欲しい」という依頼が来ました。簡単なツールを作れば良さそうだったので、早速ツールを作って公開することになったので、今回はそのツールを作った話をしたいと思います。&lt;/p>
+&lt;h2 id="設計">設計&lt;/h2>
+&lt;p>まずは友人の要望と、技術スタック、アプリの基本設計を行いました。といっても、複雑なことはあまりしたくなかったので、（友人の）やりたいことをベースに、自分がやってみたいことを混ぜたくらいのレベル感です。&lt;/p>
+&lt;h3 id="字幕">字幕&lt;/h3>
+&lt;p>&lt;a class="link" href="https://youtube-dl.org/" target="_blank" rel="noopener"
+>youtube-dl&lt;/a>や&lt;a class="link" href="https://github.com/yt-dlp/yt-dlp" target="_blank" rel="noopener"
+>yt-dlp&lt;/a>を使ってYouTubeの動画をダウンロードする際、元の動画に字幕がついてある場合はオプションを追加することで字幕も落とせます。Youtubeで字幕をダウンロードすると、多くの場合ファイル形式が&lt;a class="link" href="https://developer.mozilla.org/ja/docs/Web/API/WebVTT_API" target="_blank" rel="noopener"
+>WebVTT&lt;/a>になるので、とりあえず&lt;code>.vtt&lt;/code>形式のファイルに対応する必要があると思いました。他のフォーマットまで対応するには時間がかかりそうだったので、まずはこれのみにします。&lt;/p>
+&lt;p>幸い、実際の字幕ファイルを落としてみたところ、フォーマットはシンプルで(&lt;a class="link" href="https://ja.wikipedia.org/wiki/SubRip" target="_blank" rel="noopener"
+>SubRip&lt;/a>とほぼ一緒)、翻訳は字幕が表示される時間の次の行の文字列と、その行のインデックスとともに取ればなんとか入れ替えができそうな気がしました。実際のファイルは以下のようなフォーマットで作成されています。&lt;/p>
+&lt;pre tabindex="0">&lt;code class="language-vtt" data-lang="vtt">WEBVTT
+00:01.000 --&amp;gt; 00:04.000
+液体窒素を絶対に飲まないでください。
+00:05.000 --&amp;gt; 00:09.000
+- それはあなたの胃に穴をあけます。
+- あなたは死ぬ可能性があります。
+&lt;/code>&lt;/pre>&lt;h3 id="言語翻訳api">言語翻訳API&lt;/h3>
+&lt;p>翻訳についてはGoogle翻訳もありますが、友人の要請によって&lt;a class="link" href="https://papago.naver.com/" target="_blank" rel="noopener"
+>Papago&lt;/a>を使うことにしました。幸いAPIを無料で利用できて、PythonのサンプルコードやAPIの詳細も提供されていたのであまり利用は難しくはい感じでした。事前にPostmanでAPIを実行してみてからこちらを採用することにしました。&lt;/p>
+&lt;h3 id="技術">技術&lt;/h3>
+&lt;p>まずPythonで作ることにしました。この規模の小さいアプリは、Kotlinがメインの私でもPythonで書きたいと思っています。JVMだと起動が遅くなるのもあり、テキストを扱うだけでCPUの処理がクリティカルな作業でもないためパフォーマンスを考慮する必要もあまりありません。そして既にPythonでファイルを読み込んだり、ファイルを編集するなど色々とCLI用のツールを作っていたので「ファイルを読み込んで、編集して、保存する」という最重要の機能がすぐに実装できそうと思いました。&lt;/p>
+&lt;p>ただ、自分が使うものならCLI上でも十分使えますが、友人が使うものなのGUIを実装することにしました。Pythonは&lt;code>.py&lt;/code>ファイルで渡すと、Pythonとスクリプトのdependencyのインストールが必要となるなどエンジニアではない人が触るには不便なところがあるので、成果物は&lt;a class="link" href="https://pyinstaller.org/en/stable/" target="_blank" rel="noopener"
+>PyInstaler&lt;/a>などで実行できるバイナリにします。&lt;/p>
+&lt;p>GUIに関しては&lt;a class="link" href="https://pysimplegui.readthedocs.io/en/latest/" target="_blank" rel="noopener"
+>PySimpleGUI&lt;/a>を使ったことがありますが、今回は違うフレームワークを使ってみたいと思いました。PythonのGUIフレームワークといえば&lt;a class="link" href="https://docs.python.org/ja/3/library/tkinter.html" target="_blank" rel="noopener"
+>tkinter&lt;/a>や&lt;a class="link" href="https://kivy.org" target="_blank" rel="noopener"
+>Kivy&lt;/a>、&lt;a class="link" href="https://www.wxpython.org/" target="_blank" rel="noopener"
+>wxPython&lt;/a>、&lt;a class="link" href="https://www.libavg.de/site/" target="_blank" rel="noopener"
+>Libavg&lt;/a>など様々なものがあるのですが、中でも&lt;a class="link" href="https://www.qt.io/" target="_blank" rel="noopener"
+>Qt&lt;/a>がPythonだけでなく色々と使われているので、PythonのコードだけでなくC++のコードでも参考できる例が多いのではないかと思い&lt;a class="link" href="https://wiki.python.org/moin/PyQt" target="_blank" rel="noopener"
+>PyQt&lt;/a>の方を選びました。&lt;/p>
+&lt;p>プロダクションレベルのものを作るならまた色々と基準を持って検討してみたかも知れませんが、このような趣味レベルのコードを書く場合はなるべく手軽に書ける、サンプルの多いものを選ぶのがちょうど良いかもですね。効率というのも大事なので。&lt;/p>
+&lt;h2 id="コード">コード&lt;/h2>
+&lt;h3 id="ファイル読み込み">ファイル読み込み&lt;/h3>
+&lt;p>まずはファイルを読み込むところから始めます。&lt;code>.vtt&lt;/code>ファイルはヘッダーに字幕の情報（言語コードなど）が書かれていて、その次からは字幕が表示される時間と字幕の文字列が繰り返されます。&lt;/p>
+&lt;p>素直に全行を読み込んでも良いかもですが、翻訳のAPIを呼び出すときに一日で利用できる文字数の制限というのがあったので、極力リクエストにのせるデータは減らしたかったです。なので、後で入れ替えするためのもとのファイルのデータと、翻訳のためAPIのリクエストパラメータにのせる二つのデータにわけで読み込むようにしました。いかがそのコードです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># get original contents from vtt file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">get_content&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> source
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(file_path, &lt;span style="color:#f1fa8c">&amp;#39;r&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> file&lt;span style="color:#ff79c6">.&lt;/span>readlines()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, line &lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">enumerate&lt;/span>(original_contents):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> content &lt;span style="color:#ff79c6">=&lt;/span> line&lt;span style="color:#ff79c6">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> source &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;:&amp;#39;&lt;/span>)[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;--&amp;gt;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content &lt;span style="color:#ff79c6">and&lt;/span> content &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> original_contents, exported_contents
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>APIのパラメータには元の言語(source)と、翻訳したい言語(target)が必要となるので、Global変数として字幕のヘッダにある言語情報を&lt;code>source&lt;/code>に格納、翻訳したい行はインデックスと文字列をdictionaryとして格納します。そして最終的に元のデータと、翻訳対象のデータを返します。&lt;/p>
+&lt;h3 id="翻訳apiの呼び出し">翻訳APIの呼び出し&lt;/h3>
+&lt;p>抽出したデータのうち、翻訳対象のデータを渡してAPIを呼び出す部分です。APIには「1秒当たり10件のリクエストを許容」するという制約があり、翻訳した文字列を一行づつ送って翻訳してもらいながら、リクエストごとに120msを待つようにしました。基本的には&lt;a class="link" href="https://docs.python-requests.org/en/latest/" target="_blank" rel="noopener"
+>Requests&lt;/a>を使ってPOSTしているだけですが、もしエラーが返ってきたときはalertを表示してアプリを即終了するようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># send translate request to papago and get translated message&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">send_request&lt;/span>(self, contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> headers &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Id&amp;#39;&lt;/span>: client_id,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Secret&amp;#39;&lt;/span>: client_secret,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Content-Type&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;application/x-www-form-urlencoded; charset=UTF-8&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> contents&lt;span style="color:#ff79c6">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> payload &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;text&amp;#39;&lt;/span>: content,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;source&amp;#39;&lt;/span>: source,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;target&amp;#39;&lt;/span>: target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response &lt;span style="color:#ff79c6">=&lt;/span> requests&lt;span style="color:#ff79c6">.&lt;/span>post(api_url, headers&lt;span style="color:#ff79c6">=&lt;/span>headers, data&lt;span style="color:#ff79c6">=&lt;/span>payload)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>status_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">200&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> body &lt;span style="color:#ff79c6">=&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_text: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> body[&lt;span style="color:#f1fa8c">&amp;#39;message&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;result&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;translatedText&amp;#39;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> translated_text
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># wait for API&amp;#39;s limitation(only 10 request per second allowed)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sleep(&lt;span style="color:#bd93f9">0.12&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> msgBox &lt;span style="color:#ff79c6">=&lt;/span> QMessageBox()&lt;span style="color:#ff79c6">.&lt;/span>critical(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Error&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response&lt;span style="color:#ff79c6">.&lt;/span>json()[&lt;span style="color:#f1fa8c">&amp;#39;errorMessage&amp;#39;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> buttons&lt;span style="color:#ff79c6">=&lt;/span>QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> msgBox &lt;span style="color:#ff79c6">==&lt;/span> QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">255&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> translated_contents
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの保存">ファイルの保存&lt;/h3>
+&lt;p>ロジックとしてはここが最後です。元のファイルのある場所に翻訳された字幕ファイルを保存するために、元のファイルのパス、翻訳したものに入れ替えるための元のデータ、そしてAPIで翻訳した結果のデータを渡します。&lt;/p>
+&lt;p>基本的に翻訳したデータにはインデックスがkeyとして入っているので、そのキーを持って元のデータを入れ替えていきます。ここでヘッダには元の言語のコードが入っているので、翻訳した言語のコードに入れ替えます。そしてファイル名にも同じく言語のコードが入っているので、これもまた変えておきます。&lt;/p>
+&lt;p>全てのデータが入れ替えられ、ファイル名を決めたら保存して終了です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># write translated contents to file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">write_result&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>], translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents &lt;span style="color:#ff79c6">=&lt;/span> original_contents&lt;span style="color:#ff79c6">.&lt;/span>copy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> translated_contents&lt;span style="color:#ff79c6">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target) &lt;span style="color:#ff79c6">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content &lt;span style="color:#ff79c6">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> root &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>dirname(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_name &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>basename(file_path)&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target_file_path &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>join(root, file_name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(target_file_path, &lt;span style="color:#f1fa8c">&amp;#39;w&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file&lt;span style="color:#ff79c6">.&lt;/span>writelines(contents)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルドロップダウン">ファイルドロップダウン&lt;/h3>
+&lt;p>せっかくGUIを使っているので、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QListWidget.html" target="_blank" rel="noopener"
+>QListWidget&lt;/a>にファイルをDrag &amp;amp; Dropすると勝手にファイル名が画面に表示され、翻訳対象にもなるようにしたかったです。ここはあまり自分がQtに詳しくないので、ネットで検索したものを流用しました。&lt;/p>
+&lt;p>基本的にはファイルをDrag &amp;amp; Dropすると、拡張子が&lt;code>.vtt&lt;/code>の場合にリストに追加されます。ここでファイルのフルパスを得ることができるのですが、画面上はファイル名だけを見えるようにして、フルパスは別のグローバル変数に格納するようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># drop down file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">FileListView&lt;/span>(QListWidget):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> __init__(self, parent&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#ff79c6">None&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>(FileListView, self)&lt;span style="color:#ff79c6">.&lt;/span>__init__(parent)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>setAcceptDrops(&lt;span style="color:#ff79c6">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragEnterEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragMoveEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dropEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> url &lt;span style="color:#ff79c6">in&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>urls():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_path &lt;span style="color:#ff79c6">=&lt;/span> url&lt;span style="color:#ff79c6">.&lt;/span>toLocalFile()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> file_path&lt;span style="color:#ff79c6">.&lt;/span>endswith(&lt;span style="color:#f1fa8c">&amp;#39;.vtt&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path) &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file path to list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>append(&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file name to file list view&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>addItem(file_path&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span>)[&lt;span style="color:#ff79c6">-&lt;/span>&lt;span style="color:#bd93f9">1&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイル削除">ファイル削除&lt;/h3>
+&lt;p>リストにファイルを追加したら削除したい場合もあるかと思ったので、リストからファイルを選択してボタンを押すとリストから消えるようにしたかったです。これは以下のようなコードで実現しています。ボタンをクリックすると、リストで選択したものが消え、翻訳対象（フルパス）からも消えるようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create remove button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_remove_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Remove file&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>remove_file)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> button
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># remove file from file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">remove_file&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> original_files
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> selected_item &lt;span style="color:#ff79c6">in&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>selectedIndexes():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> index &lt;span style="color:#ff79c6">=&lt;/span> selected_item&lt;span style="color:#ff79c6">.&lt;/span>row()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>takeItem(index)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>pop(index)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="言語選択">言語選択&lt;/h3>
+&lt;p>元の字幕ファイルの言語はヘッダから抽出できるのですが、どの言語に翻訳したいかは自分で選べるようにしました。ここは翻訳APIの使用を参考にして、翻訳可能な言語のコードをdictionaryとしています。あえてdictionaryとしている理由は、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QComboBox.html" target="_blank" rel="noopener"
+>QComboBox&lt;/a>のアイテムは画面に見えるものなので実際の言語名にしたかったからです。アイテムがdictionaryのキーとなっているので、選択したアイテムに対応するvalueが翻訳したい言語となるようにしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># languages&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>supported_language_code: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Korean&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ko&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;English&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;en&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Japanese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ja&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(China)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-CN&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(Taiwan)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-TW&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Vietnamese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;vi&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Indonesian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;id&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Thailand&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;th&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;German&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;de&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Russian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ru&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Spanish&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;es&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;French&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;fr&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create drop down menu&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_target_language_selector&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label &lt;span style="color:#ff79c6">=&lt;/span> QLabel()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Select target language&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector &lt;span style="color:#ff79c6">=&lt;/span> QComboBox()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>addItems(supported_language_code&lt;span style="color:#ff79c6">.&lt;/span>keys())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>textActivated&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>set_target_language)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> label, selector
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># set translate target language when dropdown menu selected&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">set_target_language&lt;/span>(self, selectd: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> supported_language_code
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target &lt;span style="color:#ff79c6">=&lt;/span> supported_language_code[selectd]
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="翻訳ボタン">翻訳ボタン&lt;/h3>
+&lt;p>最後に翻訳ボタンを追加して、実際の翻訳はボタンを押下した時に行われるようにしました。ボタンを押すと、翻訳対象のファイルのパスをループしながらデータの読み込み、元の言語と翻訳したい言語が違うと翻訳APIの呼び出し、結果の保存という作業を行うようになっています。念の為処理が行われる間はこのボタンを非活性化するという処理も追加しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create translate button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_translate_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Translate&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>translate_files)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># read vtt file and do translate&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">translate_files&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> file_path &lt;span style="color:#ff79c6">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents, exported_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>get_content(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> target:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>send_request(exported_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>write_result(file_path, original_contents, translated_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実際作ったツールで重要な部分は以上で、全体のソースコードは&lt;a class="link" href="https://github.com/retheviper/PythonTools/blob/master/PapagoVtt/papago_vtt.py" target="_blank" rel="noopener"
+>こちらから&lt;/a>確認できます。&lt;/p>
+&lt;h2 id="改善したい">改善したい&lt;/h2>
+&lt;p>こうやってとりわけ欲しい機能は実現できたのですが、まだ自分がPyQtに慣れてないのもあり、ロジック上でも少し改善したいところは残っていますので、いくつかを挙げてみました。&lt;/p>
+&lt;h3 id="テキストをまとめて翻訳する">テキストをまとめて翻訳する&lt;/h3>
+&lt;p>翻訳APIの仕様上、リクエストは1秒で10回となっているため、&lt;code>sleep&lt;/code>を入れて一つのリクエスト毎に120msを待つようになっています。I/Oが発生することを考慮するともっと間隔を短くしてよかったかもしれませんが、そもそもの問題は、読み込んだファイルのデータから一行づつ翻訳のリクエストを送っているところです。短い動画でも字幕は数百行となるケースがあるので、こうなった場合は全体の翻訳が終わるまで処理にかなり時間がかかってしまいますね。&lt;/p>
+&lt;p>なので、最初はリクエストパラメータに翻訳したいデータを全て送る（dictionaryのvalueを一つのstrにjoinして）方法も考えてみましたが、APIの仕様として明示されてないだけで、リクエストパラメータのサイズには制限があるようでした。だとすると、翻訳したいデータをいくつかのchunkに分けて送るという方法があると思いますが、こうなった場合は最後にファイルを保存するときに入れ替えるデータの行をどうやって判断するか、それをうまく処理するための方法が悩ましくなります。&lt;/p>
+&lt;p>この処理のためファイルを翻訳するまでの時間がかなり長くなるので、いつかは解消したいものですが、翻訳した結果をうまくまとめて保存できる方法が思いつくまでは少し時間がかかりそうです。&lt;/p>
+&lt;h3 id="プログレスバーを追加する">プログレスバーを追加する&lt;/h3>
+&lt;p>今の作りだと、シングルスレッドであるため、一つのファイルに対して処理が行われている間は画面が固まってしまうという問題があります。そもそも処理が遅いので、かなり長い時間を固まっていますが、これはUXの観点ではあまり良くないですね。また、処理がどこまで終わっているかもわからないので、プログレスバーを追加して、一つのファイルおよび全体のリストでどれぐらいの処理が行われているかを視覚化したいと思っています。&lt;/p>
+&lt;p>ただ、プログレスバーを追加する場合、スレッドをわけ、さらに何を基準にプログレスバーを動いていくかというロジックを考えなければならないので、そこもまた時間がかかりそうですね。&lt;/p>
+&lt;h3 id="ボタンの非活性化">ボタンの非活性化&lt;/h3>
+&lt;p>翻訳対象のファイルが追加される前と処理の途中ではボタンを非活性化したいのですが、これもまだうまく実装されていません。処理中に画面が固まってしまうからか、処理の前後でボタンを非活性化するという処理も思い通りにならなかったのでこちらも直したいと思っています。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今回はGUIを中心に色々と新しいチャレンジができたので、かなり面白い作業となっています。そしてやはり元がサーバサイドだからか、UI/UXの観点では考慮しきれなかった問題が出てきたり、画面を実装するためにも色々と試行錯誤があったのでこれは良い勉強になっています。PythonとPyQtが優秀だったのでできたものなのですが、これをまたJetpack Composeなどで書き換えてみるとどうなるかなという好奇心もありますね。やはり、普段やってみてないことに挑戦してみるのは自分がエンジニアとして成長するための良い糧となるような気がします。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>JVM言語経験者がGoを触る時のハマりどころ</title><link>https://retheviper.github.io/posts/jvm-to-go/</link><pubDate>Sun, 17 Apr 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jvm-to-go/</guid><description>&lt;img src="https://retheviper.github.io/images/go.jpg" alt="Featured image of post JVM言語経験者がGoを触る時のハマりどころ" />&lt;p>JavaとPython、そして少しのJavaScriptの経験してなかった私が、転職先でGoとKotlinを触って1年が経ちました。最近のプログラミング言語は大体収斂進化している傾向があるので、一つの言語ができれば大体他の言語もできる、もしくは読めるようになると言います。&lt;/p>
 &lt;p>しかし、言語が違うということは、その設計思想が違うということなので、同じ結果を期待して書いたつもりのコードが全く思い通りにならないケースもあります。理由は大きく二つ、「あの言語ではこうだったから、この言語でもそうだろう」という慣性と「これはこの言語の特別な仕様だろう」という思い込みなのではないかと思います。（実際私がそうでしたが）&lt;/p>
 &lt;p>というわけで、今回はJava/Kotlinをバックグラウンドとして持つエンジニアがGoを触るときの落とし穴的な部分を一部紹介したいと思います。あくまで個人的な経験によるものなのですが、これからGoでコードを書くことになる方には少しでも参考になればと思います。&lt;/p>
 &lt;h2 id="time">time&lt;/h2>
@@ -7960,23 +8191,23 @@ alt="AWS Code Sevices">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>簡単に整理しようとしていた内容が、いつの間にかかなり長くなりましたが…おかげで色々と勉強はできたと思います。WebFluxが登場してからもすでに数年が経っていて、RestTemplateがdeprecatedになる予定であるように、究極的には全体をWebFlux基盤に移行する必要が生じる日がいつか来るかもしれません。なんでも最近は非同期、関数型、反応型というキーワードがすごく流行っていますし。&lt;/p>
 &lt;p>静的タイプの言語が最初に生まれて、動的タイプの言語も生まれ、TypeScriptのように静的な世界にまた戻るような現象が起きているのを見ると、また関数型から命令型に移行する日もいつか来る可能性があるのかな、と思ったりもします。ただ、こういうパラダイムはどれが絶対というわけではないので、優秀なプログラマならどれも適時適切に使いこなせるようにならないと、という気もします。エンジニアとしての勉強の道は本当に終わりがないですね。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>実際は、スレッド数によるボトルネックのない状態だと、関数型の方が少し遅いらしいです。実際は関数型のAPIの実装の方が複雑だからですね。ただ、この違いはコードの読みやすさや実装のしやすさなどを考慮した時は、十分トレードオフとして考慮できるくらいの差のようです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Streamは同期なので、データを生産と消費が一緒に行われます。しかし、Reactive Streamではデータの生産がすぐ消費までつながるとは言い切れません。非同期だからです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>むしろ、単一スレッドでの処理は、WebFluxの方がMVCに比べ少し遅いという話もあります。forループに比べStreamが遅い理由と似ているような気がしますが…&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:4" role="doc-endnote">
+&lt;li id="fn:4">
 &lt;p>Back-end For Front-endの略。マイクロサービスの一種で、複数のエンドポイントをまとめて固有のオブジェクトを生み出すバックエンド。フロントエンドは一つのエンドポイントを呼び出すだけでことが済みます。&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>静的ウェブページに興味を持つ</title><link>https://retheviper.github.io/posts/static-web-page/</link><pubDate>Sun, 23 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/static-web-page/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post 静的ウェブページに興味を持つ" />&lt;p>今更な話ですが、主にバックエンドの仕事をしてきたエンジニアとしては(特に、Springが全てを占拠してしまったJavaがメインな立場からは)、昨今のフロントエンドの世界を見ていると、一瞬よそ見しただけでもすぐに時代遅れな人間になってしまうような気になります。それだけさまざまなライブラリ、フレームワーク、設計思想、プラットフォームが現れ消えていくので、これからどれを学んでおくべきかわからなくなります。&lt;/p>
+&lt;/div></description></item><item><title>静的ウェブページに興味を持つ</title><link>https://retheviper.github.io/posts/static-web-page/</link><pubDate>Sun, 23 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/static-web-page/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post 静的ウェブページに興味を持つ" />&lt;p>今更な話ですが、主にバックエンドの仕事をしてきたエンジニアとしては(特に、Springが全てを占拠してしまったJavaがメインな立場からは)、昨今のフロントエンドの世界を見ていると、一瞬よそ見しただけでもすぐに時代遅れな人間になってしまうような気になります。それだけさまざまなライブラリ、フレームワーク、設計思想、プラットフォームが現れ消えていくので、これからどれを学んでおくべきかわからなくなります。&lt;/p>
 &lt;p>例えばアプリの設計思想だと、SPA&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>がトレンドになっているものの、&lt;a class="link" href="https://webassembly.org" target="_blank" rel="noopener"
 >WASM&lt;/a>の登場でPWA&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>も登場し始めています。JavaScriptのフレームワークでは、「Virtual DOMを使用するので早い」という、&lt;a class="link" href="https://angular.io" target="_blank" rel="noopener"
 >Angular&lt;/a>・&lt;a class="link" href="https://reactjs.org" target="_blank" rel="noopener"
@@ -8024,17 +8255,17 @@ alt="AWS Code Sevices">
 &lt;p>ここでは単にツールとプラットフォームを紹介(というより、言及)しただけですが、静的ウェブページでできることや活用できるものは、他にも多いようです。同じ静的ウェブページだとしても、どのような技術の組み合わせでどのような物が作り上げられるかがかなり変わってくるのですが、実際にどんな物ができるかは&lt;a class="link" href="https://jamstack.org" target="_blank" rel="noopener"
 >JAMstack&lt;/a>のExamplesタブから色々発見できますので、参考にしてみてください。&lt;/p>
 &lt;p>個人的にはGatsbyに興味があって、Reactの勉強のついでに、いつかポートフォリオのためのサイトをそれで作り上げてみようかなと思っています。Oracleクラウドだと無料のVMやDBも提供されるので、簡単なAPIを作成しておくのも可能になるかも知れませんね。いや、いい時代になったものです。皆さんもぜひ、静的ウェブページで自分だけのサイトを築き上げてみてください。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Single Page Applicationの略で、従来のWebアプリケーションが複数の画面で構成されていたことに対して、画面を一つにして開発の効率やパフォーマンスの向上を図ったWebアプリケーションのこと。画面がサーバサイドと分離されているため、バックエンドとして選択できるものの幅が広いという特徴もあります。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Progressive Web Applicationの略で、Webアプリでありながらもネイティブアプリならではのメリット(パフォーマンスが高い、インストールすることでオフラインでも利用可能)を採用したアプリケーションのことを指します。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
+&lt;/div></description></item><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
 &lt;p>そもそもJWTを使った認証認可は、JWTがISO標準ではあるものの、正解と言った実装方式がないらしいです。なので以下で紹介するAccess Tokenのみの発行に伴う問題と、それを補完するための戦略は概念だけを紹介して行きます。&lt;/p>
 &lt;h2 id="access-token">Access Token&lt;/h2>
 &lt;p>Access Tokenのみを使う場合は、最初の認証以降、サーバでは秘密キーを利用してリクエストに載せられたTokenを確認するため、データベースやストレージなどのI/Oが必要なくなるため高速で処理ができます。ただ、Tokenはリクエストを送るクライアント側が持っているため、強制的にセッションを終了させることができません。なので、ログアウトの処理をするためにはクライアント側からToken情報を削除するしかないですね。&lt;/p>
@@ -8280,20 +8511,20 @@ alt="AWS Code Sevices">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>自分の場合、Springでアプリケーションを作りながらなるべく&lt;code>XML&lt;/code>を排除しJavaのコードだけで全てを管理したかったため、クエリーを自動生成してくれるというところで惹かれていましたが、実際に使ってみると使い方も簡単で(癖はあると思いますが)、テーブルが途中で変わっても簡単に直せるというところがかなり魅力的なものですね。占有率としては標準ということもあり、JPAが他のORMと比べよく使われているようですが、自分みたいにMyBatisしか扱ったことのない方には一度触れてみて損はないかと思います。&lt;/p>
 &lt;p>JPAの他にも紹介したようにSpring Dataだけでもいろいろなライブラリが存在していてそれぞれの思想が違うので、やっと一つを少しわかったくらいではまだまだ先が遠いような気もしていますね。でもこうやって、一つのライブラリが作られた経緯や思想を調べるだけでも得られる知識は多く、どれも無駄にはならないと思われるくらい新鮮なものなので、意味のあることとなっていると思います。またこうやって情報を集めつつ、それが誰かにとっては貴重な情報になるといいですね。今後もいろいろ調べてブログに載せて行きます。では、また！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>サーバの台数を増やすこと。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>サーバのマシンパワーをあげること。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>スレッドプールが小さすぎたり、一つのリクエストに対して処理時間が長すぎてボトルネックになるケースなど&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>最近注目しているものたち</title><link>https://retheviper.github.io/posts/personal-interests-in-this-time/</link><pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/personal-interests-in-this-time/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 最近注目しているものたち" />&lt;p>常に勉強し続けなければならないのがこの業界の定めとは思いますが、変化は日々加速されていて、何に従って何を頼れば良いかわからない時もありますね。新しい言語が続々登場してくるなかでも、昔は性能の問題で注目されてなかった言語がいきなり人気を得たり、当たり前と思っていたパラダイムがひっくり返されたりもします。今はJavaScriptの時代と行っても過言ではない状況に来ていると思いますが、今後はどうなるのでしょうか。いくつか、個人的に興味をもったIT業界の動向についてまとめてみました。&lt;/p>
+&lt;/div></description></item><item><title>最近注目しているものたち</title><link>https://retheviper.github.io/posts/personal-interests-in-this-time/</link><pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/personal-interests-in-this-time/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 最近注目しているものたち" />&lt;p>常に勉強し続けなければならないのがこの業界の定めとは思いますが、変化は日々加速されていて、何に従って何を頼れば良いかわからない時もありますね。新しい言語が続々登場してくるなかでも、昔は性能の問題で注目されてなかった言語がいきなり人気を得たり、当たり前と思っていたパラダイムがひっくり返されたりもします。今はJavaScriptの時代と行っても過言ではない状況に来ていると思いますが、今後はどうなるのでしょうか。いくつか、個人的に興味をもったIT業界の動向についてまとめてみました。&lt;/p>
 &lt;h2 id="apple-silicon-mac">Apple Silicon mac&lt;/h2>
 &lt;p>こないだ、Appleの開発者向けイベントである&lt;a class="link" href="https://developer.apple.com/videos/play/wwdc2020/101" target="_blank" rel="noopener"
 >「WWDC2020」&lt;/a>が開催されました。毎年必ずライブで見ているわけではないのですが(深夜に始まるので…)、最近はテレワークをしていて通勤時間がなくなっているのもあり、最初から最後までライブで見ることができました。&lt;/p>
@@ -9191,23 +9422,23 @@ alt="JWT Postman Login">
 &lt;p>現在はJavaScriptとの互換性のために色々初期設定など煩雑だったりコンパイルに時間がかかるなどの問題もいくつかありますが、これらもAngularみたいに最初からTypeScriptを前提に作られるフレームワークやライブラリが増えたり、ブラウザからTypeScriptに対応したり(これは可能性が低いかな…)したら自然に解決される問題ではないかとも思いますね。&lt;/p>
 &lt;p>最初は単純にAngularを使うために勉強したものの、意外としっかりしていて、これからの未来もかなり明るい感じだったのでエンジニアの皆さんにもぜひお勧めしたいと思っているところです。&lt;/p>
 &lt;p>ああ、Pythonも型指定できるようになるといいな…&lt;sup id="fnref:4">&lt;a href="#fn:4" class="footnote-ref" role="doc-noteref">4&lt;/a>&lt;/sup>&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>もちろん、最近はC#もJavaも&lt;code>var&lt;/code>で変数を宣言することもできますが、習慣もあり、元々静的言語では型から書いた方が良いのではないかと個人的には思っています。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>しかも、ES6で登場したClassは結局プロトタイプ基盤の&lt;code>function&lt;/code>の書き方をちょっと変えただけなのですね。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>Javaのようにバイトコードに変わったり、Cのように機械語に変わるようなものとは少し違うのでTypeScriptのコンパイルは&lt;code>トランスパイル&lt;/code>とも呼ぶらしいです。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:4" role="doc-endnote">
+&lt;li id="fn:4">
 &lt;p>知識不足でした！Pythonも3.6から型の宣言ができるようになっています。&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>ブログ刷新</title><link>https://retheviper.github.io/posts/renew-blog-theme/</link><pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/renew-blog-theme/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post ブログ刷新" />&lt;p>この度は、ブログのテーマを新しく変えてみました。新しいテーマは&lt;a class="link" href="https://github.com/Simpleyyt/jekyll-theme-next" target="_blank" rel="noopener"
+&lt;/div></description></item><item><title>ブログ刷新</title><link>https://retheviper.github.io/posts/renew-blog-theme/</link><pubDate>Sun, 03 May 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/renew-blog-theme/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post ブログ刷新" />&lt;p>この度は、ブログのテーマを新しく変えてみました。新しいテーマは&lt;a class="link" href="https://github.com/Simpleyyt/jekyll-theme-next" target="_blank" rel="noopener"
 >NexT&lt;/a>です。一年がたってもあまりJekyllに慣れてないので思ったより苦労していますが(特に消えたページなどが気になります…)、それでも前のテーマと比べてかなりすっきりした感じが良いと思います。検索機能もついていたのでとりあえずアクティベートしてみましたが、ローカルでは機能してなかったのでGithub Pagesにあげてからテストですね。なるべく使いたい。(追記：残念ながら何かのバグのようで使えませんでした…)&lt;/p>
 &lt;p>このブログを作ってからも1年が立ちます。最初のポストが1年前だったのですね。あの頃は入社したばかりの新人だったのでいろいろとわからない物だらけでした。なので書いていたポストの内容もいまいちな物が多かったと思います。最近はJavaを使っていろいろと開発はしているものの、あまり経歴が長いわけでもないので当時書いたポストをみているとなぜこのような恥ずかしいものを書いたんだろう、とも思います。&lt;/p>
 &lt;p>それでもブログの更新を続けているのは、このブログが自分の勉強の記録であって、過去の自分が書いたコードや文面を振り返ってみることで新しい発見ができていたからです。時々過去のポストを振り返ってみることで同じことをしてもより良い方法、より安全な方法を探すことができました。修正したいものもかなり多いのですが、のちにそれを補えるようなポストを書いた方が自分のエンジニアとしての軌跡をちゃんと追える手段となるのではないかと思います。&lt;/p>
@@ -10674,23 +10905,23 @@ alt="Jenkins Pipeline Result 3">
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>今は使われているJavaのバージョンが古くても、公式サポートなどの理由でJava 1.8以上にバージョンアップするところも多いと聞きます。ならばJavaプログラマーとして、未来に備えJava 1.8の重要なAPIに慣れて置いた方が良いでしょう。そういう意味でFunctionやOptionalは皆さんにもぜひ使ってみて欲しいAPIでもあります。そもそもJavaがこんなにメジャーな言語になり得たのは、開発しやすいというメリットがあったからなので、さらに開発が楽になるAPIは覚えておいて損はないでしょう。&lt;/p>
 &lt;p>Javaもかなり古い言語ですが、最近は急激なバージョンアップと共に関数型言語など最近のトレンドを反映して変化しているところもあります。今は性能も書きやすさも優秀な言語が溢れ出している時代ですが、こんなJavaの変化がどこまで続き、いつまで生き残ることができるか気になります。JVMは依然として強力ですが、LLVMなどより性能が優れた技術も続々と登場していますしね。でも、Javaの変化に適応し、大体のAPIを使うことができたら、他の言語にも適応しやすくなるのではと思います。そういう理由ででも、みなさん、Java 1.8以後のAPIは注目してください。では！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>List, Set, Mapなど複数の要素を持つオブジェクトのことを指します。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>ファイルの入出力で使われるInputStreamやOutputStreamではなく、Collectionの要素を一つずつ巡回しながら特定のメソッド(主にLambda)を実行できるようにしてくれるJava 1.8のAPIです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>戻り値が自分自身のため、何度もメソッドをつなげて書くことのできる仕組み。Builderパターンが代表的なメソッドチェーニングの例です。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:4" role="doc-endnote">
+&lt;li id="fn:4">
 &lt;p>プログラミングでLazyということは、とある処理が常にではなく、呼ばれた際に初めて実行される仕組みのことを意味します。必要な時だけ処理が始まるので不要な処理が減ります。&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>newしたインスタンスの中でBeanを使いたい</title><link>https://retheviper.github.io/posts/spring-bean-with-yaml/</link><pubDate>Sun, 22 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-bean-with-yaml/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post newしたインスタンスの中でBeanを使いたい" />&lt;p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の&lt;a class="link" href="../java-yaml-for-configuration" >以前のポスト&lt;/a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも&lt;code>@Autowired&lt;/code>を使って呼び出せるというメリットがあります。&lt;/p>
+&lt;/div></description></item><item><title>newしたインスタンスの中でBeanを使いたい</title><link>https://retheviper.github.io/posts/spring-bean-with-yaml/</link><pubDate>Sun, 22 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-bean-with-yaml/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post newしたインスタンスの中でBeanを使いたい" />&lt;p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の&lt;a class="link" href="../java-yaml-for-configuration" >以前のポスト&lt;/a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも&lt;code>@Autowired&lt;/code>を使って呼び出せるというメリットがあります。&lt;/p>
 &lt;p>しかし、そんな便利なDIですが、使い方の難点もあります。例えば、普通にnewして使うインスタンスのなかで&lt;code>@Autowired&lt;/code>は使えない問題があるということです。今回もかなりハマっていたことなのですが、Builderでオブジェクトを作成するようにして、使用者が指定してない値はYAMLから取得したBeanを使いたかったです。でもBuilderだと新しいインスタンスを作ってしまうので、Beanを読み込めなくなっていたのでかなりはまりました。&lt;/p>
 &lt;p>結果的には違う方法をとると、&lt;code>@Autowired&lt;/code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。&lt;/p>
 &lt;h2 id="yamlからbeanを作る">YAMLからBeanを作る&lt;/h2>
@@ -10882,20 +11113,20 @@ alt="Jenkins Pipeline Result 3">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。&lt;/p>
 &lt;p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Dependency Injection(依存性の注入)。ネット上に詳しい説明が多いので深くは入りませんが、簡単に概念を説明するとオブジェクトを外部から生成してコードに入れることでオブジェクトの依存性をコードから独立させることを意味します。注入されたオブジェクトはコードに依存してないので、どこで呼ばれても同じものとして機能することができます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Configurationアノテーションをつけると自動的にSpring内で設定クラスとして認識されます。ここでオブジェクトをBeanとして定義すると、DIができるようになります。以前はxmlファイルに記入しておく場合もありました。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>循環参照とは、複数のオブジェクトが互いを参照していることを意味します。例えばAクラスのインスタンスを生成する時にBを参照することとなっていて、BクラスもAクラスを参照することとなっていると、どちらかのインスタンスを作成する時に互いの参照を繰り返す無限ループに落ちてしまいます。この無限ループの果てはStackOverflowですね。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>ルーターにSSL証明書を入れる</title><link>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</link><pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post ルーターにSSL証明書を入れる" />&lt;p>実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単にマシンスペックだけでなく、ファームウェアレベルで提供している機能も少し違います。例えばAiMeshといった機能はRT-AC58Uでは対応していません。&lt;/p>
+&lt;/div></description></item><item><title>ルーターにSSL証明書を入れる</title><link>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</link><pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-implementation-ssl-in-router/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post ルーターにSSL証明書を入れる" />&lt;p>実家で使っているルーターは、Asus社のRT-AC58Uです。そして個人的に使っているものは同じくASUS社のRT-AC68U。この二つは単にマシンスペックだけでなく、ファームウェアレベルで提供している機能も少し違います。例えばAiMeshといった機能はRT-AC58Uでは対応していません。&lt;/p>
 &lt;p>そしてこないだファームウェアをアップデートすると、管理ページにWANからアクセスするにはhttpsしかできないという制約ができました。RT-AC68Uの場合は&lt;a class="link" href="https://letsencrypt.org" target="_blank" rel="noopener"
 >Let&amp;rsquo;s encrypt&lt;/a>でSSL証明書&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を作成して更新まで自動で行われる機能を持っているので特に問題はないですが、残念ながらRT-AC58Uはそうではないです。なのでいつもブラウザからRT-AC58Uの管理ページに接続すると証明書がおかしいと怒られます。&lt;/p>
 &lt;p>これから修正される可能性もなくはないと思いますが、最近は&lt;a class="link" href="https://ja.wikipedia.org/wiki/IEEE_802.11#IEEE_802.11ax" target="_blank" rel="noopener"
@@ -11040,17 +11271,17 @@ alt="構成図">
 &lt;p>ルーターが再起動した時もどう対応できるかは検証対象ですね。最初はscpでファイルを上書き、httpsdプロセスも再起動するようなシェルスクリプトを作ることで対応できるかと思ったら、権限問題があったりするのでより簡単にできる方法はないか考えています。&lt;/p>
 &lt;p>ま、結果的にLinuxでサーバー構築ができたらWANからルーターの管理ページに接続するようなことはなくなる可能性もなくはないですが。とにかく何かわかったらまたポストとして書くことにしましょう。&lt;/p>
 &lt;p>それでは、皆さんもぜひ、SSL証明書で安全かつ快適なWeb生活を！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>SSL証明書とは、このサーバーは信頼できるかを証明してくれる電子文書のことです。SSL証明書を適用することによりhttpsでの通信は第三者の攻撃より守られます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Dynamic Domain Name Systemの略で、家庭用のルーターはIPアドレスが動的に変わることが多いですが、これを文字列のホスト名とつなげてくれる便利なサービスです。ルーターのIPアドレスがどうかわろうが、DDNSの設定ができていたらいつでも同じURLからルーターにアクセスできます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>外部設定ファイルを扱うクラスを作る</title><link>https://retheviper.github.io/posts/java-yaml-for-configuration/</link><pubDate>Sun, 24 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-yaml-for-configuration/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 外部設定ファイルを扱うクラスを作る" />&lt;p>アプリケーションを作る場合、考慮しなければならないことの一つは「設定ファイルを作る」ことです。設定値のデータがアプリケーションの内部にあると、ディコンパイルしない限りそれを変えられる方法がなくからですね。なので一般的にはアプリケーションの柔軟性のためにも動的に変える必要のある設定値はアプリケーションの外に別途のファイルとして置く場合が多いです。ゲームでいえばセーブファイルみたいなものですね。&lt;/p>
+&lt;/div></description></item><item><title>外部設定ファイルを扱うクラスを作る</title><link>https://retheviper.github.io/posts/java-yaml-for-configuration/</link><pubDate>Sun, 24 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-yaml-for-configuration/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 外部設定ファイルを扱うクラスを作る" />&lt;p>アプリケーションを作る場合、考慮しなければならないことの一つは「設定ファイルを作る」ことです。設定値のデータがアプリケーションの内部にあると、ディコンパイルしない限りそれを変えられる方法がなくからですね。なので一般的にはアプリケーションの柔軟性のためにも動的に変える必要のある設定値はアプリケーションの外に別途のファイルとして置く場合が多いです。ゲームでいえばセーブファイルみたいなものですね。&lt;/p>
 &lt;p>外部のファイルを読み込むことに関してはすでに様々な方法があるとは思いますが、今回は自分で使っている方法を共有します。簡単に、外部設定ファイルは&lt;a class="link" href="https://ja.wikipedia.org/wiki/YAML" target="_blank" rel="noopener"
 >YAML&lt;/a>で記載してプログラムの起動時に読み込んでシングルトンクラスのフィールドとして持す方法です。I/Oを一回だけにできて、どこからも参照できるというメリットがあります。設定ファイルのフォーマットとしてYAMLを選定したのは、書きやすく読みやすいというメリットもあって、自分が主に扱っているSpringで使っているためでもあります。JSONでも問題はないですが、項目が増えるほどJSONは読みづらくなるので…&lt;/p>
 &lt;p>とにかく、準備するものはYAMLを読み込むためのライブラリーです。ここでは&lt;a class="link" href="https://bitbucket.org/asomov/snakeyaml/src/default" target="_blank" rel="noopener"
@@ -11253,14 +11484,14 @@ alt="Gradle Implemenatation API">
 &lt;p>これでシンプルに、Gradleのdependenciesはどう書くべきかについて述べてみました。実際は&lt;code>implementation&lt;/code>と&lt;code>api&lt;/code>意外にもランタイムのみ参照の&lt;code>runtimeOnly&lt;/code>やテスト用の&lt;code>testImplementation&lt;/code>など、様々な記述方法があるので、状況と場合によっては柔軟な対応が必要かと思います。ただ、大抵の場合は依存関係を整理し、&lt;code>implementation&lt;/code>と&lt;code>api&lt;/code>の使い分けを確かにすることが最も重要なことなのではないでしょうか。&lt;/p>
 &lt;p>また、先に述べたように、ネットから得られた情報がAPIの更新事項を確かに反映しているかのチェックも重要ですね。古い情報だと今のコードでは問題を起こす可能性がありますので。そういう意味では、このポストも時間がたてばいつか正しくない情報となる可能性はあります。いや、このポストだけでなく、もしかしたらこのブログ全体で私が書いている情報の全てがそうなのかも知れません。&lt;/p>
 &lt;p>コードを書きながら、ネットの情報を参照するときは常にそれが書かれた日付を確認し、公式のドキュメントと見比べる必要があるのではないかと思います。勉強も最新化の方針で！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Deprecatedは、「オススメしない」という意味です。プログラミングの世界では、何らかの問題があったり必要が無くなったりするなどの理由でこれからなくなる可能性の高い関数を指す言葉となっています。実際、EclipseではJavaの関数に&lt;code>@Deprecated&lt;/code>をつけると関数名に打ち消し線が現れることを確認できます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Enumを使いましょう</title><link>https://retheviper.github.io/posts/java-enum/</link><pubDate>Sun, 27 Oct 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-enum/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post Enumを使いましょう" />&lt;p>JavaのEnumは興味深いものです。読みやすく、同時に複数の値を持たせるということが魅力的です。なので複数のクラスで共通のコード値を扱う必要があったり、DBに連携する場合に使うと便利ですね。私も現在の仕事では積極的に活用しています。また、完全なクラスとして機能しているので単に定数のため使うだけでなく、処理を記述することも可能なので活用できる範囲はかなり広いのでは、と思います。&lt;/p>
+&lt;/div></description></item><item><title>Enumを使いましょう</title><link>https://retheviper.github.io/posts/java-enum/</link><pubDate>Sun, 27 Oct 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-enum/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post Enumを使いましょう" />&lt;p>JavaのEnumは興味深いものです。読みやすく、同時に複数の値を持たせるということが魅力的です。なので複数のクラスで共通のコード値を扱う必要があったり、DBに連携する場合に使うと便利ですね。私も現在の仕事では積極的に活用しています。また、完全なクラスとして機能しているので単に定数のため使うだけでなく、処理を記述することも可能なので活用できる範囲はかなり広いのでは、と思います。&lt;/p>
 &lt;p>なので今回はJavaのEnumの活用法やメリットについて、自分の経験と調べたことをまとめ紹介したいと思います。&lt;/p>
 &lt;h2 id="読みやすい">読みやすい&lt;/h2>
 &lt;p>コードが読みやすいということは、つまり維持補修に有利ということですね。個人的にはプログラミングの段階は「とにかく動く物を作る」→「共通(重複)処理をメソッドやクラスで分離する」→「他人がみてもわかりやすいコードにする」順に進むべきだと思います。そして全ての段階が最初の設計からできていればなおさらですね。&lt;/p>
@@ -12057,17 +12288,17 @@ alt="Gradle Implemenatation API">
 &lt;h2 id="教訓">教訓？&lt;/h2>
 &lt;p>ライブラリーを使ってコードの量を減らし、自動化することは生産性の向上という面では大事な事ではありますが、人間の書いたコードはどこでバグが発生するかわからないので(想定していない使い方をする場合もありますし)、たまには手間がかかっても確実なコードを書くのが安全な場合もありますね。特にこの場合、アノテーションを諦めずコードを直そうとしていたらいつまでたってもバグは回避できなかったのかも知れません。そういう意味で、よい勉強になったと思える事件ではなかったのだろうかと思います。&lt;/p>
 &lt;p>もしこのポストを読まれる方の中、私と同じような実装を考えている方がいたら、こんなこともあるんだなと参考できるようなことになっていると嬉しいです。それではまた会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>一度インスタンスを生成すると、途中で値を変える事が出来ないクラス。Stringの場合がそうです。値を代入すると、メモリーに載せてある値を捨てて新しく生成します。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Null Pointer Exception、ヌルポとも呼ぶ例外です。参照しようとしているオブジェクトがメモリー上にありませんよーとのことで、Javaで最も遭遇しやすい例外ですね。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>関数型インタフェースを使う</title><link>https://retheviper.github.io/posts/java-functional-interface/</link><pubDate>Tue, 06 Aug 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-functional-interface/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 関数型インタフェースを使う" />&lt;p>今回も、いつもと同じく仕事で得られた知識です。とあるIterableなクラスを作り、Forループをさせる必要がありました。これはそんなに難しいことではなかったです。まずフィールドにリストを持たせる。またIterableをインプリメントし、戻り値がIteratorであるメソッドを作るだけでしたね。しかし問題は、そのクラスのループの途中で、「使用者が指定したルールによりループを終了させる機能のあるクラスを作ること」でした。つまり、ループを終了させるには引数でループ中の要素を受け入れる引数を持つメソッドが内臓されていて、そのメソッドはインスタンスごとの基準となるデータを持っているということですね。&lt;/p>
+&lt;/div></description></item><item><title>関数型インタフェースを使う</title><link>https://retheviper.github.io/posts/java-functional-interface/</link><pubDate>Tue, 06 Aug 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-functional-interface/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 関数型インタフェースを使う" />&lt;p>今回も、いつもと同じく仕事で得られた知識です。とあるIterableなクラスを作り、Forループをさせる必要がありました。これはそんなに難しいことではなかったです。まずフィールドにリストを持たせる。またIterableをインプリメントし、戻り値がIteratorであるメソッドを作るだけでしたね。しかし問題は、そのクラスのループの途中で、「使用者が指定したルールによりループを終了させる機能のあるクラスを作ること」でした。つまり、ループを終了させるには引数でループ中の要素を受け入れる引数を持つメソッドが内臓されていて、そのメソッドはインスタンスごとの基準となるデータを持っているということですね。&lt;/p>
 &lt;h2 id="メソッドをフィールドとして使う">メソッドをフィールドとして使う？&lt;/h2>
 &lt;p>メソッドとして機能しながらフィールドみたいにデータを持つ？それをさらに使用者が指定できるようにする？難しい注文だったので一瞬迷いましたが、「functionを使うといい」というアドバイスを受け、調べてみました。なるほど、これを使ったらフィールドとして宣言しながらもメソッドの機能を期待でき流みたいです。早速適用してみて、それがどう機能するかをまず紹介したいと思います。&lt;/p>
 &lt;p>まずはIterableなクラスを用意します。ループの対象となるのはこちらです。&lt;/p>
@@ -12330,14 +12561,14 @@ alt="Gradle Implemenatation API">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>このようにだいたいフィールドとメソッドがわかれば、これでどんなインスタンスやクラスが入ってきても、対応できそうな気がします。実際どうかはコンパイルして実行してみない限りわからないものですが…でも一つ、賢くなったような気はします。皆さんもぜひ、Reflectionを通じてクラスとインスタンスに対する理解を深めてみてください。&lt;/p>
 &lt;p>それでは、また！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Typeのこと。ただ、E(Element)やK(Key)、N(Number)、V(Value)も使えるらしいです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>JenkinsのJobを実行する</title><link>https://retheviper.github.io/posts/jenkins-build-trigger/</link><pubDate>Sat, 20 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-build-trigger/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsのJobを実行する" />&lt;p>今回は、Jenkinsで生成したJobを実行する方法について述べたいと思います。基本的にJenkinsの管理コンソールでJobを実行することは可能ですが、いちいちログインしてJobを起動することは便利ではないです。なので「とある条件でJobを自動的に実行したい」と思うようになりますね。例えば簡単に考えられるものとしてまず「定期的実行」があるでしょう。特定の時間、もしくは頻度などを指定して自動的に実行してくれるバッチ的な処理にはこのような設定が必要ですね。また、とある条件が満たされた時にだけ実行したい場合もあります。たとえばGitのリポジトリにコミットが発生したときは、その時だけビルドしたいですね。&lt;/p>
+&lt;/div></description></item><item><title>JenkinsのJobを実行する</title><link>https://retheviper.github.io/posts/jenkins-build-trigger/</link><pubDate>Sat, 20 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-build-trigger/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsのJobを実行する" />&lt;p>今回は、Jenkinsで生成したJobを実行する方法について述べたいと思います。基本的にJenkinsの管理コンソールでJobを実行することは可能ですが、いちいちログインしてJobを起動することは便利ではないです。なので「とある条件でJobを自動的に実行したい」と思うようになりますね。例えば簡単に考えられるものとしてまず「定期的実行」があるでしょう。特定の時間、もしくは頻度などを指定して自動的に実行してくれるバッチ的な処理にはこのような設定が必要ですね。また、とある条件が満たされた時にだけ実行したい場合もあります。たとえばGitのリポジトリにコミットが発生したときは、その時だけビルドしたいですね。&lt;/p>
 &lt;p>JenkinsのJobではこのような、条件によるJobの自動実行を設定することが可能です。これを&lt;code>Build Trigger&lt;/code>と呼びます。基本設定でも必要なパターンの最低限は揃えていますし、プラグインの組み合わせによってはより多彩な設定でJobを実行するように設定できます。今回のポストでは、そのビルドトリガーにどんなものがあるか、またどのように使えるかということを述べたいと思います。&lt;/p>
 &lt;h2 id="build-triggerの種類">Build Triggerの種類&lt;/h2>
 &lt;p>JenkinsでJobを生成すると、GeneralとSource Code Managementのタブの後にBuild Triggerというタブがあることを確認できます。プラグインの構成が違うと増えたり減ったりもするので一度確認してみてください。私はJenkinsをインストールするときオススメのプラグイン構成を選んでいるので、以下の構成になっています。&lt;/p>
@@ -12552,14 +12783,14 @@ alt="Jenkins Poll SCM">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>様々なビルドトリガーの指定ができるゆえ、活用できる方法が多いという面もまたJenkinsの魅力ではないかと思います。Jenkins自体のアップデート対応も、周期的に&lt;code>yum update&lt;/code>するようなJobを構成するとできそうな気がしますね。そのほか、Git連動と&lt;code>systemctl&lt;/code>でのサービス管理機能を組み合わせて&lt;code>Tomcat&lt;/code>や&lt;code>Node.js&lt;/code>の管理もローカルでできますので便利です。&lt;/p>
 &lt;p>それではまた、便利な使い方を見つけたらJenkinsのポストを載せましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>ソフトウェアエンジニアリングの観点からは、Software Configuration Management(ソフトウェア構成管理)の略でもあります。簡単にいうとソースコードだけでなく、開発環境やビルド構造などの全般的な環境情報を定義・管理することを構成管理というらしいです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>デザインパターン、Builder</title><link>https://retheviper.github.io/posts/java-design-pattern-builder/</link><pubDate>Sun, 14 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-design-pattern-builder/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post デザインパターン、Builder" />&lt;p>以前、自分より開発者として日本就職が早かった大学の後輩がいて、どんな言語やフレームワークを勉強した方がいいかを聞いたことがあります。周りではC#をやるといい、ReactやNode.jsのような流行りのライブラリーを学んだ方がいいという人もいましたが、現場で使われている人の意見が聞きたかったからです。そして彼は、言語やフレームワークはメインとしている言語をマスターしたらいつでも変えられるもので、実質的に必要となるスキルはデザインパターンと言っていました。&lt;/p>
+&lt;/div></description></item><item><title>デザインパターン、Builder</title><link>https://retheviper.github.io/posts/java-design-pattern-builder/</link><pubDate>Sun, 14 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-design-pattern-builder/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post デザインパターン、Builder" />&lt;p>以前、自分より開発者として日本就職が早かった大学の後輩がいて、どんな言語やフレームワークを勉強した方がいいかを聞いたことがあります。周りではC#をやるといい、ReactやNode.jsのような流行りのライブラリーを学んだ方がいいという人もいましたが、現場で使われている人の意見が聞きたかったからです。そして彼は、言語やフレームワークはメインとしている言語をマスターしたらいつでも変えられるもので、実質的に必要となるスキルはデザインパターンと言っていました。&lt;/p>
 &lt;p>それから本を買い、いくつかのデザインパターンを見たことはありますが、そのパターンたちをどう使ったらいいか一人で考えるのは難しいことでした。一人でコードを書く時は、自分が理解できるコードを書けばいいだけなのでそこまで考える余裕が無くなりますね。また、エンドユーザーだけを意識したコードになりがちだったのであまりパターンを含むコードの書き方をする必要もなかったです。&lt;/p>
 &lt;p>それが今はJavaでのフレームワーク開発に関わることとなり、自分の買いたコードを違う人が使えるように書けとの指示を受けましたが、いつも通りDTOを元とするWrapperクラスを生成して行けばいいのかなと思っていたら、実装してみてからはこれはダメだなと感じました。なぜなら数十から数百に至る変数の設定値があって、引数として渡すのも単純な数字や文字などではなかったからです。自分の作ったコードが使う側として接した場合は、これはダメと思うはず。&lt;/p>
 &lt;p>どう改善したらいいかと悩んでいたら、指示を出した方からBuilderパターンを使うといいだろうというアドバイうをもらいました。これなら引数は最低限にして、直観的に使えるらしいです。なので実際使ってみました。そして伝統的なDTOと比べてみると、確かになと思いましたね。何が違ってなぜ違うのかを、DTOとBuilderパターンの比べでこれから述べたいと思います。&lt;/p>
@@ -12790,17 +13021,17 @@ alt="Jenkins Poll SCM">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>デザインパターンの種類に何があって、どんな構造をしているかを把握することも大事ですが、何より大事なことは適材適所に使えることではないかと思いました。最初から自分がBuilderパターンを知っていたとしても、それを使ったらいいと言われなかったら果たして使おうとしていただろうかと思うと、そうでもないような気がしますね。なのでこれからはデザインパターン自体の研究とともに、それをどの場合に使えるかという面から考察していきたいと思います。&lt;/p>
 &lt;p>それでは、また会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>引数の数や種類を変えることで、同名のメソッドを複数作成する記法。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>Object Oriented Programing.オブジェクト指向プログラミングとも言いますね。コードをひたすら上から下まで流れる処理として扱うのではなく(手続き型プログラミング)、隔離されたオブジェクト間のデータ交換として成立するプログラミングのパラダイムです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Linuxのシステムサービスを作る" />&lt;p>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処理をするかの問題でもありますが、今回は簡単に「実行」の面で書いてみたいと思います。簡単にいうと、誰かが止めるまではずっと実行され続けるようなプログラムをLinuxではどう実現したらいいかの話です。&lt;/p>
+&lt;/div></description></item><item><title>Linuxのシステムサービスを作る</title><link>https://retheviper.github.io/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Linuxのシステムサービスを作る" />&lt;p>サーバーで動くプログラムなら、一般的なエンドユーザー用のプログラムとはその挙動が違うということは明らかでしょう。どんなデータを持ち、どんな処理をするかの問題でもありますが、今回は簡単に「実行」の面で書いてみたいと思います。簡単にいうと、誰かが止めるまではずっと実行され続けるようなプログラムをLinuxではどう実現したらいいかの話です。&lt;/p>
 &lt;p>CentOSやRHELでは、&lt;code>service&lt;/code>というコマンドがあります。&lt;code>yum&lt;/code>のようなパッケージ管理プログラムを使って、様々なプログラムをインストールしていくとその中には一回だけの実行で終わらず、メモリー常に常住させる必要のあるものもありますね。以前このブログで紹介したことのある&lt;code>Jenkins&lt;/code>もまたそのようなプログラムの一つです。&lt;/p>
 &lt;p>そのようなプログラムは一回インストールしたら自動的に&lt;code>service&lt;/code>コマンドで動かしたり止めたりすることができるようになりますが、例えば自作したプログラムをそのように動作させることはできるのでしょうか？ユーザーがなんでもできるLinuxならできそうですが。&lt;/p>
 &lt;p>そう思っていたら、ちょうど仕事でJavaアプリケーションをサービスとして登録し、管理する必要があることになりました。私はJenkinsのタスクを管理していたため、実際はJavaアプリケーションがGitにコミットされたらPull→ビルド→実行されているJavaアプリケーションを止めて新しくビルとした物を実行するというタスクが必要となったのです。実際はサービスに触れる必要はなく、ビルドの後にサービスを止めたり再開させたりするシェルコマンドを実行するように仕組んだだけだったのですが、一体これはどう動いてるのか気になりましたので調べてみました。&lt;/p>
@@ -12862,17 +13093,17 @@ alt="Jenkins Poll SCM">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ service NodeServer restart
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで私の作った簡単なNode.jsのWebサーバーがシステムサービスとなって、止まることなく動くようになりました。めでたしめでたし。他にも何か自動化のプログラムを作ることになったら有効活用できそうな知識ではないのかと思います。&lt;/p>
 &lt;p>それでは今回のポストはここまで。また会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Process IDの略で、実行中のプロセスに与えられるIDです。こちらは&lt;code>ps&lt;/code>コマンドで確認できて、PIDからプロセス名を参照したりプロセス名からPIDを参照することもできます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>CentOS7でもserviceは健在ですが、systemctlにリダイレクトされるみたいですね。CentOS6までは/etc/rc.d/init.dからサービスを管理していて、７からはサービスユニットという名称になったらしいです。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Ansibleでサーバーを構築する</title><link>https://retheviper.github.io/posts/ansible-server-automation/</link><pubDate>Fri, 05 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ansible-server-automation/</guid><description>&lt;img src="https://retheviper.github.io/images/ansible.jpg" alt="Featured image of post Ansibleでサーバーを構築する" />&lt;p>この度は&lt;a class="link" href="https://www.ansible.com/" target="_blank" rel="noopener"
+&lt;/div></description></item><item><title>Ansibleでサーバーを構築する</title><link>https://retheviper.github.io/posts/ansible-server-automation/</link><pubDate>Fri, 05 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ansible-server-automation/</guid><description>&lt;img src="https://retheviper.github.io/images/ansible.jpg" alt="Featured image of post Ansibleでサーバーを構築する" />&lt;p>この度は&lt;a class="link" href="https://www.ansible.com/" target="_blank" rel="noopener"
 >Ansible&lt;/a>を少し、使ってみる機会がありました。&lt;code>Ansible&lt;/code>もまた一つの自動化ツールで、あらかじめタスクを指定することで複数の環境で適用できるという意味ではJenkinsと似たようなものでした。ただ違う点は、Jenkinsは主にデプロイとリリース、テストなどの自動化に特化しているのに対し、Ansibleはサーバーの自動構築にその目的があるということです。&lt;/p>
 &lt;p>つまり、Ansibleを使えば複数の環境を同じくセッティングできます。例えば私の経験した範囲では「開発」→「内結」→「外結」という流れになっていて、それぞれで使う環境が変わっていました。段階が変わるたびに同じくサーバーを構築するのは時間の無駄で、セッティングすべき項目が増えると人の手では様々な面でミスが起こり得るので、Ansibleで自動化したいというのが今回のタスク。&lt;/p>
 &lt;p>ちょっと調べてみると、Ansibleでは&lt;code>Playbook&lt;/code>と呼ばれるYAMLファイル&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を使ってサーバーの設定を行います。深く入るとより複雑な動きもできるようですが、基本は接続先の情報(hostsファイル)とセッティングの値を保存したYAMLで起動します。できることはフォルダーやユーザーの作成、&lt;code>yum&lt;/code>によるプログラムのインストール、シェルコマンド実行、ファイル転送などができて、うまく設定ができたら複数のサーバーを分散して使う時などに有効活用できそうな印象でした。&lt;/p>
@@ -12997,14 +13228,14 @@ alt="Jenkins Poll SCM">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>どうでしたか。最近はなんでも自動化が進んでいて、JenkinsとAnsibleがあればサーバー構築から作成物のデプロイまで簡単にできる環境を構築できるので、ますます生産性が上がりそうな気がします。まだ手動でサーバーの構築をやっている方にはぜひ一度使ってみてくださいとオススメしたいですね。&lt;/p>
 &lt;p>それでは今回のポストはここで終わり。また会いましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>データフォーマットの一種で、その構造がJSONとかなり似ています。ただJSONと比べてみるとよりマークアップ言語に近い感じですね。多少癖はあるものの、JSONよりは直観的な表現ができます。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>PythonでDBの処理がしたい</title><link>https://retheviper.github.io/posts/python-blob-to-binary/</link><pubDate>Sun, 30 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-blob-to-binary/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post PythonでDBの処理がしたい" />&lt;p>あまり詳しくない上に、何か新しいプログラムを作り出すこととは少し距離があるなと思ってDBにはあまり興味を持ってなかった私ですが、ITの業界で働きながらDBと接しないのは難しいことです。そしてそうやって接するDBはまた優しくない課題になってきますね。この度の仕事でも主にPythonを使ってスクリプトを書いたものの、そのタスクのメインとなるものはDBとの連携でした。なので今回のポストではどうやってPythonでDBに繋ぎ、SQL文を発行し、そのデータを扱ったかについて述べたいと思います。&lt;/p>
+&lt;/div></description></item><item><title>PythonでDBの処理がしたい</title><link>https://retheviper.github.io/posts/python-blob-to-binary/</link><pubDate>Sun, 30 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-blob-to-binary/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post PythonでDBの処理がしたい" />&lt;p>あまり詳しくない上に、何か新しいプログラムを作り出すこととは少し距離があるなと思ってDBにはあまり興味を持ってなかった私ですが、ITの業界で働きながらDBと接しないのは難しいことです。そしてそうやって接するDBはまた優しくない課題になってきますね。この度の仕事でも主にPythonを使ってスクリプトを書いたものの、そのタスクのメインとなるものはDBとの連携でした。なので今回のポストではどうやってPythonでDBに繋ぎ、SQL文を発行し、そのデータを扱ったかについて述べたいと思います。&lt;/p>
 &lt;p>今回私に与えられたタスクは、DBからバイナリーのデータを抽出して、それをAWSのS3&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>にアップロードするスクリプトを作ることでした。また、アップロードが終わった時点でテーブルを更新する必要がありますが、抽出の対象となるDBと更新の対象となるDBがそれぞれ違うものでした。片方はOracleで片方はPostgreSQL。そしてロガーを入れ各DBやS3の接続に失敗するなどの時にはログで分かるようにしたり、DBの接続情報を外出しにして外部ファイルから読み込むようにするなどの条件がありました。ロガーについては[前回のポスト](../../../06/15/python-logger/で述べましたので、今回は省略とさせていただきます。他にバイナリーデータを抽出するには引数を受け、最終更新日を確認した上でそれより後のファイルを保存する、S3にアップロードする際はテーブルのカラムからパス名を決める、画像のアップロードの後には最終更新日を更新する、などの条件がありました。&lt;/p>
 &lt;p>要略すると、今回作るスクリプトの仕様は以下となります。&lt;/p>
 &lt;ol>
@@ -13300,14 +13531,14 @@ alt="Jenkins Poll SCM">
 &lt;p>あとはファイル書き込みがテキストだけでなく、バイナリーデータの場合も簡単にかけるということが魅力的ですね。Javaだったらストリームやバッファーをはじめとしてかなり複雑な書き方になっていただろうと思いますが(しかも私はテキストしか扱ったことがないので、同じやり方でバイナリーまでかけるかどうかわかりません)、Pythonではモジュールのインポートもなしで簡単にできますね。もちろん性能を考えるとJavaでかいた方がよかったかも知れませんが、こういう簡単さんがやっぱり生産性の向上に役立つのではないかと思います。&lt;/p>
 &lt;p>あと、やはりPythonはLinux親和的な構造が魅力的だと思います。処理の結果を判別するために&lt;code>sys.exit()&lt;/code>を設定すると終了コードを簡単に確認できますし、&lt;code>sys.args&lt;/code>を通じてコマンドラインから引数を受け入れることもできます。簡単かつLinux親和的なので、Linuxでのスクリプト処理が必要な場合はシェルスクリプトよりもPythonを用いる方が良いのでは、と思うようになりました。性能もシェルより良いところもあるという話もありますしね。&lt;/p>
 &lt;p>結果的にPythonを褒めるようなポストとなりましたが、私としてはプログラミングの初心者もしくはLinuxサーバーからスクリプトを組むことの多い開発者に魅力的な言語と思うので、皆さんにもぜひPythonを使って欲しいです。楽しく、楽に開発しましょう！&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Simple Storage Serviceの略で、その名の通りOSにマウントして普通のディスクのように使えるサービスだそうです。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Tera Termを使う" />&lt;p>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、&lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
+&lt;/div></description></item><item><title>Tera Termを使う</title><link>https://retheviper.github.io/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post Tera Termを使う" />&lt;p>PuttyやMacのターミナルは使ってみたことがありますが(CLIの範囲まで行くとMS-DOSも)、&lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
 >Tera term&lt;/a>を使ったことはなかったです。でも仕事ではAWSでLinuxのサーバーを立てて使っているのでSSH接続が必要となります。ここで私が初めてしたことはそのSSH接続ができるようにTera termのマクロを作ることでした。それまでは主に文書作業をしていたので、やっとコーディングのようなことができて嬉しく思いましたね。&lt;/p>
 &lt;p>他にも色々良いツールはあるのではないかと思いますが、マクロで簡単にシェルのコマンドが発行できたり、画面のカスタマイズが簡単だということが便利ですね。最近はWindows 10でもターミナルが使えるようになったりWSLというサービスができましたが、まだ会社で支給されるパソコンがWindows 10ではない場合にはこちらの方を使うのが便利だろうと思います。&lt;/p>
 &lt;p>それでは、設計と実際のコードでどうマクロを作ったかを紹介します。&lt;/p>
@@ -13511,14 +13742,14 @@ alt="Jenkins Poll SCM">
 &lt;p>ファイル取得部は&lt;code>glob&lt;/code>オプションで簡単にできたことに比べ少し複雑になっています。&lt;code>os.walk()&lt;/code>で起点のディレクトリを指定してパスとファイル名を取得します。ただ&lt;code>os.walk()&lt;/code>だとファイル名とパスは分離されるのでそれをつなぐ作業が必要ですね。そこで処理するファイルのリストに入れたり消したりする処理を加えます。これで以前の&lt;code>glob&lt;/code>と似たような挙動ができます。&lt;/p>
 &lt;p>そして&lt;code>rsplit('_', 1)&lt;/code>で、まず&lt;code>From_PostgreSQL_01&lt;/code>という文字列は&lt;code>From_PostgreSQL&lt;/code>と&lt;code>01&lt;/code>に1回だけ分割されます。そして分割された文字列は配列になるので[0]を指定すると意図通り&lt;code>From_PostgreSQL_01&lt;/code>が&lt;code>From_PostgreSQL&lt;/code>に代替されます。また&lt;code>find&lt;/code>を&lt;code>findall&lt;/code>に変えただけで条件に一致する全エレメントをファイル内で探してリストにしてくれます。その中でループ処理するだけですね。これがわからなかった時は以前のコードにさらにループをかけたりして失敗していましたが、意外と簡単な解決策があったものです。&lt;/p>
 &lt;p>これで完成されたコードは意図通りに動いてくれました。あとで変動があっても少しだけ変えればいいので個人的には満足しています。より綺麗な書き方はあるかも知れませんがね。そして教訓として、いつもテストは大事だなということを改めて覚えられました。常に確認と確認です。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>&lt;code>rsplit&lt;/code>と&lt;code>split&lt;/code>の違いは、方向です。前者が文字列の右側を基準に分割するなら、後者は左側からです。今回は文字列の末尾の連番を取りたいので、&lt;code>rsplit&lt;/code>を選びました。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Pythonでログを出したい</title><link>https://retheviper.github.io/posts/python-logger/</link><pubDate>Sat, 15 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-logger/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post Pythonでログを出したい" />&lt;p>コーディングにおいて、ロジックを組むこと異常に重要なことがあるとしたらそれは自分の書いているコードが正しいかどうかを確認することだと思います。まず仕様書などを書き、要件を満たしているかどうかをチェックしながら、コードを書いていきます。しかし、実行してみない限り思い通りにコードが動いてくれるかどうかは確認できませんね。そしてその動作が正しいかどうかを判別するためにはコードの中で扱っている変数やオブジェクトに正しいデータが入っているかどうかをみます。EclipseなどのIDEにはデバッグ機能があるので、チェックポイントを設定してコードの流れをモニタリングしながらそれを追うことができますが、それを利用できない場合もありますね。では標準出力という方法もありますが、実行後に記録を追うことができないという面で不安です。&lt;/p>
+&lt;/div></description></item><item><title>Pythonでログを出したい</title><link>https://retheviper.github.io/posts/python-logger/</link><pubDate>Sat, 15 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/python-logger/</guid><description>&lt;img src="https://retheviper.github.io/images/python.jpg" alt="Featured image of post Pythonでログを出したい" />&lt;p>コーディングにおいて、ロジックを組むこと異常に重要なことがあるとしたらそれは自分の書いているコードが正しいかどうかを確認することだと思います。まず仕様書などを書き、要件を満たしているかどうかをチェックしながら、コードを書いていきます。しかし、実行してみない限り思い通りにコードが動いてくれるかどうかは確認できませんね。そしてその動作が正しいかどうかを判別するためにはコードの中で扱っている変数やオブジェクトに正しいデータが入っているかどうかをみます。EclipseなどのIDEにはデバッグ機能があるので、チェックポイントを設定してコードの流れをモニタリングしながらそれを追うことができますが、それを利用できない場合もありますね。では標準出力という方法もありますが、実行後に記録を追うことができないという面で不安です。&lt;/p>
 &lt;p>そういう時にカスタムログを利用するのも一つの方法ですね。ちゃんとしたログを吐くように最初からロガーを作っておくと、自分の作ったプログラムが設計通りに動いているかどうかを判断できます。そしてプログラムが完成した後もネットワークの障害やデータの問題を確認するために有効活用できるという面もありますね。といっても、カスタムログを吐くロガーを書くということは難しいことのように思われます。最初ログを吐くようにしろという指示を受けて、私はどうしたらいいか？標準と言えるひな形はないのか？と悩みましたね。でもそんな難しく思うようなことはなくて、状況による分岐(メッセージやコードなど)を決め、それをテキストファイルとして出力するようにすれば良いだけの話でした。&lt;/p>
 &lt;p>それでは、実際のロガーをどう作ったかをこれからコードを通じて見せましょう。&lt;/p>
 &lt;h2 id="ロガーを作る">ロガーを作る&lt;/h2>
@@ -13798,17 +14029,17 @@ alt="Jenkins Poll SCM">
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>コードの量もそんなに長くないし、ちゃんとパーシングで要素を捉えているのでシェルスクリプトに比べ安全な書き方になっています。それにタグによってコンポーネントを区別しているので、コンポーネントを数に変動があってもそのまま使えるという長所がありますね。タグに名前空間があると初期設定と書き込み直前にその処理が必要となるので少し面倒な部分はありますが&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>、確かにシェルスクリプトに比べ維持補修の面で手間がかからなくなったので満足できるコードを書けたと思います。速度も直接測定してみた訳ではないですが、相当早かったです(ただ単にPythonは遅いだろうという自分の偏見が問題だったかも知れません)。いやーPythonいいですね。&lt;/p>
 &lt;p>何よりもメインの関数やクラスを省略しても、本当にスクリプトぽい書き方でもちゃんと意図通りに動くということが素晴らしいですね。これからもLinux環境で簡単な反復作業を自動化したいという場合には、皆さんもぜひPythonを使ってみてくださいとオススメしたいくらいです。とても簡単な言語なので、これからもどんどん使って色々やってみたいなと思います。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>例えば、yumで問題が発生しています。これはyumの実行環境を変える方法(/usr/bin/yumの設定を参照してください)もありますが、どれがPython2を使うかいちいち確認はできないのであまりおすすめしたくはない方法です。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>特に最後の方の&lt;code>ET.register_namespace()&lt;/code>がないと、名前空間が勝手に変わってしまいます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>JenkinsでJarファイルをデプロイする</title><link>https://retheviper.github.io/posts/jenkins-java-deploy/</link><pubDate>Thu, 30 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-deploy/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJarファイルをデプロイする" />&lt;p>今回のポストではビルドしたJarファイルをデプロイするJobを作りたいと思います。デプロイといっても、実際このポストを書くきっかけとなったタスクは単純です。&lt;a class="link" href="../../../05/30/jenkins-javabuild" >前回のポスト&lt;/a>のようなJobで生成したJarファイルを違うサーバに転送して実行するだけです。これを繋いで一連の作業にした方が良いのではと思ったのですが、どうやらプロジェクトの設計はそうではなかったみたいです。理由は各サーバの利用目的が違うから、らしいです。&lt;/p>
+&lt;/div></description></item><item><title>JenkinsでJarファイルをデプロイする</title><link>https://retheviper.github.io/posts/jenkins-java-deploy/</link><pubDate>Thu, 30 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-deploy/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJarファイルをデプロイする" />&lt;p>今回のポストではビルドしたJarファイルをデプロイするJobを作りたいと思います。デプロイといっても、実際このポストを書くきっかけとなったタスクは単純です。&lt;a class="link" href="../../../05/30/jenkins-javabuild" >前回のポスト&lt;/a>のようなJobで生成したJarファイルを違うサーバに転送して実行するだけです。これを繋いで一連の作業にした方が良いのではと思ったのですが、どうやらプロジェクトの設計はそうではなかったみたいです。理由は各サーバの利用目的が違うから、らしいです。&lt;/p>
 &lt;p>ともかく、JarファイルをSSHで転送するJobを作ります。もうすでにJarファイルをビルドするJobを作りましたので、そちらのソースを利用します。&lt;/p>
 &lt;h2 id="成果物の確保">成果物の確保&lt;/h2>
 &lt;p>まずJarファイルをどうやって新規Jobのワークスペースに持ってくるかを考えたいですね。単純には、前回生成したJobにビルドの後、シェルコマンドでファイルをコピーするようなタスクを追加することを考えられます。実際仕事でも一番最初に試した方法でもあります。&lt;/p>
@@ -14084,20 +14315,20 @@ alt="Jenkins JAR">
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>今回はただ単にファイルをコピーする作業を二つ繋げただけですが、ここからは既存のJarファイルの実行を終了し、新しくデプロイされたファイルを起動するなどのJobを作っていくなど連携の方法は色々ありそうです。何もかも応用次第ですからね！このポストを読まれる皆さんもJenkinsで自動化を試し、私以上に応用できることになるといいなと思います。&lt;/p>
 &lt;p>それでは、今回はここまで。また初心者向けの情報が集まったら、新しいポストでお目にかかりましょう。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>この画面からはまるでzipファイルになっているようにも見えますが、実際はzipファイルでダウンロードできるという意味です。成果物はちゃんとフォルダの中に元の形で保存されています。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>ただ、スクショにはもしものことなので実際の情報は書いていません。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>基本的にはSSH接続したユーザーのホームディレクトリが基準となります。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>JenkinsでJavaプロジェクトをビルドする</title><link>https://retheviper.github.io/posts/jenkins-java-build/</link><pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-build/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJavaプロジェクトをビルドする" />&lt;p>今回はJenkinsで一つのJobを生成することまでやりたいと思います。まず前回も書きましたが、私に要求されたタスクは次のようなことです。「GitにSpring Bootのアプリケーションがあるので、それをビルドするJobを作って欲しい」とのこと。リポジトリを覗き、JavaとGradleはインストールしたので早速Jobの生成に取り掛かることにしました。&lt;/p>
+&lt;/div></description></item><item><title>JenkinsでJavaプロジェクトをビルドする</title><link>https://retheviper.github.io/posts/jenkins-java-build/</link><pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-build/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJavaプロジェクトをビルドする" />&lt;p>今回はJenkinsで一つのJobを生成することまでやりたいと思います。まず前回も書きましたが、私に要求されたタスクは次のようなことです。「GitにSpring Bootのアプリケーションがあるので、それをビルドするJobを作って欲しい」とのこと。リポジトリを覗き、JavaとGradleはインストールしたので早速Jobの生成に取り掛かることにしました。&lt;/p>
 &lt;p>今回は当時と似たような環境を作るためにあらかじめSpring Bootプロジェクトを作成してGitにアップロードしています。&lt;/p>
 &lt;h2 id="それでjobとは">それでJobとは？&lt;/h2>
 &lt;p>Jenkinsを使う理由は、このJobのためです。Jobは&lt;code>自動化されたタスク&lt;/code>で、実行の条件から頻度、タスクの内容を組み込むことができます。例えばGitのリポジトリに誰かがPushしたらJobを実行するように設定できるし、実行したら自動的にGitをPullするように設定できるということです。&lt;/p>
@@ -14352,14 +14583,14 @@ alt="Jenkins Gradle Build JAR">
 &lt;p>Jenkinsでできることはこれだけではありません。ビルド終了後にデプロイのJobを作り、そのJobを実行するように連携もできれば、JUnitとの連携でテストを行えうように設定も可能です。なので今後のポストでは出来上がったJarファイルをテストしデプロイする方法について書きたいと思います。&lt;/p>
 &lt;p>また、Jobの設定で&lt;code>Build Environment&lt;/code>タブにある&lt;code>Delete workspace before build starts&lt;/code>というオプションをチェックしておくのも良いと思います。Jobの実行時にWorkspaceフォルダをまず掃除してからタスクを実行していきますが、これによって前回のビルドで生成されたファイルによる異常動作を防げられますので。&lt;/p>
 &lt;p>仕事で触れた部分が少ないのでまだ私も全部の機能を試した訳ではありませんが、Jenkinsは各種プラグインとその組み合わせによって可能性は無限大に違いのではないかと思うくらい良いツールです。また色々研究したいものですね。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>JenkinsのJobにおいてのビルドは、Jobのバージョンに近いイメージです。特定時点のJobを設定〜実行までの単位をビルドと言います。Javaのビルドとは少し違う概念なので混同しないようにしましょう。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>知っていれば便利なLinuxのコツ</title><link>https://retheviper.github.io/posts/linux-command-tips/</link><pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-command-tips/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post 知っていれば便利なLinuxのコツ" />&lt;p>小学校の頃初めてMS-DOSに触れ、その後ずっとWindowsのPCを使っていたので私はLinuxにそう詳しくないです。&lt;code>CLI&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>には&lt;code>GUI&lt;/code>とは違う感性があると思っていたくらいです。初めてCentOSを仮想マシンでインストールして見たときも、「あ、DOSに似ている」くらいの印象しかなかったです。でも仕事で使いながら思ったより便利ではやいと思いました。さすがサーバーで人気ナンバーワンのマケットシェアを誇るだけはあるんだなと思うくらいです。&lt;/p>
+&lt;/div></description></item><item><title>知っていれば便利なLinuxのコツ</title><link>https://retheviper.github.io/posts/linux-command-tips/</link><pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/linux-command-tips/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.jpg" alt="Featured image of post 知っていれば便利なLinuxのコツ" />&lt;p>小学校の頃初めてMS-DOSに触れ、その後ずっとWindowsのPCを使っていたので私はLinuxにそう詳しくないです。&lt;code>CLI&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>には&lt;code>GUI&lt;/code>とは違う感性があると思っていたくらいです。初めてCentOSを仮想マシンでインストールして見たときも、「あ、DOSに似ている」くらいの印象しかなかったです。でも仕事で使いながら思ったより便利ではやいと思いました。さすがサーバーで人気ナンバーワンのマケットシェアを誇るだけはあるんだなと思うくらいです。&lt;/p>
 &lt;p>それで、今回は&lt;code>cd&lt;/code>や&lt;code>mkdir&lt;/code>のような基礎の中の基礎しか知らない私が仕事で肩ごしで学んだコツをいくつか書こうと思います。これも基礎ですが、実際使ってみないとわからないだろうなと思っていたことが多く、コマンドやショートカットは本当に使い方次第だなと思ったのでその整理のためでもあります。&lt;/p>
 &lt;h2 id="tabキーで自動補完">tabキーで自動補完&lt;/h2>
 &lt;p>&lt;code>GUI&lt;/code>に比べ&lt;code>CLI&lt;/code>が難しいと思われる理由は、何よりもコマンドの入力がベースになっているからと思います。ファイルを元のフォルダから違うフォルダに移動するという単純な動作も、GUIではマウスでドラッグすればいいだけのものをCLIではいちいちコマンドを打ちます。そもそも&lt;code>mv&lt;/code>のようなコマンドを知っていなければ成立できないことで、コマンドのオプションでまったく違う結果になったりもしますね。そして何よるも面倒なことは、ファイルやフォルダのパスをいちいち入力しなければならないということです。&lt;/p>
@@ -14454,17 +14685,17 @@ alt="Jenkins Gradle Build JAR">
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -al | more
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p>
 &lt;p>それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>私はどっちかというとCUIという言葉に慣れていますが（Character User Interfaceとかの略だと思っていたので）、正確な名称はCommand Line Interfaceの略であるCLIらしいですね。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>&lt;code>ll&lt;/code>は&lt;code>ls -l&lt;/code>のショートカットらしいです。同じ文字を2回入力するだけでも大体の内容を出力してくれるので便利ですね。ただ、&lt;code>ls -al&lt;/code>では隠されているファイルやフォルダも表示してくれます。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Jenkinsで何もかも楽にしたい(3)</title><link>https://retheviper.github.io/posts/jenkins-automation-3/</link><pubDate>Thu, 16 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-3/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(3)" />&lt;p>仕事でJenkinsを使って、自動化したいと言われたのはいくつかのタスクがあります。そしてそのタスクを実行するにもまたいくつかの手順が入りますね。こんなことがしたいという想像力ももちろん大事なものですが、何かをするにはそれに必要な環境を整えることが何よりも大事なのではないかと思います。今回のポストでは仕事で与えられた作業と、それを準備した過程を述べたいと思います。&lt;/p>
+&lt;/div></description></item><item><title>Jenkinsで何もかも楽にしたい(3)</title><link>https://retheviper.github.io/posts/jenkins-automation-3/</link><pubDate>Thu, 16 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-3/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(3)" />&lt;p>仕事でJenkinsを使って、自動化したいと言われたのはいくつかのタスクがあります。そしてそのタスクを実行するにもまたいくつかの手順が入りますね。こんなことがしたいという想像力ももちろん大事なものですが、何かをするにはそれに必要な環境を整えることが何よりも大事なのではないかと思います。今回のポストでは仕事で与えられた作業と、それを準備した過程を述べたいと思います。&lt;/p>
 &lt;p>まずGitからSpring bootアプリケーションをPullしてきて、ビルドすること。まず私はSpring Framework&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>は扱ってみたことがありますが、Spring Bootは今回が初めてでした。そしてMavenは使ったことがあるものの、今回のようにGradleを使ったプロジェクトには触れたことがなかったです。Spring Bootが（そしてGradleが）以前と比べ初期設定が簡単とは言われていますが、Eclipeの上でしかアプリケーションを実行した経験しかないので、最初はどうやったらいいかイメージすらなかったです。&lt;/p>
 &lt;p>そしてJenkinsでどのようにJobを構成すればいいかもわからなかったので、まずJenkinsでどのようにJobを構成し自動化ができるかを調べることから始めました。&lt;/p>
 &lt;p>Jenkinsでは、Jobという名称のタスクを作り、とある行動を中に仕組み、それを一つの単位として実行することができます。全てのプログラムがそうでありますが、Linuxでのシェルスクリプトみたいに、繰り返す必要のある行為を自動化するようなものです。そして出来がったJobは手動実行するか、条件（トリガー）を指定して実行するようになります。&lt;/p>
@@ -14668,17 +14899,17 @@ alt="Jenkins Gradle">
 &lt;/figure>&lt;/p>
 &lt;p>&lt;code>Save&lt;/code>を押して保存することを忘れずに！&lt;/p>
 &lt;p>これでJenkinsでのJDKとGradleの設定は終わりです。これからはJavaアプリケーションをビルドできるようになりました。次のポストで実際Spring Bootで作られたアプリケーションをGitでPullし、ビルドするタスクを作ってみたいと思います。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>厳密には、Spring Frameworkというよりは旧バージョンと言えるでしょう。Spring BootはSpring Frameworkに含まれるものなんですからね。いつかSpring Bootに関しても勉強したいと思うので、機会があればポストしたいと思います。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>現在はJava12まで出ていますが、JenkinsでJava11をサポートし始めたのも最近のことなので（2019年３月）、まずJava 11を選びました。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Jenkinsで何もかも楽にしたい(2)</title><link>https://retheviper.github.io/posts/jenkins-automation-2/</link><pubDate>Tue, 14 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-2/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(2)" />&lt;p>前回から続きます。Jenkinのインストールが終わったら、初期設定の番です。どんなことでも始めが一番面倒なものですが、それだけ初期設定をちゃんとやっていると後の作業が楽になるものですね。なので今回はJenkinsの初期設定に関してまず述べたいと思います。&lt;/p>
+&lt;/div></description></item><item><title>Jenkinsで何もかも楽にしたい(2)</title><link>https://retheviper.github.io/posts/jenkins-automation-2/</link><pubDate>Tue, 14 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-2/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(2)" />&lt;p>前回から続きます。Jenkinのインストールが終わったら、初期設定の番です。どんなことでも始めが一番面倒なものですが、それだけ初期設定をちゃんとやっていると後の作業が楽になるものですね。なので今回はJenkinsの初期設定に関してまず述べたいと思います。&lt;/p>
 &lt;p>Jenkinsの初期設定はだいたい以下の順になります。他にも色々しておいたら便利な設定があるかも知れませんが、あくまで初心者の私の観点が基準なので参考までにしてください。&lt;/p>
 &lt;h2 id="ポートの設定">ポートの設定&lt;/h2>
 &lt;p>Jenkinsの基本ポートは&lt;code>8080&lt;/code>です。このままJenkinsを起動すると、Webブラウザから&lt;code>Jenkinsを起動中のシステムのIPアドレス:8080&lt;/code>でJenkinsに接続できます。&lt;/p>
@@ -14850,20 +15081,20 @@ alt="Jenkins Mainpage">
 &lt;/figure>&lt;/p>
 &lt;p>それでは、次からは具体的にJenkins先生と共にどんなタスク（Job）を作り、実行したかを述べたいと思います。また会いましょう！&lt;/p>
 &lt;p>（続きます）&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>特にSpring FrameworkなどでWebアプリケーションを実装する場合にそうですね。Tomcatの基本ポートも&lt;code>8080&lt;/code>になっていますから。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>viとvimのうち、どれを選ぶかはいつも悩ましいことです。vimの方がよりカラフルでコードを読みやすいという点では良いですが、システムによってはインストールされてないですからね。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:3" role="doc-endnote">
+&lt;li id="fn:3">
 &lt;p>macOSでインストールしたら、初期パスワードのパスが&lt;code>ユーザホームディレクトリ&lt;/code>の直下だった場合もありました。rootではないユーザでインストールしたからかもしれませんが。&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>Jenkinsで何もかも楽にしたい(1)</title><link>https://retheviper.github.io/posts/jenkins-automation-1/</link><pubDate>Mon, 13 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-1/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(1)" />&lt;p>世の中、なんでも自動化がトレンドのようです。AIの話も究極的には、そういう自動化の範疇に入るようなものではないかと思います。まだ人間がAIに仕事を奪われるような時代になるまではもう少し時間がいるのでは、と思いますがね。&lt;/p>
+&lt;/div></description></item><item><title>Jenkinsで何もかも楽にしたい(1)</title><link>https://retheviper.github.io/posts/jenkins-automation-1/</link><pubDate>Mon, 13 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-1/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(1)" />&lt;p>世の中、なんでも自動化がトレンドのようです。AIの話も究極的には、そういう自動化の範疇に入るようなものではないかと思います。まだ人間がAIに仕事を奪われるような時代になるまではもう少し時間がいるのでは、と思いますがね。&lt;/p>
 &lt;p>そういう意味で、&lt;a class="link" href="https://jenkins.io/" target="_blank" rel="noopener"
 >Jenkins&lt;/a>について調べました。もちろん、まだ何が何だかわからないひよっ子みたいな自分に「今回はJenkinsで面倒なことは全部自動化して手間を減らそう」みたいな考えがあったわけではなく、あくまで仕事で使われているから、というシンプルな理由です。&lt;/p>
 &lt;h2 id="それでjenkinsとは">それで、Jenkinsとは？&lt;/h2>
@@ -14885,25 +15116,25 @@ alt="Jenkins Mainpage">
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ yum install jenkins
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでインストールは終わり。問題なければ、ポートの設定をやって起動するまでです。&lt;/p>
 &lt;p>（続きます）&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>他のサーバなどに配置すること。例えば開発環境と本場環境は分離する必要があるので、開発環境で動作の検証が終わったものを本場環境に置いて実行することになりますね。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
-&lt;li id="fn:2" role="doc-endnote">
+&lt;li id="fn:2">
 &lt;p>FedoraとCentOSでも同じくできるらしいです。うちではCentOS7で検証してみました。&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item><item><title>はじめに</title><link>https://retheviper.github.io/posts/new-start/</link><pubDate>Sun, 12 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/new-start/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post はじめに" />&lt;p>まだSEになってからの日が浅いので、業界の動向や流行りの言語はおろか、プログラミングの基礎もまだわからないことが多いです。それでも仕事で学び、覚えられるようなことは多いので、それらの知識をただ頭に入れておくということは無理なのではないかと思います。日々新しい言語、フレームワーク、ライブラリーが登場している中、自分は今までの技術もまともに習得していないのです。それならばせめて、どこかに自分が触れたことのある知識をまとめ参考にしたい。そういう考えからブログを始めることにしました。&lt;/p>
+&lt;/div></description></item><item><title>はじめに</title><link>https://retheviper.github.io/posts/new-start/</link><pubDate>Sun, 12 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/new-start/</guid><description>&lt;img src="https://retheviper.github.io/images/tools.jpg" alt="Featured image of post はじめに" />&lt;p>まだSEになってからの日が浅いので、業界の動向や流行りの言語はおろか、プログラミングの基礎もまだわからないことが多いです。それでも仕事で学び、覚えられるようなことは多いので、それらの知識をただ頭に入れておくということは無理なのではないかと思います。日々新しい言語、フレームワーク、ライブラリーが登場している中、自分は今までの技術もまともに習得していないのです。それならばせめて、どこかに自分が触れたことのある知識をまとめ参考にしたい。そういう考えからブログを始めることにしました。&lt;/p>
 &lt;p>人間の文明の発達の歴史は、記録によるものという話がありました。人類の持つ知識の総量が一人の脳内に収められないくらい膨大になってから、人間が考案した方法は外部媒体による記録であるということです。そのおかげで我々は代々受け継がれてきた知識に触れることができ、最初から知識を持ってなくても臨機応変できるようになったと私は思います。例えば、携帯が生まれてからは誰も人の電話番号を覚えなくなりました。それでも連絡できる人の数はむしろ増えましたね。つまり、知識の外部記録できるようになって、個人が持つ知識の総量よりは、時と場合に適合な知識を探し出す能力が大事な時代になったのではないかと思います。&lt;/p>
 &lt;p>プログラミングの世界もそうではないかと思います。bash&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>は依然として強力なツールであり、GUIより便利な時もあります。しかし全てのコマンドを覚え、パスを入力することはあまり効率的ではないです。むしろ必要な時に適切なコマンドを入力できるかどうかの方がより重要なのではないでしょうか。そのためにコマンどを集めたスクリプトが現れ、今の時代は簡単にコピペするだけでその時必要な操作ができたらいいのではないかと思います。&lt;/p>
 &lt;p>自分がブログに勉強したことをまとめる時もなるべくそのような使い方ができるようなポストになったらいいなと思います。例えばAというサーバからBというサーバにフォルダをコピーしたいというなら、ただSCPやRSYNCのようなコマンドを書くだけでなくssh認証をはじめとしてSCPとRSYNCの違いまで比べるという一連の流れとしての知識を残す。そのような情報が得られるようなブログになったらいいなと思っています。&lt;/p>
-&lt;section class="footnotes" role="doc-endnotes">
+&lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
 &lt;ol>
-&lt;li id="fn:1" role="doc-endnote">
+&lt;li id="fn:1">
 &lt;p>Linuxだけに限らず、macOSのterminalやWindowsのPowershellなどを含め&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
 &lt;/li>
 &lt;/ol>
-&lt;/section></description></item></channel></rss>
+&lt;/div></description></item></channel></rss>
