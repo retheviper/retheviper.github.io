@@ -224,7 +224,7 @@ Goの場合も1.16からApple Siliconに対応しているので、特にバー�
 
 Microsoft社の製品にしてはかなり珍しいケースですが、対応が遅れていますね。ただ、今月[PreviewとしてUniversalバージョンが利用できる](https://techcommunity.microsoft.com/t5/microsoft-onedrive-blog/onedrive-sync-for-native-arm-devices-now-in-public-preview/ba-p/3031668)ようになったらしいので、もうすぐApple Siliconネイティブ版が出るかも知れません。その際にはApp Storeで自動的にアップデートされるはずなので、待つだけですね。
 
-### Flutter
+## Flutter
 
 Dartは[v2.14からNative対応](https://medium.com/dartlang/announcing-dart-2-14-b48b9bb2fb67)しているのですが、Flutterはまだ未対応らしく、公式を見ても[Rossettaを推奨](https://github.com/flutter/flutter/wiki/ㅅDeveloping-with-Flutter-on-Apple-Silicon)しています。なのでRosettaを入れて実行した方が早いですね。
 

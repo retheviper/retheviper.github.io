@@ -9,7 +9,7 @@ links:
   - title: Kotless
     description: Kotlin / サーバレスフレームワーク
     website: https://github.com/jetbrains/kotless
-    image: https://camo.githubusercontent.com/09328025866607ea708d128d39d7f39971df1deaede61454d8aba74c9b411e65/68747470733a2f2f73332d65752d776573742d312e616d617a6f6e6177732e636f6d2f7075626c69632e73332e6b746c732e6177732e696e74656c6c696a2e6e65742f7265736f75726365732f66617669636f6e2e61706e67
+    image: https://site.kotless.io/
   - title: Apollo
     description: Kotlin / GraphQLクライアント
     website: https://www.apollographql.com/
