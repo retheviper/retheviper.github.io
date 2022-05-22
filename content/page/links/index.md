@@ -25,11 +25,11 @@ links:
   - title: Kotest
     description: Kotlin / ユニットテストフレームワーク
     website: https://kotest.io/
-    image: https://kotest.io/img/logo.png
+    image: images/kotest.png
   - title: Mockk
     description: Kotlin / Mockingライブラリ
     website: https://github.com/mockk/mockk
-    image: https://avatars.githubusercontent.com/u/34787540?s=280&v=4
+    image: images/mockk.png
   - title: Fuel
     description: Kotlin / HTTPクライアントライブラリ
     website: https://fuel.gitbook.io/documentation/
