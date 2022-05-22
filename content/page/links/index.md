@@ -9,7 +9,7 @@ links:
   - title: Kotless
     description: Kotlin / サーバレスフレームワーク
     website: https://github.com/jetbrains/kotless
-    image: https://site.kotless.io/
+    image: https://camo.githubusercontent.com/09328025866607ea708d128d39d7f39971df1deaede61454d8aba74c9b411e65/68747470733a2f2f73332d65752d776573742d312e616d617a6f6e6177732e636f6d2f7075626c69632e73332e6b746c732e6177732e696e74656c6c696a2e6e65742f7265736f75726365732f66617669636f6e2e61706e67
   - title: Apollo
     description: Kotlin / GraphQLクライアント
     website: https://www.apollographql.com/
@@ -45,7 +45,7 @@ links:
   - title: Komapper
     description: Kotlin / R2DBC対応ORM
     website: https://www.komapper.org/ja
-    image: https://pbs.twimg.com/profile_images/1393320939287244801/H1RRS22b_400x400.jpg
+    image: https://avatars.githubusercontent.com/u/81065639?s=200&v=4
   - title: Lombok
     description: Java / Boilerplateを削減
     website: https://projectlombok.org
