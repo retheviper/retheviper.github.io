@@ -1,6 +1,6 @@
 ---
 title: "Kotlinのこれからを語る"
-date: 2022-05-08
+date: 2022-05-22
 categories: 
   - kotlin
 image: "../../images/kotlin.jpg"
