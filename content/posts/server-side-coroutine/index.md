@@ -105,7 +105,7 @@ func CallKotlinServer(c *gin.Context) {
 
 では、以上の処理を並列化することにします。Goには[Goroutine](https://go-tour-jp.appspot.com/concurrency/1)が基本的に含まれています。使い方は単純で、実行したい関数の前に`go`のキーワードをつけるだけですね。ただ、レスポンスでは10回の実行結果を待ってから返す必要があるのですが、goroutineでAPIの呼び出しをするとメインスレッドが先に終わってしまう可能性があります。
 
-というわけで、ループの中でのAPIの呼び出しにgoroutineを使い、さらにそのgoroutineが全て終了してから結果を返すようにします。goには`sync`というパッケージに[waitGroup](https://pkg.go.dev/sync#WaitGroup)があり、goroutineの終了を待つことができるようになっています。また、goroutineをループの中で実行する場合、順番はランダムになるのでレスポンスを返す際は一度ソートをかけるようにします。以上を考慮して実装した結果は以下の通りです。
+というわけで、ループの中でのAPIの呼び出しにgoroutineを使い、さらにそのgoroutineが全て終了してから結果を返すようにします。goには`sync`というパッケージに[WaitGroup](https://pkg.go.dev/sync#WaitGroup)があり、goroutineの終了を待つことができるようになっています。また、goroutineをループの中で実行する場合、順番はランダムになるのでレスポンスを返す際は一度ソートをかけるようにします。以上を考慮して実装した結果は以下の通りです。
 
 ```go
 func CallKotlinServerAsync(c *gin.Context) {
@@ -113,10 +113,10 @@ func CallKotlinServerAsync(c *gin.Context) {
 
     results := &callResults{}
     tries := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-    group := &sync.WaitGroup{} // waitGroupを定義
+    group := &sync.WaitGroup{} // WaitGroupを定義
 
     for _, i := range tries {
-        group.Add(1) // ループごとに実行するgoroutineの回数を追加
+        group.Add(1) // ループごとに実行するgoroutineの数を追加
 
         go func(i int) { // goroutineでAPIの呼び出す
             log.Print("[CallKotlinServerAsync] before request with id: ", i)
@@ -450,7 +450,7 @@ suspend fun callGoServerAsyncDual(): List<CallGoServerDto> {
 
 ## 最後に
 
-あまりCoroutineに詳しくないゆえ、もっと良い書き方はあったかなと思いますが(goroutineの実行順を決めておく、Kotlinのログ出力箇所を調整するなど)、これで簡単にAPIの呼び出しを並列化することができるというのがわかったので個人的にはかなり満足しています。Jetpack Composeを少し触りながらcoroutineに触れたことはあったものの、こうやって仕事で必要となり調査と検証をしてみたのは初めてだったのでかなりの収穫を得たと言えますね。また、各言語においての感想は以下の通りです。
+あまりCoroutineに詳しくないゆえ、もっと良い書き方はあったかなと思いますが(goroutineの実行順を決めておく、`WaitGroup.Done()`は`defer`で定義する、Kotlinのログ出力箇所を調整するなど)、これで簡単にAPIの呼び出しを並列化することができるというのがわかったので個人的にはかなり満足しています。Jetpack Composeを少し触りながらcoroutineに触れたことはあったものの、こうやって仕事で必要となり調査と検証をしてみたのは初めてだったのでかなりの収穫を得たと言えますね。また、各言語においての感想は以下の通りです。
 
 - Go
   - 依存関係の追加なしで使えるのはメリット
