@@ -35,13 +35,17 @@ links:
     website: https://fuel.gitbook.io/documentation/
     image: images/fuel.png
   - title: jOOQ
-    description: Java / DSLを使えるORM
+    description: Java / DSL対応ORM
     website: https://www.jooq.org/
     image: images/jooq.png
   - title: Exposed
-    description: Kotlin用のDSLとDAOを使えるORM
+    description: Kotlin / DSLとDAOを使えるORM
     website: https://github.com/JetBrains/Exposed
     image: images/exposed.png
+  - title: Ktorm
+    description: Kotlin / DSL対応ORM
+    website: https://www.ktorm.org/
+    image: images/ktorm.png
   - title: Komapper
     description: Kotlin / R2DBC対応ORM
     website: https://www.komapper.org/ja
