@@ -3,7 +3,7 @@
 >Reactive Streams&lt;/a>のようなものもありますが、これは一つのリクエストを分散するというより少ないリソースで多くのリクエストに対する処理を行うためのものなので、一つの処理を分散して効率を上げたいという場合にはあまりふさわしくないものですね。&lt;/p>
 &lt;p>もちろん、だからと言ってバックエンドにおいて分散処理が全く必要ないというわけではありません。確かに一つのリクエストに対しての処理を行う中でも、処理によってスレッドを分けて性能向上を期待できる場面があります。例えば後続の処理と関係のない処理を途中に挟んでい場合では、別スレッドで処理したくなりますね。&lt;/p>
 &lt;p>なので、今回は&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%B3%E3%83%AB%E3%83%BC%E3%83%81%E3%83%B3" target="_blank" rel="noopener"
->Coroutine&lt;/a>を使ったバックエンドでの処理の分散するという一例を紹介したいと思います。&lt;/p>
+>Coroutine&lt;/a>を使ったバックエンドでの処理の分散するという一例を紹介したいと思います。&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>&lt;/p>
 &lt;h2 id="apiの呼び出しを並列化する">APIの呼び出しを並列化する&lt;/h2>
 &lt;p>まず並列化で効率を上げられるケースとして、バッチ処理を考えられます。バッチ処理では、条件に当てはまるデータを複数抽出し、それぞれのデータに対して同じ処理を繰り返すことが多いですね。このように個別のデータに対しての処理が独立的に実行されるものであり、並行して走っても特に問題はないという場合は十分その処理を分散できるものです。&lt;/p>
 &lt;p>仕事ではGoで作成されたサーバから定期的に日付を基準にDBから処理対象のデータを抽出し、そのデータを配列にしてループしながらKotlinで作成されたサーバのAPIを呼び出すようになっています。また、KotlinサーバでもBackendのAPIを呼び出すケースがあり、これもまたループでデータの参照を行っている状態です。サービスが成長するにつれて、処理にかかる時間によりAPI呼び出しがタイムアウトになるなどパフォーマンスの問題が出てきたので、このループの中でのAPI呼び出しを並列化することで処理にかかる時間を減らすことにします。&lt;/p>
@@ -387,7 +387,15 @@
 &lt;/ul>
 &lt;p>二つの言語を比べると一長一短があるという感覚ですが、どれも応用が難しいものではないので、すぐにプロダクションコードにも適用できそうなものが書けるのは確かに良いものという印象を受けました。これからもcoroutineを使って性能向上ができる箇所はないか、色々と試してみたくなるものです。ちなみに、この記事に載せてあるコードを全体のソースは&lt;a class="link" href="https://github.com/retheviper/AsyncServerExample" target="_blank" rel="noopener"
 >こちらのリポジトリ&lt;/a>から参照できます。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item><item><title>色々な言語でやってみた（ソート編）</title><link>https://retheviper.github.io/posts/languages-comparsion-sorting/</link><pubDate>Wed, 10 Nov 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/languages-comparsion-sorting/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 色々な言語でやってみた（ソート編）" />&lt;p>今はどんなプログラミング言語を選んでもできることはあまり違わなく、まさに好みで選んでもいいと思えるくらいの時代となっていると思います。特に、&lt;a class="link" href="https://kotlinlang.org/docs/js-overview.html" target="_blank" rel="noopener"
+&lt;p>では、また！&lt;/p>
+&lt;div class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1">
+&lt;p>厳密にいうと、Coroutineによる処理はマルチスレッドによる並列化とは概念的には違うものですが、実装と結果の取得という面では感覚が大きく変わらないので、ConcurrencyとParallelismによる違いなどの理論的な話は割愛しています。&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/div></description></item><item><title>色々な言語でやってみた（ソート編）</title><link>https://retheviper.github.io/posts/languages-comparsion-sorting/</link><pubDate>Wed, 10 Nov 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/languages-comparsion-sorting/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 色々な言語でやってみた（ソート編）" />&lt;p>今はどんなプログラミング言語を選んでもできることはあまり違わなく、まさに好みで選んでもいいと思えるくらいの時代となっていると思います。特に、&lt;a class="link" href="https://kotlinlang.org/docs/js-overview.html" target="_blank" rel="noopener"
 >Kotlin/JS&lt;/a>のようなトランスパイラーやFlutterのようなフレームワークも続々と登場している時代なので、こういう傾向はこれからもどんどん加速していくのではないかと思います。&lt;/p>
 &lt;p>しかしそのような変化がある一方で、今現在はプログラマに一人が扱えるプログラミング言語の数に対する要求も増えいている状況ではないかと思います。実際の業務ではさまざまな理由で使われる言語が決まっていて、自分が今まで触ったことのないものでも使えるようになる必要があり、一人のエンジニアが固定されたポジションでなく、さまざまな分野にかけて実装を行うケースもありますしね。いわゆる&lt;a class="link" href="https://en.wikipedia.org/wiki/Polyglot_%28computing%29" target="_blank" rel="noopener"
 >Polyglot&lt;/a>の時代とも言えます。&lt;/p>
