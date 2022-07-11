@@ -55,7 +55,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .first()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .let {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = row[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = row[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = row[Member.name],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role = listOf(row[Mailing.role])
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
@@ -84,7 +84,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// とりあえずオブジェクトにマッピングする
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address])
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
@@ -105,13 +105,13 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyはMemberオブジェクトのマッピング、valueではMailingのレコードを集約
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .groupBy({
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, { &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address] })
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyのオブジェクトにMailingのレコードを設定
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .map { (key, value) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> key.copy(mailingAddress = value)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .map { (key, &lt;span style="color:#ff79c6">value&lt;/span>) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> key.copy(mailingAddress = &lt;span style="color:#ff79c6">value&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この方法だと、今まで照会した他の方法で考えられる問題をだいぶ解消できそうな気がしますね。ただ、気になるのは、&lt;code>groupBy&lt;/code>の引数がLambdaであることです。引数として関数を渡すということは、ループしながらその関数を実行することになるという意味なので、&lt;code>reduce&lt;/code>の時と同じ量のインスタンスが作られる可能性がありそうですね。なので、&lt;code>groupBy&lt;/code>の実装を見ていきたいと思います。中のコードは、以下の通りです。&lt;/p>
@@ -141,10 +141,10 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (Member.id eq id) and (Mailing.memberId eq Mailing.id)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .forEach {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> helperMap.compute(&lt;span style="color:#ff79c6">it&lt;/span>[Member.id].value) { key, value &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> helperMap.compute(&lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>) { key, &lt;span style="color:#ff79c6">value&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullではない場合、コピーしてmailingAddressを累計
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> value&lt;span style="color:#ff79c6">?.&lt;/span>copy(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = value.mailingAddress + &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address]
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">value&lt;/span>&lt;span style="color:#ff79c6">?.&lt;/span>copy(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = &lt;span style="color:#ff79c6">value&lt;/span>.mailingAddress + &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullの場合はインスタンスを作る
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> ) &lt;span style="color:#ff79c6">?:&lt;/span> MemberDto(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = key,
@@ -154,7 +154,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.let {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueをListに変換
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> helperMap.map { &lt;span style="color:#ff79c6">it&lt;/span>.value }
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> helperMap.map { &lt;span style="color:#ff79c6">it&lt;/span>.&lt;span style="color:#ff79c6">value&lt;/span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>いかがでしょうか。これで重複するデータなく、インスタンスの作成も最低限に抑えることができたかと思います。もちろん、mailingAddressを追加するたびにコピーが発生するという問題はありますが、ここは専用のsetterなどを作っておくことで回避できると思います。&lt;/p>
