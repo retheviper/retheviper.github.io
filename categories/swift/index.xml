@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>swift on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/swift/</link><description>Recent content in swift on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 31 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/swift/index.xml" rel="self" type="application/rss+xml"/><item><title>SwiftUIを触ってみた - その1</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-1/</link><pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-1/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた - その1" />&lt;p>今までの自分のキャリアを振り返ってみると、仕事としての経験はバックエンドばかりで、画面側の実装にはあまり関わったことがありません。しかし、スタンドアロンのアプリを作るためには、ウェブ・モバイル・デスクトップを問わず画面が必要となるので、いつかは画面側の実装もできるようになる必要があるかなと常に思っているところです。&lt;/p>
+&lt;p>画面を作るといっても、どんな分野のエンジニアとしてキャリアパスを考えているか、どのような企業で働きたいか、慣れている言語は何であるかなど色々と考慮すべき要素は多いのですが、自分の場合はKotlinに慣れているのもあり、ウェブ・モバイル・デスクトップアプリに全部対応できるという点から&lt;a class="link" href="https://www.jetbrains.com/lp/compose-mpp" target="_blank" rel="noopener"
+>Jectpack Compose&lt;/a>を、また普段からMacとiPhone、iPadといったApple社の製品をよく使っている上、KotlinからのSwift入門が比較的簡単ということで&lt;a class="link" href="https://developer.apple.com/xcode/swiftui/" target="_blank" rel="noopener"
+>SwiftUI&lt;/a>を勉強したいと思っています。&lt;/p>
+&lt;p>さて、言語とフレームワークを決めてからは実践ですね。&lt;a class="link" href="https://developer.apple.com/tutorials/swiftui" target="_blank" rel="noopener"
+>公式のチュートリアル&lt;/a>が充実していたので、まずはこちらの方をすすめながら感じたSwiftやSwiftUIで印象的だった部分についてまとめてみたいと思います。もちろん、自分は仕事としてモバイルアプリの実装に関わったことがないのでコンテンツとしては粗末なものとなるかなと思いますが、もし自分のようにKotlinのバックグラウンドからSwiftに触れてみようと思っている方や、バックエンドのみのキャリアからGUIに初めて触れる方、もしくはKotlinとSwiftのどちらかに興味を持っている方には参考になる内容となればと思います。&lt;/p>
+&lt;h2 id="swift">Swift&lt;/h2>
+&lt;p>まずは言語そのものから。KotlinとSwiftはよく似ているという話を聞くことがありますが、正確に「どこが」というのはやはり触れてみる前はわからないものです。似ているという表現は共通点があるという意味なので、何に基準を置くかによって挙げられる共通点は色々と変わってくるものだからです。&lt;/p>
+&lt;p>例えば、言語デザインの観点でOOP志向的で、関数型的な要素があり、GCが存在する、ということでも共通点は発見できます。もしくは、言語の使用としてキーワードや書き方の印象が似ているという意味にもなれますね。細かくは、セミコロンを使わなくて良いという点も挙げられますね。&lt;/p>
+&lt;p>なので、まずは上記のチュートリアルを進行しながら、肌で感じた感覚から、Kotlinに比べたSwiftはどのようなものだったかを述べていきたいと思います。&lt;/p>
+&lt;h3 id="kotlinに似ているもの">Kotlinに似ているもの&lt;/h3>
+&lt;p>では、まずKotlinに似ているなと感じたところから述べていきます。似ているとしても、あくまで「肌の感触」なものなので、厳密には違う仕様になっているものも多いのですが、ここでの基準は「Kotlinでできたことをどれほど近い感覚で再現できるか」となっていますので（といっても個人的な感想ですが）、参考までに。&lt;/p>
+&lt;h4 id="computed-properties">Computed properties&lt;/h4>
+&lt;p>まず、プロパティの話からです。Kotlinではdata classを定義するとき、プロパティを以下のような二つの方法で定義することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Student&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> age: Int
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> isAdult: Boolean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>() = age &lt;span style="color:#ff79c6">&amp;gt;=&lt;/span> &lt;span style="color:#bd93f9">18&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;code>age&lt;/code>はインスタンスを作成するときに固定される単純な値となりますが、&lt;code>isAdult&lt;/code>はgetterとして定義した処理(&lt;code>age&lt;/code>が18以上かどうかという)の結果を返すように定義する形ですね。このような処理を伴うプロパティは、Swiftでも同じく&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Properties.html#ID259" target="_blank" rel="noopener"
+>Computed Properties&lt;/a>を通じて定義することができました。同じような処理を行う場合、以下のように定義できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">Student&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">age&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">Int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">isAdult&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">Bool&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span> { &lt;span style="color:#ff79c6">return&lt;/span> age &lt;span style="color:#ff79c6">&amp;gt;=&lt;/span> &lt;span style="color:#bd93f9">18&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>まだ一つしたあげてないのですが、これだけでもなんとなく「KotlinとSwiftが似ている」の意味が少しは見えてきた気がしますね。処理を伴うプロパティを扱える、という仕様がそうですが、型の定義もそうで、キーワードは少し違うけど大体似たような感覚でコードが読めるというところがそうです。&lt;/p>
+&lt;p>ただ、やはり違う部分もありますね。data classに対して、SwiftはGoやRustのようにstructを使えるというところがそうかなと思います。もちろんSwiftにもClassはあるので、目的によってどれかを選ぶようになるらしいです。という面では、またなんとなくKotlinでdata classとclassを分けて使うという点と似ているような気もしますね。&lt;/p>
+&lt;h3 id="extension">Extension&lt;/h3>
+&lt;p>次は、拡張です。Kotlinではオブジェクトについて、そのオブジェクトの外にメソッドやプロパティを定義することができますね。これらを拡張関数や拡張プロパティと呼び、以下のように定義することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> Student.isUnderAge: Boolean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>() = age &amp;lt; &lt;span style="color:#bd93f9">18&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以前このブログでも述べたことのある&lt;a class="link" href="https://www.amazon.co.jp/dp/B08WXCRVD2/ref=dp-kindle-redirect?_encoding=UTF8&amp;amp;btkr=1" target="_blank" rel="noopener"
+>Effective Kotlin&lt;/a>で提示されている活用方法ですが、ユースケースやドメインによって違う処理が必要となった場合は、class内に全てのメソッドやプロパティをを定義するよりはこのような拡張を使って、パッケージごとに定義することでアクセス制限を設ける方法があります。&lt;/p>
+&lt;p>同じようなことがSwiftでもできますが、書き方はやはり少し違いました。上記のようなプロパティをSwiftで同じ方法で実装する場合、以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">extension&lt;/span> &lt;span style="color:#50fa7b">Student&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">isUnderAge&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">Bool&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span> { &lt;span style="color:#ff79c6">return&lt;/span> age &lt;span style="color:#ff79c6">&amp;lt;&lt;/span> &lt;span style="color:#bd93f9">18&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のようにSwiftには&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Extensions.html" target="_blank" rel="noopener"
+>Extension&lt;/a>が別途キーワードとして存在していて、新しくclassやstructを定義するかのような感覚で関数やプロパティを付け加えることができます。個人的な感想としてはRustの&lt;a class="link" href="https://doc.rust-jp.rs/book-ja/ch05-03-method-syntax.html" target="_blank" rel="noopener"
+>メソッド&lt;/a>と似ている形で、一つの&lt;code>extension&lt;/code>の中にまとめられるところがむしろKotlinより整頓された感覚なので良さげですね。Kotlinの場合、一つのオブジェクトに対しての拡張が複数あると少し汚くも見えるので…&lt;/p>
+&lt;h4 id="string-interpolation">String Interpolation&lt;/h4>
+&lt;p>Javaの場合でもそうで、多くの言語では文字列と、違う変数として格納してある値を一つの文字列にまとめる場合は&lt;code>format()&lt;/code>を使うか、文字列に変換して結合するケースが多いかなと思います。Kotlinでもそのような使い方はもちろんできますが、&lt;a class="link" href="https://kotlinlang.org/docs/basic-types.html#string-templates" target="_blank" rel="noopener"
+>String template&lt;/a>があるので、簡単に文字列の中で違う値を埋め込むことができます。例えば以下のようなものですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> world = &lt;span style="color:#f1fa8c">&amp;#34;World&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>println(&lt;span style="color:#f1fa8c">&amp;#34;Hello, &lt;/span>&lt;span style="color:#f1fa8c">$world&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Swiftでも&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/StringsAndCharacters.html#ID292" target="_blank" rel="noopener"
+>String Interpolation&lt;/a>があるので、&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">world&lt;/span> = &lt;span style="color:#f1fa8c">&amp;#34;World&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#f1fa8c">&amp;#34;Hello, &lt;/span>&lt;span style="color:#f1fa8c">\(&lt;/span>world&lt;span style="color:#f1fa8c">)&lt;/span>&lt;span style="color:#f1fa8c">!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="arguments">Arguments&lt;/h4>
+&lt;p>Kotlinでは、関数のパラメータにデフォルト値を設定することで、簡単にオーバーロードを実現でき、そのパラメータが渡されてない場合の処理にも対応できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// timesにした数値分、stringを標準出力する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">printHello&lt;/span>(string: String, times: Int = &lt;span style="color:#bd93f9">1&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repeat(times) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println(&lt;span style="color:#f1fa8c">&amp;#34;Hello, &lt;/span>&lt;span style="color:#f1fa8c">$string&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>printHello(&lt;span style="color:#f1fa8c">&amp;#34;world&amp;#34;&lt;/span>) &lt;span style="color:#6272a4">// timesに値を指定しなくても関数を呼び出せる
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、どのパラメータに値を指定したいかを明確にするときや、関数に定義されたパラメータの順番に関係なく値を指定したい場合など色々な場面で&lt;a class="link" href="https://kotlinlang.org/docs/functions.html#named-arguments" target="_blank" rel="noopener"
+>Named Arguments&lt;/a>を使うことができますね。例えば&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/join-to-string.html" target="_blank" rel="noopener"
+>joinToString()&lt;/a>には&lt;code>separator&lt;/code>、&lt;code>limit&lt;/code>、&lt;code>truncated&lt;/code>など6つのパラメータがあるのですが、デフォルト値が指定されていて、Named Argumentsにより以下のような使い方が可能です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>listOf(&lt;span style="color:#f1fa8c">&amp;#34;A&amp;#34;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;B&amp;#34;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;C&amp;#34;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;D&amp;#34;&lt;/span>).joinToString(prefix = &lt;span style="color:#f1fa8c">&amp;#34;[&amp;#34;&lt;/span>, postfix = &lt;span style="color:#f1fa8c">&amp;#34;]&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Named ArgumentはKotlinにおいてはオプションで、基本的にはJava同様、関数に定義されてあるパラメータの順番に合わせて値を渡すだけでも問題ありません。しかし、Swiftではこれが逆になっていて、sturctのインスタンスを作る場合や関数を呼び出す場合は基本的にパラメータは基本的にNamed Argumentsのような形で渡す必要があります。これを&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Functions.html#ID166" target="_blank" rel="noopener"
+>Argument Label&lt;/a>と読んでいるそうです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">printHello&lt;/span>(string: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#f1fa8c">&amp;#34;Hello &lt;/span>&lt;span style="color:#f1fa8c">\(&lt;/span>string&lt;span style="color:#f1fa8c">)&lt;/span>&lt;span style="color:#f1fa8c">!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>printHello(string: &lt;span style="color:#f1fa8c">&amp;#34;world&amp;#34;&lt;/span>) &lt;span style="color:#6272a4">// Function Argument Labelでstringを指定&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、これもKotlinと同様、デフォルト値を指定することができ、その場合はパラメータを省略することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">printHello&lt;/span>(string: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span>, times: &lt;span style="color:#8be9fd;font-style:italic">Int&lt;/span> = &lt;span style="color:#bd93f9">1&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">count&lt;/span> = &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">repeat&lt;/span> { &lt;span style="color:#6272a4">// Kotlinのdo-whileループ的なもの&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#f1fa8c">&amp;#34;Hello &lt;/span>&lt;span style="color:#f1fa8c">\(&lt;/span>string&lt;span style="color:#f1fa8c">)&lt;/span>&lt;span style="color:#f1fa8c">!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> count &lt;span style="color:#ff79c6">+=&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">while&lt;/span> (count &lt;span style="color:#ff79c6">&amp;lt;=&lt;/span> times)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>printHello(string: &lt;span style="color:#f1fa8c">&amp;#34;world&amp;#34;&lt;/span>) &lt;span style="color:#6272a4">// timesを省略している&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他にも、アンダースコアを使うことでArgument Labelを省略できるようにもなります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">printHello&lt;/span>(&lt;span style="color:#ff79c6">_&lt;/span> string: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span>, times: &lt;span style="color:#8be9fd;font-style:italic">Int&lt;/span> = &lt;span style="color:#bd93f9">1&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">count&lt;/span> = &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">repeat&lt;/span> { &lt;span style="color:#6272a4">// Kotlinのdo-whileループ的なもの&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#f1fa8c">&amp;#34;Hello &lt;/span>&lt;span style="color:#f1fa8c">\(&lt;/span>string&lt;span style="color:#f1fa8c">)&lt;/span>&lt;span style="color:#f1fa8c">!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> count &lt;span style="color:#ff79c6">+=&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">while&lt;/span> (count &lt;span style="color:#ff79c6">&amp;lt;=&lt;/span> times)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>printHello(&lt;span style="color:#f1fa8c">&amp;#34;world&amp;#34;&lt;/span>) &lt;span style="color:#6272a4">// stringを省略&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>関数を定義する側からしたらあまり似ていないような気もするのですが、呼び出す側としてはかなり似たような形でコードが書けるのが特徴的かなと思います。&lt;/p>
+&lt;h4 id="drange">dRange&lt;/h4>
+&lt;p>Kotlinでは&lt;a class="link" href="https://kotlinlang.org/docs/ranges.html#:~:text=values%20using%20the-,rangeTo%28%29,-function%20from%20the" target="_blank" rel="noopener"
+>rangeTo()&lt;/a>を使って、簡単に数値の範囲を定義することができます。この関数は&lt;a class="link" href="https://kotlinlang.org/docs/keyword-reference.html#operators-and-special-symbols" target="_blank" rel="noopener"
+>operator&lt;/a>として定義されているので、&lt;code>..&lt;/code>で簡単に使えます。こうやって定義したRangeでは、最小値と最大値の取得や、Listに変換するなど色々なことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Rangeの定義
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> min = &lt;span style="color:#bd93f9">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> max = &lt;span style="color:#bd93f9">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> range = min&lt;span style="color:#ff79c6">..&lt;/span>max
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 最小値と最大値の取得
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>println(range.start) &lt;span style="color:#6272a4">// 10
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>println(range.endInclusive) &lt;span style="color:#6272a4">// 20
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// RangeをListにする
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> intList = range.toList() &lt;span style="color:#6272a4">// [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Swiftでも&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/BasicOperators.html#ID73" target="_blank" rel="noopener"
+>Range Operator&lt;/a>を使って範囲を定義することができます。こちらも形は似ていて、&lt;code>...&lt;/code>となります。ドットの数がKotlinより一つ多いという点を除くと全く同じ感覚で、最小値と最大値もまた名前が違うだけでプロパティとして取得できるという点もまた一緒です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Rangeの定義&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">min&lt;/span> = &lt;span style="color:#bd93f9">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">max&lt;/span> = &lt;span style="color:#bd93f9">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">range&lt;/span> = min...max
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 最小値と最大値の取得&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(range.lowerBound) &lt;span style="color:#6272a4">// 10&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(range.upperBound) &lt;span style="color:#6272a4">// 20&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// RangeをArrayにする&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">array&lt;/span> = &lt;span style="color:#8be9fd;font-style:italic">Array&lt;/span>(range) &lt;span style="color:#6272a4">// [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、上記のコードを見ると気付きにくいところですが、Range実装については両言語での扱いが少し違うところがあります。Kotlinでは&lt;code>rangeTo()&lt;/code>の戻り値が、元の値の型に合わせて&lt;code>InteRange&lt;/code>や&lt;code>LongRange&lt;/code>のようなものとなっていて、最小値と最大値をプロパティで取得する場合も&lt;code>rangeTo&lt;/code>に渡された二つの値の型と一緒です。&lt;/p>
+&lt;p>しかし、Swiftの&lt;a class="link" href="https://developer.apple.com/documentation/swift/range" target="_blank" rel="noopener"
+>Range&lt;/a>は&lt;code>Range&amp;lt;Bound&amp;gt;&lt;/code>という型で、当然Rangeから取得できる最小値や最大値も&lt;a class="link" href="https://developer.apple.com/documentation/swift/rangeexpression/bound/" target="_blank" rel="noopener"
+>Bound&lt;/a>の型となっています。IntやLongとはまた別の型になるので、場合によっては注意して使う必要があるかも知れません。&lt;/p>
+&lt;h3 id="swiftだけのもの">Swiftだけのもの&lt;/h3>
+&lt;p>今まではKotlinユーザの観点から、Kotlinとどれだけ同じ感覚でコードを書けるか、ということを述べていましたが、ここからは少し間隔が違うなと思ったところを少しまとめてみようと思います。&lt;/p>
+&lt;h4 id="メソッドプロパティコールでの省略">メソッド・プロパティコールでの省略&lt;/h4>
+&lt;p>Kotlinでは、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html" target="_blank" rel="noopener"
+>apply()&lt;/a>のように自分自身を指しているのが明確な場合、&lt;code>this&lt;/code>を省略することができます。以下のようにですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Student&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> name: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">var&lt;/span> age: Int = &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> studentA = Student(name = &lt;span style="color:#f1fa8c">&amp;#34;A&amp;#34;&lt;/span>).apply { age = &lt;span style="color:#bd93f9">18&lt;/span> } &lt;span style="color:#6272a4">// Student(name=A, age=18)
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように、&lt;code>this&lt;/code>を使う場合か、明確に対象importしているなど特定のケースを除くとKotlinでは基本的に&lt;code>Class.method()&lt;/code>のような形でどのクラスのメンバを呼び出しているかを表記するのが原則ですね。&lt;/p>
+&lt;p>しかし、Swiftの場合は少し状況が違います。もっとゆるい感じで、コンパイラを基準に対象が明確であれば、&lt;code>.method()&lt;/code>のような形で省略できるような感覚です。以下はSwiftUIのチュートリアルで提示しているコードの一部を抜粋したものですが、&lt;code>filter&lt;/code>が&lt;code>FilterCategory&lt;/code>というenumであるため、&lt;code>.all&lt;/code>という形で三項演算子の中で使われていることを確認できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">LandmarkList&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @State &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">filter&lt;/span> = FilterCategory.all
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">enum&lt;/span> &lt;span style="color:#50fa7b">FilterCategory&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span>, CaseIterable, Identifiable {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> all = &lt;span style="color:#f1fa8c">&amp;#34;ALL&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> lakes = &lt;span style="color:#f1fa8c">&amp;#34;Lakes&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> rivers = &lt;span style="color:#f1fa8c">&amp;#34;Rivers&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> mountains = &lt;span style="color:#f1fa8c">&amp;#34;Mountains&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">id&lt;/span>: FilterCategory { &lt;span style="color:#ff79c6">self&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">title&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">let&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">title&lt;/span> = filter == .all ? &lt;span style="color:#f1fa8c">&amp;#34;Landmarks&amp;#34;&lt;/span> : filter.rawValue
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> showFavoritesOnly ? &lt;span style="color:#f1fa8c">&amp;#34;Favorite &lt;/span>&lt;span style="color:#f1fa8c">\(&lt;/span>title&lt;span style="color:#f1fa8c">)&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span> : title
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="protocol">Protocol&lt;/h4>
+&lt;p>Swiftでは&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Protocols.html" target="_blank" rel="noopener"
+>Protocol&lt;/a>というものがあり、JavaやKotlinのinterfaceと大体同じ感覚で使えます。ここまでだとあまり差はないように思いますが、実際にはstructやclass、enumなどを定義するときには、必要に応じでprotocolを採用(adopt)する必要があるというところが体験できる違いかなと思います。&lt;/p>
+&lt;p>例えば、Kotlinで一つのdata classを定義するとしたら、以下のようなメンバが自動て追加されます。&lt;/p>
+&lt;ul>
+&lt;li>equals()&lt;/li>
+&lt;li>hashCode()&lt;/li>
+&lt;li>toString()&lt;/li>
+&lt;li>componentN()&lt;/li>
+&lt;li>copy()&lt;/li>
+&lt;/ul>
+&lt;p>しかし、Swiftのstruct, class, enumなどにはこのようなメンバは基本的に追加されません。なので、必要なメンバがあればそれに関するprotocolを採用し、実装する必要があります。例えばハッシュ値が使いたい場合は&lt;a class="link" href="https://developer.apple.com/documentation/swift/hashable" target="_blank" rel="noopener"
+>Hashable&lt;/a>、
+Jsonなどに変換するためには&lt;a class="link" href="https://developer.apple.com/documentation/swift/codable" target="_blank" rel="noopener"
+>Codable&lt;/a>、Listでループしたい場合は&lt;a class="link" href="https://developer.apple.com/documentation/swift/identifiable" target="_blank" rel="noopener"
+>Identifiable&lt;/a>、enumの全ケースを網羅してループしたい場合は&lt;a class="link" href="https://developer.apple.com/documentation/swift/caseiterable" target="_blank" rel="noopener"
+>CaseIterable&lt;/a>、同一化を比較したい場合は&lt;a class="link" href="https://developer.apple.com/documentation/swift/equatable" target="_blank" rel="noopener"
+>Equatable&lt;/a>を採用するなどです。&lt;/p>
+&lt;p>もちろんJavaやKotlinでも必要に応じてintefaceやannotationを使う必要はありますが、SwiftだとKotlinで気軽に使える機能がstructやclassなどを定義した時点では揃ってない可能性があるので、ここは気をつけるべきところですね。&lt;/p>
+&lt;h3 id="some">some&lt;/h3>
+&lt;p>Swiftでは少し変わった感覚のキーワードがあるます。そのキーワードの説明するために、まずは以下のようなprotocolとstructの定義があるとしましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">protocol&lt;/span> &lt;span style="color:#50fa7b">Something&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">define&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">GoodThing&lt;/span>: Something {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">define&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(&lt;span style="color:#f1fa8c">&amp;#34;It&amp;#39;s good thing!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のようなコードがある場合、変数の型宣言や関数の戻り値で少し独特なキーワードを使うことができます。&lt;code>some&lt;/code>というものです。実際使う時は、以下のようなコードとなります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">good&lt;/span>: some Something = GoodThing()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">func&lt;/span> &lt;span style="color:#50fa7b">returnSomething&lt;/span>() -&amp;gt; some Something {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> GoodThing()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これだけでは&lt;code>some&lt;/code>というキーワードが一体どんなものかわからないですね。ここでKotlinの概念を持ってくるとどうでしょうか。実は、Kotlinでもこれによく似た機能があります。&lt;code>&amp;lt;T extends Something&amp;gt;&lt;/code>です。KotlinやJavaの経験がある型ならこれで十分に何を意味しているかがしっくり来るかなと思います。&lt;/p>
+&lt;p>つまり、&lt;code>some&lt;/code>はとあるprotocolを満足する何かしらのインスタンスを示すものです。Swiftではそれを満足するオブジェクトであってもprotocolを直接変数の型や関数の戻り値として定義して直接使うことはできない場合があります。その場合に&lt;code>some&lt;/code>を使うことで問題を回避できます。JavaやKotlinでinterfaceを使って、その具体的な実装は問わなく使うのと一緒だと言えます。このキーワードのおかげで、SwiftUIでは&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/view" target="_blank" rel="noopener"
+>View&lt;/a>を満足して入れば画面を構成するどんなコンポーネントとして扱えるようになります。&lt;/p>
+&lt;p>ただ、interfaceを扱うのとは概念的に同じだとしても、コードを書く側の感覚としては全く違うのでここは注意しなければならないと思います。&lt;/p>
+&lt;h4 id="compiler-control-statements">Compiler Control Statements&lt;/h4>
+&lt;p>Swiftには&lt;a class="link" href="https://docs.swift.org/swift-book/ReferenceManual/Statements.html#ID538" target="_blank" rel="noopener"
+>Compiler Control Statements&lt;/a>という仕様があり、コンパイル時の処理を指定できます。例えば、SwiftUIのチュートリアルでは一つのアプリを実装して、OSによって違う機能を実現するためにこれを利用しているケースがあります。以下がその例です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// watchOSで起動する場合は、通知を使う&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#if&lt;/span> &lt;span style="color:#ff79c6">os&lt;/span>(&lt;span style="color:#ff79c6">watchOS&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>WKNotificationScene(controller: NotificationController.&lt;span style="color:#ff79c6">self&lt;/span>, category: &lt;span style="color:#f1fa8c">&amp;#34;LandmarkNear&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#endif&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// macOSで起動する場合は、設定を使う&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#if&lt;/span> &lt;span style="color:#ff79c6">os&lt;/span>(&lt;span style="color:#ff79c6">macOS&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Settings {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkSettings()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#endif&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Kotlinの場合もAndroidでアプリを実装する場合はこのような設定が必要になる場面もあるかも知れませんが、バックエンドの経験上ではコードによりコンパイラをコントロールするというケースはあまりなかったので、かなり新鮮な感覚でした。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>いかがでしたか。SwiftUIの話をするつもりが、Swiftのことだけでかなりの量になってしまったので、SwiftUIについては次のポストで述べようかなと思っています。しかし、Swiftだけでもかなり興味深いところが多かったので、やはりチュートリアルを触ってみて色々な経験ができたので良い選択をしたかなと思います。&lt;/p>
+&lt;p>また、やはりKotlinとSwiftがなんとなく似ている部分があるのは感覚的には確かなので、やはりどちらかの経験があると残りの片方への入門もしやすくなるのかなという感覚はあります。これは外国語の教育（自分の専攻です）でいうスキーマ、いわゆるバックグラウンドの知識ある故のことだろうなと思うと、少しうれしくもなりますね。やはりKotlinやってよかったなと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item></channel></rss>
