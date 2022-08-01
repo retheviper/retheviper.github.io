@@ -88,13 +88,12 @@ val world = "World"
 println("Hello, $world")
 ```
 
-Swiftでも[String Interpolation](https://docs.swift.org/swift-book/LanguageGuide/StringsAndCharacters.html#ID292)があるので、
+Swiftでも[String Interpolation](https://docs.swift.org/swift-book/LanguageGuide/StringsAndCharacters.html#ID292)があるので、同じことができます。少し書き方が変わっているのですが、機能的にはほぼ一緒です。
 
 ```swift
 let world = "World"
 print("Hello, \(world)!")
 ```
-
 
 #### Arguments
 
