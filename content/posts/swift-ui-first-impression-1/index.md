@@ -156,7 +156,7 @@ printHello("world") // stringを省略
 
 関数を定義する側からしたらあまり似ていないような気もするのですが、呼び出す側としてはかなり似たような形でコードが書けるのが特徴的かなと思います。
 
-#### dRange
+#### Range
 
 Kotlinでは[rangeTo()](https://kotlinlang.org/docs/ranges.html#:~:text=values%20using%20the-,rangeTo(),-function%20from%20the)を使って、簡単に数値の範囲を定義することができます。この関数は[operator](https://kotlinlang.org/docs/keyword-reference.html#operators-and-special-symbols)として定義されているので、`..`で簡単に使えます。こうやって定義したRangeでは、最小値と最大値の取得や、Listに変換するなど色々なことができます。
 
