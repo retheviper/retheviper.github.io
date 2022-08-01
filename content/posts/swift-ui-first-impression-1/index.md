@@ -56,7 +56,7 @@ struct Student {
 
 ただ、やはり違う部分もありますね。data classに対して、SwiftはGoやRustのようにstructを使えるというところがそうかなと思います。もちろんSwiftにもClassはあるので、目的によってどれかを選ぶようになるらしいです。という面では、またなんとなくKotlinでdata classとclassを分けて使うという点と似ているような気もしますね。
 
-### Extension
+#### Extension
 
 次は、拡張です。Kotlinではオブジェクトについて、そのオブジェクトの外にメソッドやプロパティを定義することができますね。これらを拡張関数や拡張プロパティと呼び、以下のように定義することができます。
 
@@ -252,7 +252,7 @@ Jsonなどに変換するためには[Codable](https://developer.apple.com/docum
 
 もちろんJavaやKotlinでも必要に応じてintefaceやannotationを使う必要はありますが、SwiftだとKotlinで気軽に使える機能がstructやclassなどを定義した時点では揃ってない可能性があるので、ここは気をつけるべきところですね。
 
-### some
+#### some
 
 Swiftでは少し変わった感覚のキーワードがあるます。そのキーワードの説明するために、まずは以下のようなprotocolとstructの定義があるとしましょう。
 
