@@ -100,7 +100,7 @@ print("Hello, \(world)!")
 Kotlinでは、関数のパラメータにデフォルト値を設定することで、簡単にオーバーロードを実現でき、そのパラメータが渡されてない場合の処理にも対応できます。
 
 ```kotlin
-// timesにした数値分、stringを標準出力する
+// timesに指定した数値分、stringを標準出力する
 fun printHello(string: String, times: Int = 1) {
     repeat(times) {
         println("Hello, $string")
@@ -145,7 +145,7 @@ printHello(string: "world") // timesを省略している
 ```swift
 func printHello(_ string: String, times: Int = 1) {
     var count = 1
-    repeat { // Kotlinのdo-whileループ的なもの
+    repeat {
         print("Hello \(string)!")
         count += 1
     } while (count <= times)
