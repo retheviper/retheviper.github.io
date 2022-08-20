@@ -1,4 +1,255 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>swift on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/swift/</link><description>Recent content in swift on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 31 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/swift/index.xml" rel="self" type="application/rss+xml"/><item><title>SwiftUIを触ってみた - その1</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-1/</link><pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-1/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた - その1" />&lt;p>今までの自分のキャリアを振り返ってみると、仕事としての経験はバックエンドばかりで、画面側の実装にはあまり関わったことがありません。しかし、スタンドアロンのアプリを作るためには、ウェブ・モバイル・デスクトップを問わず画面が必要となるので、いつかは画面側の実装もできるようになる必要があるかなと常に思っているところです。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>swift on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/swift/</link><description>Recent content in swift on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 20 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/swift/index.xml" rel="self" type="application/rss+xml"/><item><title>SwiftUIを触ってみた - その2</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-2/</link><pubDate>Sat, 20 Aug 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-2/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた - その2" />&lt;p>前回に続いて、今回はSwiftUIを触りながら感じたことについて述べたいと思います。自分のように、今までバックエンドの実績しかないエンジニアがGUIを作るとしたら、画面のレイアウトや色合い、画面間の繊維など「今までなかった概念」で混乱することも多いかなと思います。そしてその中でも特に難しい、うまく扱えない機能などもあるかなと思います。&lt;/p>
+&lt;p>自分の場合、プロダクションレベルのコードを書いたことはないものの、以前から&lt;a class="link" href="https://reactnative.dev/" target="_blank" rel="noopener"
+>React Native&lt;/a>, &lt;a class="link" href="https://flutter.dev/" target="_blank" rel="noopener"
+>Flutter&lt;/a>, &lt;a class="link" href="https://developer.android.com/jetpack/compose" target="_blank" rel="noopener"
+>Jetpack Compose&lt;/a>には少し触れたことがあったためSwiftUIで「画面を構成する方式」については少し理解しているつもりでした。しかし、やはりバックエンドでは存在しない機能がありました。&lt;/p>
+&lt;p>今回はそのSwiftUIの話となりますが、中でも私が注目した機能もしくは概念について述べたいと思います。&lt;/p>
+&lt;h2 id="swiftui">SwiftUI&lt;/h2>
+&lt;p>まずは、SwiftUIそのものに対して簡単に紹介しましょう。SwiftUIはいわゆる宣言型(Declarative)UIのフレームワークで、&lt;a class="link" href="https://ja.reactjs.org/" target="_blank" rel="noopener"
+>React&lt;/a>や&lt;a class="link" href="https://vuejs.org/" target="_blank" rel="noopener"
+>Vue&lt;/a>などのフロントエンドからの影響が見えます。要するに、画面を構成する要素(Widget, Component, Materialなどフレームワークやライブラリによって呼び方は様々ですが)を一つのオブジェクトとして「宣言」し、それらの要素の組み合わせによって一つの画面を完成するという形になっているということです。このような宣言型UIはSwiftUIだけでなく、モバイルに限定してもReact NativeやFlutter、Jetpack Composeなど様々なフレームワークやライブラリで採択しているものでもあります。&lt;/p>
+&lt;p>そして、要素の実装についてもフレームワークやライブラリによって色々と方法が分かれますが、SwiftUIでは、個別の要素はViewといい、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/view" target="_blank" rel="noopener"
+>View&lt;/a>というprotocolをstructとして実装していきます。なので、一覧を表示する画面であれば、一つの行としてデータを表示するView、その行をリストとして表示するためのView、さらに一覧の上や下にメニューを表示するViewなどが一つ一つのstructとして定義されていく形ということです。&lt;/p>
+&lt;p>このような画面の作り方は、フレームワークのパラダイム・コンセプトとして決まってあるものなので、それに従って実装を進めることには私のようにバックグラウンドが全く違うエンジニアでも特に問題はないかなと思います。&lt;/p>
+&lt;p>ただ、実際のアプリを作るとしましょう。画面に対してはフレームワークで提示する通り要素を実装して作ったとしたら、アプリを実行してなんらかの処理を行うためにはバックエンドを繋げるか、アプリ内でなんらかの処理を行うかなど「ロジック」とつなげる必要があるはずです。ここで常にとは言い難いのですが、バックエンドでは見慣れない概念が出てくる場合があります。「状態」というものです。&lt;/p>
+&lt;h2 id="状態">状態&lt;/h2>
+&lt;p>バックエンドのアプリを実装している場合は、リクエストがあり、それに対してのレスポンス（HTTPステータスのみだとしても）がある、という明確なプロセスがありますね。この一連の処理には、「途中で変化する」という概念はありません。この場合のデータは永続化されるか、処理が終了するまでの一時的な物が多いです。&lt;/p>
+&lt;p>しかし、画面の世界だと話は変わってきます。多くのモバイルアプリではスライダ、ボタン、テキストボックスなどいろいろな要素で構成されてあり、それらの要素に関する状態が常に変わってくるケースもあるのです。ファイルをダウンロードしている状態を表示するためのプログレスバーがあるとしたら、単純に進行状況を見せるとしたら一つのスレッドを割り当てて処理するだけで良いでしょう。&lt;/p>
+&lt;p>ここで一つ、もしダウンロードに「一時停止」のような機能があったらどうでしょうか。プロセスが進行中にボタンを押下したら止まり、再度押下したら再開されるような機能です。他にも色々と考慮すべきものはあるかと思いますが、この「停止している」「再開した」という概念をどこかに記憶しておく必要はあるでしょう。つまり、画面においてのユーザの入力に対して、なんらかの処理を実際に行うまで記憶しておくための機構が必要ということですね。&lt;/p>
+&lt;p>SwiftUIでももちろん、状態を管理するためのものがあります。ただ、ユースケースで考えると画面の要素(View)一つに限って必要なものか、それとも複数の要素において必要なものか、複数の画面（アプリ全体）にかけて必要なものかという、スコープによって必要な状態は違うものになります。View一つで必要なものをアプリ全体で管理する必要もなければ、複雑になりがちだからですね。なので、ここではそのスコープ別に状態を管理するためにどんなものがあるのかについて述べていきたいと思います。&lt;/p>
+&lt;h3 id="個別viewの状態">個別Viewの状態&lt;/h3>
+&lt;p>まずは最も小さい単位、Viewの場合です。先に述べた、一覧の画面が良い例になりそうですね。Appleのチュートリアルでは、以下のような一覧の画面を作ることになります。&lt;/p>
+&lt;p>&lt;figure
+class="gallery-image"
+style="
+flex-grow: 48;
+flex-basis: 117px"
+>
+&lt;a href="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list.png" data-size="860x1756">
+&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list.png"
+width="860"
+height="1756"
+srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu0267d8896987db251873bf1e3d824beb_440048_480x0_resize_box_3.png 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu0267d8896987db251873bf1e3d824beb_440048_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="List View">
+&lt;/a>
+&lt;figcaption>List View&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;p>この画面では右上のボタンを押すことで、一覧に表示するアイテムをフィルタリングできる機能があります。たとえば一部の行にハートマークがついてありますが、これは「お気に入り」を意味していて、そのお気に入りとして登録したものだけをフィルタするか、アイテムのカテゴリでフィルタするかなどの機能が入っています。&lt;/p>
+&lt;p>そしてこの画面では、「フィルタするカテゴリ」や「お気に入りだけを表示する」を状態として扱っていますが、この状態は他の画面では知る必要がないデータとなっています。この場合に使えるのが、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/state" target="_blank" rel="noopener"
+>@State&lt;/a>です。コードとしては、以下のようになっています。(一部省略)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 一覧画面&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">LandmarkList&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// お気に入りだけを表示するかどうか&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @State &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">showFavoritesOnly&lt;/span> = &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// フィルタするカテゴリ&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @State &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">filter&lt;/span> = FilterCategory.all
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// カテゴリの種類&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">enum&lt;/span> &lt;span style="color:#50fa7b">FilterCategory&lt;/span>: &lt;span style="color:#8be9fd;font-style:italic">String&lt;/span>, CaseIterable, Identifiable {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> all = &lt;span style="color:#f1fa8c">&amp;#34;ALL&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> lakes = &lt;span style="color:#f1fa8c">&amp;#34;Lakes&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> rivers = &lt;span style="color:#f1fa8c">&amp;#34;Rivers&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> mountains = &lt;span style="color:#f1fa8c">&amp;#34;Mountains&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">id&lt;/span>: FilterCategory { &lt;span style="color:#ff79c6">self&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// アイテムにフィルタを適用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">filteredLandmarks&lt;/span>: [Landmark] {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> modelData.landmarks.filter { landmark &lt;span style="color:#ff79c6">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#ff79c6">!&lt;/span>showFavoritesOnly &lt;span style="color:#ff79c6">||&lt;/span> landmark.isFavorite)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;amp;&amp;amp;&lt;/span> (filter == .all &lt;span style="color:#ff79c6">||&lt;/span> filter.rawValue == landmark.category.rawValue )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">body&lt;/span>: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> NavigationView {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// アイテムの表示部&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List(selection: $selectedLandmark) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(filteredLandmarks) { landmark &lt;span style="color:#ff79c6">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> NavigationLink {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkDetail(landmark: landmark)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } label: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkRow(landmark: landmark)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .toolbar {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ToolbarItem {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ツールバーにフィルタを適用するためのボタンを追加&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Menu {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 選択できるカテゴリ&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Picker(&lt;span style="color:#f1fa8c">&amp;#34;Category&amp;#34;&lt;/span>, selection: $filter) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ForEach(FilterCategory.allCases) { category &lt;span style="color:#ff79c6">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Text(category.rawValue).tag(category)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .pickerStyle(.inline)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// お気に入りだけを表示するかどうかのトグル&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Toggle(isOn: $showFavoritesOnly) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Label(&lt;span style="color:#f1fa8c">&amp;#34;Favorites only&amp;#34;&lt;/span>, systemImage: &lt;span style="color:#f1fa8c">&amp;#34;heart.fill&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } label: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Label(&lt;span style="color:#f1fa8c">&amp;#34;Filter&amp;#34;&lt;/span>, systemImage: &lt;span style="color:#f1fa8c">&amp;#34;slider.horizontal.3&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように、一つのViewにおいて状態を管理するためには、&lt;code>@State&lt;/code>を使うことになります。&lt;/p>
+&lt;h3 id="親子関係のviewが共有する状態">親子関係のViewが共有する状態&lt;/h3>
+&lt;p>さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、&lt;/p>
+&lt;p>実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで&lt;code>isOn&lt;/code>に親の状態を渡していますね。ただ、トグル時の挙動を&lt;code>@State&lt;/code>で定義したBooleanと結びつけるために&lt;code>isOn&lt;/code>として渡す際、&lt;code>$&lt;/code>をつけることに注目する必要があります。&lt;code>$&lt;/code>をつけることで、Booleanではなく、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/binding" target="_blank" rel="noopener"
+>Binding&lt;!-- raw HTML omitted -->&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
+>Toggle&lt;/a>の中でも親の状態を変更できるようになります。&lt;code>Toggle&lt;/code>は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である&lt;code>showFavoritesOnly&lt;/code>の値が変わるということです。&lt;/p>
+&lt;p>後でまた関連したポストを書きたいと思いますが、Jetpack Composeでも何となく似たような形で状態の管理ができる方法があります。例えば、&lt;code>@State&lt;/code>のように簡単な状態を管理するためには以下のような書き方ができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// true/falseの状態
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> toggle: Boolean &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#ff79c6">false&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> toggle {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println(&lt;span style="color:#f1fa8c">&amp;#34;On!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> toggle = &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>} &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println(&lt;span style="color:#f1fa8c">&amp;#34;Off!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> toggle = &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のような書き方はいわゆる&lt;a class="link" href="https://kotlinlang.org/docs/delegation.html" target="_blank" rel="noopener"
+>Delegation&lt;/a>によるもので、&lt;code>mutableStateOf&amp;lt;T&amp;gt;&lt;/code>が返すのは&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState" target="_blank" rel="noopener"
+>MutableState&lt;!-- raw HTML omitted -->&lt;/a>ですが、&lt;code>by&lt;/code>を使うことで実際は&lt;code>Boolean&lt;/code>そのものを扱うようになります。&lt;/p>
+&lt;p>そして&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>を分解し、以下のように状態と、状態を変化させる処理の処理を指定することもできます。これもまた、先ほどの&lt;code>Binding&lt;/code>のような役割をするようなものですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// テキストの状態と値の変更
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> (content: String, onValueChange: (String) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit) = remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// テキストフィールドに状態を表示し、変化があった場合は状態を変更させる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>TextField(&lt;span style="color:#ff79c6">value&lt;/span> = content, onValueChange = onValueChange)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやって他の要素に状態の変更を可能にするためには、基本的にその状態をラップしているオブジェクトを利用するという考えは、SwiftUIでもJetpack Composeでも一緒のようです。ただ、&lt;code>$&lt;/code>というキーワードを使ってラッパーにアクセスできるSwiftと、状態のオブジェクトをどうやって宣言するかを考える必要のあるKotlinの違いがまた面白いポイントです。&lt;/p>
+&lt;h3 id="アプリ全体で共有する状態">アプリ全体で共有する状態&lt;/h3>
+&lt;p>さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかも知れません。&lt;/p>
+&lt;p>&lt;figure
+class="gallery-image"
+style="
+flex-grow: 49;
+flex-basis: 119px"
+>
+&lt;a href="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu.png" data-size="732x1466">
+&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu.png"
+width="732"
+height="1466"
+srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu9c7790eb6847b0c09531674054eff1d4_1201768_480x0_resize_box_3.png 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu9c7790eb6847b0c09531674054eff1d4_1201768_1024x0_resize_box_3.png 1024w"
+loading="lazy"
+alt="Menu View">
+&lt;/a>
+&lt;figcaption>Menu View&lt;/figcaption>
+&lt;/figure>&lt;/p>
+&lt;p>ここで、下にある「Featured」や「List」をタッチすることにより表示される画面が変わるわけですが、この二つの画面は親子といえる関係ではありません。以下のコードをご覧ください。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">ContentView&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @State &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">selection&lt;/span>: Tab = .featured
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">enum&lt;/span> &lt;span style="color:#50fa7b">Tab&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> featured
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">case&lt;/span> list
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">body&lt;/span>: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// タブメニュー&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> TabView(selection: $selection) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Featured画面&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CategoryHome()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .tabItem {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Label(&lt;span style="color:#f1fa8c">&amp;#34;Featured&amp;#34;&lt;/span>, systemImage: &lt;span style="color:#f1fa8c">&amp;#34;star&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .tag(Tab.featured)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// LandmarkList画面&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .tabItem {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Label(&lt;span style="color:#f1fa8c">&amp;#34;List&amp;#34;&lt;/span>, systemImage: &lt;span style="color:#f1fa8c">&amp;#34;list.bullet&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .tag(Tab.list)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>要件によっては、この対等な関係にある画面間でも状態を共有する必要はあります。たとえば、ショッピングのアプリを作るとしたら、自分のアカウントの画面を開いている場合でもカートに入れている商品の情報は維持される必要がありますね。このように、現在表示している画面とは関係なく、アプリ全体で共有する状態が必要な場面があります。&lt;/p>
+&lt;p>この場合は、どうしたらいいでしょうか？もちろん、起点となるViewがあるので、そこに&lt;code>@State&lt;/code>を定義しておくというのも一つの方法かも知れません。ただ、状態として管理したい項目が増えれば増えるほど複雑になりがちですね。起点のViewには複数の&lt;code>@State&lt;/code>が必要となり、画面ごとにそれらを渡す必要があります。だとすると、やはり一つのオブジェクトに状態をまとめて置いて使いまわしたいものです。&lt;/p>
+&lt;p>Appleのチュートリアルでもそれを提示していて、画面間で共有するデータとしてLandmarkのデータと、ユーザのプロフィールをまとめて共有できるオブジェクトとして提供する方法があります。まずは、以下がその状態のオブジェクトのコードとなります。（一部省略）&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">final&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ModelData&lt;/span>: ObservableObject {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Published &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">landmarks&lt;/span>: [Landmark] = load(&lt;span style="color:#f1fa8c">&amp;#34;landmarkData.json&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Published &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">profile&lt;/span> = Profile.&lt;span style="color:#ff79c6">default&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでアプリ内でLandmarkの情報はjsonから読み取ったものとなっていて、プロフィールはEnumとなっています。そして&lt;a class="link" href="https://developer.apple.com/documentation/combine/observableobject" target="_blank" rel="noopener"
+>ObservableObject&lt;/a>というプロトコールが使われているのが見えますね。&lt;code>ObservableObject&lt;/code>を使うことで、このModelDataというクラスは変更される状態を保持し、値の変更があった場合はそれを参照する画面に通知する&lt;code>Publisher&lt;/code>として機能することになります。そしてそれぞれの状態となるプロパティについては、&lt;a class="link" href="https://developer.apple.com/documentation/combine/published" target="_blank" rel="noopener"
+>@Published&lt;/a>をつけることで状態として指定することになります。&lt;/p>
+&lt;p>こうして状態を保持するためのオブジェクトを定義したら、次はアプリ内でどうやって使用するかですね。チュートリアルでは、以下のようにアプリのメインとなるstructに以下のように定義しています。（一部省略）&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>@main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">LandmarksApp&lt;/span>: App {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ModelDataを状態のオブジェクトとして宣言&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @StateObject &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">modelData&lt;/span> = ModelData()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">body&lt;/span>: some Scene {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> WindowGroup {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ContentView()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .environmentObject(modelData) &lt;span style="color:#6272a4">// メイン画面に状態オブジェクトを渡す&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コードでわかるように、アプリでは定義しておいた状態オブジェクトを&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/stateobject" target="_blank" rel="noopener"
+>@StateObject&lt;/a>をつけて、メイン画面に渡すことで使うようになります。ちなみにこうやって&lt;code>View&lt;/code>として定義された画面にならどんなものでも&lt;code>environmentObject()&lt;/code>に状態オブジェクトを渡すことができるので、画面の一部だけをプレビューとして表示する場合でも、プレビューに表示する画面に状態オブジェクトを渡すことで動作を試すこともできます。例えば、先ほどのLandmarkの一覧画面のプレビューだと、以下のようになっています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">LandmarkList_Previews&lt;/span>: PreviewProvider {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">static&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">previews&lt;/span>: some View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .environmentObject(ModelData()) &lt;span style="color:#6272a4">// 状態オブジェクトを渡す&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうして状態オブジェクトを画面に渡したら、中では使うだけです。&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/environmentobject" target="_blank" rel="noopener"
+>@EnvironmentObject&lt;/a>というアノテーションを使って、状態を持つオブジェクトを宣言するだけで自動的にオブジェクトはDIされ、その画面で使えるようになります。また一覧の画面の話となりますが、以下のコードを見てください。&lt;code>landmarks&lt;/code>のデータを使って一覧を表示しているのがわかります。（一部省略）&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">LandmarkList&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 状態オブジェクト&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @EnvironmentObject &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">modelData&lt;/span>: ModelData
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 状態オブジェクトからデータを取り出しフィルタを適用&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">filteredLandmarks&lt;/span>: [Landmark] {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> modelData.landmarks.filter { landmark &lt;span style="color:#ff79c6">in&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#ff79c6">!&lt;/span>showFavoritesOnly &lt;span style="color:#ff79c6">||&lt;/span> landmark.isFavorite)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;amp;&amp;amp;&lt;/span> (filter == .all &lt;span style="color:#ff79c6">||&lt;/span> filter.rawValue == landmark.category.rawValue )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ちなみに、Jetpack Composeの場合はこのような方法ではなく、オブジェクトそのものを&lt;code>remember&lt;/code>するように使うようです。例えば以下のような形になります。そもそも要素を作成するアプローチが違うのが理由の一つなのかも知れませんね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// アプリ全体で共有する状態
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">ApplicationState&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> environment: MutableState&amp;lt;Environment&amp;gt;,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> hash: MutableState&amp;lt;String&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 状態の初期化
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>@Composable
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">rememberApplicationState&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> environment: MutableState&amp;lt;Environment&amp;gt; = mutableStateOf(Environment.PRODUCTION),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> hash: MutableState&amp;lt;String&amp;gt; = mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>): ApplicationState {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> remember(environment, hash) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ApplicationState(environment, hash)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 状態の定義
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> appState = rememberApplicationState()
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="永続化できる状態">永続化できる状態&lt;/h3>
+&lt;p>今までの状態は、アプリが実行中のみ有効なものでした。それだけでも十分な場合もありますが、場合によっては状態を永続化したい場合もあるでしょう。例えば、学習用のアプリだとしたらどこまで進行したかなどを保存しておきたいかなと思います。このような種のデータは、アプリを再起動しても変わらないことを期待しますね。&lt;/p>
+&lt;p>もちろん、この場合のためにDBがあり、ネットワーク機能のあるアプリならサーバ側にデータを保存したりするでしょう。ただ、この場合は「状態」とは言えないものですね。なぜなら、状態は画面の更新を伴うものだからです。画面をタッチした回数を、画面に表示しながら同時に保存しておきたい場合は毎回DBの更新と参照で実装したくない場合もあるかなと思います。そこで使えるのが、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/appstorage" target="_blank" rel="noopener"
+>@AppStorage&lt;/a>です。これを使うことで、画面の更新と永続化を同時に行うことができます。&lt;/p>
+&lt;p>また、チュートリアルによると、いくつかデフォルトとして保存されているデータに関してもこのアノテーションでアクセスできるようにになっています。一覧画面に表示される「お気に入り」ボタンの例ですが、ボタンのアイコンを&lt;code>@AppStorage&lt;/code>から参照するようになっています。コードは以下です。（一部省略）&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">struct&lt;/span> &lt;span style="color:#50fa7b">FavoriteButton&lt;/span>: View {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ボタンはハートのアイコンとして表示する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @AppStorage(&lt;span style="color:#f1fa8c">&amp;#34;Favorite.iconType&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">iconType&lt;/span>: IconType = .heart
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>いかがでしたか。自分の感想としては、やはり今まで自分が触れてきた分野とは全く違う概念やアプローチが多かったので、大変興味深いと思いつつ、「これであっているのか」という疑問もかなり湧いてくるような経験となっています。全く経験のない分野に足を踏み入れるのは常にそういうものなのかも知れませんが。&lt;/p>
+&lt;p>ただこれで、ある程度アプリを作る場合にどうやって処理を行うべきかについての疑問の一つは解けたような気がします。本当は画面を作る分、他にも色々と新しい概念が出てきたり、画面のレイアウトやUXの観点で色々と難しいものが出てくるかも知れませんが、とにかく「動く」ものを作れそうな気はしますね。何卒自分のようにバックエンドのみを経験してきた形にとって参考できるような記事となっていればと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>SwiftUIを触ってみた - その1</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-1/</link><pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-1/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた - その1" />&lt;p>今までの自分のキャリアを振り返ってみると、仕事としての経験はバックエンドばかりで、画面側の実装にはあまり関わったことがありません。しかし、スタンドアロンのアプリを作るためには、ウェブ・モバイル・デスクトップを問わず画面が必要となるので、いつかは画面側の実装もできるようになる必要があるかなと常に思っているところです。&lt;/p>
 &lt;p>画面を作るといっても、どんな分野のエンジニアとしてキャリアパスを考えているか、どのような企業で働きたいか、慣れている言語は何であるかなど色々と考慮すべき要素は多いのですが、自分の場合はKotlinに慣れているのもあり、ウェブ・モバイル・デスクトップアプリに全部対応できるという点から&lt;a class="link" href="https://www.jetbrains.com/lp/compose-mpp" target="_blank" rel="noopener"
 >Jectpack Compose&lt;/a>を、また普段からMacとiPhone、iPadといったApple社の製品をよく使っている上、KotlinからのSwift入門が比較的簡単ということで&lt;a class="link" href="https://developer.apple.com/xcode/swiftui/" target="_blank" rel="noopener"
 >SwiftUI&lt;/a>を勉強したいと思っています。&lt;/p>
