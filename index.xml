@@ -1,4 +1,173 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Korean-man in Tokyo</title><link>https://retheviper.github.io/</link><description>Recent content on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 27 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>data classのListをCSVにする</title><link>https://retheviper.github.io/posts/kotlin-write-csv/</link><pubDate>Sat, 27 Aug 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-write-csv/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post data classのListをCSVにする" />&lt;p>アプリを書いていると、DBに保存した形とは違う形でデータを読み込んだり出力するケースが多いです。代表的に、多くのバックエンドアプリで採用しているREST APIがそうですね。APIの入力値と戻り値は、DBに保存されている形とは一致しないケースが多く、必要(リクエストを送信してきた側の都合)に合わせて適切にパラメータを受け取り、レスポンスを返すようになっています。そして時と場合によっては、人間が楽に読める形としてデータをまとめる必要もあります。そういった場合はExcelファイルやCSV、PDFといったいろいろなものを想定できますね。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Korean-man in Tokyo</title><link>https://retheviper.github.io/</link><description>Recent content on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 09 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>Kotlinでデスクトップアプリを作ってみた</title><link>https://retheviper.github.io/posts/kotlin-compose-desktop/</link><pubDate>Fri, 09 Sep 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-compose-desktop/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Kotlinでデスクトップアプリを作ってみた" />&lt;p>バックエンドの開発をしていると、テストの自動化では対応できない場合もありますね。理想的なシナリオとしては、ユニットテストから全てのシナリオを想定したインテグレーションテストまでを全部作成でき、開発・企画に属するものがそれらを理解しきっていることだろうとは思いますが、現実ではなかなか難しいものです。特に、サービスが成長していきながら技術的負債を解消しようとしたり、新しい機能を足したり、昔は対応できなかった改修が必要となったり、運用上のイレギュラー対応が必要となったりなどで最初の仕様は変わり続けていき、改修を行うエンジニアや運用する側でも今の状態がどうで、どう変わるべきかを判断するのは難しくなりがちなのだから、と自分は理解しています。&lt;/p>
+&lt;p>なので、少なくとも今のアプリがちゃんと想定通りに動くかどうかを人の手で検証する必要が出てくるケースも十分にあり得るものです。そしてそうなった場合はどうやってテストを行うかを考える必要もありますね。テストの方法も色々あり、小さい機能単位でユニットテストを行い、最終的にはインテグレーションテストやシナリオテストまで上がっていくと良いはずですが、その全部を自動化するのが難しいケースもあるかと思います。例えばテストするためのデータのパターンを色々と用意する必要があったり、エンジニアが完全に仕様を把握してなかったりなどの場合もありますね。なので、人の手によるテスト（モンキーテスト的な）が必要となる場面も存在すると思います。&lt;/p>
+&lt;p>今回はその「人の手によるテスト」を手伝うために、テストツールを作った話です。自分の扱っているシステムはマイクロサービスの一つであり、業務仕様が複雑でさまざまなパターンで機能をテストする必要がありました。なのでエンジニアとしては実装を進めながら、同時に業務仕様に詳しい人にさまざまなパターンのデータを使ってテストができるツールを作ることになったわけです。&lt;/p>
+&lt;h2 id="目標と設計技術選定">目標と設計、技術選定&lt;/h2>
+&lt;p>実は以前から、リポジトリにはすでにテストツールが存在していました。しかし調べたところ、作られて2年以上放置されていて、Ruby on railsという自分が全く触れたことも（興味を持ったことも）ないフレームワークで作られているという問題がありました。これだと、自分がRubyを勉強して既存のツールを改修するという手もあったかも知れませんが、以下の理由から一から作り直そうと思いました。&lt;/p>
+&lt;ol>
+&lt;li>KotlinエンジニアがRubyアプリをメンテするのは良くない&lt;/li>
+&lt;li>ドキュメント化が進んでなく、使い方が不便&lt;/li>
+&lt;/ol>
+&lt;p>そう決めてからは、テストを行いたい側（企画）からの要請を受け、ツールに要求される仕様としての機能をまとめることに。テストが行えるツールという確実な目標があったので、仕様は極めて単純です。要求事項としてツールに揃うべき機能は以下のようなものでした。&lt;/p>
+&lt;ul>
+&lt;li>テストデータのファイルを読み込ませる&lt;/li>
+&lt;li>バックエンドのアプリのAPIを呼び出す&lt;/li>
+&lt;li>APIの実行結果をファイルに書き込む&lt;/li>
+&lt;/ul>
+&lt;p>テストツールとしては上記に挙げている要求事項を満たしているならテストツールとしては合格というわけです。しかし、実際のテストを行いたい側がまずエンジニアではなく、今後もエンジニアではない人がツールを触る可能性があります。そこまでを考慮して、以下の追加的な目標を立てました。&lt;/p>
+&lt;ul>
+&lt;li>環境構築をしなくても使えるようにする&lt;/li>
+&lt;li>手順書がなくても使えるくらい簡単なものに仕上げる&lt;/li>
+&lt;/ul>
+&lt;p>ここまで決めたら、次に要求されている機能の細部を掘り下げていきます。設計書を書くほどでもないですが、土台となる設計のようなものです。&lt;/p>
+&lt;ul>
+&lt;li>データの読み込みと書き込み
+&lt;ul>
+&lt;li>ツールを使える人はSQLが使える=テーブル（表）が読める&lt;/li>
+&lt;li>テーブルの形でデータの入出力ができた方がわかりやすい&lt;/li>
+&lt;li>テストデータはCSVで読み込む&lt;/li>
+&lt;li>API実行結果もCSVに書き込む&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>APIコールができる
+&lt;ul>
+&lt;li>HTTPクライアントでGET・POSTする&lt;/li>
+&lt;li>APIコールにはトークンが必要
+&lt;ul>
+&lt;li>トークンはセキュリティ問題でソースコードに埋め込むのはNG&lt;/li>
+&lt;li>しかし毎回入力するのはめんどくさい&lt;/li>
+&lt;li>アプリを実行して最初はトークンを入力し、次回からはそのトークンを使い回すようにする&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>本番以外の環境が対象
+&lt;ul>
+&lt;li>複数の環境があるのでどれかを選択できるようにする&lt;/li>
+&lt;li>これも毎回入力はめんどくさい&lt;/li>
+&lt;li>最初に一回だけ選択できるようにしたい&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>そして自分の立てた目標を、上記の要求事項を達成できるかどうかを考えながら振り返ってみます。環境構築をしなくても使えるなら、実行可能な一つのバイナリとして提供した方が良いでしょう。また、使い方が簡単な方だと、やはりGUIを含めた方が良いですね。特にGUIを採用したら要求事項に対してもかなり良い感じで機能を完成できると思いました。&lt;/p>
+&lt;p>例えばファイルの読み込みや書き込みにはパスの指定が必要で、トークンと環境の選択も入力が必要な項目で、CLIだとやはり不便です。エンジニアではない人が触るとしたら尚更ですね。Windowsユーザなら、コマンドラインも考慮しなければならないかも知れません。その反面、GUIだとファイルパスならダイアログ、トークンの入力もテキストポックス、環境の選択ならプールダウンメニューで対応できます。なので、「バイナリの実行で起動できるGUIのアプリを作る」という結論を出しています。&lt;/p>
+&lt;h2 id="compose-for-desktop">Compose for Desktop&lt;/h2>
+&lt;p>テストツールの仕様と技術的な要件が決まったら次は技術選定になりますがね。まずどの言語を使うかについてですが、自分以外でも同じチーム、つまりKotlinエンジニアがこれからもメンテを行うことになる可能性が高いのでKotlinにしました。Kotlinを使うことで、機能の実現で必要なライブラリの選定も楽になりますね。すでにテスト対象のバックエンドアプリで使っているHTTPクライアントがあるので、一部のコードはそのまま移植しても良いはずです。また、同じライブラリを使うことでメンテもより簡単になるでしょう。&lt;/p>
+&lt;p>あとはGUIですが、今回は&lt;a class="link" href="https://www.jetbrains.com/ja-jp/lp/compose-desktop/" target="_blank" rel="noopener"
+>Compose for Desktop&lt;/a>を使うことにしました。KotlinはJavaと互換性があるので、当然&lt;a class="link" href="https://ja.wikipedia.org/wiki/Swing" target="_blank" rel="noopener"
+>Swing&lt;/a>や&lt;a class="link" href="https://openjfx.io/" target="_blank" rel="noopener"
+>JavaFX&lt;/a>などJavaのGUIツールキットをそのまま使うという選択肢もあります。他にも&lt;a class="link" href="https://github.com/edvin/tornadofx" target="_blank" rel="noopener"
+>TornadoFX&lt;/a>という選択肢があったりもしますが、今回あえてComposeを選んだのはいくつかの理由があります。&lt;/p>
+&lt;p>まずは個人的にモバイルに興味があって以前から興味を持っていたので、今回本格的にこれでアプリを作ってみたいという願望もありましたが、今後もKotlinエンジニアの手でメンテが行われるとすると、やはりモバイルの経験があるか、少なくとも興味を持つ方が多いだろうという点です。Composeはまだ正式リリースされて1年ほどしか経ってない新しいものですが、最近流行っているいわゆる「宣言型」のフレームワークなので、少なくともAndroidアプリの開発ではメインストリームになる可能性が高いだろうという判断からでした。&lt;/p>
+&lt;p>また、Composeはモバイルのみでなく、そもそもマルチプラットフォーム向けに開発されたものなので、Windows/Mac/Linuxの環境を問わず実行可能なバイナリをビルドできるという点でも魅力的だったです。これならテスターがどんなOSを使っていても同じ感覚でツールを使えて、&lt;/p>
+&lt;p>ただ、やはり今まであまり接したことのない技術なので勉強はもちろん試行錯誤などもあったので、テストツールを作りながらこれは覚えておいた方が良いなと思ったところをいくつか挙げてみようと思います。&lt;/p>
+&lt;h3 id="状態管理">状態管理&lt;/h3>
+&lt;p>&lt;a class="link" href="../swift-ui-first-impression-2/" >SwiftUIのポスト&lt;/a>の時も触れた状態管理ですが、Composeでも同じくGUIを扱うことになるので、状態管理が大事となります。今回はアプリとしての画面がひとつしかないので、複数の画面にまたがって状態を管理する必要はないかなと思いましたが、それでもやはり処理を行うためにはアプリ全体で共有する状態として管理が必要なものがいくつかありました。&lt;/p>
+&lt;p>ただ、上記ポストでも述べた通り、SwiftUIとComposeとは状態管理の方式が少し違います。SwiftUIでは状態がどこで使われるかによって明確に使われるアノテーションやクラスなどが変わっていたなら、Composeでは大体&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary?hl=ja#remember%28kotlin.Function0%29" target="_blank" rel="noopener"
+>remember()&lt;/a>と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja" target="_blank" rel="noopener"
+>MutableState&lt;!-- raw HTML omitted -->&lt;/a>の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p>
+&lt;p>まず、Composeでの状態は、以下のような三つの方法で定義することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Delegateで定義する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> isOn: Boolean &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#ff79c6">false&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 直接値を書き換えできる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>isOn = &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 分解宣言で定義する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> (isOff: Boolean, setIsOff: (Boolean) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit) = remember { mutableStateOf(&lt;span style="color:#ff79c6">true&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 参照と更新が分離される
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">if&lt;/span> (isOff) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> setIsOff(&lt;span style="color:#ff79c6">!is&lt;/span>Off) &lt;span style="color:#6272a4">// toggle
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// MubtableState&amp;lt;T&amp;gt;として扱う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> isNotOff: MutableState&amp;lt;Boolean&amp;gt; = remember { mutableStateOf(&lt;span style="color:#ff79c6">false&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// ラッパーになっているので、値を更新するためにはvalueにアクセスする必要がある
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>isNotOff.&lt;span style="color:#ff79c6">value&lt;/span> = &lt;span style="color:#ff79c6">!is&lt;/span>NotOff.&lt;span style="color:#ff79c6">value&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでDelegateで&lt;code>var&lt;/code>として定義した場合は最も使いやすくなりますが、Intellij上ではコンパイルエラーになりがちです。なぜかというと、Delegateを使うためには&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#%28androidx.compose.runtime.MutableState%29.setValue%28kotlin.Any,kotlin.reflect.KProperty,kotlin.Any%29" target="_blank" rel="noopener"
+>androidx.compose.runtime.setValue&lt;/a>と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#%28androidx.compose.runtime.State%29.getValue%28kotlin.Any,kotlin.reflect.KProperty%29" target="_blank" rel="noopener"
+>androidx.compose.runtime.getValue&lt;/a>をimportする必要がありますが、これが自動で行われないからです。最初このエラーの理由がわからなかったり、忙しい場合にいちいちimport文を書いていくが面倒だったりでかなり使わなくなるケースも多いかなという気がします。ただこれは、まだIntellijでのCompose対応が完璧ではないのが原因なので、これはいずれ解消されると期待できるでしょう。&lt;/p>
+&lt;p>分解宣言で値の参照と更新を別々で使うのは、どこで使うか悩ましいケースもあるかなと思いますが、Composeの一部Widgetに状態を渡す場合に使われる場面があります。代表的なものが&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/material/package-summary#TextField%28kotlin.String,kotlin.Function1,androidx.compose.ui.Modifier,kotlin.Boolean,kotlin.Boolean,androidx.compose.ui.text.TextStyle,kotlin.Function0,kotlin.Function0,kotlin.Function0,kotlin.Function0,kotlin.Boolean,androidx.compose.ui.text.input.VisualTransformation,androidx.compose.foundation.text.KeyboardOptions,androidx.compose.foundation.text.KeyboardActions,kotlin.Boolean,kotlin.Int,androidx.compose.foundation.interaction.MutableInteractionSource,androidx.compose.ui.graphics.Shape,androidx.compose.material.TextFieldColors%29" target="_blank" rel="noopener"
+>TextField&lt;/a>で、これはコードを見るとすぐにその目的がわかります。実際のコードで、以下のように使われます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> (text: String, updateText: (String) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit) = remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>TextField(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> onValueChange = setValue, &lt;span style="color:#6272a4">// TextFieldに文字を入力するとその値でtextを更新する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">value&lt;/span> = text &lt;span style="color:#6272a4">// textの値をTextFieldに表示する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>最後に&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>として定義するケースですが、直接的な値の更新ができないので最も使い方としては不便なのですが、実際は最も多く使われるのではないかと思います。なぜかというと、アプリ全体で状態を共有するなど複数のWidgetをまたがって使う場合は、以下のようにclassの中にフィールドとして&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>を定義することになるからです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// アプリ全体で共有するためにクラスに状態を定義する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AppState&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> isOn: MutableState&amp;lt;Boolean&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはもちろん別途&lt;a class="link" href="https://kotlinlang.org/docs/properties.html#getters-and-setters" target="_blank" rel="noopener"
+>getter/setter&lt;/a>をclassに定義しておくと、中のvalueにアクセスしなくても直接プロパティにアクセスする感覚で使えます。イメージ的には以下のようなものですね。これだと状態として管理したい項目が増えれば増えるほどコードの量が増えてしまう面倒さがあるというのが短所かなと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AppState&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> _isOn: MutableState&amp;lt;Boolean&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">var&lt;/span> isOn: Boolean
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>() = _isOn.&lt;span style="color:#ff79c6">value&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">set&lt;/span>(&lt;span style="color:#ff79c6">value&lt;/span>) { _isOn.&lt;span style="color:#ff79c6">value&lt;/span> = &lt;span style="color:#ff79c6">value&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように、Composeでの状態には定義する方法が色々あり、それぞれの特徴があるわけなのでどの場面で使うかによって適切な定義の方法を考えるのが何よりも大事だという印象です。&lt;/p>
+&lt;h3 id="swingawt">Swing/AWT&lt;/h3>
+&lt;p>Compose for Desktopの特徴の一つは、Swingや&lt;a class="link" href="https://en.wikipedia.org/wiki/Abstract_Window_Toolkit" target="_blank" rel="noopener"
+>AWT&lt;/a>に対する互換性があるという点です。最初は&lt;a class="link" href="https://github.com/JetBrains/compose-jb/blob/master/tutorials/Tray_Notifications_MenuBar_new/README.md" target="_blank" rel="noopener"
+>Macのトレイ、メニューバー、通知&lt;/a>にも対応していたので基本的な機能は全て揃っているのではないかと思いましたが、実はそうでもなく、一部の機能はSwingやAWTの機能を借りて実装することになるケースもありました。実際、私の作ったテストツールでも一部SwingとAWTの機能を使っているところがあります。&lt;/p>
+&lt;p>例えばファイル選択機能がそうです。CSVを読み込むためにファイル選択のダイアログを表示したかったのですが、ComposeのWigdetではまだ対応できてないので、やむを得なくAWTの&lt;a class="link" href="https://docs.oracle.com/javase/jp/8/docs/api/java/awt/FileDialog.html" target="_blank" rel="noopener"
+>FileDialog&lt;/a>を使う必要がありました。以下がその実装の例です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 選択したファイル名を状態として保持する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> fileName &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// AWTのファイル選択ダイアログを使う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>FileDialog(ComposeWindow()).apply {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 選択できるのはCSVのみにしたい
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> setFilenameFilter { _, name &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> name.endsWith(&lt;span style="color:#f1fa8c">&amp;#34;.csv&amp;#34;&lt;/span>, ignoreCase = &lt;span style="color:#ff79c6">true&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> isVisible = &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ファイルが選択された場合は状態を更新する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (!&lt;span style="color:#ff79c6">file&lt;/span>.isNullOrBlank()) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileName = &lt;span style="color:#ff79c6">file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし、これでも十分ではない場合もありました。フォルダのみを選択できるようにしたい場合に&lt;code>FileDialog&lt;/code>はあまり良い選択ではなかったのです。名前からそうですが、あくまでファイルの選択を想定したものであるため、フォルダのみを選択できるようにはできなかったのです。なので、フォルダのみを選択できるようにするためには、Swingの力も借りる必要があります。その場合は、以下のように実装ができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// 選択したフォルダのパスを状態として保持する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> selectedPath &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Swingのファイル選択ダイアログをディレクトリのみ選択できるように設定して定義する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> fileChooser = JFileChooser().apply {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> dialogTitle = &lt;span style="color:#f1fa8c">&amp;#34;Choose Directory&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// ダイアログを表示する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">if&lt;/span> (fileChooser.showOpenDialog(ComposeWindow()) &lt;span style="color:#ff79c6">==&lt;/span> JFileChooser.APPROVE_OPTION) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// ダイアログで選択したパスが状態として保持しているパスと違う場合、選択したディレクトリの絶対パスを状態として更新する
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> path = fileChooser.selectedFile.absolutePath
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (selectedPath &lt;span style="color:#ff79c6">!=&lt;/span> path) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selectedPath = path
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>今回はこの二つユースケースのみSwingやAWTが登場していませんでしたが、どんなアプリを実装するかによって他のAPIも色々と使う必要性が出てくるかも知れないという良い一例になっている気がします。まだComposeはリリースされて1年ほどしか経っていないので、今後のバージョンアップでより多彩なWidgetが追加されることに期待ですね。&lt;/p>
+&lt;h3 id="ビルド">ビルド&lt;/h3>
+&lt;p>Composeを選んだ理由の一つのバイナリのビルドができるという点ですが、これはかなり満足度が高かったです。&lt;code>gradle&lt;/code>を使って、コマンドひとつで実行可能なバイナリが生成されます。Macでビルドして見ると、他のアプリと同じくパッケージが生成されます。中を見ると、実行に必要なJREと依存関係のJarが含まれていて、ネイティブではなくJVM上で起動される構造になっていました。&lt;/p>
+&lt;p>バイナリをビルドするときのオプションには色々なものがあり、OSの種類(Windows, Mac, Linux)によって違うアイコンを使ったり、基本的には含まれないモジュールを含むように指定したりすることができました。以下が実際のビルド時のオプションのサンプルです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>compose.desktop {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> application {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mainClass = &lt;span style="color:#f1fa8c">&amp;#34;com.testtool.MainKt&amp;#34;&lt;/span> &lt;span style="color:#6272a4">// 実行時のメインクラスを指定
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> nativeDistributions {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> packageName = &lt;span style="color:#f1fa8c">&amp;#34;Test Tool&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> packageVersion = &lt;span style="color:#f1fa8c">&amp;#34;1.0.0&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> modules(&lt;span style="color:#f1fa8c">&amp;#34;java.sql&amp;#34;&lt;/span>, &lt;span style="color:#f1fa8c">&amp;#34;java.naming&amp;#34;&lt;/span>) &lt;span style="color:#6272a4">// デフォルトでは含まれないパッケージを追加
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> macOS {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> iconFile.&lt;span style="color:#ff79c6">set&lt;/span>(project.&lt;span style="color:#ff79c6">file&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;misc/appicon/icon-mac.icns&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> windows {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> iconFile.&lt;span style="color:#ff79c6">set&lt;/span>(project.&lt;span style="color:#ff79c6">file&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;misc/appicon/icon-win.ico&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、ビルド時は注意が必要です。ビルドするとき、Composeでは内部的に&lt;a class="link" href="https://docs.oracle.com/javase/jp/14/docs/specs/man/jpackage.html" target="_blank" rel="noopener"
+>jpackage&lt;/a>を使うので、まずJava 15以上が必要となります。また、CPUのアーキテクチャによって違うJDKをインストールするようになっているため、ビルドするマシンと違うのアーキテクチャのCPUを使っているマシンをターゲットにすることはできません。&lt;/p>
+&lt;p>つまり、自分の使用のMacだとApple Silicon用のバイナリが生成され、IntelチップのMacだとx64用のバイナリが生成されるということです。実際ComposeでApp Storeにアプリを提出した人もいるらしいのですが、Rosettaで起動できるということでIntelチップのMacを使ってビルドしているとのことでした。Universal Binaryを作りたい場合は、JDKそのものがまずUniversal Binaryとして提供されることを待つしかなさそうです。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今回はデスクトップアプリの中でもかなり制限された機能と単純なロジックしかないシンプルなものを作ったので、もしこれからまたComposeを使ってさまざまな機能を持つように実装するとしたら(マルチウィンドウやダークモード対応、ナビゲーションなど)また色々と発見があるかも知れない気がしています。個人的にはかなりためになる経験で、思ったより実装もそこまで難しくなかったので、ツールの機能を拡張するか新しいツールを作ってみるチャンスがあるとしたら再度Composeを使ってみたいなと思いました。&lt;/p>
+&lt;p>まだリリースされてからそう長くもなく、足りない機能や情報も多かったり競合のフレームワークが色々とあるので未来はどうなるかわからないものですが、自分のようにKotlinをメインとしているエンジニアで、GUIに興味がある方なら一度はComposeを使って見ることをお勧めしたいですね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>data classのListをCSVにする</title><link>https://retheviper.github.io/posts/kotlin-write-csv/</link><pubDate>Sat, 27 Aug 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-write-csv/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post data classのListをCSVにする" />&lt;p>アプリを書いていると、DBに保存した形とは違う形でデータを読み込んだり出力するケースが多いです。代表的に、多くのバックエンドアプリで採用しているREST APIがそうですね。APIの入力値と戻り値は、DBに保存されている形とは一致しないケースが多く、必要(リクエストを送信してきた側の都合)に合わせて適切にパラメータを受け取り、レスポンスを返すようになっています。そして時と場合によっては、人間が楽に読める形としてデータをまとめる必要もあります。そういった場合はExcelファイルやCSV、PDFといったいろいろなものを想定できますね。&lt;/p>
 &lt;p>今回のポストも場合も人が読める形のファイルとして、特にCSVを扱う場合にKotlin側の実装をどうやっていくかに関するものです。&lt;/p>
 &lt;h2 id="kotlinでcsvを扱う">KotlinでCSVを扱う&lt;/h2>
 &lt;p>KotlinのCSV読み込み/書き込みのライブラリとして&lt;a class="link" href="https://github.com/doyaaaaaken/kotlin-csv/" target="_blank" rel="noopener"
