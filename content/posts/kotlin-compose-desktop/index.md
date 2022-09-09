@@ -1,6 +1,6 @@
 ---
 title: "Kotlinでデスクトップアプリを作ってみた"
-date: 2022-09-08
+date: 2022-09-09
 categories: 
   - kotlin
 image: "../../images/kotlin.jpg"
