@@ -1,4 +1,188 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>kotlin on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/kotlin/</link><description>Recent content in kotlin on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 10 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/kotlin/index.xml" rel="self" type="application/rss+xml"/><item><title>Kotlinだけでファイルサーバを作ってみた</title><link>https://retheviper.github.io/posts/kotlin-compose-web/</link><pubDate>Mon, 10 Oct 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-compose-web/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Kotlinだけでファイルサーバを作ってみた" />&lt;p>世の中にはさまざまなプログラミング言語があり、それぞれの特徴も明確で、言語ごとにできる・できないことも違うケースが多いですね。企業ならエンジニアの採用や費用など現実的な観点から技術選定をするので、プロジェクトにおいてどの言語を使うかは明確かつ一般的な基準があるかと思います。しかし、個人のレベルだとチームでの作業を考慮すべきでもなく、その人の好みや慣れというものから言語を選ぶ傾向があるのではないかと思います。なので、割とマイナーな言語やフレームワークを使うケースもあるでしょう。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>kotlin on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/kotlin/</link><description>Recent content in kotlin on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 20 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/kotlin/index.xml" rel="self" type="application/rss+xml"/><item><title>ifでの分岐を考える</title><link>https://retheviper.github.io/posts/kotlin-if-to-non-if/</link><pubDate>Sun, 20 Nov 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-if-to-non-if/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post ifでの分岐を考える" />&lt;p>ほとんどの言語で、特定の条件に合致した場合にのみ実行する処理を書くには、&lt;code>if&lt;/code>のように分岐処理のための構文を使うのが当たり前のように考えられています。言語によっては構文ではなく式として扱われたり、&lt;code>switch&lt;/code>や三項演算子のような他の選択肢も存在しますが、基本的に「条件とそれに従う処理」を書く機能として本質は変わらないものですね。&lt;/p>
+&lt;p>分岐処理に限った話ではありませんが、便利な道具というのは時に危険性を伴うこともあります。&lt;code>if&lt;/code>を使う場合、最初の実装ではわかりやすく簡単に目的を達成できますが、維持保守の観点からするとあまり良くない選択になるケースもありますね。たとえば条件が増えたり変わるなどコードに変更が必要となった場合は修正がすべてのケースを網羅しているかどうかがわからなくなったり、ユニットテストが困難になったりするなどが考えられます。&lt;/p>
+&lt;p>なので少なくとも&lt;code>if&lt;/code>の処理をよりシンプルにしたり、もしくはデザインパターンなどで分岐の構文を使わず同じ処理ができるように改善する必要が出てくることもあるかなと思います。そうすることで、コードリーディングはより難しくなるとしても、維持保守の観点からはより良いコードになる可能性もあるでしょう。&lt;/p>
+&lt;p>もちろん、完全に&lt;code>if&lt;/code>をなくするというのは不可能に近い話で、そこまでする必要もありません。道具自体に罪はなく、あくまで使い方が問題になるだけですので。ここではあくまで、&lt;code>if&lt;/code>を使ったコードをどういう風にリファクタできるか、それだけに集中したいと思います。（初心者向けな感じで）&lt;/p>
+&lt;h2 id="if文の例">if文の例&lt;/h2>
+&lt;p>まずは、以下の関数をご覧ください。コードと価格を渡したら、内部ではコードに合わせて元の価格から割引の値を返すというものです。極めて単純化してはいますが、ECサイトのプロモーションなどでこのような処理が存在することもあるかなと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (amount * &lt;span style="color:#bd93f9">0.1&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (amount * &lt;span style="color:#bd93f9">0.15&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (amount &amp;lt; &lt;span style="color:#bd93f9">1000&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>すでにどのように処理をリファクタすれば良いか、一目でわかる方もいらっしゃるかなと思いますが、ここでは色々な観点でどうコードを変えられるかを述べたいので、一つ一つ項目を挙げて説明したいと思います。&lt;/p>
+&lt;h2 id="関数のリファクタ">関数のリファクタ&lt;/h2>
+&lt;p>まずは関数内の処理をどう変えられるかを考えてみます。コードをより単純化して可読性を向上したり、処理の漏れをなくしたり、共通化できたり処理の単位が曖昧な場合は分離するなどいろいろな方法が考えられるはずです。&lt;/p>
+&lt;h3 id="標準ライブラリ">標準ライブラリ&lt;/h3>
+&lt;p>上記の関数では&lt;code>if&lt;/code>の中にさらに&lt;code>if&lt;/code>が入っている構造となっているのがわかります。このようなネストは深くなれば深くなるほど良いコードとは言えませんね。なのでまずはここから直していきましょう。&lt;/p>
+&lt;p>&lt;code>if&lt;/code>のネストを一つ減らす方法として、標準ライブラリを用いた方法を考えられます。標準ライブラリでなくでも関数として分離するという選択もありますが、標準ライブラリに処理を委任することでこの関数の負担がまず減るかなと思います。&lt;/p>
+&lt;p>Kotlinには&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/coerce-at-least.html" target="_blank" rel="noopener"
+>coerceAtLeast()&lt;/a>という関数があり、パラメータとして渡された値をミニマムとして返すという働きをします。なので、&lt;code>amount&lt;/code>が1000以下の場合は&lt;code>amount&lt;/code>自身を、それ以外は1000を返すという処理はこの関数を使うことで単純化できます。以下のようにですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (amount * &lt;span style="color:#bd93f9">0.1&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (amount * &lt;span style="color:#bd93f9">0.15&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">if&lt;/span> (code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>) &lt;span style="color:#6272a4">// 閾値を超えない値となる
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> } &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>単純に標準ライブラリを使用しただけですが、ネストが一つなくなりより単純なコードになりました。また、ここでの修正により閾値の修正が必要になった場合でも、1箇所だけを修正すると良いというメリットもありますね。&lt;/p>
+&lt;p>他にも標準ライブラリで処理ができそうな場所は積極的に利用したり、似たような処理が繰り返されるところがあったら切り出して自前のライブラリとして分離しておくことも良い選択になるでしょう。&lt;/p>
+&lt;h3 id="when">when&lt;/h3>
+&lt;p>もう一つのリファクタとしては、&lt;code>if&lt;/code>を&lt;code>when&lt;/code>(他の言語の&lt;code>switch&lt;/code>)に入れ替えるという方法を考えられます。&lt;code>when&lt;/code>は結果的に同じ機能をするので、常に&lt;code>if&lt;/code>の代替として良いというわけではありません。しかし、ifの条件が一律であれば、&lt;code>when&lt;/code>を選ぶのは良い選択になる場合があります。&lt;/p>
+&lt;p>先ほどの&lt;code>if&lt;/code>で分岐する条件は、あくまで&lt;code>code&lt;/code>という文字列がどのような値となっているか比較することだけですね。他には特に条件がないので、&lt;code>when&lt;/code>を用いた方がブランチを文字列だけで収めるのでより単純化つ明瞭なコードになります。たとえば以下のようにです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">when&lt;/span> (code) { &lt;span style="color:#6272a4">// codeの値を比較するだけの分岐
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> (amount * &lt;span style="color:#bd93f9">0.1&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> (amount * &lt;span style="color:#bd93f9">0.15&lt;/span>).roundToInt()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>if&lt;/code>を&lt;code>when&lt;/code>に変えただけで、全体的に短くなってより読みやすいコードになっているかと思います。このように、&lt;code>if&lt;/code>の条件文がどのようなものかをみて、&lt;code>when&lt;/code>に変えるのも場合によっては良い選択の一つになり得るかなと思います。&lt;/p>
+&lt;h3 id="拡張関数">拡張関数&lt;/h3>
+&lt;p>Kotlinのような言語には、拡張関数で既存のクラスにメソッドを追加する機能がありますね。同じような処理が2箇所以上繰り返されているなら関数として分離を考慮すべきで、その関数を拡張関数として定義することも場合によっては考えられます。&lt;/p>
+&lt;p>ここでは&lt;code>code&lt;/code>が&lt;code>Facebook&lt;/code>か&lt;code>Twitter&lt;/code>かによる分岐がありますが、やりたいことは&lt;code>amount&lt;/code>に特定のパーセンテージをかけて返すことですね。なので、パーセンテージを求める関数を定義しておいた方が良いでしょう。&lt;/p>
+&lt;p>パーセンテージを求めるのはここでしか使わないとしたら&lt;code>private&lt;/code>な関数として定義しても良いのですが、より汎用的な使い方ができるようにしたいなら、以下のような拡張関数を定義するのもありでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// パーセントを求める拡張関数
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">infix&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Int&lt;/span>.percentOf(amount: Int): Int = (amount * &lt;span style="color:#ff79c6">this&lt;/span> / &lt;span style="color:#bd93f9">100&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">when&lt;/span> (code) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">10&lt;/span> percentOf amount &lt;span style="color:#6272a4">// 10パーセントの値を返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">15&lt;/span> percentOf amount &lt;span style="color:#6272a4">// 15パーセントの値を返す
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>先のほどのコードと比べ、拡張関数を定義することで処理の共通化ができたことと共に、「パーセントを計算する」という意図がコードでより明確に表れているようになっているのではないかと思います。&lt;/p>
+&lt;h3 id="map">Map&lt;/h3>
+&lt;p>&lt;code>if&lt;/code>や&lt;code>when&lt;/code>を使わない場合でも分岐ができる場合はあります。たとえば&lt;code>Map&lt;/code>を活用する方法ですね。&lt;code>code&lt;/code>によって違う値を掛け算したいので、&lt;code>code&lt;/code>をKeyに、掛けたい値をValueとするMapを定義しておくことです。たとえば以下のようなものです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// コードと割引率
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> discountPercentages = mapOf(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> to &lt;span style="color:#bd93f9">10&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> to &lt;span style="color:#bd93f9">15&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 割引率が定義してあったら掛け算
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> discountPercentages[code]&lt;span style="color:#ff79c6">?.&lt;/span>let {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">it&lt;/span> percentOf amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Mapにないcodeの場合
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">when&lt;/span> (code) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、この方法では全ての分岐を網羅することはできなくなりますね。&lt;code>code&lt;/code>の値ががMapのKeyに含まれてない場合の処理が必要となるからです。ここでクロージャを用いると&lt;code>code&lt;/code>の値が&lt;code>Instagram&lt;/code>の場合の処理もMapに含めることができます。たとえば以下のようにですね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Valueを(Int) -&amp;gt; Intに変える
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> discountRules = mapOf(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> to { amount: Int &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">10&lt;/span> percentOf amount },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> to { amount: Int &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> &lt;span style="color:#bd93f9">15&lt;/span> percentOf amount },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> to { amount: Int &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> discountRules[code]&lt;span style="color:#ff79c6">?.&lt;/span>let { &lt;span style="color:#ff79c6">it&lt;/span>(amount) } &lt;span style="color:#ff79c6">?:&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Mapを利用する方法が条件分岐より良い方法だとは言い切れないのですが、コード別の割引率を他の関数でも参照する必要があるなど、複数の関数やクラスを跨いで共通の値を保持しておきたい場合は考えられる方法の一つになるかなと思います。この場合は、Map一つを修正するだけで全体の処理で整合性が保証されるコードになるという効果がありますね。&lt;/p>
+&lt;h2 id="oop的な考え方">OOP的な考え方&lt;/h2>
+&lt;p>今までは単純に関数内部の処理をどう変えていくかについて述べましたが、より高度な方法ももちろんあります。OOPの考え方として捉えると、先ほどの関数は「割引額を求める」責任がありますが、その中で「割引」の定義そのものと、その計算式まで持っていることになります。なので、責任を分離していく必要がありますね。&lt;/p>
+&lt;p>この修正に処理は一見より複雑なものになっていくと感じる場合もあるかと思いますが、これはOOPに原則である&lt;a class="link" href="https://ja.wikipedia.org/wiki/SOLID" target="_blank" rel="noopener"
+>SOLID&lt;/a>を考慮したものでもあります。長期的な観点からすると、このような方法をとった方がより維持保守には向いていることになるでしょう。&lt;/p>
+&lt;h3 id="interface抽出">interface抽出&lt;/h3>
+&lt;p>まずは「割引ポリシー」を&lt;code>insterface&lt;/code>として分離します。この割引ポリシーを実装するクラスで実際のポリシーに従う割引額を計算するイメージです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">interface&lt;/span> &lt;span style="color:#50fa7b">DiscountPolicy&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> NONE: DiscountPolicy = &lt;span style="color:#ff79c6">object&lt;/span> : &lt;span style="color:#50fa7b">DiscountPolicy&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>あとはこの&lt;code>interface&lt;/code>を実装するクラスを、コード別に定義しておきます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">FacebookDiscountPolicy&lt;/span> : DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = &lt;span style="color:#bd93f9">10&lt;/span> percentOf amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">TwitterDiscountPolicy&lt;/span> : DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = &lt;span style="color:#bd93f9">15&lt;/span> percentOf amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">InstagramDiscountPolicy&lt;/span> : DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやって割引ポリシーを定義しておくと、&lt;code>getDiscountAmount()&lt;/code>は以下のように変えられるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> discountPolicy = &lt;span style="color:#ff79c6">when&lt;/span> (code) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> FacebookDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> TwitterDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> InstagramDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> DiscountPolicy.NONE
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> discountPolicy.calculate(amount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="factory">Factory&lt;/h3>
+&lt;p>先ほどの&lt;code>interface&lt;/code>抽出で割引ポリシー自体は分離できたものの、&lt;code>getDiscountAmount()&lt;/code>ではまだ「割引ポリシーを生成する」という責任を持っています。これもまた別の役割として分離ができるでしょう。ここは以下のように割引ポリシーを生成する&lt;code>Factory&lt;/code>を定義しておくと良いでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">object&lt;/span> &lt;span style="color:#50fa7b">DiscountPolicyFactory&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountPolicy&lt;/span>(code: String): DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> &lt;span style="color:#ff79c6">when&lt;/span> (code) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> FacebookDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> TwitterDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> InstagramDiscountPolicy()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> DiscountPolicy.NONE
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>最終的に、&lt;code>getDiscountAmount()&lt;/code>は以下のように修正できます。&lt;code>interface&lt;/code>の抽出や&lt;code>Factory&lt;/code>の作成でコードの量は増えましたが、この関数の責任はより軽くなり、割引ポリシーの追加や修正が必要な場合でも柔軟な対応ができるようになりました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> discountPolicy = DiscountFactory.getDiscountPolicy(code)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> discountPolicy.calculate(amount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="enum">Enum&lt;/h2>
+&lt;p>割引ポリシーを生成するために&lt;code>Factory&lt;/code>を使う代わりに、&lt;code>Enum&lt;/code>を使うこともできます。先ほどの&lt;code>DiscountPolicy&lt;/code>を継承して、クラスではなく列挙定数として扱う方法です。たとえば以下のようなものが定義できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">enum&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">DiscountPolicies&lt;/span>(&lt;span style="color:#ff79c6">private&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> code: String) : DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FACEBOOK(&lt;span style="color:#f1fa8c">&amp;#34;Facebook&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = &lt;span style="color:#bd93f9">10&lt;/span> percentOf amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> TWITTER(&lt;span style="color:#f1fa8c">&amp;#34;Twitter&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = &lt;span style="color:#bd93f9">15&lt;/span> percentOf amount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> INSTAGRAM(&lt;span style="color:#f1fa8c">&amp;#34;Instagram&amp;#34;&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">calculate&lt;/span>(amount: Int): Int = amount.coerceAtLeast(&lt;span style="color:#bd93f9">1000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> };
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">fromCode&lt;/span>(code: String): DiscountPolicy {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> values().find { &lt;span style="color:#ff79c6">it&lt;/span>.code &lt;span style="color:#ff79c6">==&lt;/span> code } &lt;span style="color:#ff79c6">?:&lt;/span> DiscountPolicy.NONE
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記の&lt;code>Enum&lt;/code>を利用する場合、&lt;code>getDiscountAmount()&lt;/code>は以下のようになるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getDiscountAmount&lt;/span>(code: String, amount: Int): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> discountPolicy = DiscountPolicies.fromCode(code)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> discountPolicy.calculate(amount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Enum&lt;/code>の場合、&lt;code>fromCode()&lt;/code>で&lt;code>code&lt;/code>による分岐そのものが必要なくなり、割引ポリシを追加したい場合でも列挙定数を追加することで拡張も容易にできるので&lt;code>Factory&lt;/code>よりも良い方法ではないかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>最初に断っておいたように、全ての&lt;code>if&lt;/code>をなくすのは不可能に近い話で、そうする必要もありません。しかしその&lt;code>if&lt;/code>が行っている処理の本質、責任、可読性のような要素は注意深く観察する必要があり、最初は&lt;code>if&lt;/code>でとりあえず動くコードを作ったあとは他の方法で改善できるかどうか振り返ってみる必要はあるかなと思います。&lt;/p>
+&lt;p>こういう自分も常に綺麗なコードを書いているわけではないのですが、たまにはこうやって初心者の気持ちで自分の書いたコードを振り返ってみるという姿勢は常に必要なのではという気持ちにもなります。良いコードを書くのは常に難しいものですね。でも、難しいことを最初にやっておいた方が後に後悔しないことにもつながるだろうと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Kotlinだけでファイルサーバを作ってみた</title><link>https://retheviper.github.io/posts/kotlin-compose-web/</link><pubDate>Mon, 10 Oct 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-compose-web/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Kotlinだけでファイルサーバを作ってみた" />&lt;p>世の中にはさまざまなプログラミング言語があり、それぞれの特徴も明確で、言語ごとにできる・できないことも違うケースが多いですね。企業ならエンジニアの採用や費用など現実的な観点から技術選定をするので、プロジェクトにおいてどの言語を使うかは明確かつ一般的な基準があるかと思います。しかし、個人のレベルだとチームでの作業を考慮すべきでもなく、その人の好みや慣れというものから言語を選ぶ傾向があるのではないかと思います。なので、割とマイナーな言語やフレームワークを使うケースもあるでしょう。&lt;/p>
 &lt;p>自分がまさにそうであって、個人的に使うために実装するアプリや自動化のスクリプトなどは、なるべくKotlinやPythonで作成しています。特にKotlinの場合、仕事でも使っているので最も慣れているからでもありますが、さまざまなフレームワークや言語自体の特徴によりサーバサイドというジャンルやJVMという環境に限らずいろいろなことにチャレンジできるのが魅力的で好きです。&lt;/p>
 &lt;p>というわけで、今回もプライベートでちょっと変わった形でウェブアプリを一つ作ってみた、という話です。どこが変わっているかというと、表題にも書いてある通りですが、「Kotlin」だけでファイルサーバのアプリを実装した話となります。&lt;/p>
 &lt;h2 id="背景">背景&lt;/h2>
