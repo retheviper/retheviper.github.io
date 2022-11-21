@@ -233,7 +233,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
 }
 ```
 
-## Enum
+### Enum
 
 割引ポリシーを生成するために`Factory`を使う代わりに、`Enum`を使うこともできます。先ほどの`DiscountPolicy`を継承して、クラスではなく列挙定数として扱う方法です。たとえば以下のようなものが定義できます。
 
