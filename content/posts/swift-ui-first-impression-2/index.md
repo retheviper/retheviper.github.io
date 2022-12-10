@@ -1,5 +1,5 @@
 ---
-title: "SwiftUIを触ってみた - その2"
+title: "SwiftUIを触ってみた〜その2〜"
 date: 2022-08-20
 categories: 
   - swift
@@ -7,6 +7,7 @@ image: "../../images/swift.jpg"
 tags:
   - swift
   - swiftui
+  - gui
   - kotlin
   - compose
 ---
@@ -194,7 +195,7 @@ Appleのチュートリアルでもそれを提示していて、画面間で共
 
 ```swift
 final class ModelData: ObservableObject {
-    @Published var landmarks: [Landmark] = load("landmarkData.json"
+    @Published var landmarks: [Landmark] = load("landmarkData.json")
     @Published var profile = Profile.default
 }
 ```
