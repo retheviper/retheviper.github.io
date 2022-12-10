@@ -8,12 +8,12 @@
 &lt;/blockquote>
 &lt;p>要するに、特定のオブジェクトに範囲(Scope)を限定し、Lambdaで書かれた関数を実行させたい場合に使えるもののようです。もちろん、これは全く新しい形の関数ではありません。形(コードの書き方)としては、オブジェクトの関数を呼び出しているだけのように見えるだけですね。しかし、コードをみてみると、コードブロックで警戒を作ることでより&lt;code>特定のオブジェクト&lt;/code>に限った処理であることが視覚的に、明確になります。例えば、以下のようなコードはどれもやっていることは同じですが、コードも読む側からすると処理を適用させる&lt;code>範囲&lt;/code>は後者の方が明確になりますね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Scope Functionなしのコード
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> john = Person(&lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">20&lt;/span>, Gender.Male)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> john = Person(&lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">20&lt;/span>, &lt;span style="color:#50fa7b">Gender&lt;/span>.Male)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>john.doWarmingUp()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>john.startToRun()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Scope Functionのletを使った場合
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> john = Person(&lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">20&lt;/span>, Gender.Male).let {
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> john = Person(&lt;span style="color:#f1fa8c">&amp;#34;John&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">20&lt;/span>, &lt;span style="color:#50fa7b">Gender&lt;/span>.Male).let {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.doWarmingUp()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.startToRun()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -147,7 +147,7 @@ alt="Kotlin Select Scope Function">
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> three: Int = &lt;span style="color:#f1fa8c">&amp;#34; abc &amp;#34;&lt;/span>.let { &lt;span style="color:#ff79c6">it&lt;/span>.trim() }.let { &lt;span style="color:#ff79c6">it&lt;/span>.length }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// alsoの連鎖
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> jack: Person = Person(&lt;span style="color:#f1fa8c">&amp;#34;Jack&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">30&lt;/span>, Gender.MALE).also { println(&lt;span style="color:#ff79c6">it&lt;/span>.name) }.also { &lt;span style="color:#ff79c6">it&lt;/span>.doWarmingUp() }
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> jack: Person = Person(&lt;span style="color:#f1fa8c">&amp;#34;Jack&amp;#34;&lt;/span>, &lt;span style="color:#bd93f9">30&lt;/span>, &lt;span style="color:#50fa7b">Gender&lt;/span>.MALE).also { println(&lt;span style="color:#ff79c6">it&lt;/span>.name) }.also { &lt;span style="color:#ff79c6">it&lt;/span>.doWarmingUp() }
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>実は、このようなKotlinの機能は、そう新しいものでもありません。なぜなら、同じJVM言語であり、同じく機能する&lt;code>with()&lt;/code>のような関数を提供している&lt;a class="link" href="http://groovy-lang.org" target="_blank" rel="noopener"
 >Groovy&lt;/a>があるからです。自分の中では&lt;a class="link" href="http://spockframework.org" target="_blank" rel="noopener"

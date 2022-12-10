@@ -7,7 +7,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>hello</span>(): ResponseEntity = 
 </span></span><span style=display:flex><span>        ResponseEntity
 </span></span><span style=display:flex><span>            .ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>            .body(service.getHello())
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
@@ -30,8 +30,8 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>しかし、Mono/Fluxを返すAPIを使う場合は、以下のようなコードになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMemberWithMailRecord</span>(memberId: Int): Mono&lt;MemberWithMailRecord&gt; =
 </span></span><span style=display:flex><span>    memberRepository.getMember(id = memberId)
-</span></span><span style=display:flex><span>        .switchIfEmpty(Mono.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find member&#34;</span>)))
-</span></span><span style=display:flex><span>        .zipWith(mailRecordRepository.getMailRecord(memberId = memberId).switchIfEmpty(Mono.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find mailRecord&#34;</span>)))
+</span></span><span style=display:flex><span>        .switchIfEmpty(<span style=color:#50fa7b>Mono</span>.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find member&#34;</span>)))
+</span></span><span style=display:flex><span>        .zipWith(mailRecordRepository.getMailRecord(memberId = memberId).switchIfEmpty(<span style=color:#50fa7b>Mono</span>.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find mailRecord&#34;</span>)))
 </span></span><span style=display:flex><span>        .map { MemberWithMailRecord(
 </span></span><span style=display:flex><span>              member = <span style=color:#ff79c6>it</span>.t1,
 </span></span><span style=display:flex><span>              mailRecord = <span style=color:#ff79c6>it</span>.t2
@@ -60,16 +60,16 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getHello</span>(request: ServerRequest): Mono&lt;ServerResponse&gt; =
 </span></span><span style=display:flex><span>        ServerResponse
 </span></span><span style=display:flex><span>            .ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
-</span></span><span style=display:flex><span>            .body(Mono.Just(<span style=color:#f1fa8c>&#34;Hello Spring WebFlux&#34;</span>))
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .body(<span style=color:#50fa7b>Mono</span>.Just(<span style=color:#f1fa8c>&#34;Hello Spring WebFlux&#34;</span>))
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>Functional Endpointを使う場合の特徴は、RouterはあくまでエンドポイントとHandlerをつなぐ役割をするだけなので、Handlerで<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerRequest.html target=_blank rel=noopener>ServerRequest</a>を受け取り<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerResponse.html target=_blank rel=noopener>ServerResponse</a>を返す処理までを書くことになるということです。MVCパターンではRestControllerの戻り値としてResponseEntityや自分で定義したクラスを自由に指定でるし、Serviceではビジネスロジックだけを担当するパターンが多いのを考えるとかなり独特であるといえます。</p><p>このようにServerRequestとServerResponseを使うため、HandlerはServiceと比べビジネスロジック部分が一回層が深くなった形になります。ServerResponseのbodyでロジックを書いて、それを返す形ですね。例えば以下のようなコードになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMember</span>(request: ServerRequest): Mono&lt;ServerResponse&gt; =
 </span></span><span style=display:flex><span>    ServerResponse
 </span></span><span style=display:flex><span>        .ok()
-</span></span><span style=display:flex><span>        .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>        .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>        .body(memberRepository.getMember(id = request.PathVariable(<span style=color:#f1fa8c>&#34;id&#34;</span>))
-</span></span><span style=display:flex><span>            .switchIfEmpty(Mono.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find member&#34;</span>)))
-</span></span><span style=display:flex><span>            .zipWith(mailRecordRepository.getMailRecord(memberId = request.PathVariable(<span style=color:#f1fa8c>&#34;id&#34;</span>)).switchIfEmpty(Mono.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find mailRecord&#34;</span>)))
+</span></span><span style=display:flex><span>            .switchIfEmpty(<span style=color:#50fa7b>Mono</span>.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find member&#34;</span>)))
+</span></span><span style=display:flex><span>            .zipWith(mailRecordRepository.getMailRecord(memberId = request.PathVariable(<span style=color:#f1fa8c>&#34;id&#34;</span>)).switchIfEmpty(<span style=color:#50fa7b>Mono</span>.error(RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find mailRecord&#34;</span>)))
 </span></span><span style=display:flex><span>            .map { MemberWithMailRecord(
 </span></span><span style=display:flex><span>                member = <span style=color:#ff79c6>it</span>.t1,
 </span></span><span style=display:flex><span>                mailRecord = <span style=color:#ff79c6>it</span>.t2
@@ -81,9 +81,9 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> mailRecord = mailRecordRepository.getMailRecord(memberId = memberId).awaitFirstOrNull() <span style=color:#ff79c6>?:</span> <span style=color:#ff79c6>throw</span> RuntimeException(<span style=color:#f1fa8c>&#34;Can&#39;t find mailRecord&#34;</span>)
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> ServerResponse
 </span></span><span style=display:flex><span>                    .ok()
-</span></span><span style=display:flex><span>                    .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>                    .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>                    .bodyValueAndAwait(
-</span></span><span style=display:flex><span>                        Mono.just(
+</span></span><span style=display:flex><span>                        <span style=color:#50fa7b>Mono</span>.just(
 </span></span><span style=display:flex><span>                            MemberWithMailRecord(
 </span></span><span style=display:flex><span>                                member = <span style=color:#ff79c6>it</span>.t1,
 </span></span><span style=display:flex><span>                                mailRecord = <span style=color:#ff79c6>it</span>.t2
@@ -100,8 +100,8 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>            Person(
 </span></span><span style=display:flex><span>                id = <span style=color:#ff79c6>it</span>.toLong(),
 </span></span><span style=display:flex><span>                name = <span style=color:#f1fa8c>&#34;Person</span><span style=color:#f1fa8c>${it}</span><span style=color:#f1fa8c>&#34;</span>,
-</span></span><span style=display:flex><span>                birth = LocalDate.ofEpochDay(<span style=color:#ff79c6>it</span>.toLong()),
-</span></span><span style=display:flex><span>                joined = LocalDate.ofEpochDay(<span style=color:#ff79c6>it</span>.toLong() + <span style=color:#bd93f9>10000</span>)
+</span></span><span style=display:flex><span>                birth = <span style=color:#50fa7b>LocalDate</span>.ofEpochDay(<span style=color:#ff79c6>it</span>.toLong()),
+</span></span><span style=display:flex><span>                joined = <span style=color:#50fa7b>LocalDate</span>.ofEpochDay(<span style=color:#ff79c6>it</span>.toLong() + <span style=color:#bd93f9>10000</span>)
 </span></span><span style=display:flex><span>            )
 </span></span><span style=display:flex><span>        }.toList()
 </span></span><span style=display:flex><span>}
@@ -122,7 +122,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getData</span>(): ResponseEntity&lt;List&lt;Person&gt;&gt; =
 </span></span><span style=display:flex><span>        ResponseEntity
 </span></span><span style=display:flex><span>            .ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>            .body(service.getData())
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
@@ -146,8 +146,8 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getData</span>(request: ServerRequest): Mono&lt;ServerResponse&gt; =
 </span></span><span style=display:flex><span>        ServerResponse
 </span></span><span style=display:flex><span>            .ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
-</span></span><span style=display:flex><span>            .body(Flux.fromIterable(DataCreationUtil.<span style=color:#ff79c6>data</span>))
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .body(<span style=color:#50fa7b>Flux</span>.fromIterable(<span style=color:#50fa7b>DataCreationUtil</span>.<span style=color:#ff79c6>data</span>))
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h3 id=テスト結果>テスト結果</h3><p>テストは以下のような条件で実施しました。</p><ul><li>ユーザ数は5000, ユーザごとのリクエストは50に設定</li><li>ワームアップ時間を考慮して、パターンごとにテストを分ける<ul><li>サーバの再起動後にテストを実施</li><li>テストは10回ループ</li></ul></li></ul><p>実際に使ったスクリプトは以下のようなものです。サーバの起動後にこれを実行し、10回のループが終わったら再起動後にFunctional Endpointのテストを実施しています。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span><span style=color:#ff79c6>#!/bin/bash
 </span></span></span><span style=display:flex><span><span style=color:#ff79c6></span>
@@ -247,35 +247,35 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></span><span style=display:flex><span><span style=color:#50fa7b>                beanClass = MemberHandler::class,
 </span></span></span><span style=display:flex><span><span style=color:#50fa7b>                beanMethod = &#34;listMember&#34;,
 </span></span></span><span style=display:flex><span><span style=color:#50fa7b>                method = [RequestMethod.GET]</span>,
-</span></span><span style=display:flex><span>                produces = [MediaType.APPLICATION_JSON_VALUE]
+</span></span><span style=display:flex><span>                produces = [<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE]
 </span></span><span style=display:flex><span>            ),
 </span></span><span style=display:flex><span>            RouterOperation(
 </span></span><span style=display:flex><span>                path = <span style=color:#f1fa8c>&#34;/api/v1/members/{id}&#34;</span>,
 </span></span><span style=display:flex><span>                beanClass = MemberHandler<span style=color:#ff79c6>::</span><span style=color:#ff79c6>class</span>,
 </span></span><span style=display:flex><span>                beanMethod = <span style=color:#f1fa8c>&#34;getMember&#34;</span>,
-</span></span><span style=display:flex><span>                method = [RequestMethod.GET],
-</span></span><span style=display:flex><span>                produces = [MediaType.APPLICATION_JSON_VALUE]
+</span></span><span style=display:flex><span>                method = [<span style=color:#50fa7b>RequestMethod</span>.GET],
+</span></span><span style=display:flex><span>                produces = [<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE]
 </span></span><span style=display:flex><span>            ),
 </span></span><span style=display:flex><span>            RouterOperation(
 </span></span><span style=display:flex><span>                path = <span style=color:#f1fa8c>&#34;/api/v1/members&#34;</span>,
 </span></span><span style=display:flex><span>                beanClass = MemberHandler<span style=color:#ff79c6>::</span><span style=color:#ff79c6>class</span>,
 </span></span><span style=display:flex><span>                beanMethod = <span style=color:#f1fa8c>&#34;createMember&#34;</span>,
-</span></span><span style=display:flex><span>                method = [RequestMethod.POST],
-</span></span><span style=display:flex><span>                produces = [MediaType.APPLICATION_JSON_VALUE]
+</span></span><span style=display:flex><span>                method = [<span style=color:#50fa7b>RequestMethod</span>.POST],
+</span></span><span style=display:flex><span>                produces = [<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE]
 </span></span><span style=display:flex><span>            ),
 </span></span><span style=display:flex><span>            RouterOperation(
 </span></span><span style=display:flex><span>                path = <span style=color:#f1fa8c>&#34;/api/v1/members/{id}&#34;</span>,
 </span></span><span style=display:flex><span>                beanClass = MemberHandler<span style=color:#ff79c6>::</span><span style=color:#ff79c6>class</span>,
 </span></span><span style=display:flex><span>                beanMethod = <span style=color:#f1fa8c>&#34;updateMember&#34;</span>,
-</span></span><span style=display:flex><span>                method = [RequestMethod.PUT],
-</span></span><span style=display:flex><span>                produces = [MediaType.APPLICATION_JSON_VALUE]
+</span></span><span style=display:flex><span>                method = [<span style=color:#50fa7b>RequestMethod</span>.PUT],
+</span></span><span style=display:flex><span>                produces = [<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE]
 </span></span><span style=display:flex><span>            ),
 </span></span><span style=display:flex><span>            RouterOperation(
 </span></span><span style=display:flex><span>                path = <span style=color:#f1fa8c>&#34;/api/v1/members/{id}&#34;</span>,
 </span></span><span style=display:flex><span>                beanClass = MemberHandler<span style=color:#ff79c6>::</span><span style=color:#ff79c6>class</span>,
 </span></span><span style=display:flex><span>                beanMethod = <span style=color:#f1fa8c>&#34;deleteMember&#34;</span>,
-</span></span><span style=display:flex><span>                method = [RequestMethod.DELETE],
-</span></span><span style=display:flex><span>                produces = [MediaType.APPLICATION_JSON_VALUE]
+</span></span><span style=display:flex><span>                method = [<span style=color:#50fa7b>RequestMethod</span>.DELETE],
+</span></span><span style=display:flex><span>                produces = [<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE]
 </span></span><span style=display:flex><span>            ),
 </span></span><span style=display:flex><span>        ]
 </span></span><span style=display:flex><span>    )

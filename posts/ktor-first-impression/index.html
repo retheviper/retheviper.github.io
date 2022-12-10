@@ -22,14 +22,14 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></code></pre></div><p>そしてこのHttpメソッドごとの関数のbodyを実装することになりますが、これが基本的に<code>suspend</code>となっています。これはつまり、実装する側で特に意識しなくてもコードは非同期になるということですね。Spring WebFluxの場合も、Coroutineを使うと簡単に実装ができましたが、<code>suspend</code>すら意識しなくて良いというところはKtorならではのメリットなのではという気がします。</p><h3 id=テスト>テスト</h3><p><code>ktor-server-test-host</code>や<code>kotlin-test</code>、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、<code>Get</code>をのレスポンスをテストするためには以下のようなコードを書くことができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>@Test
 </span></span><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMember</span>() {
 </span></span><span style=display:flex><span>    withTestApplication(Application<span style=color:#ff79c6>::</span>module) {
-</span></span><span style=display:flex><span>        handleRequest(HttpMethod.Get, <span style=color:#f1fa8c>&#34;api/v1/web/members/</span><span style=color:#f1fa8c>$id</span><span style=color:#f1fa8c>&#34;</span>).apply {
+</span></span><span style=display:flex><span>        handleRequest(<span style=color:#50fa7b>HttpMethod</span>.Get, <span style=color:#f1fa8c>&#34;api/v1/web/members/</span><span style=color:#f1fa8c>$id</span><span style=color:#f1fa8c>&#34;</span>).apply {
 </span></span><span style=display:flex><span>            assertEquals(
 </span></span><span style=display:flex><span>                <span style=color:#ff79c6>actual</span> = response.status(),
-</span></span><span style=display:flex><span>                expected = HttpStatusCode.OK
+</span></span><span style=display:flex><span>                expected = <span style=color:#50fa7b>HttpStatusCode</span>.OK
 </span></span><span style=display:flex><span>            )
 </span></span><span style=display:flex><span>            assertEquals(
 </span></span><span style=display:flex><span>                <span style=color:#ff79c6>actual</span> = response.content,
-</span></span><span style=display:flex><span>                expected = Json.encodeToString(
+</span></span><span style=display:flex><span>                expected = <span style=color:#50fa7b>Json</span>.encodeToString(
 </span></span><span style=display:flex><span>                    MemberResponse(
 </span></span><span style=display:flex><span>                        id = id,
 </span></span><span style=display:flex><span>                        userId = userId,
@@ -41,20 +41,20 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h2 id=exposed>Exposed</h2><p>Ktorで使える、Kotlinで書かれたORMは代表的に<a class=link href=https://github.com/JetBrains/Exposed target=_blank rel=noopener>Exposed</a>があります。Javaの<a class=link href=https://www.jooq.org target=_blank rel=noopener>jOOQ</a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> userInUsa: List&lt;User&gt; = transaction {
-</span></span><span style=display:flex><span>    UserTable.select {
-</span></span><span style=display:flex><span>        UserTable.deleted eq <span style=color:#ff79c6>false</span>
+</span></span><span style=display:flex><span>    <span style=color:#50fa7b>UserTable</span>.select {
+</span></span><span style=display:flex><span>        <span style=color:#50fa7b>UserTable</span>.deleted eq <span style=color:#ff79c6>false</span>
 </span></span><span style=display:flex><span>    }.map {
 </span></span><span style=display:flex><span>        User(
-</span></span><span style=display:flex><span>            id = <span style=color:#ff79c6>it</span>[UserTable.id],
-</span></span><span style=display:flex><span>            name = <span style=color:#ff79c6>it</span>[UserTable.name],
-</span></span><span style=display:flex><span>            country = <span style=color:#ff79c6>it</span>[UserTable.country]
+</span></span><span style=display:flex><span>            id = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>UserTable</span>.id],
+</span></span><span style=display:flex><span>            name = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>UserTable</span>.name],
+</span></span><span style=display:flex><span>            country = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>UserTable</span>.country]
 </span></span><span style=display:flex><span>        )
 </span></span><span style=display:flex><span>    }.filter {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>it</span>.country = Country.USA
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>it</span>.country = <span style=color:#50fa7b>Country</span>.USA
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>val</span> userInGermany: List&lt;User&gt;  = transaction {
-</span></span><span style=display:flex><span>    User.find { (UserTable.country eq Country.GERMANY) and (UserTable.deleted eq <span style=color:#ff79c6>false</span>)}
+</span></span><span style=display:flex><span>    <span style=color:#50fa7b>User</span>.find { (<span style=color:#50fa7b>UserTable</span>.country eq <span style=color:#50fa7b>Country</span>.GERMANY) and (<span style=color:#50fa7b>UserTable</span>.deleted eq <span style=color:#ff79c6>false</span>)}
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで<a class=link href=https://www.liquibase.org target=_blank rel=noopener>Liquibase</a>や<a class=link href=https://flywaydb.org target=_blank rel=noopener>Flyway</a>でDBの形状管理をやっていたことが多かったのですが、個人的に実際のDBとアプリケーションのテーブル定義に乖離があるケースを考えるとこうやってコードの中に定義した方が、データのオーナーという観点からもかなり良いのではないかと思います。特に、頻繁なテーブル定義の修正があったり、マイクロサービスが多いケースではかなり開発が便利になるのではないかと思います。</p><p>Exposedのテーブル定義は、以下のようにできます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>object</span> <span style=color:#50fa7b>Member</span> : IntIdTable() {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> userId: Column&lt;String&gt; = varchar(name = <span style=color:#f1fa8c>&#34;user_id&#34;</span>, length = <span style=color:#bd93f9>16</span>)

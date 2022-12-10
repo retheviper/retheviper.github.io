@@ -37,33 +37,33 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>ここで問題は、オブジェクトをJSONに変えることはそう難しくないのですが（<a class=link href=https://github.com/FasterXML/jackson target=_blank rel=noopener>Jackson</a>, <a class=link href=https://github.com/google/gson target=_blank rel=noopener>Gson</a>, <a class=link href=https://github.com/Kotlin/kotlinx.serialization target=_blank rel=noopener>Kotlin Serialization</a>のようなライブラリがすでにありますし）</p><p>では、このような場合、DBから取得したレコードをどうやってオブジェクトにマッピングしたら良いのでしょう。JPAのようなORMを使う場合、クラスにテーブル間の関係を表すフィールドとアノテーションを適切に使うことでレコードへのマッピングは自動に行われますが、<a class=link href=https://www.jooq.org target=_blank rel=noopener>jOOQ</a>や<a class=link href=https://querydsl.com target=_blank rel=noopener>Querydsl</a>, <a class=link href=https://github.com/JetBrains/Exposed target=_blank rel=noopener>Exposed</a>, <a class=link href=https://www.ktorm.org target=_blank rel=noopener>Ktorm</a>のようなORMで、DSLを使ってSQLを書く場合はデータのマッピングを手動で行う必要があります。そして取得したデータは行の配列という形になるので、どうマッピングしたら（効率が）いいかは少し悩ましいところです。</p><p>なので、今回はExposedのDSLを使って取得したOne to Manyのレコードを、コード上でどうやってオブジェクトにマッピングするかについて考えたことを述べたいとお思います。</p><h2 id=テーブルごとにselectする>テーブルごとにSelectする</h2><p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>transaction {
 </span></span><span style=display:flex><span>    <span style=color:#6272a4>// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
-</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> member = Member.select { Member.id eq id }
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> member = <span style=color:#50fa7b>Member</span>.select { <span style=color:#50fa7b>Member</span>.id eq id }
 </span></span><span style=display:flex><span>        .first()
 </span></span><span style=display:flex><span>        .let {
 </span></span><span style=display:flex><span>            MemberDto(
-</span></span><span style=display:flex><span>                id = row[Member.id].<span style=color:#ff79c6>value</span>,
-</span></span><span style=display:flex><span>                name = row[Member.name],
-</span></span><span style=display:flex><span>                role = listOf(row[Mailing.role])
+</span></span><span style=display:flex><span>                id = row[<span style=color:#50fa7b>Member</span>.id].<span style=color:#ff79c6>value</span>,
+</span></span><span style=display:flex><span>                name = row[<span style=color:#50fa7b>Member</span>.name],
+</span></span><span style=display:flex><span>                role = listOf(row[<span style=color:#50fa7b>Mailing</span>.role])
 </span></span><span style=display:flex><span>            )
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#6272a4>// MailingテーブルをSelectし、リストにする
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> mailingAddress = Mailing
-</span></span><span style=display:flex><span>            .select { Mailing.memberId eq member.id }
-</span></span><span style=display:flex><span>            .map { <span style=color:#ff79c6>it</span>[Mailing.address] }
+</span></span><span style=display:flex><span>            .select { <span style=color:#50fa7b>Mailing</span>.memberId eq member.id }
+</span></span><span style=display:flex><span>            .map { <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Mailing</span>.address] }
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>    <span style=color:#6272a4>// オブジェクトのコピーを作り配送先のデータをマッピング
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    member.copy(mailingAddress = mailingAddress)
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>もっとも簡単で、コードとしてもわかりやすい方法ではありますが、トランザクションの観点からするとあまりよくない方法ですね。Exposedでは、<code>transaction</code>ブロックに包むことでトランザクションの単位を制御できるものの、一回で済ませるクエリの発行が複数になるという問題があります。ここではMemberテーブルを照会するたびにMailingテーブルも照会することになるので1回のクエリが追加されているだけですが、もしMemberテーブルに1:Nの関係となっているテーブルが増えれば増えるほどクエリの発行数も増えることになるでしょう。そして今回は一つのレコードに対してのコードとなっていますが、照会対象のMemberテーブルのレコードが増えれば増えるほど発行されるクエリの数も多くなります。</p><p>また、オブジェクトのインスタンスを作っておいて、わざわあコピーするというのもあまり効率が良いとは言えません。これもまたクエリの数が増える問題と同じく、照会対象のレコードが増えれば増えるほど生成されるオブジェクトのインスタンスも増えることになるという訳ですね。なので、全く性能や効率を考えてないコードと言えます。</p><h2 id=joinしてマッピングする>joinしてマッピングする</h2><p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり<code>join</code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の<a class=link href=https://vmm.dev/ja/cci/cci-0.md target=_blank rel=noopener>Big O記法</a>で表現すると、前者は<code>O(N^2)</code>であり、これは<code>O(1)</code>と表現できるはずです。</p><p>ならばデータを取得する際に、クエリとしては<code>join</code>を使うのが理想的なのはわかりますが、問題はそうやって取得したデータをどう加工するかです。先に述べましたが、取得したデータのうち重複するものがあるからですね。そしてこれが重複しているかどうかはクエリを実行した結果を取得して、確認するまではわかりません。</p><p>ここで考えられる方法は三つほどありますので、一つづつ紹介していきます。</p><h3 id=reduce>reduce</h3><p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、<code>reduce</code>でまとめる方法です。例えば以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>transaction {
-</span></span><span style=display:flex><span>    Member.leftJoin(Mailing)
-</span></span><span style=display:flex><span>        .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+</span></span><span style=display:flex><span>    <span style=color:#50fa7b>Member</span>.leftJoin(Mailing)
+</span></span><span style=display:flex><span>        .select { (<span style=color:#50fa7b>Member</span>.id eq id) and (<span style=color:#50fa7b>Mailing</span>.memberId eq <span style=color:#50fa7b>Member</span>.id) }
 </span></span><span style=display:flex><span>        .map {
 </span></span><span style=display:flex><span>            <span style=color:#6272a4>// とりあえずオブジェクトにマッピングする
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>            MemberDto(
-</span></span><span style=display:flex><span>                id = <span style=color:#ff79c6>it</span>[Member.id].<span style=color:#ff79c6>value</span>,
-</span></span><span style=display:flex><span>                name = <span style=color:#ff79c6>it</span>[Member.name],
-</span></span><span style=display:flex><span>                mailingAddress = listOf(<span style=color:#ff79c6>it</span>[Mailing.address])
+</span></span><span style=display:flex><span>                id = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.id].<span style=color:#ff79c6>value</span>,
+</span></span><span style=display:flex><span>                name = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.name],
+</span></span><span style=display:flex><span>                mailingAddress = listOf(<span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Mailing</span>.address])
 </span></span><span style=display:flex><span>            )
 </span></span><span style=display:flex><span>        }.reduce { acc, memberDto <span style=color:#ff79c6>-&gt;</span>
 </span></span><span style=display:flex><span>            <span style=color:#6272a4>// オブジェクトを一つに集約させる（mailingAddressは累計）
@@ -73,15 +73,15 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>このやり方で考えられる問題は、まず行数分のオブジェクトのインスタンスが作られるということです。このクエリとして取得しようとしているMemberのレコードは一つのみですが、そのレコードに紐づくMailingのレコードが多ければ多いほど件数は増え、当然生成されるオブジェクトの数も多くなります。また、マッピングだけでなく、<code>reduce</code>でもオブジェクトをコピーしているので、やはり行数分のオブジェクトが生成されていると考えられます。オブジェクトのインスタンス数は行数x2になる訳ですね。</p><p>そしてもう一つの問題は、Memberのレコードを複数取得する場合、全部一つのオブジェクトにまとまってしまうという問題がありますね。なので、このやり方だと一つのレコードを取得する場合のみしか適応できなくなります。</p><h3 id=groupby>groupBy</h3><p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには<code>groupBy</code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに<code>List</code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>transaction {
-</span></span><span style=display:flex><span>    Member.leftJoin(Mailing)
-</span></span><span style=display:flex><span>        .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+</span></span><span style=display:flex><span>    <span style=color:#50fa7b>Member</span>.leftJoin(Mailing)
+</span></span><span style=display:flex><span>        .select { (<span style=color:#50fa7b>Member</span>.id eq id) and (<span style=color:#50fa7b>Mailing</span>.memberId eq <span style=color:#50fa7b>Member</span>.id) }
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// keyはMemberオブジェクトのマッピング、valueではMailingのレコードを集約
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        .groupBy({
 </span></span><span style=display:flex><span>            MemberDto(
-</span></span><span style=display:flex><span>                id = <span style=color:#ff79c6>it</span>[Member.id].<span style=color:#ff79c6>value</span>,
-</span></span><span style=display:flex><span>                name = <span style=color:#ff79c6>it</span>[Member.name],
+</span></span><span style=display:flex><span>                id = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.id].<span style=color:#ff79c6>value</span>,
+</span></span><span style=display:flex><span>                name = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.name],
 </span></span><span style=display:flex><span>            )
-</span></span><span style=display:flex><span>        }, { <span style=color:#ff79c6>it</span>[Mailing.address] })
+</span></span><span style=display:flex><span>        }, { <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Mailing</span>.address] })
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// keyのオブジェクトにMailingのレコードを設定
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        .map { (key, <span style=color:#ff79c6>value</span>) <span style=color:#ff79c6>-&gt;</span>
 </span></span><span style=display:flex><span>            key.copy(mailingAddress = <span style=color:#ff79c6>value</span>)
@@ -102,20 +102,20 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span><span style=color:#ff79c6>val</span> helperMap = mutableMapOf&lt;Int, MemberDto&gt;()
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>transaction {
-</span></span><span style=display:flex><span>    Member.leftJoin(Mailing)
+</span></span><span style=display:flex><span>    <span style=color:#50fa7b>Member</span>.leftJoin(Mailing)
 </span></span><span style=display:flex><span>        .select {
-</span></span><span style=display:flex><span>            (Member.id eq id) and (Mailing.memberId eq Mailing.id)
+</span></span><span style=display:flex><span>            (<span style=color:#50fa7b>Member</span>.id eq id) and (<span style=color:#50fa7b>Mailing</span>.memberId eq <span style=color:#50fa7b>Mailing</span>.id)
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>        .forEach {
-</span></span><span style=display:flex><span>            helperMap.compute(<span style=color:#ff79c6>it</span>[Member.id].<span style=color:#ff79c6>value</span>) { key, <span style=color:#ff79c6>value</span> <span style=color:#ff79c6>-&gt;</span>
+</span></span><span style=display:flex><span>            helperMap.compute(<span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.id].<span style=color:#ff79c6>value</span>) { key, <span style=color:#ff79c6>value</span> <span style=color:#ff79c6>-&gt;</span>
 </span></span><span style=display:flex><span>                <span style=color:#6272a4>// valueがnullではない場合、コピーしてmailingAddressを累計
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>                <span style=color:#ff79c6>value</span><span style=color:#ff79c6>?.</span>copy(
-</span></span><span style=display:flex><span>                    mailingAddress = <span style=color:#ff79c6>value</span>.mailingAddress + <span style=color:#ff79c6>it</span>[Mailing.address]
+</span></span><span style=display:flex><span>                    mailingAddress = <span style=color:#ff79c6>value</span>.mailingAddress + <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Mailing</span>.address]
 </span></span><span style=display:flex><span>                <span style=color:#6272a4>// valueがnullの場合はインスタンスを作る
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>                ) <span style=color:#ff79c6>?:</span> MemberDto(
 </span></span><span style=display:flex><span>                    id = key,
-</span></span><span style=display:flex><span>                    name = <span style=color:#ff79c6>it</span>[Member.name],
-</span></span><span style=display:flex><span>                    mailingAddress = listOf(<span style=color:#ff79c6>it</span>[Mailing.address])
+</span></span><span style=display:flex><span>                    name = <span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Member</span>.name],
+</span></span><span style=display:flex><span>                    mailingAddress = listOf(<span style=color:#ff79c6>it</span>[<span style=color:#50fa7b>Mailing</span>.address])
 </span></span><span style=display:flex><span>                )
 </span></span><span style=display:flex><span>            }
 </span></span><span style=display:flex><span>        }.let {

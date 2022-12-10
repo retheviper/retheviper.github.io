@@ -14,18 +14,18 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></code></pre></div><p>Javaの伝統的な書き方だと以下です。こちらの方が、むしろコードは短くなるし、変数であることも明確ではないでしょうか。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>String a <span style=color:#ff79c6>=</span> <span style=color:#f1fa8c>&#34;this is string&#34;</span><span style=color:#ff79c6>;</span>
 </span></span></code></pre></div><p>また、厳密にいうと変数ではないところでは<code>var</code>をつけないのは当たり前なのかも知れませんが、Javaだと変数でも戻り値でも引数でも型をつけてしまうのに対して、Kotlinではこれらに<code>var</code>をつけるか型をつけるか方が省略できるかという場面がそれぞれ区別されてしまうので、これだけはJavaよりも厳格じゃないか？という気になったりもします。例えば以下のような例です。</p><p>関数の引数の場合は、型の指定が必要です。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMember</span>(request: ServerRequest): Mono&lt;ServerResponse&gt; =
 </span></span><span style=display:flex><span>        ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>            .body(repository.findById(request.pathVariable(id).toLong()).map { MemberDto(<span style=color:#ff79c6>it</span>.username, <span style=color:#ff79c6>it</span>.name) })
 </span></span><span style=display:flex><span>            .switchIfEmpty(notFound().build())
 </span></span></code></pre></div><p>そして関数の戻り値は、型推論により省略可能です。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMember</span>(request: ServerRequest) =
 </span></span><span style=display:flex><span>        ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>            .body(repository.findById(request.pathVariable(id).toLong()).map { MemberDto(<span style=color:#ff79c6>it</span>.username, <span style=color:#ff79c6>it</span>.name) })
 </span></span><span style=display:flex><span>            .switchIfEmpty(notFound().build())
 </span></span></code></pre></div><p>しかし、これはあくまで関数をSingle Expressionで書いた時の話です。明示的にreturnを書く場合は戻り値を省略するとコンパイルエラーになります。例えば以下のような場合がそうです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#6272a4>// これはコンパイルエラー(戻り値はUnitとなってしまう)
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getMember</span>(request: ServerRequest) {
 </span></span><span style=display:flex><span>      <span style=color:#ff79c6>return</span> ok()
-</span></span><span style=display:flex><span>            .contentType(MediaType.APPLICATION_JSON)
+</span></span><span style=display:flex><span>            .contentType(<span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON)
 </span></span><span style=display:flex><span>            .body(repository.findById(request.pathVariable(id).toLong()).map { MemberDto(<span style=color:#ff79c6>it</span>.username, <span style=color:#ff79c6>it</span>.name) })
 </span></span><span style=display:flex><span>            .switchIfEmpty(notFound().build())
 </span></span><span style=display:flex><span>}

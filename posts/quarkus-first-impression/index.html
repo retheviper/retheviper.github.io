@@ -36,14 +36,14 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonController</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> service: PersonService) {
 </span></span><span style=display:flex><span>    @GetMapping
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): PersonResponse {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { PresonResponse.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { <span style=color:#50fa7b>PresonResponse</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>@Service
 </span></span><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonService</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): PersonDto {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { PersonDto.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { <span style=color:#50fa7b>PersonDto</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h4 id=ktorの場合>Ktorの場合</h4><p>Quarkusのコードを見る前に、まず同じコードをこのブログでも紹介したことのある<a class=link href=https://ktor.io/ target=_blank rel=noopener>Ktor</a>で書くとどうなるかをまず見ていきたいと思います。これでSpringと全く違うフレームワークを選ぶという場合の比較ができるでしょう。</p><p>Ktorもよいフレームワークではありますが、フレームワークそのものの設計思想はSpringと異なるので、既存のアプリを移行するとしたら色々と考慮すべきものが多いです。例えば、基本的にDIに対応していないのでライブラリを別途導入する必要がありますね。</p><p>以下は、上記のSpringと同じAPIを、DIライブラリとして<a class=link href=https://insert-koin.io/ target=_blank rel=noopener>Koin</a>を導入して実装したKtorの例です。かなり違う構造になっているのがわかります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>main</span>() {
@@ -73,35 +73,35 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    <span style=color:#6272a4>// Serviceのインジェクション
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    <span style=color:#ff79c6>val</span> service: PersonService <span style=color:#ff79c6>by</span> inject()
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>get</span>(<span style=color:#f1fa8c>&#34;/api/v1/person&#34;</span>) {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { PresonResponse.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { <span style=color:#50fa7b>PresonResponse</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#6272a4>// Service
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonService</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): PersonDto {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { PersonDto.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { <span style=color:#50fa7b>PersonDto</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h4 id=quarkusの場合>Quarkusの場合</h4><p>では、続いてQuarkusでAPIを作成した場合のコードを見ていきましょう。QuarkusでAPIを作成する方法は<a class=link href=https://resteasy.github.io target=_blank rel=noopener>RESTEasy</a>と<a class=link href=https://quarkus.io/guides/reactive-routes target=_blank rel=noopener>Reactive Routes</a>の二つのパターンがありますが、どちらを使った場合でもアプリの作成そのものに大きい違いはないので、ここではRESTEasyを使った実装を紹介したいと思います。まずは以下のコードをご覧ください。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>@Path(<span style=color:#f1fa8c>&#34;/api/v1/person&#34;</span>)
 </span></span><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonController</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> service: PersonService) {
 </span></span><span style=display:flex><span>    @GET
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): PersonResponse {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { PresonResponse.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> service.getPerson(id).let { <span style=color:#50fa7b>PresonResponse</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>@ApplicationScoped
 </span></span><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonService</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> repository: PersonRepository) {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): PersonDto {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { PersonDto.from(<span style=color:#ff79c6>it</span>) }
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> repository.findById(id).let { <span style=color:#50fa7b>PersonDto</span>.from(<span style=color:#ff79c6>it</span>) }
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>Springのコードど比較して、使っているアノテーションの種類が違うだけで、ほぼ同じ感覚で実装ができるのがわかります。なので、Ktorの場合のようにアーキテクチャを考え直す必要もなく、移行も簡単になるわけですね。また、RESTEasyを使う場合、ReactiveのAPIを作りやすいというメリットもあります。Reactiveだと<a class=link href=https://smallrye.io/smallrye-mutiny/ target=_blank rel=noopener>Mutiny</a>を使うことになりますが、Uni/Multiの概念がMono/Fluxと1:1対応していると思って良いので、Spring WebFluxや他のReactive Streamを触ったことのある方ならすぐに適応できそうです。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span>@Path(<span style=color:#f1fa8c>&#34;/api/v1/person&#34;</span>)
 </span></span><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>PersonController</span>(<span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> service: PersonService) {
 </span></span><span style=display:flex><span>    @GET
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>getPerson</span>(id: Int): Uni&lt;PersonResponse&gt; {
-</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> Uni.createFrom().item(service.getPerson(id).let { PresonResponse.from(<span style=color:#ff79c6>it</span>) })
+</span></span><span style=display:flex><span>        <span style=color:#ff79c6>return</span> <span style=color:#50fa7b>Uni</span>.createFrom().item(service.getPerson(id).let { <span style=color:#50fa7b>PresonResponse</span>.from(<span style=color:#ff79c6>it</span>) })
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>KtorやSpring WebFluxのRouter Functionのような書き方もそれなりの良い点はあるかと思いますが、やはりSpring MVCのような書き方に慣れている人も多いだろうし、そのような書き方で特に問題になることもないので、新しいフレームワークだとしてもこのように既存のものと同じような感覚でコードを書けるというのもそのフレームワークを選択しやすくする一つのセールズポイントになるのではないかと思います。例えば<a class=link href=https://nestjs.com/ target=_blank rel=noopener>NestJS</a>のように、JavaScript用のフレームワークでもSpring MVCに似たようなコードを書けるのですが、おそらくこれもまたSpringを触った経験のあるエンジニアにアピールするためでしょう。</p><p>こういう面からすると、すでにSpringの経験があるエンジニアならすぐにQuarkusに移行できて、既存のSpringプロジェクトも簡単に移行できそうなので良さそうです。</p><h2 id=懸念>懸念</h2><p>Quarkusを実際触ってみて、最も良いと思われたのは上記の通りですが、Nativeでアプリをビルドしながら、いくつかの懸念もあると感じました。例えば以下のようなものがあります。</p><h3 id=nativeのビルドは遅い>Nativeのビルドは遅い</h3><p>Nativeで起動速度が早くなるのは確かに良いところですが、問題はビルド自体は遅いということです。当然ながら、Nativeとしてビルドするということは、最初から全てのコードをマシンコードとしてコンパイルするということを意味します。JVM用のバイトコードはどの環境でも同じですが、マシンコードはそうではないので、そのプラットフォームに合わせたコードを生成するのに時間がかかるのは当然のことですね。例えば、ローカルでテストに使ったプロジェクトをNativeイメージとしてビルドした場合は以下のような時間がかかりました。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash><span style=display:flex><span>$ ./gradlew build -Dquarkus.package.type<span style=color:#ff79c6>=</span>native

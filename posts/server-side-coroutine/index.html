@@ -248,12 +248,12 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></code></pre></div><p>また、APIを呼び出している関数(<code>goServerClient.call()</code>)もsuspendにしておく必要があります。ここではSpringの<a class=link href=https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/client/RestTemplate.html target=_blank rel=noopener>RestTemplate</a>を使い、以下のような関数を定義しておきました。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> client = RestTemplate()
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#ff79c6>private</span> <span style=color:#ff79c6>val</span> header = HttpHeaders().apply {
-</span></span><span style=display:flex><span>    <span style=color:#ff79c6>set</span>(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>set</span>(<span style=color:#50fa7b>HttpHeaders</span>.CONTENT_TYPE, <span style=color:#50fa7b>MediaType</span>.APPLICATION_JSON_VALUE)
 </span></span><span style=display:flex><span>}
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span><span style=color:#ff79c6>suspend</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>call</span>(id: Int): CallGoServerDto? {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> request = HttpEntity(CallGoServerRequest(id), header)
-</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> withContext(Dispatchers.IO) {
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>return</span> withContext(<span style=color:#50fa7b>Dispatchers</span>.IO) {
 </span></span><span style=display:flex><span>        client.postForObject(<span style=color:#f1fa8c>&#34;http://localhost:8800/api/v1/some-process&#34;</span>, request, CallGoServerDto<span style=color:#ff79c6>::</span><span style=color:#ff79c6>class</span>.java)
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}

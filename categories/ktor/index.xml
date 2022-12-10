@@ -23,7 +23,7 @@
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで呼び出している&lt;code>install&lt;/code>関数の実装を見ると、以下のようになっています。&lt;code>feature&lt;/code>(モジュール)と、そのモジュールの設定となる&lt;code>configure&lt;/code>が引数になっているのがわかります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &amp;lt;&lt;span style="color:#50fa7b">P&lt;/span> : &lt;span style="color:#50fa7b">Pipeline&lt;/span>&amp;lt;*, &lt;span style="color:#50fa7b">ApplicationCall&lt;/span>&amp;gt;, &lt;span style="color:#50fa7b">B&lt;/span> : &lt;span style="color:#50fa7b">Any&lt;/span>, &lt;span style="color:#50fa7b">F&lt;/span> : &lt;span style="color:#50fa7b">Any&lt;/span>&amp;gt; &lt;span style="color:#50fa7b">P&lt;/span>.install(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> feature: ApplicationFeature&amp;lt;P, B, F&amp;gt;,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: B.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit = {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: &lt;span style="color:#50fa7b">B&lt;/span>.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit = {}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>): F
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>先ほどの&lt;code>kotlinx.serialization&lt;/code>をインストールするために使っていたコードでは、&lt;code>feature&lt;/code>として&lt;code>ContentNegotiation&lt;/code>を渡し、その設定として&lt;code>json&lt;/code>を使うという設定をしているのだなという推測ができますね。実際、&lt;code>ContentNegotiation&lt;/code>の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には&lt;code>Configuration&lt;/code>というクラスと、&lt;code>ApplicationFeature&lt;/code>を継承した&lt;code>companion object&lt;/code>を中に持っているのがわかります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">public&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">ContentNegotiation&lt;/span> &lt;span style="color:#ff79c6">internal&lt;/span> &lt;span style="color:#ff79c6">constructor&lt;/span>(
@@ -63,14 +63,14 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Application&lt;/span>.main() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> routing {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 管理者のみアクセスできる
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(Role.ADMIN) {
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(&lt;span style="color:#50fa7b">Role&lt;/span>.ADMIN) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;/admin&amp;#34;&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(&lt;span style="color:#f1fa8c">&amp;#34;This is admin page&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 一般ユーザがアクセスできる
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(Role.USER) {
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> withRole(&lt;span style="color:#50fa7b">Role&lt;/span>.USER) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">get&lt;/span>(&lt;span style="color:#f1fa8c">&amp;#34;/user&amp;#34;&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(&lt;span style="color:#f1fa8c">&amp;#34;This is user page&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
@@ -81,11 +81,11 @@
 &lt;h3 id="authorizedrotueselectorの実装">AuthorizedRotueSelectorの実装&lt;/h3>
 &lt;p>まずは&lt;code>RouteSelector&lt;/code>を実装します。これは、&lt;code>routing&lt;/code>の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">AuthorizedRouteSelector&lt;/span>() : RouteSelector() {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">evaluate&lt;/span>(context: RoutingResolveContext, segmentIndex: Int) = RouteSelectorEvaluation.Constant
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">evaluate&lt;/span>(context: RoutingResolveContext, segmentIndex: Int) = &lt;span style="color:#50fa7b">RouteSelectorEvaluation&lt;/span>.Constant
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="child-routeの実装">child routeの実装&lt;/h3>
 &lt;p>先に実装した&lt;code>AuthorizedRouteSelector&lt;/code>を利用して、実際に&lt;code>child route&lt;/code>として機能する関数を作ります。この&lt;code>child route&lt;/code>は&lt;code>Router&lt;/code>の下にネストすることになるので、&lt;code>Route&lt;/code>の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Route&lt;/span>.withRole(&lt;span style="color:#ff79c6">val&lt;/span> role: Role, build: Route.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit): Route {
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">Route&lt;/span>.withRole(&lt;span style="color:#ff79c6">val&lt;/span> role: Role, build: &lt;span style="color:#50fa7b">Route&lt;/span>.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit): Route {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> authorizedRoute = createChild(AuthorizedRouteSelector())
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> application.feature(RoleBaseAuthorizer).interceptPipeline(&lt;span style="color:#ff79c6">this&lt;/span>, role)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> build()
@@ -122,8 +122,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role: Role
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// Pipelineの位置付け
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline.insertPhaseAfter(Authentication.ChallengePhase, AuthorizationPhase)
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pipeline.insertPhaseAfter(&lt;span style="color:#50fa7b">ApplicationCallPipeline&lt;/span>.Features, &lt;span style="color:#50fa7b">Authentication&lt;/span>.ChallengePhase)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline.insertPhaseAfter(&lt;span style="color:#50fa7b">Authentication&lt;/span>.ChallengePhase, AuthorizationPhase)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// インターセプト時の処理
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> pipeline.intercept(AuthorizationPhase) {
@@ -148,7 +148,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">override&lt;/span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">install&lt;/span>(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> pipeline: ApplicationCallPipeline,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: Configuration.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> configure: &lt;span style="color:#50fa7b">Configuration&lt;/span>.() &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ): RoleBasedAuthorization {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> configuration = Configuration().apply(configure)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> RoleBaseAuthorizer(configuration)
@@ -164,7 +164,7 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> (roles.none { role }) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// レスポンスを返す
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> call.respond(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = HttpStatusCode.Forbidden,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = &lt;span style="color:#50fa7b">HttpStatusCode&lt;/span>.Forbidden,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> message = &lt;span style="color:#f1fa8c">&amp;#34;permission not granted: &lt;/span>&lt;span style="color:#f1fa8c">$role&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -191,7 +191,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// 認可の場合の処理
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">is&lt;/span> AuthorizationException &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> call.respond(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = HttpStatusCode.Forbidden,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> status = &lt;span style="color:#50fa7b">HttpStatusCode&lt;/span>.Forbidden,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> message = AuthFailedResponse(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reason = cause.message
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
@@ -260,14 +260,14 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Test
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> withTestApplication(Application&lt;span style="color:#ff79c6">::&lt;/span>module) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> handleRequest(HttpMethod.Get, &lt;span style="color:#f1fa8c">&amp;#34;api/v1/web/members/&lt;/span>&lt;span style="color:#f1fa8c">$id&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>).apply {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> handleRequest(&lt;span style="color:#50fa7b">HttpMethod&lt;/span>.Get, &lt;span style="color:#f1fa8c">&amp;#34;api/v1/web/members/&lt;/span>&lt;span style="color:#f1fa8c">$id&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>).apply {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.status(),
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = HttpStatusCode.OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = &lt;span style="color:#50fa7b">HttpStatusCode&lt;/span>.OK
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.content,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = Json.encodeToString(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = &lt;span style="color:#50fa7b">Json&lt;/span>.encodeToString(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberResponse(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = id,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userId = userId,
@@ -283,21 +283,21 @@
 >Exposed&lt;/a>があります。Javaの&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
 >jOOQ&lt;/a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInUsa: List&amp;lt;User&amp;gt; = transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.select {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">UserTable&lt;/span>.select {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">UserTable&lt;/span>.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.map {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.id],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.name],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> country = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.country]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.id],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> country = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.country]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.filter {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.country = Country.USA
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.country = &lt;span style="color:#50fa7b">Country&lt;/span>.USA
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInGermany: List&amp;lt;User&amp;gt; = transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User.find { (UserTable.country eq Country.GERMANY) and (UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>)}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">User&lt;/span>.find { (&lt;span style="color:#50fa7b">UserTable&lt;/span>.country eq &lt;span style="color:#50fa7b">Country&lt;/span>.GERMANY) and (&lt;span style="color:#50fa7b">UserTable&lt;/span>.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>)}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで&lt;a class="link" href="https://www.liquibase.org" target="_blank" rel="noopener"
 >Liquibase&lt;/a>や&lt;a class="link" href="https://flywaydb.org" target="_blank" rel="noopener"

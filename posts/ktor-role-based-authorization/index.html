@@ -7,7 +7,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p>ここで呼び出している<code>install</code>関数の実装を見ると、以下のようになっています。<code>feature</code>(モジュール)と、そのモジュールの設定となる<code>configure</code>が引数になっているのがわかります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>public</span> <span style=color:#ff79c6>fun</span> &lt;<span style=color:#50fa7b>P</span> : <span style=color:#50fa7b>Pipeline</span>&lt;*, <span style=color:#50fa7b>ApplicationCall</span>&gt;, <span style=color:#50fa7b>B</span> : <span style=color:#50fa7b>Any</span>, <span style=color:#50fa7b>F</span> : <span style=color:#50fa7b>Any</span>&gt; <span style=color:#50fa7b>P</span>.install(
 </span></span><span style=display:flex><span>    feature: ApplicationFeature&lt;P, B, F&gt;,
-</span></span><span style=display:flex><span>    configure: B.() <span style=color:#ff79c6>-&gt;</span> Unit = {}
+</span></span><span style=display:flex><span>    configure: <span style=color:#50fa7b>B</span>.() <span style=color:#ff79c6>-&gt;</span> Unit = {}
 </span></span><span style=display:flex><span>): F
 </span></span></code></pre></div><p>先ほどの<code>kotlinx.serialization</code>をインストールするために使っていたコードでは、<code>feature</code>として<code>ContentNegotiation</code>を渡し、その設定として<code>json</code>を使うという設定をしているのだなという推測ができますね。実際、<code>ContentNegotiation</code>の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には<code>Configuration</code>というクラスと、<code>ApplicationFeature</code>を継承した<code>companion object</code>を中に持っているのがわかります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>public</span> <span style=color:#ff79c6>class</span> <span style=color:#50fa7b>ContentNegotiation</span> <span style=color:#ff79c6>internal</span> <span style=color:#ff79c6>constructor</span>(
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>public</span> <span style=color:#ff79c6>val</span> registrations: List&lt;ConverterRegistration&gt;,
@@ -41,14 +41,14 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></code></pre></div><p>次に、ロールでアクセスを制限する関数を作ります。<code>Router</code>のエンドポイントに、どのロールの場合にアクセスできるかを指定するようなイメージです。例えば以下のような形で使えたらいいかと思います。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Application</span>.main() {
 </span></span><span style=display:flex><span>    routing {
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// 管理者のみアクセスできる
-</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        withRole(Role.ADMIN) {
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        withRole(<span style=color:#50fa7b>Role</span>.ADMIN) {
 </span></span><span style=display:flex><span>            <span style=color:#ff79c6>get</span>(<span style=color:#f1fa8c>&#34;/admin&#34;</span>) {
 </span></span><span style=display:flex><span>                call.respond(<span style=color:#f1fa8c>&#34;This is admin page&#34;</span>)
 </span></span><span style=display:flex><span>            }
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// 一般ユーザがアクセスできる
-</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        withRole(Role.USER) {
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        withRole(<span style=color:#50fa7b>Role</span>.USER) {
 </span></span><span style=display:flex><span>            <span style=color:#ff79c6>get</span>(<span style=color:#f1fa8c>&#34;/user&#34;</span>) {
 </span></span><span style=display:flex><span>                call.respond(<span style=color:#f1fa8c>&#34;This is user page&#34;</span>)
 </span></span><span style=display:flex><span>            }
@@ -56,9 +56,9 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><p><code>Router</code>の使い方でわかるように、<code>Pipeline</code>でのコードブロック（関数）はネストが可能なのでこのように一つのレイヤーを挟むのも可能です。ここで追加した<code>withRole</code>という関数でロールを確認し、APIにアクセスできるかどうかを判定するようにしたら良いでしょう。</p><h3 id=authorizedrotueselectorの実装>AuthorizedRotueSelectorの実装</h3><p>まずは<code>RouteSelector</code>を実装します。これは、<code>routing</code>の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>class</span> <span style=color:#50fa7b>AuthorizedRouteSelector</span>() : RouteSelector() {
-</span></span><span style=display:flex><span>    <span style=color:#ff79c6>override</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>evaluate</span>(context: RoutingResolveContext, segmentIndex: Int) = RouteSelectorEvaluation.Constant
+</span></span><span style=display:flex><span>    <span style=color:#ff79c6>override</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>evaluate</span>(context: RoutingResolveContext, segmentIndex: Int) = <span style=color:#50fa7b>RouteSelectorEvaluation</span>.Constant
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><h3 id=child-routeの実装>child routeの実装</h3><p>先に実装した<code>AuthorizedRouteSelector</code>を利用して、実際に<code>child route</code>として機能する関数を作ります。この<code>child route</code>は<code>Router</code>の下にネストすることになるので、<code>Route</code>の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Route</span>.withRole(<span style=color:#ff79c6>val</span> role: Role, build: Route.() <span style=color:#ff79c6>-&gt;</span> Unit): Route {
+</span></span></code></pre></div><h3 id=child-routeの実装>child routeの実装</h3><p>先に実装した<code>AuthorizedRouteSelector</code>を利用して、実際に<code>child route</code>として機能する関数を作ります。この<code>child route</code>は<code>Router</code>の下にネストすることになるので、<code>Route</code>の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>Route</span>.withRole(<span style=color:#ff79c6>val</span> role: Role, build: <span style=color:#50fa7b>Route</span>.() <span style=color:#ff79c6>-&gt;</span> Unit): Route {
 </span></span><span style=display:flex><span>    <span style=color:#ff79c6>val</span> authorizedRoute = createChild(AuthorizedRouteSelector())
 </span></span><span style=display:flex><span>    application.feature(RoleBaseAuthorizer).interceptPipeline(<span style=color:#ff79c6>this</span>, role)
 </span></span><span style=display:flex><span>    build()
@@ -89,8 +89,8 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>        role: Role
 </span></span><span style=display:flex><span>    ) {
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// Pipelineの位置付け
-</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
-</span></span><span style=display:flex><span>        pipeline.insertPhaseAfter(Authentication.ChallengePhase, AuthorizationPhase)
+</span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        pipeline.insertPhaseAfter(<span style=color:#50fa7b>ApplicationCallPipeline</span>.Features, <span style=color:#50fa7b>Authentication</span>.ChallengePhase)
+</span></span><span style=display:flex><span>        pipeline.insertPhaseAfter(<span style=color:#50fa7b>Authentication</span>.ChallengePhase, AuthorizationPhase)
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>        <span style=color:#6272a4>// インターセプト時の処理
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>        pipeline.intercept(AuthorizationPhase) {
@@ -115,7 +115,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>
 </span></span><span style=display:flex><span>        <span style=color:#ff79c6>override</span> <span style=color:#ff79c6>fun</span> <span style=color:#50fa7b>install</span>(
 </span></span><span style=display:flex><span>            pipeline: ApplicationCallPipeline,
-</span></span><span style=display:flex><span>            configure: Configuration.() <span style=color:#ff79c6>-&gt;</span> Unit
+</span></span><span style=display:flex><span>            configure: <span style=color:#50fa7b>Configuration</span>.() <span style=color:#ff79c6>-&gt;</span> Unit
 </span></span><span style=display:flex><span>        ): RoleBasedAuthorization {
 </span></span><span style=display:flex><span>            <span style=color:#ff79c6>val</span> configuration = Configuration().apply(configure)
 </span></span><span style=display:flex><span>            <span style=color:#ff79c6>return</span> RoleBaseAuthorizer(configuration)
@@ -125,7 +125,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span></code></pre></div><p>先に説明した通り、<code>Configuration</code>ではユーザのロール情報を取得する関数を設定し、保存します。そして<code>interceptPipeline</code>では、その関数を持って<code>Pipeline</code>をインターセプトし、ロールの検証を行うようにします。</p><p>また、<code>interceptPipeline</code>では、引数として渡された<code>Pipeline</code>の位置付けを設定する必要があります。上記のコードでは、「認証の後」に位置付けしています。その後のロジックは、色々な方法があると思いますので、ここでは割愛させていただきます。</p><p>他に、<code>Feature</code>の場合は、<code>RoleBaseAuthorizer</code>が独立したモジュールとして使える設定を行います。単純に名前をつけてインスタンスを返すような、お作法的なものですね。</p><p>ここまでの実装が終わったら、一通り認可に関するモジュールの作成は終わります。ただ、<code>interceptPipeline</code>の処理としてユーザのロールが、APIにアクセスできない場合の処理として考えられることは二つほどあります。</p><h4 id=レスポンスを返して終了>レスポンスを返して終了</h4><p>まず考えられる方法は、適当なレスポンスを返し、そこで処理を終了させることです。この場合、以下のように実装ができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#ff79c6>if</span> (roles.none { role }) {
 </span></span><span style=display:flex><span>    <span style=color:#6272a4>// レスポンスを返す
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>    call.respond(
-</span></span><span style=display:flex><span>        status = HttpStatusCode.Forbidden,
+</span></span><span style=display:flex><span>        status = <span style=color:#50fa7b>HttpStatusCode</span>.Forbidden,
 </span></span><span style=display:flex><span>        message = <span style=color:#f1fa8c>&#34;permission not granted: </span><span style=color:#f1fa8c>$role</span><span style=color:#f1fa8c>&#34;</span>
 </span></span><span style=display:flex><span>    )
 </span></span><span style=display:flex><span>
@@ -148,7 +148,7 @@ extended"><div id=article-toolbar><a href=/ class=back-home><svg xmlns="http://w
 </span></span><span style=display:flex><span>            <span style=color:#6272a4>// 認可の場合の処理
 </span></span></span><span style=display:flex><span><span style=color:#6272a4></span>            <span style=color:#ff79c6>is</span> AuthorizationException <span style=color:#ff79c6>-&gt;</span> {
 </span></span><span style=display:flex><span>                call.respond(
-</span></span><span style=display:flex><span>                    status = HttpStatusCode.Forbidden,
+</span></span><span style=display:flex><span>                    status = <span style=color:#50fa7b>HttpStatusCode</span>.Forbidden,
 </span></span><span style=display:flex><span>                    message = AuthFailedResponse(
 </span></span><span style=display:flex><span>                        reason = cause.message
 </span></span><span style=display:flex><span>                    )

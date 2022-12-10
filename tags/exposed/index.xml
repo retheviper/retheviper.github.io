@@ -51,20 +51,20 @@
 &lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> member = Member.select { Member.id eq id }
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> member = &lt;span style="color:#50fa7b">Member&lt;/span>.select { &lt;span style="color:#50fa7b">Member&lt;/span>.id eq id }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .first()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .let {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = row[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = row[Member.name],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role = listOf(row[Mailing.role])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = row[&lt;span style="color:#50fa7b">Member&lt;/span>.id].&lt;span style="color:#ff79c6">value&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = row[&lt;span style="color:#50fa7b">Member&lt;/span>.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> role = listOf(row[&lt;span style="color:#50fa7b">Mailing&lt;/span>.role])
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// MailingテーブルをSelectし、リストにする
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">val&lt;/span> mailingAddress = Mailing
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { Mailing.memberId eq member.id }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address] }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { &lt;span style="color:#50fa7b">Mailing&lt;/span>.memberId eq member.id }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Mailing&lt;/span>.address] }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// オブジェクトのコピーを作り配送先のデータをマッピング
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> member.copy(mailingAddress = mailingAddress)
@@ -79,14 +79,14 @@
 &lt;h3 id="reduce">reduce&lt;/h3>
 &lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">Member&lt;/span>.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#50fa7b">Member&lt;/span>.id eq id) and (&lt;span style="color:#50fa7b">Mailing&lt;/span>.memberId eq &lt;span style="color:#50fa7b">Member&lt;/span>.id) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// とりあえずオブジェクトにマッピングする
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.id].&lt;span style="color:#ff79c6">value&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Mailing&lt;/span>.address])
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.reduce { acc, memberDto &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// オブジェクトを一つに集約させる（mailingAddressは累計）
@@ -100,15 +100,15 @@
 &lt;h3 id="groupby">groupBy&lt;/h3>
 &lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (Member.id eq id) and (Mailing.memberId eq Member.id) }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">Member&lt;/span>.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#50fa7b">Member&lt;/span>.id eq id) and (&lt;span style="color:#50fa7b">Mailing&lt;/span>.memberId eq &lt;span style="color:#50fa7b">Member&lt;/span>.id) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyはMemberオブジェクトのマッピング、valueではMailingのレコードを集約
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .groupBy({
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberDto(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.id].&lt;span style="color:#ff79c6">value&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.name],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, { &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address] })
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }, { &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Mailing&lt;/span>.address] })
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// keyのオブジェクトにMailingのレコードを設定
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> .map { (key, &lt;span style="color:#ff79c6">value&lt;/span>) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> key.copy(mailingAddress = &lt;span style="color:#ff79c6">value&lt;/span>)
@@ -136,20 +136,20 @@
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> helperMap = mutableMapOf&amp;lt;Int, MemberDto&amp;gt;()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Member.leftJoin(Mailing)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">Member&lt;/span>.leftJoin(Mailing)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (Member.id eq id) and (Mailing.memberId eq Mailing.id)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#50fa7b">Member&lt;/span>.id eq id) and (&lt;span style="color:#50fa7b">Mailing&lt;/span>.memberId eq &lt;span style="color:#50fa7b">Mailing&lt;/span>.id)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .forEach {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> helperMap.compute(&lt;span style="color:#ff79c6">it&lt;/span>[Member.id].&lt;span style="color:#ff79c6">value&lt;/span>) { key, &lt;span style="color:#ff79c6">value&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> helperMap.compute(&lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.id].&lt;span style="color:#ff79c6">value&lt;/span>) { key, &lt;span style="color:#ff79c6">value&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullではない場合、コピーしてmailingAddressを累計
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> &lt;span style="color:#ff79c6">value&lt;/span>&lt;span style="color:#ff79c6">?.&lt;/span>copy(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = &lt;span style="color:#ff79c6">value&lt;/span>.mailingAddress + &lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = &lt;span style="color:#ff79c6">value&lt;/span>.mailingAddress + &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Mailing&lt;/span>.address]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// valueがnullの場合はインスタンスを作る
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span> ) &lt;span style="color:#ff79c6">?:&lt;/span> MemberDto(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = key,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[Member.name],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[Mailing.address])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Member&lt;/span>.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mailingAddress = listOf(&lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">Mailing&lt;/span>.address])
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.let {
@@ -217,14 +217,14 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>@Test
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">getMember&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> withTestApplication(Application&lt;span style="color:#ff79c6">::&lt;/span>module) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> handleRequest(HttpMethod.Get, &lt;span style="color:#f1fa8c">&amp;#34;api/v1/web/members/&lt;/span>&lt;span style="color:#f1fa8c">$id&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>).apply {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> handleRequest(&lt;span style="color:#50fa7b">HttpMethod&lt;/span>.Get, &lt;span style="color:#f1fa8c">&amp;#34;api/v1/web/members/&lt;/span>&lt;span style="color:#f1fa8c">$id&lt;/span>&lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>).apply {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.status(),
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = HttpStatusCode.OK
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = &lt;span style="color:#50fa7b">HttpStatusCode&lt;/span>.OK
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> assertEquals(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">actual&lt;/span> = response.content,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = Json.encodeToString(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> expected = &lt;span style="color:#50fa7b">Json&lt;/span>.encodeToString(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> MemberResponse(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = id,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> userId = userId,
@@ -240,21 +240,21 @@
 >Exposed&lt;/a>があります。Javaの&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
 >jOOQ&lt;/a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInUsa: List&amp;lt;User&amp;gt; = transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.select {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">UserTable&lt;/span>.select {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">UserTable&lt;/span>.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.map {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User(
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.id],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.name],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> country = &lt;span style="color:#ff79c6">it&lt;/span>[UserTable.country]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.id],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> name = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.name],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> country = &lt;span style="color:#ff79c6">it&lt;/span>[&lt;span style="color:#50fa7b">UserTable&lt;/span>.country]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }.filter {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.country = Country.USA
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">it&lt;/span>.country = &lt;span style="color:#50fa7b">Country&lt;/span>.USA
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> userInGermany: List&amp;lt;User&amp;gt; = transaction {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User.find { (UserTable.country eq Country.GERMANY) and (UserTable.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>)}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#50fa7b">User&lt;/span>.find { (&lt;span style="color:#50fa7b">UserTable&lt;/span>.country eq &lt;span style="color:#50fa7b">Country&lt;/span>.GERMANY) and (&lt;span style="color:#50fa7b">UserTable&lt;/span>.deleted eq &lt;span style="color:#ff79c6">false&lt;/span>)}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで&lt;a class="link" href="https://www.liquibase.org" target="_blank" rel="noopener"
 >Liquibase&lt;/a>や&lt;a class="link" href="https://flywaydb.org" target="_blank" rel="noopener"
