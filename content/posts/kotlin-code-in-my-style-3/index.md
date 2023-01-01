@@ -146,8 +146,8 @@ list.forEach {
 
 ```kotlin
 val (totalAmount, totalPrice) = list.fold(0 to 0) { acc, value ->
-        (acc.first + value.amount) to (acc.second + value.price)
-    }
+    (acc.first + value.amount) to (acc.second + value.price)
+}
 ```
 
 `fold`を使う場合、合算したい値が三つある場合は[Triple](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-triple/)を使うこともできますし、さらに値が多い場合は専用のクラスを作ることで対応もできるかと思います。ただ、こうする場合、合算した値を`val`として宣言できるというメリットはありますが、ループごとにインスタンスが作成されるので合算したい項目が増えれば増えるほど性能的にはあまり良くない可能性が高いので場合によって適切なものを選ぶ必要がありそうですね。
