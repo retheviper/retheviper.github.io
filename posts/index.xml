@@ -1,4 +1,126 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 20 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>ifでの分岐を考える</title><link>https://retheviper.github.io/posts/kotlin-if-to-non-if/</link><pubDate>Sun, 20 Nov 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-if-to-non-if/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post ifでの分岐を考える" />&lt;p>ほとんどの言語で、特定の条件に合致した場合にのみ実行する処理を書くには、&lt;code>if&lt;/code>のように分岐処理のための構文を使うのが当たり前のように考えられています。言語によっては構文ではなく式として扱われたり、&lt;code>switch&lt;/code>や三項演算子のような他の選択肢も存在しますが、基本的に「条件とそれに従う処理」を書く機能として本質は変わらないものですね。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 30 Dec 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>Kotlinはどう書いたらいいか</title><link>https://retheviper.github.io/posts/kotlin-how-to-kotlin-like/</link><pubDate>Fri, 30 Dec 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-how-to-kotlin-like/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Kotlinはどう書いたらいいか" />&lt;p>自分がJavaからKotlinに転向してからもう2年ほどが経ちます。しかし、いまだにKotlinでできることは無限にあって、新しい発見は終わることがないと感じています。Kotlinという言語自体のバージョンアップが早く、色々と機能が追加されて続けているのでまだしばらくこの発見も続きそうですね。&lt;/p>
+&lt;p>そんな中で思うことなのですが、Intellijを使っていると自動的にJavaのコードを変換してくれたり、Javaの書き方をそのまま流用しても問題になることは少ないものの、やはりKotlinならではのコードを書きたいという欲求も湧いてきます。つまり、「Kotlinらしき書き方」をしたいと思ってしまうのです。&lt;/p>
+&lt;h2 id="korlinらしき書き方って">Korlinらしき書き方って？&lt;/h2>
+&lt;p>「Kotlinらしき書き方」とは一体どういうものなのでしょうか。まずはその定義が必要ですね。いろいろな捉え方があるかと思いますが、私は基本的に「Kotlinの仕様や機能を最大限に活かすこと」なのではと思っています。つまり、スタンダードライブラリのAPI、Scope Function, Extensionなどを積極的にコードに取り入れることです。そうすることでコードを書く時間は短くなり、より効率が上がるだろうと私は思っています。&lt;/p>
+&lt;p>ただ、そういう概念を言葉で述べるだけでは曖昧なところがあるので、コードを持って例を挙げた方がいいでしょう。例えば、以下のような関数を実装する必要があるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">numbers&lt;/span>(): List&amp;lt;String&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4">// TODO
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この関数を通じて行いたい処理は、「0〜10の数字をStringに変換してListとして返す」ことだとしましょう。その場合、実装の一例として以下のようなコードを提示できるかなと思います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">numbers&lt;/span>(): List&amp;lt;String&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> list = mutableListOf&amp;lt;String&amp;gt;()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">var&lt;/span> i = &lt;span style="color:#bd93f9">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">while&lt;/span> (i &amp;lt; &lt;span style="color:#bd93f9">10&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> i&lt;span style="color:#ff79c6">++&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> list.add(i.toString())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> list.toList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map.html" target="_blank" rel="noopener"
+>kotlin.collections.map()&lt;/a>を使ったら、同じコードを以下のように変換することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">numbers&lt;/span>(): List&amp;lt;String&amp;gt; =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&lt;span style="color:#bd93f9">0.&lt;/span>.&lt;span style="color:#bd93f9">10&lt;/span>).map { &lt;span style="color:#ff79c6">it&lt;/span>.toString() }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>map()&lt;/code>のような関数が初めて登場した際は、あまり直感的にその処理の意味を把握できないということから「可読性に欠ける」という評価もあったようです。上記の二つのコードを比べると、場合によっては&lt;code>while&lt;/code>ループでの処理がわかりやすいと感じる方もいらっしゃるかなと思います。今は&lt;code>map()&lt;/code>が多くのプログラミング言語で採用している関数であり、期待できる関数の実行結果も常識化していますが、古典的なコードに慣れている人からしたら「ループで何かを行う」というコードの方がわかりやすいかもです。&lt;/p>
+&lt;h2 id="可読性として">「可読性」として&lt;/h2>
+&lt;p>しかし、果たしてより高度な処理を行う場合も「長いコードの方が可読性は良い場合もある」と断定できるのでしょうか。ここでまた、違う例を挙げてみましょう。例えば、&lt;code>Listの数字を全て掛け算した結果を返す&lt;/code>関数を実装する必要があるとします。例えば以下のようなコードを書くことができるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">multiply&lt;/span>(numbers: List&amp;lt;Int&amp;gt;): Int {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (numbers.isEmpty()) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">throw&lt;/span> IllegalAccessException(&lt;span style="color:#f1fa8c">&amp;#34;List is empty&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">var&lt;/span> acc = numbers[&lt;span style="color:#bd93f9">0&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (numbers.size &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">1&lt;/span>) &lt;span style="color:#ff79c6">return&lt;/span> acc
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> ((index, &lt;span style="color:#ff79c6">value&lt;/span>) &lt;span style="color:#ff79c6">in&lt;/span> numbers.withIndex()) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (index &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> acc &lt;span style="color:#ff79c6">*=&lt;/span> &lt;span style="color:#ff79c6">value&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> acc
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のコードでは当初の目的は果たしていますが、「可読性」という観点からするとどうでしょうか。関数のシグニチャーだけでなく、関数で行なっている処理全体に目を通さないと、何が起こっているかわからないのではないでしょうか？&lt;/p>
+&lt;p>この関数で行なっている処理を一つ一つ読んでみると、「リストが空の場合はエラーを返す」、「リストの要素が一つの場合はそれを返す」、「リストが空でなく、要素が一つでもない場合は後続の処理を行う」、「最初の要素をとり、リストの要素をループしながら最初の要素以外を全て掛け算する」という情報が込められています。&lt;/p>
+&lt;p>ここでExtensionと&lt;code>kotlin.collections&lt;/code>の関数を使って同じ処理を行う関数を実装してみると、コードは大きく変わります。以下がそのサンプルコードです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">List&lt;/span>&amp;lt;Int&amp;gt;.multiply(): Int =
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reduce { acc, e &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> acc * e }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>map()&lt;/code>の場合と同じく、&lt;code>reduce()&lt;/code>という関数が何をするかがわからない場合もあるかと思います。しかし、その関数が「要素を一つに減らす」ことであり、その中で行なっている「減らし方は掛け算」ということを理解すれば良いだけなので、こちらの方がその意図を把握しやすいのではないでしょうか。先ほどの関数は、処理全体をいくつかの単位で分けて理解する必要があったということから考えると、可読性の面ではこちらの方がより優秀だと言えるのではないかと私は思っています。&lt;/p>
+&lt;p>また、&lt;code>List&lt;/code>に拡張関数として定義することで、まるで元からついていたメソッドのように使えるのも良い点でしょう（IDEから自動補完に出てくるはずなので）。&lt;/p>
+&lt;h2 id="工数として">「工数」として&lt;/h2>
+&lt;p>コードを書くのは工数がかかる行為です。なので、同じ機能をする関数を書くとしても、毎回全ての処理を書くより共通化できる部分は分離し、再利用するのが常識のようなものです。そのため多くのライブラリやフレームワークが存在していますね。&lt;/p>
+&lt;p>プログラミング言語の使用や機能をよく理解し、それらを活用するということも本質的にはライブラリやフレームワークを使うことと変わらないものです。先のように、「Listの要素を一つにまとめる」処理を毎回自前で書くとしたら、かなりの時間が必要となるでしょう。&lt;/p>
+&lt;p>ここで他の例をまた挙げます。例えば以下のようなデータがあるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Data&lt;/span>(&lt;span style="color:#ff79c6">val&lt;/span> id: Int, &lt;span style="color:#ff79c6">val&lt;/span> version: Int)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> list = listOf(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Data(&lt;span style="color:#bd93f9">1&lt;/span>, &lt;span style="color:#bd93f9">1&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Data(&lt;span style="color:#bd93f9">1&lt;/span>, &lt;span style="color:#bd93f9">2&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Data(&lt;span style="color:#bd93f9">2&lt;/span>, &lt;span style="color:#bd93f9">1&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Data(&lt;span style="color:#bd93f9">2&lt;/span>, &lt;span style="color:#bd93f9">2&lt;/span>),
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Data(&lt;span style="color:#bd93f9">2&lt;/span>, &lt;span style="color:#bd93f9">3&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>DBの中に履歴を残したい場合はversionや枝番など名称の列を持たせ、同じIDのデータをいくつか挿入する場合があるかと思います。そしてその場合、最新のデータのみを処理したいケースもありますね。上記の例だと、&lt;code>Data(1, 2)&lt;/code>と&lt;code>Data(2, 3)&lt;/code>のみを取得したいということです。&lt;/p>
+&lt;p>最初からクエリで最新のデータのみを取得できるといいのですが、外部APIのレスポンスの場合はそのようにフィルタされたデータでない場合もあります。なのでこちらでversionがmaxのデータをフィルタする処理を書くとします。例えば以下のようなコードを考えられます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">maxVersions&lt;/span>(list: List&amp;lt;Data&amp;gt;) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> result = mutableListOf&amp;lt;Data&amp;gt;()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> ((index, &lt;span style="color:#ff79c6">value&lt;/span>) &lt;span style="color:#ff79c6">in&lt;/span> list.withIndex()) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (index &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">0&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result.add(&lt;span style="color:#ff79c6">value&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> last = result[result.size - &lt;span style="color:#bd93f9">1&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#ff79c6">value&lt;/span>.id &lt;span style="color:#ff79c6">==&lt;/span> last.id) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#ff79c6">value&lt;/span>.version &amp;gt; last.version) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result.remove(last)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result.add(&lt;span style="color:#ff79c6">value&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#ff79c6">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result.add(&lt;span style="color:#ff79c6">value&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> result.toList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>可読性の問題は一旦置いといて、このようなコードを書くときの工数はどうでしょうか。慣れてしまえば簡単なのかも知れませんが、初めてこの処理を書く人の立場からしたらかなりの工数がかかり、関数が期待通りに動作するかの検証を含めるとさらに工数が必要となりそうだと思います。慣れている場合でも、常にこのようなコードを的確に書けるかどうかが疑問です。&lt;/p>
+&lt;p>それに対して、スタンダードライブラリを使った例を考えてみます。以下のように、メソッドチェーンによって簡単に同じことができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> maxVersions = list.groupBy { &lt;span style="color:#ff79c6">it&lt;/span>.id }.map { &lt;span style="color:#ff79c6">it&lt;/span>.&lt;span style="color:#ff79c6">value&lt;/span>.maxBy { &lt;span style="color:#ff79c6">it&lt;/span>.version } }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで使われている&lt;code>groupBy()&lt;/code>、&lt;code>map()&lt;/code>、&lt;code>maxBy()&lt;/code>はそれぞれ「ValueがListのMapを作る」、「要素を違う形にマッピングする」、「Listの要素のうちmaxの値を探す」という関数なので、ここだけでなく色々な場面で活用できる関数となっています。このように便利な関数を使いこなし、さらに組み合わせることでより複雑な処理でも簡単に書くことができるという点をみると、スタンダードライブラリの機能を理解するのは工数の面でもかなり効率を上げられることになるのではないかと思います。&lt;/p>
+&lt;h2 id="注意点">注意点&lt;/h2>
+&lt;p>ここまではKotlinの仕様や機能を活かすと可読性と工数という二つの観点から、メリットがあるという話をしてきました。しかし、どんなことでもメリットがあればデメリットもあるものですね。&lt;/p>
+&lt;p>当たり前ながら、どんな機能でも単純に「それができる」という理由で乱用するとむしろ逆効果が出るケースがあります。例えば以下のような例を考えられます。二つのデータクラスがあって、&lt;code>Data&lt;/code>から&lt;code>Request&lt;/code>にマッピングする必要があるとしましょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Data&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> id: Int?,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> version: Int?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Request&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> id: Int,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> version: Int
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Data&lt;/code>のフィールドはnullableとなっていますが、&lt;code>Request&lt;/code>の場合はそうではないです。このようにビジネスロジック上はnullになることはなくても、実装上の都合によってnullableにするケースもありますね。その場合、どうやってマッピングしたらいいでしょうか。例えば以下のような例があるとします。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">data&lt;/span> &lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">Request&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> id: Int,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> version: Int
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">companion&lt;/span> &lt;span style="color:#ff79c6">object&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">fun&lt;/span> &lt;span style="color:#50fa7b">from&lt;/span>(&lt;span style="color:#ff79c6">data&lt;/span>: Data): Request {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> Request(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> id = requireNotNull(&lt;span style="color:#ff79c6">data&lt;/span>.id) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>&lt;span style="color:#f1fa8c">${Data::id.name}&lt;/span>&lt;span style="color:#f1fa8c"> should not be null.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> version = requireNotNull(&lt;span style="color:#ff79c6">data&lt;/span>.version) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#34;&lt;/span>&lt;span style="color:#f1fa8c">${Data::version.name}&lt;/span>&lt;span style="color:#f1fa8c"> should not be null.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここではcompanion objectを利用して&lt;code>Request&lt;/code>のインスタンスを生成しながら、データのマッピングを行うようにしています。そこで、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/require-not-null.html" target="_blank" rel="noopener"
+>requireNotNull()&lt;/a>を利用したバリデーションを行い、nullだった場合はエラーメッセージを出力するようにしていますね。&lt;/p>
+&lt;p>ここまでは良い実装だとして、問題はエラーメッセージの方です。どのパラメータがnullだったかわかるようにしていますが、そこで&lt;code>Data&lt;/code>のフィールドをRefelctionで取得し、そのフィールド名をStringに埋め込むようにしています。エラーが発生した時には意図的に動作するとしても、果たして性能の劣るRefelctionを使うまでのことだったでしょうか。&lt;/p>
+&lt;p>このように、言語が提供する機能を活用する場合は適切な場面を判断する必要があります。ここで紹介した&lt;code>map()&lt;/code>や&lt;code>reduce()&lt;/code>、&lt;code>groupBy()&lt;/code>なども便利で簡単な実装ができるようにしてくれる優秀な関数ですが、これらの関数の実装をみるとそれぞれが一つのループを必ず行い新しいCollectionを生成するという処理を行なっているということを理解すれば、メソッドチェーンで複数の関数を利用する場合は性能に影響を及ぼす可能性もあるということがわかるでしょう。他にも可読性の面でもわかりにくくなったり、別の関数として分離した方が良いコードが一つの関数内でいくつも繰り広げられることになる可能性もあるかと思います。&lt;/p>
+&lt;p>なので、「曖昧な理解」や「慣性」としてこれらの機能を利用するという行為にはリスクがあるということを理解し、どのような実装をするかは常に悩むべきではないかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>すでに何回か、「Kotlinで書いてみた」というタイトルで、Kotlinならこういう書き方ができるというポストを載せていて、今回の記事もまたそれらと大きく離れた題ではないです。また、ある意味ここで挙げたことはプログラマなら基本的に熟知しておくべき常識のようなもので、今更な感があるのかも知れません。&lt;/p>
+&lt;p>それでもあえて記事として書いている理由は、基本こそ大事だという自分の考えゆえでもあります。経験を積んでいくと発展する部分もありますが、逆に変な習慣がついてしまいなかなか直せないところも出てくるものですので。自分はそうでないかという警戒を兼ねて、一度は基本に戻り今の自分と照らし合わせてみるのもまた一つの勉強になるのではないかと思います。&lt;/p>
+&lt;p>少し遅れてしまいましたが、2022年のポストはこれにて終わりとなります。来年は自分も、ここに訪れるみなさんにも成長のある一年になることをお祈りします。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>ifでの分岐を考える</title><link>https://retheviper.github.io/posts/kotlin-if-to-non-if/</link><pubDate>Sun, 20 Nov 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-if-to-non-if/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post ifでの分岐を考える" />&lt;p>ほとんどの言語で、特定の条件に合致した場合にのみ実行する処理を書くには、&lt;code>if&lt;/code>のように分岐処理のための構文を使うのが当たり前のように考えられています。言語によっては構文ではなく式として扱われたり、&lt;code>switch&lt;/code>や三項演算子のような他の選択肢も存在しますが、基本的に「条件とそれに従う処理」を書く機能として本質は変わらないものですね。&lt;/p>
 &lt;p>分岐処理に限った話ではありませんが、便利な道具というのは時に危険性を伴うこともあります。&lt;code>if&lt;/code>を使う場合、最初の実装ではわかりやすく簡単に目的を達成できますが、維持保守の観点からするとあまり良くない選択になるケースもありますね。たとえば条件が増えたり変わるなどコードに変更が必要となった場合は修正がすべてのケースを網羅しているかどうかがわからなくなったり、ユニットテストが困難になったりするなどが考えられます。&lt;/p>
 &lt;p>なので少なくとも&lt;code>if&lt;/code>の処理をよりシンプルにしたり、もしくはデザインパターンなどで分岐の構文を使わず同じ処理ができるように改善する必要が出てくることもあるかなと思います。そうすることで、コードリーディングはより難しくなるとしても、維持保守の観点からはより良いコードになる可能性もあるでしょう。&lt;/p>
 &lt;p>もちろん、完全に&lt;code>if&lt;/code>をなくするというのは不可能に近い話で、そこまでする必要もありません。道具自体に罪はなく、あくまで使い方が問題になるだけですので。ここではあくまで、&lt;code>if&lt;/code>を使ったコードをどういう風にリファクタできるか、それだけに集中したいと思います。（初心者向けな感じで）&lt;/p>
@@ -5367,7 +5489,7 @@ alt="Google Cloud Certification Perks Webstore">
 >reduceTo&lt;/a>のようにこの初期値の型はListの要素とは違うものに指定できます。そして関数を実行した結果はinitialと同じ型になるので、これを応用すると&lt;code>Data&lt;/code>のリストを二つの値(&lt;code>Pair&lt;/code>)に&lt;code>reduce&lt;/code>することもできます。例えば上記の処理は&lt;code>fold&lt;/code>を使うと以下のようにワンライナで実装ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">val&lt;/span> (totalAmount, totalPrice) = list.fold(&lt;span style="color:#bd93f9">0&lt;/span> to &lt;span style="color:#bd93f9">0&lt;/span>) { acc, &lt;span style="color:#ff79c6">value&lt;/span> &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (acc.first + &lt;span style="color:#ff79c6">value&lt;/span>.amount) to (acc.second + &lt;span style="color:#ff79c6">value&lt;/span>.price)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>fold&lt;/code>を使う場合、合算したい値が三つある場合は&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-triple/" target="_blank" rel="noopener"
 >Triple&lt;/a>を使うこともできますし、さらに値が多い場合は専用のクラスを作ることで対応もできるかと思います。ただ、こうする場合、合算した値を&lt;code>val&lt;/code>として宣言できるというメリットはありますが、ループごとにインスタンスが作成されるので合算したい項目が増えれば増えるほど性能的にはあまり良くない可能性が高いので場合によって適切なものを選ぶ必要がありそうですね。&lt;/p>
 &lt;h2 id="最後に">最後に&lt;/h2>
