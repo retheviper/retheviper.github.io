@@ -1,4 +1,150 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>spring on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/spring/</link><description>Recent content in spring on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/spring/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>spring on Korean-man in Tokyo</title><link>https://retheviper.github.io/categories/spring/</link><description>Recent content in spring on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 29 Jan 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/categories/spring/index.xml" rel="self" type="application/rss+xml"/><item><title>Spring Boot 3を導入してみた</title><link>https://retheviper.github.io/posts/spring-boot-2-to-3/</link><pubDate>Sun, 29 Jan 2023 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-boot-2-to-3/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post Spring Boot 3を導入してみた" />&lt;p>Spring Boot 2 (Spring Framework 5) から Spring Boot 3 (Spring Framework 6) にアップデートしてみました。&lt;/p>
+&lt;h2 id="java-17">Java 17&lt;/h2>
+&lt;p>仕事でJavaを使っていたごろは、Java 17をずっと待っていました。以前こちらのブログの記事として整理したこともありましたがテキストブロックやSwitchを式で使えるなど便利な機能がたくさん追加されたためです。しかし、Kotlinを使っている今は機能や言語仕の観点からJavaのバージョンを機にする必要はありません。なので、既存のアプリケーションがJava 11で動いているのであれば、Java 17に上げるモチベーションはあまりないように見えるかもしれません。&lt;/p>
+&lt;p>それでもあえてバージョンを上げようとした理由は、まずサポート期間が今年の9月で終わるからということになります。正確にはJava 11のPremier Supportが2023年9月で終わり、それに準するExtended Supportは2026年9月までということになります。ただ、「準する」という表現が曖昧で、11は今の時点ではもうだいぶ古く、17もリリースから1年以上の期間の間に十分検証されていると判断しました。&lt;/p>
+&lt;p>サポート期間の話だけだと、まだ終了まで半年以上の時間が残っているのですが、このタイミングで行うのは会社で「リファクタ期間」というものを設けているためです。この期間中は主に技術負債の解消や依存関係のバージョンアップなどを重点的に行うので、新しい機能の開発とバージョンアップが重なり問題が起こるような事項は避けたいと思いました。&lt;/p>
+&lt;p>そのほかでも、新しいJavaのバージョンを採用することでパフォーマンスの向上を図ることができる点があります。例えば、&lt;a class="link" href="https://www.optaplanner.org/blog/2021/09/15/HowMuchFasterIsJava17.html" target="_blank" rel="noopener"
+>Java 11よりGCの性能が改善されていたり&lt;/a>、状況によって&lt;a class="link" href="https://malloc.se/blog/zgc-jdk17" target="_blank" rel="noopener"
+>ZGCの導入を考慮できる&lt;/a>オプションができたりです。Javaのバージョンが上がるということは、JVMの改善を含むということになるので、Kotlinでも十分その恩義を受けられることになるでしょう。&lt;/p>
+&lt;p>なので、Java 17を採用することで決め、以降時の経験に関して共有したいと思います。&lt;/p>
+&lt;h3 id="record">Record&lt;/h3>
+&lt;p>社内ではORMとして&lt;a class="link" href="https://www.jooq.org/" target="_blank" rel="noopener"
+>jOOQ&lt;/a>を採用していて、これから自動生成されたテーブル定義のコードをKotlinのコード(Repository)で呼び出す構造となっています。ただ、場合によってはこの自動生成のコードによりJava 17でのコンパイルが失敗することがあります。今回の場合は、以下のようなエラーメッセージと共にコンパイルが失敗するのを確認できました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>エラー: Recordの参照はあいまいです
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> public &amp;lt;O extends Record&amp;gt; SomeTable(Table&amp;lt;O&amp;gt; child, ForeignKey&amp;lt;O, SomeRecord&amp;gt; key) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ^
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> org.jooqのインタフェース org.jooq.Recordとjava.langのクラス java.lang.Recordの両方が一致します
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはjOOQに&lt;a class="link" href="https://www.jooq.org/javadoc/latest/org.jooq/org/jooq/Record.html" target="_blank" rel="noopener"
+>Record&lt;/a>というクラスが存在していて、自動生成のコードでそれを利用しているためです。Java 14以降Lombokの&lt;a class="link" href="https://projectlombok.org/features/Value" target="_blank" rel="noopener"
+>@Value&lt;/a>と似た機能を持つ&lt;a class="link" href="https://docs.oracle.com/en/java/javase/15/language/records.html" target="_blank" rel="noopener"
+>Record Class&lt;/a>が登場していて、&lt;code>record&lt;/code>キーワードを使って定義したクラスは全て&lt;a class="link" href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Record.html" target="_blank" rel="noopener"
+>java.lang.Record&lt;/a>を実装する形になっています。というわけで、「jOOQのRecordを意味するのか、JavaのRecordを意味するのかコンパイラが判断できない」とエラーが発生してしまうのです。&lt;/p>
+&lt;p>これは、既存の自動生成コードのインポートを修正するだけで回避できます。既存のコードだと、自動生成のコードでは以下のようにjOOQのクラスをインポートしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> org.jooq.*&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これを、明確にjOOQのRecordを指定するように修正します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> org.jooq.Record&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> org.jooq.*&lt;span style="color:#ff79c6">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上で問題なくコンパイルが通るようになりました。もし自作のライブラリなどで&lt;code>Record&lt;/code>というクラスを定義している場合はここと同じエラーになる可能性があるので、なるべくクラスの名前を変えた方が良いかもです。&lt;/p>
+&lt;h3 id="docker-image">Docker Image&lt;/h3>
+&lt;p>現在開発中のサービスは&lt;a class="link" href="https://github.com/GoogleContainerTools/jib" target="_blank" rel="noopener"
+>Jib&lt;/a>を使ってコンテナ化しています。ここでベースとなるイメージの指定が必要なのですが、既存で使っていたイメージはOpenJDKの&lt;a class="link" href="https://hub.docker.com/layers/library/openjdk/11-jre/images/sha256-762d8d035c3b1c98d30c5385f394f4d762302ba9ee8e0da8c93344c688d160b2?context=explore" target="_blank" rel="noopener"
+>11-jre&lt;/a>でした。これが17からはJREのみのイメージはなく、&lt;a class="link" href="https://hub.docker.com/layers/library/openjdk/17-jdk/images/sha256-98f0304b3a3b7c12ce641177a99d1f3be56f532473a528fda38d53d519cafb13?context=explore" target="_blank" rel="noopener"
+>17-jdk&lt;/a>のみとなったので、バージョンをあげる際は注意する必要があります。&lt;/p>
+&lt;p>ただ、OpenJDK以外のイメージ意外を使っている場合は状況が違うかも知れませんので確認が必要です。例えば、&lt;a class="link" href="https://hub.docker.com/layers/library/eclipse-temurin/17-jre/images/sha256-402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c?context=explore" target="_blank" rel="noopener"
+>Temurin&lt;/a>や&lt;a class="link" href="https://hub.docker.com/layers/azul/zulu-openjdk/17-jre/images/sha256-09163c13aefbe5e0aa3dc7910d9997e416031e777ca0c50bd9b66a63b46be481?context=explore" target="_blank" rel="noopener"
+>Zulu&lt;/a>は&lt;code>17-jre&lt;/code>を提供していて、Libericaの場合は&lt;a class="link" href="https://hub.docker.com/layers/bellsoft/liberica-openjdk-alpine/17/images/sha256-50feb980f142b152e19c9dc25c835e0e451321eb3b837a3a924f457b11ce8c59?context=explore" target="_blank" rel="noopener"
+>17&lt;/a>とバージョンだけになっているなど使っているJDKの種類によってタグ名が違うので、JDKのバージョンアップの際には使っているイメージのタグはチェックしておく方が良いでしょう。&lt;/p>
+&lt;h3 id="依存関係">依存関係&lt;/h3>
+&lt;p>自分の担当しているアプリで発生していた問題ではないのですが(マイクロサービスとして、Kotlinのサービスは複数あります)、一部でJavaのバージョンを11から17に上げた際に&lt;a class="link" href="https://github.com/TIBCOSoftware/jasperreports" target="_blank" rel="noopener"
+>Jasperreports&lt;/a>を使った帳票の出力で報告された問題がありました。このライブラリはPDFの出力のために利用しているのですが、レイアウトに問題はなかったものの、表の中の表示文字数が少し減ったという問題がありました。幸い、これは大きい問題ではなかったのでまずは対応なしとなりそうですが場合によっては致命的かも知れません。&lt;/p>
+&lt;p>おそらくこのような問題が発生したら、依存しているライブラリのバージョンをJava 17に対応したものにあげれば解消できるのではないかと思いますが、まだ17に対応していないライブラリがある可能性もあるので、事前に依存関係の方をチェックしておいた方が胃良いでしょう。&lt;/p>
+&lt;h2 id="spring-boot-3">Spring Boot 3&lt;/h2>
+&lt;p>Java 17は今年に11のサポートが終了するということで必須としていましたが、Spring Boot 3(Spring Framework 6)の場合は去年の12月にリリースされたばかりなので今回はあえて移行を試す必要はありませんでした。ただ、Spring Boot 3からちょうどJava 17が最低バージョンになり、以前からサーバレスの&lt;a class="link" href="https://ja.wikipedia.org/wiki/Google_App_Engine" target="_blank" rel="noopener"
+>GAE&lt;/a>上で起動しているプロジェクトもあったので、起動時間を減らすために&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html" target="_blank" rel="noopener"
+>Spring Native&lt;/a>を試してみたいと思っていたためでもあります。Spring NativeはSpring Boot 3から正式にサポートされることになったので。&lt;/p>
+&lt;p>また、Spring Boot 3で依存関係が変わったり、プロパティの記述方法が変わったりするケースがあるとしても、自分が扱っているアプリケーションはマイクロサービスなので比較的に影響が少ないと予測できたからです。おそらくモノリシックで、Springの様々な機能に依存している場合は移行が難しい場合もあるかなと思います。なので、もし移行を考えている場合はなるべくリリースノートなどを確認しておいた方が良いでしょう。&lt;/p>
+&lt;p>Spring Boot 2系から3系の移行は、基本的に&lt;a class="link" href="https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide" target="_blank" rel="noopener"
+>公式のマイグレーションガイド&lt;/a>を参照すると良いのですが、マイグレーションガイドだけではわからないことや、Spring Frameworkの依存関係の変化により他のライブラリに影響が出ることがあります。なので自分の場合はどのように対応したかを少し紹介したいと思います。&lt;/p>
+&lt;h3 id="constructorbinding">@ConstructorBinding&lt;/h3>
+&lt;p>&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/context/properties/ConstructorBinding.html" target="_blank" rel="noopener"
+>@ConstructorBinding&lt;/a>は、&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/context/properties/ConfigurationProperties.html" target="_blank" rel="noopener"
+>@ConfigurationProperties&lt;/a>を付けたクラスにアプリケーションプロパティファイルから読み込んだ値をコンストラクタインジェクションするためのアノテーションです。現在のプロジェクトではAWSのS3のバケット名やメールのテンプレート、他のAPIを呼び出すためのエンドポイントなどを&lt;code>application.yaml&lt;/code>に記載して読み込むようにしています。&lt;/p>
+&lt;p>ここで、Spring Boot 3だと&lt;code>@ConstructorBinding&lt;/code>なしでもプロパティを読み込むようになって、そもそもこのアノテーション自体がDeprecatedになっています。なので、最初はコンパイルエラーとなりますが、&lt;code>@ConstructorBinding&lt;/code>を削除するだけで問題なく動作するようになりました。最も簡単な対応でした。&lt;/p>
+&lt;h3 id="tracingの変更">Tracingの変更&lt;/h3>
+&lt;p>現在のアプリケーションでは、他のマイクロサービスのAPIを呼び出す際に&lt;a class="link" href="https://github.com/openzipkin/brave" target="_blank" rel="noopener"
+>Brave&lt;/a>を使ってヘッダに&lt;code>Trace Context&lt;/code>を載せています。この場合、同じTrace IDが連携されるのでログの確認がやりやすくなりますね。今までは&lt;a class="link" href="https://spring.io/projects/spring-cloud-sleuth" target="_blank" rel="noopener"
+>Spring Cloud Sleuth&lt;/a>を通じてBraveをDIしていましたが、これがSpring Boot 3になくなり(Spring Bootに統合）、&lt;a class="link" href="https://micrometer.io/" target="_blank" rel="noopener"
+>Micrometer&lt;/a>の新しいAPIを利用することになったらしいです。&lt;/p>
+&lt;p>つまり、既存のSpring Cloud SleuthによるDIは使えなくなり、依存関係も変化があるということです。まずは、DIを担当していた&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/3.0.1/api/org/springframework/boot/actuate/autoconfigure/tracing/BraveAutoConfiguration.html" target="_blank" rel="noopener"
+>BraveAutoConfiguration&lt;/a>が&lt;a class="link" href="https://github.com/spring-projects/spring-boot/tree/v3.0.2/spring-boot-project/spring-boot-actuator" target="_blank" rel="noopener"
+>Spring Boot Actuator&lt;/a>に移りました。なので、もうSpring Cloud Sleuthはいらなくなります。&lt;/p>
+&lt;p>ただ、Spring Boot Actuatorだけだと&lt;code>BraveAutoConfiguration&lt;/code>によるDIはできません。なので以下のようにブリッジの依存関係を追加する必要があります。(バージョンはSpring Bootのものが使われる)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>implementation(&lt;span style="color:#f1fa8c">&amp;#34;io.micrometer:micrometer-tracing-bridge-brave&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>依存関係が変わるので、&lt;code>application.yaml&lt;/code>の設定も変更が必要になります。既存では、以下のように記載していました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yml" data-lang="yml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">spring&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">sleuth&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">enabled&lt;/span>: &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">propagation&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">type&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - w3c
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Micrometerに移行したので、このように変更します。実際は、以下の設定はデフォルトなので記載しなくても問題はありませんが、メンテナンス時に現在の設定がわかりやすいように記載しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yml" data-lang="yml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">management&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">tracing&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">enabled&lt;/span>: &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">propagation&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">type&lt;/span>: w3c
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、最もつまづいた部分はユニットテストでした。テストを実行してみると、なぜか以下のようなエラーメッセージが出ていました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-shell" data-lang="shell">&lt;span style="display:flex;">&lt;span>Caused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of &lt;span style="color:#8be9fd;font-style:italic">type&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;brave.Tracing&amp;#39;&lt;/span> available: expected at least &lt;span style="color:#bd93f9">1&lt;/span> bean which qualifies as autowire candidate. Dependency annotations: &lt;span style="color:#ff79c6">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Spring Cloud Sleuthを使っていた頃はユニットテスト時もDIができていたのですが、なぜか&lt;code>BraveAutoConfiguration&lt;/code>によるDIが聞かない状態です。ローカルで起動した場合は同じエラーにならないので、おそらくテスト時にだけAutoConfigurationが呼ばれてないように思われます。&lt;/p>
+&lt;p>&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/test/context/TestConfiguration.html" target="_blank" rel="noopener"
+>@TestConfiguration&lt;/a>などを使って、直接Bean登録をする方法もあるかと思いますが、調査してみると&lt;a class="link" href="https://www.baeldung.com/spring-boot-3-observability#testing-observations" target="_blank" rel="noopener"
+>Micrometerにはテスト用のライブラリが用意されている&lt;/a>ので、それを使うことにしました。このライブラリがリリースされたのは2022年の12月なので、なかなか情報を見つけるのが難しいです。とにかく、以下のようにライブラリを追加することでDIの問題は解消できます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>testImplementation(&lt;span style="color:#f1fa8c">&amp;#34;io.micrometer:micrometer-tracing-test&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>今回はライブラリの追加だけで解消できたのですが、新しいライブラリの情報はこちらで調べないとなかなかわからないというのが問題でしたね。他のライブラリの場合も同じ問題があるかもしれないので、もしAutoConfigurationによりDIされるはずのBeanが見つからないとのエラーが出る場合は、テスト用のライブラリが追加されてないか確認するのが良いかも知れません。&lt;/p>
+&lt;p>追加で、&lt;a class="link" href="https://www.datadoghq.com/ja/" target="_blank" rel="noopener"
+>Datadog&lt;/a>の場合もMicrometerの設定の記載方法が全体的に変わったためか、一部プロパティの記載方法が変わっています。以前の場合は以下のように記載していました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yml" data-lang="yml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">management&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">metrics&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">export&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">datadog&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">enabled&lt;/span>: &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">apiKey&lt;/span>: ${API_KEY}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">step&lt;/span>: 1m
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これが以下のように変わります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yml" data-lang="yml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">management&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">datadog&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">metrics&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">export&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">enabled&lt;/span>: &lt;span style="color:#ff79c6">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">api-key&lt;/span>: ${DD_API_KEY}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">step&lt;/span>: 1m
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他にもMicrometerの機能を使っている場合、既存のSpring Boot 2と比べプロパティの設定方法が変わってないか確認した方がいいでしょう。&lt;/p>
+&lt;h3 id="jakarta-ee">Jakarta EE&lt;/h3>
+&lt;p>Spring Framework 6はOracleの&lt;code>Java EE&lt;/code>からEclipseの&lt;code>Jakarta EE&lt;/code>に移行しているので、コンパイルが通らない場合があります。主に&lt;a class="link" href="https://docs.oracle.com/javaee/7/api/javax/servlet/http/HttpServletRequest.html" target="_blank" rel="noopener"
+>HttpServletRequest&lt;/a>などsevlet系や&lt;a class="link" href="https://docs.oracle.com/javaee/7/api/javax/validation/Valid.html" target="_blank" rel="noopener"
+>@Valid&lt;/a>などvalidation系パッケージがよく使われているかと思います。これらはimport時のパッケージ名を変更することで対応できます。例えば、以下のようなパッケージを使っている場合だとします。&lt;/p>
+&lt;ul>
+&lt;li>javax.servlet&lt;/li>
+&lt;li>javax.validation&lt;/li>
+&lt;/ul>
+&lt;p>これらは以下のように変更します。&lt;/p>
+&lt;ul>
+&lt;li>jakarta.servlet&lt;/li>
+&lt;li>jakarta.validation&lt;/li>
+&lt;/ul>
+&lt;p>パッケージ名が変わっただけで、中身は変わっていないので、簡単な対応となります。&lt;/p>
+&lt;h3 id="springdoc">springdoc&lt;/h3>
+&lt;p>&lt;a class="link" href="https://springdoc.org/" target="_blank" rel="noopener"
+>springdoc-openapi&lt;/a>を使ってAPIドキュメントを生成している場合、既存のバージョンだとSpring Boot 3と互換性がないようです。CIでは&lt;code>/v3/api-docs&lt;/code>から取得したJSONを解析してS3にドキュメントをアップロードするようになっていますが、Spring Boot 3だと404エラーとなっていました。&lt;/p>
+&lt;p>幸い、これも依存関係を変更することで対応ができます。以前は以下のように依存関係を追加していました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>implementation(&lt;span style="color:#f1fa8c">&amp;#34;org.springdoc:springdoc-openapi-ui:1.6.14&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>implementation(&lt;span style="color:#f1fa8c">&amp;#34;org.springdoc:springdoc-openapi-kotlin:1.6.14&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これを、&lt;a class="link" href="https://springdoc.org/v2/" target="_blank" rel="noopener"
+>springdoc-openapiのv2&lt;/a>に変更するだけで良いです。Kotlinのサポートも含まれるので、以下のみで問題なく動きます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>implementation(&lt;span style="color:#f1fa8c">&amp;#34;org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで404エラーは発生することなく、S3へのドキュメントのアップロードもできます。&lt;/p>
+&lt;h3 id="liquibase">Liquibase&lt;/h3>
+&lt;p>Spring Frameworkとの直接的な関係がある訳ではないのですが、Spring Bootのバージョンを上げたことにより影響を受けたのでこちらのケースも紹介します。DBのマイグレーションのためにGradleのプラグインとして&lt;a class="link" href="https://www.liquibase.org/" target="_blank" rel="noopener"
+>Liquibase&lt;/a>を使っている場合、バージョンによっては以下のようなエラーが出る場合があります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>SLF4J: No SLF4J providers were found.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SLF4J: Defaulting to no-operation (NOP) logger implementation
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SLF4J: See https://www.slf4j.org/codes.html#noProviders for further details.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions 1.7.x or earlier.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SLF4J: Ignoring binding found at [jar:file:/root/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.2.11/4741689214e9d1e8408b206506cbe76d1c6a7d60/logback-classic-1.2.11.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SLF4J: See https://www.slf4j.org/codes.html#ignoredBindings for an explanation.
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Exception in thread &amp;#34;main&amp;#34; java.lang.ClassCastException: class org.slf4j.helpers.NOPLogger cannot be cast to class ch.qos.logback.classic.Logger (org.slf4j.helpers.NOPLogger and ch.qos.logback.classic.Logger are in unnamed module of loader &amp;#39;app&amp;#39;)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> at liquibase.integration.commandline.Main.setupLogging(Main.java:233)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> at liquibase.integration.commandline.Main.run(Main.java:145)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> at liquibase.integration.commandline.Main.main(Main.java:129)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはおそらく、Spring Boot 3から&lt;a class="link" href="https://www.slf4j.org/" target="_blank" rel="noopener"
+>SLF4J&lt;/a>のバージョンが2系になったためですね。Liquibaseのプラグインでは今まで&lt;a class="link" href="https://logback.qos.ch/index.html" target="_blank" rel="noopener"
+>Logback&lt;/a>を使ってマイグレーションの状況を出力していたのですが、このLogbackのバージョンが1.2だったのでSLF4Jの2系と互換性がなかったのです。Logbackの1.3から互換性があるらしいので、それ以前のバージョンを使っている場合はこちらも合わせてバージョンを上げておく必要があるでしょう。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>何とかJavaとSpring Bootのバージョンアップには成功していますが、前述した通り、これはあくまで自分が開発しているアプリケーションがマイクロサービスで、依存関係が比較的少なかったからできたことなのではないかと思います。モノリシックなアプリケーションだったり、より複雑な依存関係を持っているアプリケーションならここに記載したこと以外の部分でも問題が発生する可能性は高いでしょう。&lt;/p>
+&lt;p>ただ、Springの場合はいずれSpring Boot 2のサポートが切れ、3系に移行するしかない状況が来るかも知れませんが、その時は十分マイグレーションの実例も出てくるのではないかと思います。Javaの場合は11から17に上げる場合なら大きく問題はないかと思いますが、8から移行する場合はJava 9で導入された&lt;a class="link" href="https://www.oracle.com/webfolder/technetwork/jp/javamagazine/Java-JA18-LibrariesToModules.pdf" target="_blank" rel="noopener"
+>Module&lt;/a>で問題が起こる可能性もあるかと思いますので、慎重に行うべきかなと思います。&lt;/p>
+&lt;p>嬉しいことに、まだNative化までは試してないのですが、JVM上でもアプリケーションの起動時間が減少していることを確認できました。ローカルで起動した場合、Java 11 &amp;amp; Spring Boot 2だと31秒がかかり、Java 17 &amp;amp; Spring Boot 3だと23秒がかかっていたので、断定はできないものの全体的な性能の向上もある程度は期待できるのではないかという気がします。正確なデータはまだ取れていないので、今後の課題として残しておきますが、ありがたいことですね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
 &lt;p>実際の業務でWebFluxを使っているわけではないので、さまざまなパターンがあるかなとは思いますが、この&lt;code>Functional Endpoint&lt;/code>を使う場合に考慮すべきものが、&lt;code>Router Function&lt;/code>(以下&lt;code>Router&lt;/code>)と&lt;code>Handler Function&lt;/code>(以下&lt;code>Handler&lt;/code>)をどう分けるかについての問題かと思います。&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は概念的には別のものではありますが、実装としては一つのクラスにまとめでもアプリは問題なく動くので、フレームワークの仕様や思想というよりかは、アプリのアーキテクチャに関する内容に近いますね。&lt;/p>
 &lt;p>なので、今回は&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分けた場合と分けない場合について、いくつかの観点から考えてみたいと思います。&lt;/p>
 &lt;h2 id="routerとhandlerは分離するべきか">RouterとHandlerは分離するべきか&lt;/h2>
