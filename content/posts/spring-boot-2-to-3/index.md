@@ -147,7 +147,7 @@ management:
     metrics:
       export:
         enabled: true
-        api-key: ${DD_API_KEY}
+        api-key: ${API_KEY}
         step: 1m
 ```
 
