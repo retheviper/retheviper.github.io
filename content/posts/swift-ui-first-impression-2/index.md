@@ -118,7 +118,7 @@ struct LandmarkList: View {
 
 さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、
 
-実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで`isOn`に親の状態を渡していますね。ただ、トグル時の挙動を`@State`で定義したBooleanと結びつけるために`isOn`として渡す際、`$`をつけることに注目する必要があります。`$`をつけることで、Booleanではなく、[Binding<Boolean>](https://developer.apple.com/documentation/swiftui/binding)という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、[Toggle](https://developer.apple.com/documentation/swiftui/toggle/)の中でも親の状態を変更できるようになります。`Toggle`は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である`showFavoritesOnly`の値が変わるということです。
+実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで`isOn`に親の状態を渡していますね。ただ、トグル時の挙動を`@State`で定義したBooleanと結びつけるために`isOn`として渡す際、`$`をつけることに注目する必要があります。`$`をつけることで、Booleanではなく、[`Binding<Boolean>`](https://developer.apple.com/documentation/swiftui/binding)という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、[Toggle](https://developer.apple.com/documentation/swiftui/toggle/)の中でも親の状態を変更できるようになります。`Toggle`は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である`showFavoritesOnly`の値が変わるということです。
 
 後でまた関連したポストを書きたいと思いますが、Jetpack Composeでも何となく似たような形で状態の管理ができる方法があります。例えば、`@State`のように簡単な状態を管理するためには以下のような書き方ができます。
 
@@ -135,7 +135,7 @@ if toggle {
 }
 ```
 
-上記のような書き方はいわゆる[Delegation](https://kotlinlang.org/docs/delegation.html)によるもので、`mutableStateOf<T>`が返すのは[MutableState<T>](https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState)ですが、`by`を使うことで実際は`Boolean`そのものを扱うようになります。
+上記のような書き方はいわゆる[Delegation](https://kotlinlang.org/docs/delegation.html)によるもので、`mutableStateOf<T>`が返すのは[`MutableState<T>`](https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState)ですが、`by`を使うことで実際は`Boolean`そのものを扱うようになります。
 
 そして`MutableState<T>`を分解し、以下のように状態と、状態を変化させる処理の処理を指定することもできます。これもまた、先ほどの`Binding`のような役割をするようなものですね。
 

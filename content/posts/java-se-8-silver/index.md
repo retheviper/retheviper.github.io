@@ -94,7 +94,7 @@ JavaSE SilverではJava8ならではのAPIについて聞く場合が少なく�
 
 書き方については括弧とreturnの省略が正しく書いてあるのかについての問題で、例外同様IDEだとすぐコンパイルエラーになるため見逃しやすい部分でした。
 
-### LocalDate / LocalTime / LocalDateTime 
+### LocalDate / LocalTime / LocalDateTime
 
 今まで自分が使っていた日付関連のAPIは`java.util.Date`と`java.sql.Date`しかなかったので、苦戦した問題でした。こちらもStringと同じくImmutableなので、似たような問題が出てきます。例えば以下のような問題です。
 

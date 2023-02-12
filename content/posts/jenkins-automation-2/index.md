@@ -22,7 +22,7 @@ Jenkinsの基本ポートは`8080`です。このままJenkinsを起動すると
 私はのちにTomcatを使うことがあるかもしれないと思い、Jenkinのポートは`8088`に変えました。`vi`や`vim`[^2]でJenkinsのシステムコンフィグファイルを開けます。
 
 ```bash
-$ sudo vim /etc/sysconfig/jenkins
+sudo vim /etc/sysconfig/jenkins
 ```
 
 そうすると、以下のような画面が現れます。少し下にスクロールしたら`JENKINS_PORT`と、親切に書いてあるのが見えますね！`I`を押してインサートモードに切り替え、好きなポートに変えましょう。
@@ -38,13 +38,13 @@ Jenkinsは初起動で初期パスワードを要求します。この初期パ�
 ポート設定が終わったら（8080をそのまま使いたいならそのままでもいいです）、まずJenkinsを起動します。
 
 ```bash
-$ service jenkins start
+service jenkins start
 ```
 
 `[OK]`というメッセージが出力されるはずですが（ポート設定に問題がある場合もあるので）念の為起動状況を確認します。
 
 ```bash
-$ service jenkins status
+service jenkins status
 ```
 
 実は、仕事で１日前は元気だったJenkins先生が、いきなり接続できなくなっていたことがったのです。やはり人は何かよくないことを経験すると、慎重になるものです。`Active: active (running)`というメッセージを確認できたら、いよいよJenkinsのページに接続です。
@@ -58,7 +58,7 @@ $ service jenkins status
 やはりパスは`/var/lib/jenkins/secrets/initialAdminPassword`でした。ポート設定と同じく、viやvimで中を覗き、そのパスワードを入力します。
 
 ```bash
-$ sudo vim /var/lib/jenkins/secrets/initialAdminPassword
+sudo vim /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
 ## プラグインと管理者アカウントの設定

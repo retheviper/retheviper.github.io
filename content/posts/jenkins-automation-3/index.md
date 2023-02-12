@@ -24,25 +24,25 @@ Jenkinsでは、Jobという名称のタスクを作り、とある行動を中�
 まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11[^2]をインストールします。`yum install java`をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。
 
 ```bash
-$ curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
+curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
 ```
 
 curl -OはURLからファイルをダウンロードして保存するということです。ダウンロードしたファイルは圧縮されているので解凍します。
 
 ```bash
-$ tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
+tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
 ```
 
 tarは圧縮したり解凍するとき使うコマンド。zは.gzファイルを、xは圧縮ファイルの展開、vは処理したファイルを表示、fはこのファイルを指定するという意味らしいです。解凍が終わったらファイルを適切な場所に格納しましょう。
 
 ```bash
-$ mv jdk-11.0.1 /usr/local/
+mv jdk-11.0.1 /usr/local/
 ```
 
 次に簡単なシェルスクリプトを書きます。Linuxでの環境変数を設定するためです。まずviやvimでファイルを作りましょう。
 
 ```bash
-$ vi /etc/profile.d/jdk11.sh
+vi /etc/profile.d/jdk11.sh
 ```
 
 iを押して以下の内容を書きます。Javaを格納したパスを確認してください。
@@ -55,7 +55,7 @@ export PATH=$PATH:$JAVA_HOME/bin
 esc⇨:wqで保存と終了。そしてすぐシェルスクリプトを今の状態に適用させます。sourceコマンドを使います。
 
 ```bash
-$ source /etc/profile.d/jdk11.sh
+source /etc/profile.d/jdk11.sh
 ```
 
 これでOpenJDK11は準備されました。私はCentOS7を使っているのですが、ubuntuなどの違うLinuxではまた手順も色々あるようです。とにかくインストールがちゃんと終わっているか`java -version`で確認してみましょう。
@@ -70,13 +70,13 @@ $ source /etc/profile.d/jdk11.sh
 まず新しくインストールしたJavaを選択できるよう登録します。
 
 ```bash
-$ alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2
+alternatives --install /usr/bin/java java $JAVA_HOME/bin/java 2
 ```
 
 登録が終わったら、以下のコマンドで現在登録されているJavaを表示します。
 
 ```bash
-$ alternatives --config java
+alternatives --config java
 ```
 
 CentOSインストール時にすでに二つのバージョンのJavaがインストールされてましたね。Java11が3番目になったので3を入力します。これでJavaは準備オッケーです。
@@ -86,7 +86,7 @@ CentOSインストール時にすでに二つのバージョンのJavaがイン�
 ちなみに、JenkinsもまたJavaで作られているので場合によってはJava11のJVMで起動できます。Java11のJVMをJenkinsに登録するには以下の手順になります。
 
 ```bash
-$ vi /etc/init.d/jenkins
+vi /etc/init.d/jenkins
 ```
 
 Jenkinsの設定ファイルです。candidatesという部分に様々なバージョンのJVMの経路が機材されていますので、ここにOpenJDK11のbinフォルダのパスを追加します。esc⇨:wqで終了！
@@ -98,19 +98,19 @@ Jenkinsの設定ファイルです。candidatesという部分に様々なバー
 次にGradleをインストールします。macOSでは`brew install gradle`で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。
 
 ```bash
-$ wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
+wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
 ```
 
 -Pオプションをつけると指定したフォルダにファイルを保存します。
 
 ```bash
-$ sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
+sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
 ```
 
 zipファイルンなので、unzipコマンドで解凍します。-dもまたフォルダ（ディレクトリ）を指定するオプションです。
 
 ```bash
-$ sudo nano /etc/profile.d/gradle.sh
+sudo nano /etc/profile.d/gradle.sh
 ```
 
 今回はnanoを使ってスクリプトを作ってみます。よりGUIに近い感じがしますね。nanoがなければ`yum install nano`でインストールしてもいいし、viを使っても良いです。
@@ -131,14 +131,14 @@ nanoではctrl+xを押すと編集した内容を保存するかを聞いてき�
 あとは作られたスクリプトに実行の権限を与え、`source`コマンドで環境変数として登録。
 
 ```bash
-$ sudo chmod +x /etc/profile.d/gradle.sh
+sudo chmod +x /etc/profile.d/gradle.sh
 $ source /etc/profile.d/gradle.sh
 ```
 
 chmod 755のようなコマンドを書いたことが多いですが、+xで実行の権限だけ与える方が習慣的には良さそうですね。
 
 ```bash
-$ gradle -v
+gradle -v
 ```
 
 インストールに成功したかを確認するにはやはりバージョンの確認ですね。以下のような画面が表示されたらGradleのインストールも成功です。

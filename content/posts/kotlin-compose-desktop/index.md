@@ -72,7 +72,7 @@ tags:
 
 [SwiftUIのポスト](../swift-ui-first-impression-2/)の時も触れた状態管理ですが、Composeでも同じくGUIを扱うことになるので、状態管理が大事となります。今回はアプリとしての画面がひとつしかないので、複数の画面にまたがって状態を管理する必要はないかなと思いましたが、それでもやはり処理を行うためにはアプリ全体で共有する状態として管理が必要なものがいくつかありました。
 
-ただ、上記ポストでも述べた通り、SwiftUIとComposeとは状態管理の方式が少し違います。SwiftUIでは状態がどこで使われるかによって明確に使われるアノテーションやクラスなどが変わっていたなら、Composeでは大体[remember()](https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary?hl=ja#remember(kotlin.Function0))と[MutableState<T>](https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja)の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。
+ただ、上記ポストでも述べた通り、SwiftUIとComposeとは状態管理の方式が少し違います。SwiftUIでは状態がどこで使われるかによって明確に使われるアノテーションやクラスなどが変わっていたなら、Composeでは大体[remember()](https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary?hl=ja#remember(kotlin.Function0))と[`MutableState<T>`](https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja)の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。
 
 まず、Composeでの状態は、以下のような三つの方法で定義することができます。
 

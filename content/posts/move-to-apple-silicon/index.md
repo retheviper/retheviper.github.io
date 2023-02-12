@@ -146,7 +146,7 @@ Javaの場合、intellだとどのベンダのものを選んでも大差ない�
 Apple Siliconとは直接的な関係はないですが、以下のコマンドで使うJDKのバージョンを簡単に切り替えできるのでさまざまなベンダのJDKを使ってみるのもありかもですね。
 
 ```bash
-$ export JAVA_HOME=`/usr/libexec/java_home -v 11`
+export JAVA_HOME=`/usr/libexec/java_home -v 11`
 $ java -version
 openjdk version "11.0.13" 2021-10-19 LTS
 OpenJDK Runtime Environment Zulu11.52+13-CA (build 11.0.13+8-LTS)

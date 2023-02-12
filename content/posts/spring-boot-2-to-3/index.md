@@ -198,9 +198,9 @@ SLF4J: Class path contains SLF4J bindings targeting slf4j-api versions 1.7.x or 
 SLF4J: Ignoring binding found at [jar:file:/root/.gradle/caches/modules-2/files-2.1/ch.qos.logback/logback-classic/1.2.11/4741689214e9d1e8408b206506cbe76d1c6a7d60/logback-classic-1.2.11.jar!/org/slf4j/impl/StaticLoggerBinder.class]
 SLF4J: See https://www.slf4j.org/codes.html#ignoredBindings for an explanation.
 Exception in thread "main" java.lang.ClassCastException: class org.slf4j.helpers.NOPLogger cannot be cast to class ch.qos.logback.classic.Logger (org.slf4j.helpers.NOPLogger and ch.qos.logback.classic.Logger are in unnamed module of loader 'app')
-	at liquibase.integration.commandline.Main.setupLogging(Main.java:233)
-	at liquibase.integration.commandline.Main.run(Main.java:145)
-	at liquibase.integration.commandline.Main.main(Main.java:129)
+  at liquibase.integration.commandline.Main.setupLogging(Main.java:233)
+  at liquibase.integration.commandline.Main.run(Main.java:145)
+  at liquibase.integration.commandline.Main.main(Main.java:129)
 ```
 
 これはおそらく、Spring Boot 3から[SLF4J](https://www.slf4j.org/)のバージョンが2系になったためですね。Liquibaseのプラグインでは今まで[Logback](https://logback.qos.ch/index.html)を使ってマイグレーションの状況を出力していたのですが、このLogbackのバージョンが1.2だったのでSLF4Jの2系と互換性がなかったのです。Logbackの1.3から互換性があるらしいので、それ以前のバージョンを使っている場合はこちらも合わせてバージョンを上げておく必要があるでしょう。

@@ -221,7 +221,7 @@ public String replace(CharSequence target, CharSequence replacement) {
 
 少なくとも区切り文字がカンマではない場合は、`toString()`と`replace()`での文字列の生成よりは、他の方法をとったほうが性能面では有利ではないか、という推測が可能です。もちろん、要素数という変数があるので、実際の性能は測ってみないとわからないものですが…
 
-### ベンチマークしてみる
+### ベンチマークしてみる(1)
 
 では、文字列を連結するために使える色々なAPIと、その特徴を簡単に把握できたので、次に確認したいのは、やはり性能です。特に気になるのは、`String.join()`や`Collectors.joining()`でも結局は内部で`StringJoiner`を使っているというところです。それはつまり、`StringBuffer`や`StringBuilder`よりも`StringJoiner`が性能で有利だから、でしょうか。
 
@@ -348,7 +348,7 @@ List<String> mutableList = Arrays.stream(array).collect(Collectors.toList());
 List<String> mutableList = Stream.of(array).collect(Collectors.toUnmodifiableList());
 ```
 
-### ベンチマークしてみる
+### ベンチマークしてみる(2)
 
 では、次にまたベンチマークとなります。コード自体は明らかに`Arrays.toList()`の方が簡単だったのですが、MutableなListを作るためにはListを生成した後にさらにインスタンスを作成する必要があるということで、性能面で損する可能性もあるのかなという気がします。なので、以上で紹介した`Arrays.asList()`と`Stream`によるListのインスタンスの作成を、Immutable・Mutableという二つのケースに分けて検証してみました。以下がそのベンチマークのコードです。
 

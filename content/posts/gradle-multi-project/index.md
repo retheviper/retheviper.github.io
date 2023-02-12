@@ -59,8 +59,7 @@ rootProject.children.each { it.name = rootProject.name + '-' + it.name }
 
 `include`と書いたものはサブプロジェクトで、`rootProject.name`はその名の通りルートプロジェクト名を意味します。他にも命名できる方法はありますが、あくまでルートプロジェクト名がこのプロジェクト全体を意味するもので、サブプロジェクトはそのうちの一つの機能単位という感覚て命名しています。
 
-`rootProject.children.each { it.name = rootProject.name + '-' + it.name }
-`では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。
+`rootProject.children.each { it.name = rootProject.name + '-' + it.name }`では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。
 
 ```groovy
 rootProject.children.each { p -> p.name = "${rootProject.name}-${p.name}"}

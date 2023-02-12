@@ -29,7 +29,7 @@ CentOSやRHELでは、`service`というコマンドがあります。`yum`の�
 まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。
 
 ```bash
-$ vi /etc/systemd/system/NodeServer.service
+vi /etc/systemd/system/NodeServer.service
 ```
 
 それでは以下のような形で中を書いていきます。

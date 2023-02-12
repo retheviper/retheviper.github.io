@@ -93,7 +93,7 @@ fun updateWeather(degrees: Int) {
 - `to`で二つのオブジェクトを`Pair`にまとめることができる
 
 他にも、Javaの`switch`に比べKotlinの`when`句は以下のよう活用ができるというところもあります。オブジェクトの比較がより簡単ですね。例えば以下のようなコードで、簡単に二つのオブジェクトに対しても比較が可能になります。
-    
+
 ```kotlin
 fun mix(c1: Color, c2: Color) =
     when (setOf(c1, c2)) {

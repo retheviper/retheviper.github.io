@@ -23,7 +23,7 @@ tags:
 Ansibleは`yum`、`brew`、`pip`、`apt-get`でインストールできます。簡単ですね！ただ場合によってはPython2やPIPが必要となるので、事前にインストールしておきましょう。
 
 ```bash
-$ yum install ansible
+yum install ansible
 $ brew install ansible
 $ pip install ansible
 $ sudo apt-get install ansible
