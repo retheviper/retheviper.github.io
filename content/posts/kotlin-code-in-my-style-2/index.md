@@ -153,7 +153,7 @@ fun doSomething(parameter: String): String {
 }
 ```
 
-ここで少し違う言語の例をみていきたいと思います。Kotlinとよく似ていると言われているSwiftの場合、ここで[Guard Statement](https://docs.swift.org/swift-book/ReferenceManual/Statements.html#grammar_if-statement)を使うのが一般的のようです。チェックのための表現が存在することで、ビジネスロジックとチェックが分離されるのが良いですね。Swiftをあまり触ったことがないので良い例にはなっていないかも知れませんが、イメージ的には以下のようなコードになります。
+ここで少し違う言語の例をみていきたいと思います。Kotlinとよく似ていると言われているSwiftの場合、ここで[Guard Statement](https://docs.swift.org/swift-book/ReferenceManual/Statements.html#grammar_if-statement)を使うのが一般的のようです。チェックのための表現が存在することで、ビジネスロジックとチェックが分離されるのが良いですね。Swiftをあまり触ったことがないので良い例にはなっていないかもしれませんが、イメージ的には以下のようなコードになります。
 
 ```swift
 func doSomething(parameter: String) throws -> String {

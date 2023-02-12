@@ -52,7 +52,7 @@ var john = Person("John", 20, Gender.Male).let {
 
 また、withを除いた他の4つの関数たちは、[Extension Function](https://kotlinlang.org/docs/reference/extensions.html)でもあるという特徴があります。 Extension Functionは何か？というと、簡単に、既定のクラスに関数を追加することです。Javaだとクラスの継承やラッパークラスの作成、オーバーライドなどで実現できる機能ですが、Kotlinでは簡単に定義できます。
 
-「Scope FunctionなのにExtension Functionでもあると？」と思うかも知れませんが、理由は簡単です。クラスの作成時に関数として定義してなくても、もともとそのクラスにあったかのように呼べる関数だから、ということです。どのオブジェクトでも、宣言しなくてもwithを除いたScope Functionをあらかじめ宣言しておいたかのように使うことができます。
+「Scope FunctionなのにExtension Functionでもあると？」と思うかもしれませんが、理由は簡単です。クラスの作成時に関数として定義してなくても、もともとそのクラスにあったかのように呼べる関数だから、ということです。どのオブジェクトでも、宣言しなくてもwithを除いたScope Functionをあらかじめ宣言しておいたかのように使うことができます。
 
 ### 参考：itとthis
 

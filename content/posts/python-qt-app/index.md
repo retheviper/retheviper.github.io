@@ -46,7 +46,7 @@ WEBVTT
 
 GUIに関しては[PySimpleGUI](https://pysimplegui.readthedocs.io/en/latest/)を使ったことがありますが、今回は違うフレームワークを使ってみたいと思いました。PythonのGUIフレームワークといえば[tkinter](https://docs.python.org/ja/3/library/tkinter.html)や[Kivy](https://kivy.org)、[wxPython](https://www.wxpython.org/)、[Libavg](https://www.libavg.de/site/)など様々なものがあるのですが、中でも[Qt](https://www.qt.io/)がPythonだけでなく色々と使われているので、PythonのコードだけでなくC++のコードでも参考できる例が多いのではないかと思い[PyQt](https://wiki.python.org/moin/PyQt)の方を選びました。
 
-プロダクションレベルのものを作るならまた色々と基準を持って検討してみたかも知れませんが、このような趣味レベルのコードを書く場合はなるべく手軽に書ける、サンプルの多いものを選ぶのがちょうど良いかもですね。効率というのも大事なので。
+プロダクションレベルのものを作るならまた色々と基準を持って検討してみたかもしれませんが、このような趣味レベルのコードを書く場合はなるべく手軽に書ける、サンプルの多いものを選ぶのがちょうど良いかもですね。効率というのも大事なので。
 
 ## コード
 

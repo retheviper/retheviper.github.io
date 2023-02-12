@@ -39,7 +39,7 @@ val japaneseDateFromSpecificDate = JapaneseDate.of(2000, 12, 31)
 
 まず上記で紹介した通り、`JapaneseDate`のインスタンスを取得した上で、さらにそのオブジェクトが保持している`JapaneseEra`を取得する必要があります。その後、`JapaneseEra.getDisplayName()`という関数に[TextStyle](https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/TextStyle.html)と[Locale](https://docs.oracle.com/javase/jp/11/docs/api/java.base/java/util/Locale.html)を指定して文字列を取得することができます。前者は文字の出力型を指定する列挙型定数で、後者は言語の指定と思ってください。
 
-`TextStyle`の場合、以下のような値があります。他の言語だと指定したものによって出力がかなり変わってくるかも知れませんが、日本語の場合は`FULL`と`NARROW`だけで十分ではないかと思います。
+`TextStyle`の場合、以下のような値があります。他の言語だと指定したものによって出力がかなり変わってくるかもしれませんが、日本語の場合は`FULL`と`NARROW`だけで十分ではないかと思います。
 
 | 定数 | 出力例 |
 |---|---|

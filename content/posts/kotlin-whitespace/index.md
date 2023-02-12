@@ -106,7 +106,7 @@ public inline fun CharSequence.trim(predicate: (Char) -> Boolean): CharSequence 
 
 そしてその処理での判断基準が`isWhitespace()`になっているわけですが、先に確認している通りこちらは最終的にJavaのAPIを呼ぶことになっているので、`trim()`でも十分Unicodeに定義されてあるwhitespaceやspaceまでを削除してくれると推論できます。なので、Javaとは違ってあえて`strip()`を使う必要はなさそうです。
 
-また、`trim()`は文字列の前後のwhitespaceを削除しますが、場合によっては前方のみ、後方のみで分けて使いたい場合もあるかも知れません。その時は、以下のようなことができます。
+また、`trim()`は文字列の前後のwhitespaceを削除しますが、場合によっては前方のみ、後方のみで分けて使いたい場合もあるかもしれません。その時は、以下のようなことができます。
 
 ```kotlin
 val string = "  string  "
@@ -152,18 +152,18 @@ Intellijだと自動的に`trimIndent()`をつけてくれますが、これは�
 fun String.stripLine() = replace(System.lineSeparator(), " ")
 ```
 
-ただ、Javaでも13から[Text Block](https://openjdk.java.net/jeps/355)が導入されているので、今後はJavaのAPIの方で上記のようなメソッドが追加されることを期待できるかも知れません。
+ただ、Javaでも13から[Text Block](https://openjdk.java.net/jeps/355)が導入されているので、今後はJavaのAPIの方で上記のようなメソッドが追加されることを期待できるかもしれません。
 
 ## 最後に
 
 最初に`expect`と`actual`の話をしましたが、これらのキーワードは[Kotlin Multiplatform](https://kotlinlang.org/docs/multiplatform.html)でもっとも重要な概念です。Kotlinで書いたコードをさまざまなプラットフォームで共有できるようにすることを目的としているので、こういう構造になっているのは自然ですね。なので、Kotlin/JVMだけでなく、他のことを試したい方にはとりあえず理解しておく必要があるキーワードだと思います。ちょっと独特なだけで、実体は単純なので、理解は簡単でしょう。
 
-また、KotlinのStringに関しては、[JetBrains公式YouTubeチャンネルの動画](https://youtu.be/n4WBip822A8)で簡単に説明しているので、Kotlinで開発をしている方なら一度は参考にした方が良いかも知れません。
+また、KotlinのStringに関しては、[JetBrains公式YouTubeチャンネルの動画](https://youtu.be/n4WBip822A8)で簡単に説明しているので、Kotlinで開発をしている方なら一度は参考にした方が良いかもしれません。
 
 他に、`strip()`をあえて使う必要はないと言いましたが、実際Kotlinの最新バージョンである1.5.0でも`strip()`は`deprecated`になっていて、以下のようなコメントがついているので、次のバージョンで正式対応するまでは使わない方が良いですね。
 
 > 'strip(): String!' is deprecated. This member is not fully supported by Kotlin compiler, so it may be absent or have different signature in next major version
 
-こういうケースでもわかるように、KotlinがJavaと100%互換性があると言い切れない側面もあるのではと思います。なので、JavaからKotlinに移行した場合(実際のコードであれ、開発者自身のスキルであれ)には、一度注意深くスタンダードライブラリの説明を読む必要があるかも知れません。
+こういうケースでもわかるように、KotlinがJavaと100%互換性があると言い切れない側面もあるのではと思います。なので、JavaからKotlinに移行した場合(実際のコードであれ、開発者自身のスキルであれ)には、一度注意深くスタンダードライブラリの説明を読む必要があるかもしれません。
 
 では、また！

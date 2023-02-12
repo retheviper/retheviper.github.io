@@ -170,7 +170,7 @@ public interface CarRepository extends CrudRepository<Car, Long> {
 
 Spring Data JDBCは自分でもあまり詳しくなく、サンプルコードをみてテストしてみただけなのですが、すでにSpring Data JPAの経験がある人ならすぐにでも適応できそうな構成となっていました。パッケージは変わってもアノテーションやインタフェースそのものの使い方が大きく変わっている訳でもないので、感覚的には大差ありません。`@Entity`のようなアノテーションを使う必要がなくなったというところが目立つくらいでした。なので、個人的なプロジェクトでは一度試してみるのも良いかもしれません。(エンタープライズレベルでは、まだ検証すべきところがあると思うので)
 
-また、Spring 5からReactiveなプログラミングのできる[Webflux](https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.htm)が紹介されたことと共に、同じくNon-blockingに対応する[Spring R2DBC](https://spring.io/projects/spring-data-r2dbc)というものも注目されているようです。既存のSpringプロジェクトにWebfluxを今すぐ導入する必要はないらしいのでSpring R2DBCも今すぐ導入する必要はないのかも知れませんが、Non-blockingによって性能を改善できる場合[^3]は確実に存在するので、場合によっては導入を考慮する価値があるのかも知れませんね。
+また、Spring 5からReactiveなプログラミングのできる[Webflux](https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.htm)が紹介されたことと共に、同じくNon-blockingに対応する[Spring R2DBC](https://spring.io/projects/spring-data-r2dbc)というものも注目されているようです。既存のSpringプロジェクトにWebfluxを今すぐ導入する必要はないらしいのでSpring R2DBCも今すぐ導入する必要はないのかもしれませんが、Non-blockingによって性能を改善できる場合[^3]は確実に存在するので、場合によっては導入を考慮する価値があるのかもしれませんね。
 
 ## 最後に
 

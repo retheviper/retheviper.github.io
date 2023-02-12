@@ -352,7 +352,7 @@ public static Path copy(Path source, Path target, CopyOption... options) throws 
 
 ここで`CopyMoveHelper.copyToForeignTarget()`の場合は、結果的に`Files.copy(InputStream, Path)`を呼ぶことになるのですが、前者の場合は全く違う方式になるのでやはり性能の差が発生する可能性もありそうですね。整理すると、`同じシステム内で、Path → Pathでコピーする場合だけ性能がよくなる可能性がある`ということですね。
 
-ここはまた検証が必要なところなので、またベンチマークを実施してみました。もちろんファイルシステムの違いにより結果は変わる可能性があるので、これが絶対的だとは言えませんが、何らかの違いがあるかも知れません。他の`Files.copy()`メソッドは実質的に`transferTo()`と同じものなので、今回の比較は`InputStream → OutputStream`と`Path → Path`だけになります。また、比較のためのテストケースが少ないので、今回は`transferTo()`のベンチマークよりもファイルサイズを大きくしてみました。以下は、そのテストコードです。
+ここはまた検証が必要なところなので、またベンチマークを実施してみました。もちろんファイルシステムの違いにより結果は変わる可能性があるので、これが絶対的だとは言えませんが、何らかの違いがあるかもしれません。他の`Files.copy()`メソッドは実質的に`transferTo()`と同じものなので、今回の比較は`InputStream → OutputStream`と`Path → Path`だけになります。また、比較のためのテストケースが少ないので、今回は`transferTo()`のベンチマークよりもファイルサイズを大きくしてみました。以下は、そのテストコードです。
 
 ```java
 @State(Scope.Benchmark)

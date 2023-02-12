@@ -56,11 +56,11 @@ import org.jooq.*;
 
 現在開発中のサービスは[Jib](https://github.com/GoogleContainerTools/jib)を使ってコンテナ化しています。ここでベースとなるイメージの指定が必要なのですが、既存で使っていたイメージはOpenJDKの[11-jre](https://hub.docker.com/layers/library/openjdk/11-jre/images/sha256-762d8d035c3b1c98d30c5385f394f4d762302ba9ee8e0da8c93344c688d160b2?context=explore)でした。これが17からはJREのみのイメージはなく、[17-jdk](https://hub.docker.com/layers/library/openjdk/17-jdk/images/sha256-98f0304b3a3b7c12ce641177a99d1f3be56f532473a528fda38d53d519cafb13?context=explore)のみとなったので、バージョンをあげる際は注意する必要があります。
 
-ただ、OpenJDK以外のイメージ意外を使っている場合は状況が違うかも知れませんので確認が必要です。例えば、[Temurin](https://hub.docker.com/layers/library/eclipse-temurin/17-jre/images/sha256-402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c?context=explore)や[Zulu](https://hub.docker.com/layers/azul/zulu-openjdk/17-jre/images/sha256-09163c13aefbe5e0aa3dc7910d9997e416031e777ca0c50bd9b66a63b46be481?context=explore)は`17-jre`を提供していて、Libericaの場合は[17](https://hub.docker.com/layers/bellsoft/liberica-openjdk-alpine/17/images/sha256-50feb980f142b152e19c9dc25c835e0e451321eb3b837a3a924f457b11ce8c59?context=explore)とバージョンだけになっているなど使っているJDKの種類によってタグ名が違うので、JDKのバージョンアップの際には使っているイメージのタグはチェックしておく方が良いでしょう。
+ただ、OpenJDK以外のイメージ意外を使っている場合は状況が違うかもしれませんので確認が必要です。例えば、[Temurin](https://hub.docker.com/layers/library/eclipse-temurin/17-jre/images/sha256-402c656f078bc116a6db1e2e23b08c6f4a78920a2c804ea4c2d3e197f1d6b47c?context=explore)や[Zulu](https://hub.docker.com/layers/azul/zulu-openjdk/17-jre/images/sha256-09163c13aefbe5e0aa3dc7910d9997e416031e777ca0c50bd9b66a63b46be481?context=explore)は`17-jre`を提供していて、Libericaの場合は[17](https://hub.docker.com/layers/bellsoft/liberica-openjdk-alpine/17/images/sha256-50feb980f142b152e19c9dc25c835e0e451321eb3b837a3a924f457b11ce8c59?context=explore)とバージョンだけになっているなど使っているJDKの種類によってタグ名が違うので、JDKのバージョンアップの際には使っているイメージのタグはチェックしておく方が良いでしょう。
 
 ### 依存関係
 
-自分の担当しているアプリで発生していた問題ではないのですが(マイクロサービスとして、Kotlinのサービスは複数あります)、一部でJavaのバージョンを11から17に上げた際に[Jasperreports](https://github.com/TIBCOSoftware/jasperreports)を使った帳票の出力で報告された問題がありました。このライブラリはPDFの出力のために利用しているのですが、レイアウトに問題はなかったものの、表の中の表示文字数が少し減ったという問題がありました。幸い、これは大きい問題ではなかったのでまずは対応なしとなりそうですが場合によっては致命的かも知れません。
+自分の担当しているアプリで発生していた問題ではないのですが(マイクロサービスとして、Kotlinのサービスは複数あります)、一部でJavaのバージョンを11から17に上げた際に[Jasperreports](https://github.com/TIBCOSoftware/jasperreports)を使った帳票の出力で報告された問題がありました。このライブラリはPDFの出力のために利用しているのですが、レイアウトに問題はなかったものの、表の中の表示文字数が少し減ったという問題がありました。幸い、これは大きい問題ではなかったのでまずは対応なしとなりそうですが場合によっては致命的かもしれません。
 
 おそらくこのような問題が発生したら、依存しているライブラリのバージョンをJava 17に対応したものにあげれば解消できるのではないかと思いますが、まだ17に対応していないライブラリがある可能性もあるので、事前に依存関係の方をチェックしておいた方が胃良いでしょう。
 
@@ -125,7 +125,7 @@ Spring Cloud Sleuthを使っていた頃はユニットテスト時もDIがで�
 testImplementation("io.micrometer:micrometer-tracing-test")
 ```
 
-今回はライブラリの追加だけで解消できたのですが、新しいライブラリの情報はこちらで調べないとなかなかわからないというのが問題でしたね。他のライブラリの場合も同じ問題があるかもしれないので、もしAutoConfigurationによりDIされるはずのBeanが見つからないとのエラーが出る場合は、テスト用のライブラリが追加されてないか確認するのが良いかも知れません。
+今回はライブラリの追加だけで解消できたのですが、新しいライブラリの情報はこちらで調べないとなかなかわからないというのが問題でしたね。他のライブラリの場合も同じ問題があるかもしれないので、もしAutoConfigurationによりDIされるはずのBeanが見つからないとのエラーが出る場合は、テスト用のライブラリが追加されてないか確認するのが良いかもしれません。
 
 追加で、[Datadog](https://www.datadoghq.com/ja/)の場合もMicrometerの設定の記載方法が全体的に変わったためか、一部プロパティの記載方法が変わっています。以前の場合は以下のように記載していました。
 
@@ -209,7 +209,7 @@ Exception in thread "main" java.lang.ClassCastException: class org.slf4j.helpers
 
 何とかJavaとSpring Bootのバージョンアップには成功していますが、前述した通り、これはあくまで自分が開発しているアプリケーションがマイクロサービスで、依存関係が比較的少なかったからできたことなのではないかと思います。モノリシックなアプリケーションだったり、より複雑な依存関係を持っているアプリケーションならここに記載したこと以外の部分でも問題が発生する可能性は高いでしょう。
 
-ただ、Springの場合はいずれSpring Boot 2のサポートが切れ、3系に移行するしかない状況が来るかも知れませんが、その時は十分マイグレーションの実例も出てくるのではないかと思います。Javaの場合は11から17に上げる場合なら大きく問題はないかと思いますが、8から移行する場合はJava 9で導入された[Module](https://www.oracle.com/webfolder/technetwork/jp/javamagazine/Java-JA18-LibrariesToModules.pdf)で問題が起こる可能性もあるかと思いますので、慎重に行うべきかなと思います。
+ただ、Springの場合はいずれSpring Boot 2のサポートが切れ、3系に移行するしかない状況が来るかもしれませんが、その時は十分マイグレーションの実例も出てくるのではないかと思います。Javaの場合は11から17に上げる場合なら大きく問題はないかと思いますが、8から移行する場合はJava 9で導入された[Module](https://www.oracle.com/webfolder/technetwork/jp/javamagazine/Java-JA18-LibrariesToModules.pdf)で問題が起こる可能性もあるかと思いますので、慎重に行うべきかなと思います。
 
 嬉しいことに、まだNative化までは試してないのですが、JVM上でもアプリケーションの起動時間が減少していることを確認できました。ローカルで起動した場合、Java 11 & Spring Boot 2だと31秒がかかり、Java 17 & Spring Boot 3だと23秒がかかっていたので、断定はできないものの全体的な性能の向上もある程度は期待できるのではないかという気がします。正確なデータはまだ取れていないので、今後の課題として残しておきますが、ありがたいことですね。
 

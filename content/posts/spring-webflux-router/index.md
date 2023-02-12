@@ -440,12 +440,12 @@ fun routeMember() = coRouter {
 }
 ```
 
-ご覧の通り、ドキュメンテーションのためのアノテーションが実際のコードよりも長くなっています。Functional EndpointでもSwaggerを利用できる手段ができたのは良いことですが、MVCパターンと比べやはり不便ではありますね。なので、ドキュメンテーションが大事であるなら、まだFunctional Pointを使うべきではないかも知れません。
+ご覧の通り、ドキュメンテーションのためのアノテーションが実際のコードよりも長くなっています。Functional EndpointでもSwaggerを利用できる手段ができたのは良いことですが、MVCパターンと比べやはり不便ではありますね。なので、ドキュメンテーションが大事であるなら、まだFunctional Pointを使うべきではないかもしれません。
 
 ## 最後に
 
 今回は、Spring WebFluxのMVCパターン及びFunctional Endpointをコードの書き方、性能、ドキュメンテーションという観点から比較してみました。Spring WebFluxも発表されたのが2017年なので、もう今年で5年目になりますが、まだまだMVCパターンに比べては色々と補完すべき点が多い印象です。自分の場合はWebFluxのメインコンセプトであるノンブロッキングや関数型プログラミングを活かすためにはやはりFunctional Endpointを選んだ方が良さそうな気はしていますが、まだあえてそうする必要はないのではないか、という感覚です。特にエンタプライズのアプリケーションを書くことになるとますますそうでしょう。もちろん、そもそもWebFluxそのものを導入すべきかということから考える必要がありますが。
 
-それでも、やはりFunctional Endpointという実装方式には色々と可能性があると思います。Spring WebFluxでなくても、最近のウェブフレームワークでは多く採用されているものですからね。例えばTechEmpowerの[ベンチマーク](https://www.techempower.com/benchmarks)でJavaのフレームワークのうちではもっとも性能がよかった[jooby](https://jooby.io)でもMVCパターンとFunctional Endpointとよく似たScript Routeパターンに対応していますし、JetBrainsで開発しているKotlin用のウェブフレームワークである[Ktor](https://ktor.io)ではMVCパターンなしで、同じくFunctional Endpointとよく似たRoutingにのみ対応しています。なので、他にも[Express](https://expressjs.com/ja)や[Gin](https://github.com/gin-gonic/gin)のようなフレームワークでも似たようなAPIの実装方法を提供しているので、余裕があったら個人的に試してみて慣れるのも良い勉強になるかも知れません。また、関数型プログラミングはこれからも幅広く使われそうなので、これを持って練習してみるのも良いかも知れませんね。
+それでも、やはりFunctional Endpointという実装方式には色々と可能性があると思います。Spring WebFluxでなくても、最近のウェブフレームワークでは多く採用されているものですからね。例えばTechEmpowerの[ベンチマーク](https://www.techempower.com/benchmarks)でJavaのフレームワークのうちではもっとも性能がよかった[jooby](https://jooby.io)でもMVCパターンとFunctional Endpointとよく似たScript Routeパターンに対応していますし、JetBrainsで開発しているKotlin用のウェブフレームワークである[Ktor](https://ktor.io)ではMVCパターンなしで、同じくFunctional Endpointとよく似たRoutingにのみ対応しています。なので、他にも[Express](https://expressjs.com/ja)や[Gin](https://github.com/gin-gonic/gin)のようなフレームワークでも似たようなAPIの実装方法を提供しているので、余裕があったら個人的に試してみて慣れるのも良い勉強になるかもしれません。また、関数型プログラミングはこれからも幅広く使われそうなので、これを持って練習してみるのも良いかもしれませんね。
 
 では、また！

@@ -11,9 +11,9 @@ tags:
 
 今月は新しいLTSバージョンであるJava 17のリリースがありました。まだJava 1.8を使っている案件も多いかなと思いますが、Java 1.8は2022年まで、Java 11は2023年までのサポートとなるので、いずれにせよJava 17に移行する必要はあるかなと思います。特にJava 9からモジュールが導入されたため、8からの移行はかなり大変だったらしいですが、11から移行する場合はそれほどでもないと言われているので、今からでも17では何が変わっているか、目を通しておくのもそう悪くはないでしょう。
 
-現時点では[Eclipse Temurin](https://adoptium.net)(旧AdoptOpenJDK)、[Zulu](https://www.azul.com/downloads/)などの有名JDKはほとんどが17のリリースを完了しているか、対応の最中にありますね。また、[Oracle JDK 17は無料に](https://www.itmedia.co.jp/news/articles/2109/15/news147.html)なったので、こちらを選ぶもの悪くない選択肢の一つかも知れません。
+現時点では[Eclipse Temurin](https://adoptium.net)(旧AdoptOpenJDK)、[Zulu](https://www.azul.com/downloads/)などの有名JDKはほとんどが17のリリースを完了しているか、対応の最中にありますね。また、[Oracle JDK 17は無料に](https://www.itmedia.co.jp/news/articles/2109/15/news147.html)なったので、こちらを選ぶもの悪くない選択肢の一つかもしれません。
 
-また、こういう無料化やJDKの多様化のみでなく、GoogleとOracleの訴訟の件もGoogleの勝利で終わったので、AndroidでもJava 17を使える可能性ができた以上、これからJava 17を使える場面は増えてくるかも知れません。実際、まだ遠い話ではあります、Springを使う場合、2022年の[Spring 6はJava 17がベースラインとなる](https://spring.io/blog/2021/09/02/a-java-17-and-jakarta-ee-9-baseline-for-spring-framework-6)らしいですね。なので、Java 11は採択されてなかった現場でも、サポート期間などを考慮して17に転換する可能性はあると思います。
+また、こういう無料化やJDKの多様化のみでなく、GoogleとOracleの訴訟の件もGoogleの勝利で終わったので、AndroidでもJava 17を使える可能性ができた以上、これからJava 17を使える場面は増えてくるかもしれません。実際、まだ遠い話ではあります、Springを使う場合、2022年の[Spring 6はJava 17がベースラインとなる](https://spring.io/blog/2021/09/02/a-java-17-and-jakarta-ee-9-baseline-for-spring-framework-6)らしいですね。なので、Java 11は採択されてなかった現場でも、サポート期間などを考慮して17に転換する可能性はあると思います。
 
 というわけで、今回はそんなJava 17では何が変わったかを述べていきますが、大きく分けて新しい予約語の追加、新しい書き方など言語スペックとして変わったものと、新しく追加されたAPIという二つの観点でその変化を辿っていきたいと思います。案件によってはJava 1.8から17に移行するケースもあるかと思いますが、9〜11までの間にあった変更事項や新しいAPIなどはこのブログでも扱っていて、他でも参考にできるサイトが多いと思いますので、今回は8~11までの変化については割愛し、11〜17の間の変化だけを扱うことにさせてください。
 
@@ -233,7 +233,7 @@ static String formatterPatternSwitch(Object o) {
 
 ### Packaging Tool (16)
 
-実行できるバイナリを生成する[Packaging Tool](https://openjdk.java.net/jeps/392)が導入されています。これを使うと、Java runtimeとライブラリ、それぞれのOSにあった実行ファイルが一つのパッケージになる機能です。Java runtimeが含まれるということはOSのJavaのバージョンに関係なく実行できるものになるという意味なので、Javaのバージョンを固定したり、複数のアプリでそれぞれ違うバージョンのJavaを使って起動したい場合は役立つ機能かも知れません。
+実行できるバイナリを生成する[Packaging Tool](https://openjdk.java.net/jeps/392)が導入されています。これを使うと、Java runtimeとライブラリ、それぞれのOSにあった実行ファイルが一つのパッケージになる機能です。Java runtimeが含まれるということはOSのJavaのバージョンに関係なく実行できるものになるという意味なので、Javaのバージョンを固定したり、複数のアプリでそれぞれ違うバージョンのJavaを使って起動したい場合は役立つ機能かもしれません。
 
 ## API
 
@@ -277,7 +277,7 @@ class SerializableClass implements Serializable {
 - Enumのように、Serializeの効果がないクラス
 - [Externalizable](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Externalizable.html)を継承しているクラス
 
-このようなアノテーションが追加されたことによって、JacksonやGsonなどのライブラリの実装にも何か影響があるかも知れません。
+このようなアノテーションが追加されたことによって、JacksonやGsonなどのライブラリの実装にも何か影響があるかもしれません。
 
 ### String
 
@@ -520,7 +520,7 @@ List<String> upper = list.stream().map(String::toUpperCase).collect(Collectors.t
 List<String> lower = list.stream().map(String::toLowerCase).toList();
 ```
 
-Kotlinでは基本的にCollectionで高階関数を呼び出した結果が`Unmodifiable`なListになるのですが、`stream`に変換して使うこともできるので、場合によっては便利なのかも知れませんね。
+Kotlinでは基本的にCollectionで高階関数を呼び出した結果が`Unmodifiable`なListになるのですが、`stream`に変換して使うこともできるので、場合によっては便利なのかもしれませんね。
 
 ### Collectors.teeing (12)
 
@@ -579,6 +579,6 @@ Kotlinではそもそも`collect`する必要がないので、`Collection`の�
 
 いかがだったでしょうか。さすがに全ての変更事項を整理するのは難しかったので、目立っている変化だけをいくつか取り上げてみましたが、それでもかなりの量ですね。ただ確かなのは、Java 17が11よりもさらにモダンな言語になったバージョンであるので、Javaを使っている案件なら十分導入する価値がありそうです。また、Java 15からは11に比べてG1GCの改良による[性能向上もあった](https://www.optaplanner.org/blog/2021/01/26/HowMuchFasterIsJava15.html)ようですので、性能という面でも良いですね。
 
-Kotlinを使っている場合でも、APIだけを見るとあまりメリットはないかも知れませんが、JVMを使っている限り性能向上などの恩恵を受けることはできると思われるので、導入を考慮しても良いかなと思います。また次のLTSでは色々と面白いAPIが続々と登場するかも知れませんしね。
+Kotlinを使っている場合でも、APIだけを見るとあまりメリットはないかもしれませんが、JVMを使っている限り性能向上などの恩恵を受けることはできると思われるので、導入を考慮しても良いかなと思います。また次のLTSでは色々と面白いAPIが続々と登場するかもしれませんしね。
 
 では、また！

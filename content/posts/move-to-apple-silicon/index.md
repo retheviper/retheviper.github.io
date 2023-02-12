@@ -206,23 +206,23 @@ Goの場合も1.16からApple Siliconに対応しているので、特にバー�
 
 多くのアプリがApple Siliconに対応してきましたが、バージョンアップそのものが終わったり、Rosettaを通じて問題なく動く（からApple Silicon対応は後回しにするという政策の）アプリに関してはネイティブのバイナリが存在しない場合もあるので、仕方なくRosettaを使うしかないかなと思います。
 
-ソースコードをダウンロードして、ローカルでビルドするという方法もあるかと思いますが、使われているSwiftのバージョンが低い場合はXCodeですぐにビルドできない場合もあったりしました。いつかはRosettaのサボートも終わりそうなので、長期的な観点ではこのようなアプリは他のものに代替した方が良いかも知れません。
+ソースコードをダウンロードして、ローカルでビルドするという方法もあるかと思いますが、使われているSwiftのバージョンが低い場合はXCodeですぐにビルドできない場合もあったりしました。いつかはRosettaのサボートも終わりそうなので、長期的な観点ではこのようなアプリは他のものに代替した方が良いかもしれません。
 
 ### Mattermost
 
 [Mattermost](https://mattermost.com/download)はSlackと似たようなコミュニケーションツールで、サーバにインストールすることで無料利用ができるしマークダウンのサポートが優秀だったりするのでプライペートでよく使っています。ただ残念なことに、こちらはまだApple Silicon用の正式リリース版がないようです。
 
-正式リリースの予定はあるようなのでバージョンアップまでintell版を使うという選択肢もありますが、[GitHubのリポジトリ](https://github.com/mattermost/desktop/releases)を見るとUniversalとApple Silicon用のバイナリのベータ版も存在しているので、どうしてもRosettaを使いたくない場合はこちらを選んでみても良いかも知れません。
+正式リリースの予定はあるようなのでバージョンアップまでintell版を使うという選択肢もありますが、[GitHubのリポジトリ](https://github.com/mattermost/desktop/releases)を見るとUniversalとApple Silicon用のバイナリのベータ版も存在しているので、どうしてもRosettaを使いたくない場合はこちらを選んでみても良いかもしれません。
 
 ### KeyboardCleanTool
 
-[KeyboardCleanTool](https://folivora.ai/keyboardcleantool)は、アプリを実行している間に全てのキー入力を無視するという単純なツールです。キーボードが汚れて拭きたいときによく使っていますね。残念ながらこちらもまだApple Siliconに対応していません。同じ会社で開発している[BetterTouchTool](https://folivora.ai)はUniversalバイナリで提供されていますが、その対応ができたのも11月のことなので他の製品が全部Apple Siliconに対応するにはかなり時間がかかるかも知れません。
+[KeyboardCleanTool](https://folivora.ai/keyboardcleantool)は、アプリを実行している間に全てのキー入力を無視するという単純なツールです。キーボードが汚れて拭きたいときによく使っていますね。残念ながらこちらもまだApple Siliconに対応していません。同じ会社で開発している[BetterTouchTool](https://folivora.ai)はUniversalバイナリで提供されていますが、その対応ができたのも11月のことなので他の製品が全部Apple Siliconに対応するにはかなり時間がかかるかもしれません。
 
 このようなアプリは特にネイティブにならなくても困らないものなので、Apple Siliconネイティブ対応はかなり優先順位が低い感がありますね。
 
 ## OneDrive
 
-Microsoft社の製品にしてはかなり珍しいケースですが、対応が遅れていますね。ただ、今月[PreviewとしてUniversalバージョンが利用できる](https://techcommunity.microsoft.com/t5/microsoft-onedrive-blog/onedrive-sync-for-native-arm-devices-now-in-public-preview/ba-p/3031668)ようになったらしいので、もうすぐApple Siliconネイティブ版が出るかも知れません。その際にはApp Storeで自動的にアップデートされるはずなので、待つだけですね。
+Microsoft社の製品にしてはかなり珍しいケースですが、対応が遅れていますね。ただ、今月[PreviewとしてUniversalバージョンが利用できる](https://techcommunity.microsoft.com/t5/microsoft-onedrive-blog/onedrive-sync-for-native-arm-devices-now-in-public-preview/ba-p/3031668)ようになったらしいので、もうすぐApple Siliconネイティブ版が出るかもしれません。その際にはApp Storeで自動的にアップデートされるはずなので、待つだけですね。
 
 ## Flutter
 
