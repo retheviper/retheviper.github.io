@@ -127,7 +127,7 @@ alt="List View">
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>TextField(&lt;span style="color:#ff79c6">value&lt;/span> = content, onValueChange = onValueChange)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやって他の要素に状態の変更を可能にするためには、基本的にその状態をラップしているオブジェクトを利用するという考えは、SwiftUIでもJetpack Composeでも一緒のようです。ただ、&lt;code>$&lt;/code>というキーワードを使ってラッパーにアクセスできるSwiftと、状態のオブジェクトをどうやって宣言するかを考える必要のあるKotlinの違いがまた面白いポイントです。&lt;/p>
 &lt;h3 id="アプリ全体で共有する状態">アプリ全体で共有する状態&lt;/h3>
-&lt;p>さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかも知れません。&lt;/p>
+&lt;p>さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかもしれません。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
 style="
@@ -173,7 +173,7 @@ alt="Menu View">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>要件によっては、この対等な関係にある画面間でも状態を共有する必要はあります。たとえば、ショッピングのアプリを作るとしたら、自分のアカウントの画面を開いている場合でもカートに入れている商品の情報は維持される必要がありますね。このように、現在表示している画面とは関係なく、アプリ全体で共有する状態が必要な場面があります。&lt;/p>
-&lt;p>この場合は、どうしたらいいでしょうか？もちろん、起点となるViewがあるので、そこに&lt;code>@State&lt;/code>を定義しておくというのも一つの方法かも知れません。ただ、状態として管理したい項目が増えれば増えるほど複雑になりがちですね。起点のViewには複数の&lt;code>@State&lt;/code>が必要となり、画面ごとにそれらを渡す必要があります。だとすると、やはり一つのオブジェクトに状態をまとめて置いて使いまわしたいものです。&lt;/p>
+&lt;p>この場合は、どうしたらいいでしょうか？もちろん、起点となるViewがあるので、そこに&lt;code>@State&lt;/code>を定義しておくというのも一つの方法かもしれません。ただ、状態として管理したい項目が増えれば増えるほど複雑になりがちですね。起点のViewには複数の&lt;code>@State&lt;/code>が必要となり、画面ごとにそれらを渡す必要があります。だとすると、やはり一つのオブジェクトに状態をまとめて置いて使いまわしたいものです。&lt;/p>
 &lt;p>Appleのチュートリアルでもそれを提示していて、画面間で共有するデータとしてLandmarkのデータと、ユーザのプロフィールをまとめて共有できるオブジェクトとして提供する方法があります。まずは、以下がその状態のオブジェクトのコードとなります。（一部省略）&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">final&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">ModelData&lt;/span>: ObservableObject {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @Published &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">landmarks&lt;/span>: [Landmark] = load(&lt;span style="color:#f1fa8c">&amp;#34;landmarkData.json&amp;#34;&lt;/span>)
@@ -216,7 +216,7 @@ alt="Menu View">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">&amp;amp;&amp;amp;&lt;/span> (filter == .all &lt;span style="color:#ff79c6">||&lt;/span> filter.rawValue == landmark.category.rawValue )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ちなみに、Jetpack Composeの場合はこのような方法ではなく、オブジェクトそのものを&lt;code>remember&lt;/code>するように使うようです。例えば以下のような形になります。そもそも要素を作成するアプローチが違うのが理由の一つなのかも知れませんね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ちなみに、Jetpack Composeの場合はこのような方法ではなく、オブジェクトそのものを&lt;code>remember&lt;/code>するように使うようです。例えば以下のような形になります。そもそも要素を作成するアプローチが違うのが理由の一つなのかもしれませんね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// アプリ全体で共有する状態
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">ApplicationState&lt;/span>(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">val&lt;/span> environment: MutableState&amp;lt;Environment&amp;gt;,
@@ -247,8 +247,8 @@ alt="Menu View">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">private&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">var&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">iconType&lt;/span>: IconType = .heart
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>いかがでしたか。自分の感想としては、やはり今まで自分が触れてきた分野とは全く違う概念やアプローチが多かったので、大変興味深いと思いつつ、「これであっているのか」という疑問もかなり湧いてくるような経験となっています。全く経験のない分野に足を踏み入れるのは常にそういうものなのかも知れませんが。&lt;/p>
-&lt;p>ただこれで、ある程度アプリを作る場合にどうやって処理を行うべきかについての疑問の一つは解けたような気がします。本当は画面を作る分、他にも色々と新しい概念が出てきたり、画面のレイアウトやUXの観点で色々と難しいものが出てくるかも知れませんが、とにかく「動く」ものを作れそうな気はしますね。何卒自分のようにバックエンドのみを経験してきた形にとって参考できるような記事となっていればと思います。&lt;/p>
+&lt;p>いかがでしたか。自分の感想としては、やはり今まで自分が触れてきた分野とは全く違う概念やアプローチが多かったので、大変興味深いと思いつつ、「これであっているのか」という疑問もかなり湧いてくるような経験となっています。全く経験のない分野に足を踏み入れるのは常にそういうものなのかもしれませんが。&lt;/p>
+&lt;p>ただこれで、ある程度アプリを作る場合にどうやって処理を行うべきかについての疑問の一つは解けたような気がします。本当は画面を作る分、他にも色々と新しい概念が出てきたり、画面のレイアウトやUXの観点で色々と難しいものが出てくるかもしれませんが、とにかく「動く」ものを作れそうな気はしますね。何卒自分のようにバックエンドのみを経験してきた形にとって参考できるような記事となっていればと思います。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>SwiftUIを触ってみた〜その1〜</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-1/</link><pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-1/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた〜その1〜" />&lt;p>今までの自分のキャリアを振り返ってみると、仕事としての経験はバックエンドばかりで、画面側の実装にはあまり関わったことがありません。しかし、スタンドアロンのアプリを作るためには、ウェブ・モバイル・デスクトップを問わず画面が必要となるので、いつかは画面側の実装もできるようになる必要があるかなと常に思っているところです。&lt;/p>
 &lt;p>画面を作るといっても、どんな分野のエンジニアとしてキャリアパスを考えているか、どのような企業で働きたいか、慣れている言語は何であるかなど色々と考慮すべき要素は多いのですが、自分の場合はKotlinに慣れているのもあり、ウェブ・モバイル・デスクトップアプリに全部対応できるという点から&lt;a class="link" href="https://www.jetbrains.com/lp/compose-mpp" target="_blank" rel="noopener"
 >Jectpack Compose&lt;/a>を、また普段からMacとiPhone、iPadといったApple社の製品をよく使っている上、KotlinからのSwift入門が比較的簡単ということで&lt;a class="link" href="https://developer.apple.com/xcode/swiftui/" target="_blank" rel="noopener"
@@ -377,7 +377,7 @@ alt="Menu View">
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、上記のコードを見ると気付きにくいところですが、Range実装については両言語での扱いが少し違うところがあります。Kotlinでは&lt;code>rangeTo()&lt;/code>の戻り値が、元の値の型に合わせて&lt;code>InteRange&lt;/code>や&lt;code>LongRange&lt;/code>のようなものとなっていて、最小値と最大値をプロパティで取得する場合も&lt;code>rangeTo&lt;/code>に渡された二つの値の型と一緒です。&lt;/p>
 &lt;p>しかし、Swiftの&lt;a class="link" href="https://developer.apple.com/documentation/swift/range" target="_blank" rel="noopener"
 >Range&lt;/a>は&lt;code>Range&amp;lt;Bound&amp;gt;&lt;/code>という型で、当然Rangeから取得できる最小値や最大値も&lt;a class="link" href="https://developer.apple.com/documentation/swift/rangeexpression/bound/" target="_blank" rel="noopener"
->Bound&lt;/a>の型となっています。IntやLongとはまた別の型になるので、場合によっては注意して使う必要があるかも知れません。&lt;/p>
+>Bound&lt;/a>の型となっています。IntやLongとはまた別の型になるので、場合によっては注意して使う必要があるかもしれません。&lt;/p>
 &lt;h3 id="swiftだけのもの">Swiftだけのもの&lt;/h3>
 &lt;p>今まではKotlinユーザの観点から、Kotlinとどれだけ同じ感覚でコードを書けるか、ということを述べていましたが、ここからは少し間隔が違うなと思ったところを少しまとめてみようと思います。&lt;/p>
 &lt;h4 id="メソッドプロパティコールでの省略">メソッド・プロパティコールでの省略&lt;/h4>
@@ -462,7 +462,7 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> LandmarkSettings()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">#endif&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Kotlinの場合もAndroidでアプリを実装する場合はこのような設定が必要になる場面もあるかも知れませんが、バックエンドの経験上ではコードによりコンパイラをコントロールするというケースはあまりなかったので、かなり新鮮な感覚でした。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Kotlinの場合もAndroidでアプリを実装する場合はこのような設定が必要になる場面もあるかもしれませんが、バックエンドの経験上ではコードによりコンパイラをコントロールするというケースはあまりなかったので、かなり新鮮な感覚でした。&lt;/p>
 &lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>いかがでしたか。SwiftUIの話をするつもりが、Swiftのことだけでかなりの量になってしまったので、SwiftUIについては次のポストで述べようかなと思っています。しかし、Swiftだけでもかなり興味深いところが多かったので、やはりチュートリアルを触ってみて色々な経験ができたので良い選択をしたかなと思います。&lt;/p>
 &lt;p>また、やはりKotlinとSwiftがなんとなく似ている部分があるのは感覚的には確かなので、やはりどちらかの経験があると残りの片方への入門もしやすくなるのかなという感覚はあります。これは外国語の教育（自分の専攻です）でいうスキーマ、いわゆるバックグラウンドの知識ある故のことだろうなと思うと、少しうれしくもなりますね。やはりKotlinやってよかったなと思います。&lt;/p>

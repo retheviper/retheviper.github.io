@@ -16,13 +16,13 @@
 &lt;p>最後は、Refresh TokenとSliding Sessionを同時に使った方法です。普通のSliding Sessionを適用した方法との違いは、Access TokenではなくRefresh Tokenを更新するということです。Refresh Tokenを更新することにより、Access Tokenを頻繁に更新する必要がなくなりますß。またRefresh Tokenが更新されるためアクセス回数の少ないユーザでも比較的ログインを頻繁にする必要がなくなりますね。Refresh TokenとSliding Sessionのメリットを適切に融合させた戦略と言えます。&lt;/p>
 &lt;p>ただ、この方式でも問題が全くないとは言えません。サーバからRefresh Tokenの有効期限を満了させない限り、ユーザはリソースにアクセスできるので、もしPCやスマホなどの機器が乗っ取られた場合は対応できません。なのでアカウントのパスワードを周期的にリセットさせるか、特定のリソースにアクセスする場合は再び認証させるなどの方法が必要となります。&lt;/p>
 &lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>認証はWebアプリケーションにとってもっとも重要で、当たり前な機能となっていますが、セキュリティのため強化して行くとユーザの使用性に悪影響が出てしまうという問題を持っているものです。なので色々な方法論があり、さまざまなWebアプリケーションではそれぞれ違う方法を使って脆弱性に対応していますが、どれもメリット・デメリットがあるので正解と言える物はないのかも知れません。&lt;/p>
+&lt;p>認証はWebアプリケーションにとってもっとも重要で、当たり前な機能となっていますが、セキュリティのため強化して行くとユーザの使用性に悪影響が出てしまうという問題を持っているものです。なので色々な方法論があり、さまざまなWebアプリケーションではそれぞれ違う方法を使って脆弱性に対応していますが、どれもメリット・デメリットがあるので正解と言える物はないのかもしれません。&lt;/p>
 &lt;p>また、JWTのPayloadは暗号化されないため(ただのbase64文字列)、JWTを乗っ取られた時にその中身を見れるという問題もあるらしいです。これを補完するために&lt;a class="link" href="https://developer.okta.com/blog/2020/07/23/introducing-jpaseto" target="_blank" rel="noopener"
 >PASETO&lt;/a>という物も提案されているらしいですが、これがまたJWTほど亜補給される稼働かはわからない状態ですね。&lt;/p>
 &lt;p>あと、そもそもの認証方式の問題ですが、量子コンピュータが一般に補給されたら、&lt;a class="link" href="https://www.nttdata.com/jp/ja/data-insight/2018/0611" target="_blank" rel="noopener"
->従来の方式による暗号の解析はすぐにできる&lt;/a>ようになるとも言われているので、暗号化という考え方そのものが変わる可能性もあるかも知れません。そうなると既存のアプリも全体を作り直さなくてはならないことになるでしょう。&lt;/p>
+>従来の方式による暗号の解析はすぐにできる&lt;/a>ようになるとも言われているので、暗号化という考え方そのものが変わる可能性もあるかもしれません。そうなると既存のアプリも全体を作り直さなくてはならないことになるでしょう。&lt;/p>
 &lt;p>セキュリティは難しいものです。暗号化とともに、ユーザが便利に使える設計、戦略を適切に選定するためには色々と工夫が必要と感じます。&lt;/p></description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTによるREST APIのログインを実現する" />&lt;p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。&lt;/p>
-&lt;p>他にもいろいろな方法があるのかも知れませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。&lt;/p>
+&lt;p>他にもいろいろな方法があるのかもしれませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。&lt;/p>
 &lt;h2 id="jwtとは">JWTとは&lt;/h2>
 &lt;p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準&lt;a class="link" href="https://tools.ietf.org/html/rfc7519" target="_blank" rel="noopener"
 >RFC 7519&lt;/a>です。JWTのデータは署名されているためこの伝達されるデータの送信元の特定や途中でデータが入れ替えされなかったか(改ざんされてないか)の検証などができるので、多くの場合にユーザの認証で使われます。&lt;/p>
@@ -526,7 +526,7 @@ alt="Structure of JWT">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="ログイン用のcontrollerを使う場合">ログイン用のControllerを使う場合&lt;/h4>
 &lt;p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。&lt;/p>
-&lt;p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかも知れません。&lt;/p>
+&lt;p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかもしれません。&lt;/p>
 &lt;h5 id="controllerの作成">Controllerの作成&lt;/h5>
 &lt;p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@RestController
