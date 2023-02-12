@@ -307,7 +307,7 @@ alt="Gradle Implemenatation API">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;TestProject&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;-&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>include&lt;/code>と書いたものはサブプロジェクトで、&lt;code>rootProject.name&lt;/code>はその名の通りルートプロジェクト名を意味します。他にも命名できる方法はありますが、あくまでルートプロジェクト名がこのプロジェクト全体を意味するもので、サブプロジェクトはそのうちの一つの機能単位という感覚て命名しています。&lt;/p>
-&lt;p>&lt;code>rootProject.children.each { it.name = rootProject.name + '-' + it.name } &lt;/code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。&lt;/p>
+&lt;p>&lt;code>rootProject.children.each { it.name = rootProject.name + '-' + it.name }&lt;/code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> p &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> p&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;${rootProject.name}-${p.name}&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この命名法によりそれぞれのサブプロジェクトは&lt;code>TestProject-core&lt;/code>や&lt;code>TestProject-web&lt;/code>のように命名されます。&lt;/p>
 &lt;p>こう構成したプロジェクトをEclipseのパッケージエクスプローラからみると、以下のように見えるようになります。&lt;/p>
@@ -344,11 +344,11 @@ alt="Gradle Implemenatation API">
 &lt;p>ただ、皆さんにもわかるように、Sping BootプロジェクトでMainクラスが用意されていると、普通に&lt;code>java -jar project.jar&lt;/code>という風にコマンドラインから起動させることができます。なのになぜあえてGraleのタスクに入れようとしたかというと、以下のような理由があります。&lt;/p>
 &lt;h3 id="マルチプロジェクト構造となっている">マルチプロジェクト構造となっている&lt;/h3>
 &lt;p>現在の設計で、ライブラリー全体のプロジェクトは複数のサブプロジェクトを含むマルチプロジェクトとなっています。これでちゃんと伝わるか分かりませんが、とにかく表で表現すると以下のようになっています。&lt;/p>
-&lt;pre tabindex="0">&lt;code>rootproject
-┣ target
-┣ generator
-┗ runtime
-&lt;/code>&lt;/pre>&lt;p>簡単に説明しますと、現在のライブラリーはgeneratorというサブプロジェクトを利用して(runtimeはその時generatorから参照します)targetプロジェクトのコードを操作します。ここで最終的にgeneratorとruntimeはJarとして提供され、使用者はこのライブラリーでの処理を適用したいプロジェクトをtargetの位置に置いて使うことになります。こうなった場合に、コマンドラインからruntimeに依存しているgeneratorのJarを起動してtargetのソースファイルを操作するように指定するのはかなり面倒臭い作業となりますね。これを自動化したかったです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>rootproject
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┣ target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┣ generator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┗ runtime
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>簡単に説明しますと、現在のライブラリーはgeneratorというサブプロジェクトを利用して(runtimeはその時generatorから参照します)targetプロジェクトのコードを操作します。ここで最終的にgeneratorとruntimeはJarとして提供され、使用者はこのライブラリーでの処理を適用したいプロジェクトをtargetの位置に置いて使うことになります。こうなった場合に、コマンドラインからruntimeに依存しているgeneratorのJarを起動してtargetのソースファイルを操作するように指定するのはかなり面倒臭い作業となりますね。これを自動化したかったです。&lt;/p>
 &lt;h3 id="起動時に渡したい引数が多い">起動時に渡したい引数が多い&lt;/h3>
 &lt;p>Gradleのタスクとして実行したかったもう一つの理由は、ライブラリーが処理を行うために必要な引数の種類が7つくらいがあって、これを全部覚えるのは難しいからです。それにタイポにより処理に失敗する可能性も上がりますね。ここで思ったのが&lt;code>.bat&lt;/code>ファイルを用意していて、使用者がそれを修正したらいいだけの話ではないかと一瞬思いましたが、やはりあまり良い方法ではなかったです。Gradle自体も今はそうなっていますが、別途のファイルを用意するということは、OSごとにそのファイルを作成する必要があるということですね。使用者がどんな環境で実行するかわからないのでとりあえず&lt;code>.bat&lt;/code>と&lt;code>.sh&lt;/code>の両方を準備する必要がありますね。&lt;/p>
 &lt;p>それに、このライブラリーがWindowsやLinuxでしか使用されないだろうと言い切れないので、そういう場合はより変数は多くなります。そうなるといちいちOSや環境に合わせて、コマンドライン引数を渡すための方法を作らなければならないですね。わざわざそんなことをするよりは、Gradleのタスクとして用意し(もちろん引数はファイルに記載して読み込まれるように)、環境のことはGradleにお任せした方がコードの管理や便宜性という面からして良さげな気がしました。統一感もあって、使用者にも良い印象になりそうですしね。&lt;/p>

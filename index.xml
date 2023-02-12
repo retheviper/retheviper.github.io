@@ -761,7 +761,7 @@
 &lt;p>&lt;a class="link" href="../swift-ui-first-impression-2/" >SwiftUIのポスト&lt;/a>の時も触れた状態管理ですが、Composeでも同じくGUIを扱うことになるので、状態管理が大事となります。今回はアプリとしての画面がひとつしかないので、複数の画面にまたがって状態を管理する必要はないかなと思いましたが、それでもやはり処理を行うためにはアプリ全体で共有する状態として管理が必要なものがいくつかありました。&lt;/p>
 &lt;p>ただ、上記ポストでも述べた通り、SwiftUIとComposeとは状態管理の方式が少し違います。SwiftUIでは状態がどこで使われるかによって明確に使われるアノテーションやクラスなどが変わっていたなら、Composeでは大体&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary?hl=ja#remember%28kotlin.Function0%29" target="_blank" rel="noopener"
 >remember()&lt;/a>と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja" target="_blank" rel="noopener"
->MutableState&lt;!-- raw HTML omitted -->&lt;/a>の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p>
+>&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>&lt;/a>の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p>
 &lt;p>まず、Composeでの状態は、以下のような三つの方法で定義することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Delegateで定義する
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> isOn: Boolean &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#ff79c6">false&lt;/span>) }
@@ -1116,7 +1116,7 @@ alt="List View">
 &lt;h3 id="親子関係のviewが共有する状態">親子関係のViewが共有する状態&lt;/h3>
 &lt;p>さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、&lt;/p>
 &lt;p>実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで&lt;code>isOn&lt;/code>に親の状態を渡していますね。ただ、トグル時の挙動を&lt;code>@State&lt;/code>で定義したBooleanと結びつけるために&lt;code>isOn&lt;/code>として渡す際、&lt;code>$&lt;/code>をつけることに注目する必要があります。&lt;code>$&lt;/code>をつけることで、Booleanではなく、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/binding" target="_blank" rel="noopener"
->Binding&lt;!-- raw HTML omitted -->&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
+>&lt;code>Binding&amp;lt;Boolean&amp;gt;&lt;/code>&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
 >Toggle&lt;/a>の中でも親の状態を変更できるようになります。&lt;code>Toggle&lt;/code>は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である&lt;code>showFavoritesOnly&lt;/code>の値が変わるということです。&lt;/p>
 &lt;p>後でまた関連したポストを書きたいと思いますが、Jetpack Composeでも何となく似たような形で状態の管理ができる方法があります。例えば、&lt;code>@State&lt;/code>のように簡単な状態を管理するためには以下のような書き方ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// true/falseの状態
@@ -1131,7 +1131,7 @@ alt="List View">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のような書き方はいわゆる&lt;a class="link" href="https://kotlinlang.org/docs/delegation.html" target="_blank" rel="noopener"
 >Delegation&lt;/a>によるもので、&lt;code>mutableStateOf&amp;lt;T&amp;gt;&lt;/code>が返すのは&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState" target="_blank" rel="noopener"
->MutableState&lt;!-- raw HTML omitted -->&lt;/a>ですが、&lt;code>by&lt;/code>を使うことで実際は&lt;code>Boolean&lt;/code>そのものを扱うようになります。&lt;/p>
+>&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>&lt;/a>ですが、&lt;code>by&lt;/code>を使うことで実際は&lt;code>Boolean&lt;/code>そのものを扱うようになります。&lt;/p>
 &lt;p>そして&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>を分解し、以下のように状態と、状態を変化させる処理の処理を指定することもできます。これもまた、先ほどの&lt;code>Binding&lt;/code>のような役割をするようなものですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// テキストの状態と値の変更
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> (content: String, onValueChange: (String) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit) = remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
@@ -3544,7 +3544,7 @@ alt="Google Cloud Certification Perks Webstore">
 >IBM Semeru&lt;/a>などがありますが、こちらの場合はApple Silicon用のJDKを提供していません。&lt;/p>
 &lt;p>最近はどのJDKを選んでも特に問題はないかと思いますので、17を選ぶならOracleのでも良いし、他も好みで選んでも良さそうな気がします。私の場合はずっとAdpotOpenJDKを使っていたので、今回もTemurinを選びました。ただ、Temurinだと11がApple Siliconに対応してないので、そこはZuluを選んでいます。インストールにはhomebrewを使いました。&lt;/p>
 &lt;p>Apple Siliconとは直接的な関係はないですが、以下のコマンドで使うJDKのバージョンを簡単に切り替えできるのでさまざまなベンダのJDKを使ってみるのもありかもですね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">JAVA_HOME&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">`&lt;/span>/usr/libexec/java_home -v 11&lt;span style="color:#f1fa8c">`&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">JAVA_HOME&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">`&lt;/span>/usr/libexec/java_home -v 11&lt;span style="color:#f1fa8c">`&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ java -version
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>openjdk version &lt;span style="color:#f1fa8c">&amp;#34;11.0.13&amp;#34;&lt;/span> 2021-10-19 LTS
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>OpenJDK Runtime Environment Zulu11.52+13-CA &lt;span style="color:#ff79c6">(&lt;/span>build 11.0.13+8-LTS&lt;span style="color:#ff79c6">)&lt;/span>
@@ -4992,7 +4992,7 @@ alt="Google Cloud Certification Perks Webstore">
 &lt;p>Quarkusを実際触ってみて、最も良いと思われたのは上記の通りですが、Nativeでアプリをビルドしながら、いくつかの懸念もあると感じました。例えば以下のようなものがあります。&lt;/p>
 &lt;h3 id="nativeのビルドは遅い">Nativeのビルドは遅い&lt;/h3>
 &lt;p>Nativeで起動速度が早くなるのは確かに良いところですが、問題はビルド自体は遅いということです。当然ながら、Nativeとしてビルドするということは、最初から全てのコードをマシンコードとしてコンパイルするということを意味します。JVM用のバイトコードはどの環境でも同じですが、マシンコードはそうではないので、そのプラットフォームに合わせたコードを生成するのに時間がかかるのは当然のことですね。例えば、ローカルでテストに使ったプロジェクトをNativeイメージとしてビルドした場合は以下のような時間がかかりました。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ./gradlew build -Dquarkus.package.type&lt;span style="color:#ff79c6">=&lt;/span>native
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>./gradlew build -Dquarkus.package.type&lt;span style="color:#ff79c6">=&lt;/span>native
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;gt; Task :quarkusBuild
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>building quarkus jar
@@ -8077,7 +8077,7 @@ alt="Kotlin Sequence Processing">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> sb&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">append&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>&lt;span style="color:#ff79c6">this&lt;/span>&lt;span style="color:#ff79c6">,&lt;/span> i&lt;span style="color:#ff79c6">,&lt;/span> thisLen&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">toString&lt;/span>&lt;span style="color:#ff79c6">();&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>少なくとも区切り文字がカンマではない場合は、&lt;code>toString()&lt;/code>と&lt;code>replace()&lt;/code>での文字列の生成よりは、他の方法をとったほうが性能面では有利ではないか、という推測が可能です。もちろん、要素数という変数があるので、実際の性能は測ってみないとわからないものですが…&lt;/p>
-&lt;h3 id="ベンチマークしてみる">ベンチマークしてみる&lt;/h3>
+&lt;h3 id="ベンチマークしてみる1">ベンチマークしてみる(1)&lt;/h3>
 &lt;p>では、文字列を連結するために使える色々なAPIと、その特徴を簡単に把握できたので、次に確認したいのは、やはり性能です。特に気になるのは、&lt;code>String.join()&lt;/code>や&lt;code>Collectors.joining()&lt;/code>でも結局は内部で&lt;code>StringJoiner&lt;/code>を使っているというところです。それはつまり、&lt;code>StringBuffer&lt;/code>や&lt;code>StringBuilder&lt;/code>よりも&lt;code>StringJoiner&lt;/code>が性能で有利だから、でしょうか。&lt;/p>
 &lt;p>これらのAPIを利用して、実際のアプリケーションに使われるビジネスロジックのコードを書く立場としては、それはコードを簡単に書ける方が良いのは当然ですが、そもそもこういうAPIの場合は、手間を省けるために性能は良くても複雑なコードで実装する可能性もあるのですので、疑問になります。しかも、多くの場合、文字列の操作では&lt;code>StringBuilder&lt;/code>が早いと言われていますので、ますます性能差というのが気になってきます。なので、いつもの通りにベンチマークを実施してみました。&lt;/p>
 &lt;p>ベンチマークは、カンマ区切りで文字列を連結する例として作成しています。以下がそのコードです。&lt;/p>
@@ -8173,7 +8173,7 @@ StringConcatTest.stringBuilder thrpt 25 45.965 ± 1.736 ops/s
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>List&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> mutableList &lt;span style="color:#ff79c6">=&lt;/span> Arrays&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">stream&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>array&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">collect&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Collectors&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">toList&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Listに変える(Immutable)
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>List&lt;span style="color:#ff79c6">&amp;lt;&lt;/span>String&lt;span style="color:#ff79c6">&amp;gt;&lt;/span> mutableList &lt;span style="color:#ff79c6">=&lt;/span> Stream&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">of&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>array&lt;span style="color:#ff79c6">).&lt;/span>&lt;span style="color:#50fa7b">collect&lt;/span>&lt;span style="color:#ff79c6">(&lt;/span>Collectors&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">toUnmodifiableList&lt;/span>&lt;span style="color:#ff79c6">());&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ベンチマークしてみる-1">ベンチマークしてみる&lt;/h3>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ベンチマークしてみる2">ベンチマークしてみる(2)&lt;/h3>
 &lt;p>では、次にまたベンチマークとなります。コード自体は明らかに&lt;code>Arrays.toList()&lt;/code>の方が簡単だったのですが、MutableなListを作るためにはListを生成した後にさらにインスタンスを作成する必要があるということで、性能面で損する可能性もあるのかなという気がします。なので、以上で紹介した&lt;code>Arrays.asList()&lt;/code>と&lt;code>Stream&lt;/code>によるListのインスタンスの作成を、Immutable・Mutableという二つのケースに分けて検証してみました。以下がそのベンチマークのコードです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>@State&lt;span style="color:#ff79c6">(&lt;/span>Scope&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">Benchmark&lt;/span>&lt;span style="color:#ff79c6">)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">public&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">class&lt;/span> &lt;span style="color:#50fa7b">StringSplitTest&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span>
@@ -8981,7 +8981,8 @@ StreamCopyTest.pathToPath avgt 25 153.505 ± 2.662 s/op
 &lt;h3 id="コードの伝染">コードの伝染&lt;/h3>
 &lt;p>非同期でコードを書くことになると、結局はアプリケーション全体から同期という概念を排除する結論に至るかもしれません。なぜなら、先に述べました通り、非同期の処理の中で一つでも同期の処理が混ざっているとしたら、それだけでも全体の処理が同期になっちゃうからです。なので、同期と非同期を一つのアプリの中で共存させるのはかなり難しくなり、結果的には非同期のコードに他のコードが「伝染」されるようなことが起きてしまうケースが発生します。例えばWebFluxの例では、同期のコードと混ぜて使うこともほぼ不可能に近いので、あえてオブジェクトを&lt;code>Mono&lt;/code>や&lt;code>Flux&lt;/code>に入れ(非同期に変え)、&lt;code>zipWith()&lt;/code>でタプルとして結び、&lt;code>map()&lt;/code>や&lt;code>flatMap()&lt;/code>で処理するという形になるしかなくなります。そしてその逆の方法を取るとしたら(&lt;code>block()&lt;/code>で&lt;code>Mono&lt;/code>の中身を持ち出すなど)、もはや最初から同期でコードを書いた方が良いということになってしまうという問題があります。&lt;/p>
 &lt;h2 id="それでも非同期は必要">それでも非同期は必要&lt;/h2>
-&lt;p>以上のことは、おそらく非同期に触れてみた人なら誰でも一度は触れてみた問題であり、共感する人も多いのではないかと思います。しかし、このような不便さがあるにもかかわらず、依然として非同期プログラミングの必要性はあります。特に、今のトレンドだと多くのWebアプリケーションで同時処理性能が重要となっていますので、尚更です。実際&lt;a class="link" href="%28https://support.google.com/analytics/answer/4589209?hl=ja%29" >グーグルアナリティクス&lt;/a>は、KissMetricsを引用して「ページのレスポンスが 1 秒遅れると、コンバージョン数が 7% 減少する」、「47% の消費者は 2 秒以内にウェブページが読み込まれることを期待している」と行っているくらいですが、このような要求に対応できるのはやはり非同期としか言えません。なので、JavaScriptやC#のような言語では&lt;code>async&lt;/code>/&lt;code>await&lt;/code>/&lt;code>promise&lt;/code>などを試し、Kotlinで&lt;a class="link" href="https://kotlinlang.org/docs/reference/coroutines-overview.html" target="_blank" rel="noopener"
+&lt;p>以上のことは、おそらく非同期に触れてみた人なら誰でも一度は触れてみた問題であり、共感する人も多いのではないかと思います。しかし、このような不便さがあるにもかかわらず、依然として非同期プログラミングの必要性はあります。特に、今のトレンドだと多くのWebアプリケーションで同時処理性能が重要となっていますので、尚更です。実際&lt;a class="link" href="https://support.google.com/analytics/answer/4589209?hl=ja" target="_blank" rel="noopener"
+>グーグルアナリティクス&lt;/a>は、KissMetricsを引用して「ページのレスポンスが 1 秒遅れると、コンバージョン数が 7% 減少する」、「47% の消費者は 2 秒以内にウェブページが読み込まれることを期待している」と行っているくらいですが、このような要求に対応できるのはやはり非同期としか言えません。なので、JavaScriptやC#のような言語では&lt;code>async&lt;/code>/&lt;code>await&lt;/code>/&lt;code>promise&lt;/code>などを試し、Kotlinで&lt;a class="link" href="https://kotlinlang.org/docs/reference/coroutines-overview.html" target="_blank" rel="noopener"
 >Coroutine&lt;/a>というものを導入するなど、なんとしても非同期の短所を補完するという努力をしているところですね。&lt;/p>
 &lt;p>特に、Javaの場合はOSのスレッドを直接使用するので、同時に処理できるリクエストは数千くらいにすぎません。なので、このスレッド基盤という言語そのものの限界を克服するため今まで多くの非同期ライブラリが作られてきました。しかし、ライブラリにはやはり限界があったので、JVMレベルでの対応が検討されているところです。それが先ほど紹介しました、&lt;a class="link" href="https://cr.openjdk.java.net/~rpressler/loom/Loom-Proposal.html" target="_blank" rel="noopener"
 >Project Loom&lt;/a>というものです。&lt;/p>
@@ -13277,9 +13278,9 @@ alt="構成図">
 &lt;p>ルーターのOSはLinuxとなっていますが、やはり重要なコマンドがいくつか足りていないです。代表的にパッケージ管理用の&lt;code>yum&lt;/code>や&lt;code>apt&lt;/code>、&lt;code>dnf&lt;/code>のどちらも搭載されていなく、CPUの性能も怪しいので重要な作業はまずmacで行うことにしました。&lt;/p>
 &lt;p>また、SSL証明書自体はRT-AC68Uで対応しているLet&amp;rsquo;s encryptを使います。こちらは有効期間が90日にすぎないですが、発給も更新も無料となっているのでこういう簡単な作業で使うには最適です。&lt;/p>
 &lt;p>まず、ターミナルでLet&amp;rsquo;s encryptをインストールします。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ brew install letsencrypt
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>brew install letsencrypt
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>インストールが終わったら、&lt;code>certbot&lt;/code>コマンドで証明書を作成できます。ただ、証明書を作成する前にDDNSを登録して置く必要があります。私はすでにルーターで提供している機能でドメインを登録してあるので、それをそのまま使います。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo certbot certonly --manual
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo certbot certonly --manual
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コマンドを入力すると以下のような画面が出力されます。ただ、自分は何回か同じコマンドを実行しているので初めての実行で出力される画面は少し違う可能性はあります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Saving debug log to /var/log/letsencrypt/letsencrypt.log
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Plugins selected: Authenticator manual, Installer None
@@ -13362,10 +13363,10 @@ alt="構成図">
 &lt;p>コピーができたら、ルーターに接続します。&lt;/p>
 &lt;h2 id="ルーターでの設定2">ルーターでの設定(2)&lt;/h2>
 &lt;p>SSHでルーターに接続して以下のパスに移動します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /tmp/etc
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /tmp/etc
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ディレクトリー内のファイルをみると、先ほどコピーしておいたファイルと同じものが置かれてあるのを確認できます。viでファイルをあけ、先ほどコピーしておいたもので上書きします。&lt;/p>
 &lt;p>cert.pemとkey.pemの上書きが終わったら、次にルーター内でのプロセス目録を確認します。すでに管理ページがhttpdsのサービスとして実行されているため、新しい証明書を適用するためには一回サービスを終了して再実行する必要があります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ps
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ps
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のコマンドを入力すると、現在実行中のプロセスの目録が出力されます。そのうち、&lt;code>httpds -s -i br0 -p 8443&lt;/code>があればそれを終了させます。8443は管理ページで指定したデフォルトのポート番号です。プロセスの左に出力されるのがプロセスのID(PID)なので覚えておきましょう。その後は以下のコマンドを入力します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># PIDが562の場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">kill&lt;/span> &lt;span style="color:#bd93f9">562&lt;/span>
@@ -13783,7 +13784,7 @@ alt="Gradle Implemenatation API">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;TestProject&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;-&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> it&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>include&lt;/code>と書いたものはサブプロジェクトで、&lt;code>rootProject.name&lt;/code>はその名の通りルートプロジェクト名を意味します。他にも命名できる方法はありますが、あくまでルートプロジェクト名がこのプロジェクト全体を意味するもので、サブプロジェクトはそのうちの一つの機能単位という感覚て命名しています。&lt;/p>
-&lt;p>&lt;code>rootProject.children.each { it.name = rootProject.name + '-' + it.name } &lt;/code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。&lt;/p>
+&lt;p>&lt;code>rootProject.children.each { it.name = rootProject.name + '-' + it.name }&lt;/code>では、ルートプロジェクト名にダッシュをつけ、その下にサブプロジェクト名を付けています。これは以下の方法でも表現できます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>rootProject&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">children&lt;/span>&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">each&lt;/span> &lt;span style="color:#ff79c6">{&lt;/span> p &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> p&lt;span style="color:#ff79c6">.&lt;/span>&lt;span style="color:#50fa7b">name&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#34;${rootProject.name}-${p.name}&amp;#34;&lt;/span>&lt;span style="color:#ff79c6">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この命名法によりそれぞれのサブプロジェクトは&lt;code>TestProject-core&lt;/code>や&lt;code>TestProject-web&lt;/code>のように命名されます。&lt;/p>
 &lt;p>こう構成したプロジェクトをEclipseのパッケージエクスプローラからみると、以下のように見えるようになります。&lt;/p>
@@ -13880,11 +13881,11 @@ alt="Gradle Implemenatation API">
 &lt;p>ただ、皆さんにもわかるように、Sping BootプロジェクトでMainクラスが用意されていると、普通に&lt;code>java -jar project.jar&lt;/code>という風にコマンドラインから起動させることができます。なのになぜあえてGraleのタスクに入れようとしたかというと、以下のような理由があります。&lt;/p>
 &lt;h3 id="マルチプロジェクト構造となっている">マルチプロジェクト構造となっている&lt;/h3>
 &lt;p>現在の設計で、ライブラリー全体のプロジェクトは複数のサブプロジェクトを含むマルチプロジェクトとなっています。これでちゃんと伝わるか分かりませんが、とにかく表で表現すると以下のようになっています。&lt;/p>
-&lt;pre tabindex="0">&lt;code>rootproject
-┣ target
-┣ generator
-┗ runtime
-&lt;/code>&lt;/pre>&lt;p>簡単に説明しますと、現在のライブラリーはgeneratorというサブプロジェクトを利用して(runtimeはその時generatorから参照します)targetプロジェクトのコードを操作します。ここで最終的にgeneratorとruntimeはJarとして提供され、使用者はこのライブラリーでの処理を適用したいプロジェクトをtargetの位置に置いて使うことになります。こうなった場合に、コマンドラインからruntimeに依存しているgeneratorのJarを起動してtargetのソースファイルを操作するように指定するのはかなり面倒臭い作業となりますね。これを自動化したかったです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>rootproject
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┣ target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┣ generator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>┗ runtime
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>簡単に説明しますと、現在のライブラリーはgeneratorというサブプロジェクトを利用して(runtimeはその時generatorから参照します)targetプロジェクトのコードを操作します。ここで最終的にgeneratorとruntimeはJarとして提供され、使用者はこのライブラリーでの処理を適用したいプロジェクトをtargetの位置に置いて使うことになります。こうなった場合に、コマンドラインからruntimeに依存しているgeneratorのJarを起動してtargetのソースファイルを操作するように指定するのはかなり面倒臭い作業となりますね。これを自動化したかったです。&lt;/p>
 &lt;h3 id="起動時に渡したい引数が多い">起動時に渡したい引数が多い&lt;/h3>
 &lt;p>Gradleのタスクとして実行したかったもう一つの理由は、ライブラリーが処理を行うために必要な引数の種類が7つくらいがあって、これを全部覚えるのは難しいからです。それにタイポにより処理に失敗する可能性も上がりますね。ここで思ったのが&lt;code>.bat&lt;/code>ファイルを用意していて、使用者がそれを修正したらいいだけの話ではないかと一瞬思いましたが、やはりあまり良い方法ではなかったです。Gradle自体も今はそうなっていますが、別途のファイルを用意するということは、OSごとにそのファイルを作成する必要があるということですね。使用者がどんな環境で実行するかわからないのでとりあえず&lt;code>.bat&lt;/code>と&lt;code>.sh&lt;/code>の両方を準備する必要がありますね。&lt;/p>
 &lt;p>それに、このライブラリーがWindowsやLinuxでしか使用されないだろうと言い切れないので、そういう場合はより変数は多くなります。そうなるといちいちOSや環境に合わせて、コマンドライン引数を渡すための方法を作らなければならないですね。わざわざそんなことをするよりは、Gradleのタスクとして用意し(もちろん引数はファイルに記載して読み込まれるように)、環境のことはGradleにお任せした方がコードの管理や便宜性という面からして良さげな気がしました。統一感もあって、使用者にも良い印象になりそうですしね。&lt;/p>
@@ -14797,16 +14798,15 @@ alt="Jnekins Build Period">
 &lt;p>&lt;code>基本フォーマット&lt;/code>&lt;/p>
 &lt;ol>
 &lt;li>時間単位は空白を基準に分ける&lt;/li>
-&lt;li>記入順は分(minute)、時間(hour)、日付(day of month)、月(month)、週(week)&lt;/li>
-&lt;/ol>
-&lt;ul>
+&lt;li>記入順は分(minute)、時間(hour)、日付(day of month)、月(month)、週(week)
+&lt;ol>
 &lt;li>分(minute): 0から59までの数字&lt;/li>
 &lt;li>時間(hour): 0から23までの数字&lt;/li>
 &lt;li>日付(day of month): 1から31までの数字&lt;/li>
 &lt;li>月(month): 1から12までの数字&lt;/li>
 &lt;li>週(week): 0から7前での数字(0と７は日、1は月、2は火、3は水、4は木、5は金、6は土)&lt;/li>
-&lt;/ul>
-&lt;ol start="3">
+&lt;/ol>
+&lt;/li>
 &lt;li>&lt;code>*&lt;/code>は入力できる全範囲の値を許容するという意味(分の位置に入力すると0~59までの全数字)&lt;/li>
 &lt;li>&lt;code>M-N&lt;/code>のように&lt;code>-&lt;/code>を入れると範囲の指定が可能(&lt;code>2-4&lt;/code>は2から4までの値)&lt;/li>
 &lt;li>&lt;code>M-N/X&lt;/code>または&lt;code>*/X&lt;/code>は合間の意味(時間の位置に&lt;code>*/2&lt;/code>と入力すると、２時間置きという意味になる)&lt;/li>
@@ -15155,7 +15155,7 @@ alt="Jenkins Poll SCM">
 &lt;p>&lt;code>Node.js&lt;/code>の場合、&lt;code>$ node /node/index.js&lt;/code>みたいな簡単なコマンドで実行できますね。これをサービスに登録する場合は以下のようになります。&lt;/p>
 &lt;h2 id="serviceファイルを作成する">serviceファイルを作成する&lt;/h2>
 &lt;p>まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi /etc/systemd/system/NodeServer.service
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi /etc/systemd/system/NodeServer.service
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>それでは以下のような形で中を書いていきます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># サービスとしての設定&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>Unit&lt;span style="color:#ff79c6">]&lt;/span>
@@ -15224,7 +15224,7 @@ alt="Jenkins Poll SCM">
 &lt;p>ただYAMLファイルとフォルダー構成などが少し複雑なので、ここでは一つ一つのファイルの設定を述べてみようと思います。以下のYAML設定は、AMAZON Linuxを基準に書かれています。&lt;/p>
 &lt;h2 id="ansibleのインストール">Ansibleのインストール&lt;/h2>
 &lt;p>Ansibleは&lt;code>yum&lt;/code>、&lt;code>brew&lt;/code>、&lt;code>pip&lt;/code>、&lt;code>apt-get&lt;/code>でインストールできます。簡単ですね！ただ場合によってはPython2やPIPが必要となるので、事前にインストールしておきましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ yum install ansible
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>yum install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ brew install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ pip install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ sudo apt-get install ansible
@@ -15950,7 +15950,7 @@ alt="Jenkins Poll SCM">
 &lt;p>すでにBashにコマンドを追加した場合は以下の手順で移行ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>新規で追加する場合は、下の「プロファイルを作る」節のコマンドの代わりに以下を入力します。そのあとは同じ手順で進めてください。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.zprofile
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi ~/.zprofile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以下、前のポストです。&lt;/p>
 &lt;hr>
 &lt;p>パソコンではMS-DOSとWindowsしか使ってみたことのない私がmacを使ってかれこれ一年となります。macといえばやはり高く、Windowsとは全く違う環境なので使いづらいのではないかなと思っていました。動画や音楽の編集には最適だという話もありましたが、自分とは関係のない世界の話でした。&lt;/p>
@@ -15959,7 +15959,7 @@ alt="Jenkins Poll SCM">
 &lt;p>今回のポストはそのLinuxのショートカットをmacで使うための設定の話です。といっても、自分が研究した訳ではなく、インターネットで拾ってきた情報にすぎませんがね。でもこの設定をみるだけでも様々なコマンドやAliasを勉強できて、かなり貴重な資料ではないかと思います。誰か知りませんが、作った方には敬意を。&lt;/p>
 &lt;h2 id="プロファイルを作る">プロファイルを作る&lt;/h2>
 &lt;p>まずはBashのプロファイルを作ります。ターミナルで以下のように入力します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.bash_profile
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi ~/.bash_profile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>bash_profile&lt;/code>と&lt;code>bashrc&lt;/code>の違いは、前者がターミナルを開くときすぐ適用される設定なら、後者はターミナルで改めてBashを実行した時に適用される設定という違いがあるらしいです。ただコマンドでわかりますが、現在ユーザーのホームにプロファイルを作るのでユーザーが変わる場合はまた同じことをする必要があります。&lt;/p>
 &lt;h2 id="プロファイルの内容">プロファイルの内容&lt;/h2>
 &lt;p>以下のコードをプロファイルに入れます。&lt;/p>
@@ -16716,7 +16716,7 @@ alt="Jenkins Gradle Build JAR">
 &lt;li>２つ以上のファイルやフォルダがある場合はリストを出力&lt;/li>
 &lt;/ol>
 &lt;p>例えば &lt;code>/home/retheviper/task01&lt;/code>というフォルダに移動するとします。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> h &lt;span style="color:#6272a4"># ここでtab&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> h &lt;span style="color:#6272a4"># ここでtab&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/r &lt;span style="color:#6272a4"># ここでtab&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/retheviper/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
@@ -16796,7 +16796,7 @@ alt="Jenkins Gradle Build JAR">
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>メモリーとディスク、CPUの使用量をモニタリングできるため覚えておきたいコマンドですね。&lt;/p>
 &lt;h2 id="長い出力を少しづつ見たい">長い出力を少しづつ見たい&lt;/h2>
 &lt;p>&lt;code>ls -al&lt;/code>&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>などのコマンドでとある内容を出力する場合、リストが多すぎて画面に全部表示されない場合があります。こういうときは&lt;code>more&lt;/code>コマンドで出力がターミナルを全部満たした場合、エンターキーを押すことで次のリストを表示することになります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -al | more
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ls -al | more
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p>
 &lt;p>それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
@@ -16816,18 +16816,18 @@ alt="Jenkins Gradle Build JAR">
 &lt;p>今回のタスクを振り返ってみましょう。JavaアプリケーションがGitにあります。それをPullし（Jenkinsが実行されているサーバにソースコードを持ってきて）、ビルド（実行可能なパッケージにする）する。これでJenkinsは最新のソースコードを確保しつつ、実行可能なアプリケーションをデプロイできる状態になります。それではまず必要な道具はJDKとGradleです。&lt;/p>
 &lt;h2 id="openjdkをインストールしましょう">OpenJDKをインストールしましょう&lt;/h2>
 &lt;p>まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>をインストールします。&lt;code>yum install java&lt;/code>をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>curl -OはURLからファイルをダウンロードして保存するということです。ダウンロードしたファイルは圧縮されているので解凍します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>tarは圧縮したり解凍するとき使うコマンド。zは.gzファイルを、xは圧縮ファイルの展開、vは処理したファイルを表示、fはこのファイルを指定するという意味らしいです。解凍が終わったらファイルを適切な場所に格納しましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ mv jdk-11.0.1 /usr/local/
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>mv jdk-11.0.1 /usr/local/
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>次に簡単なシェルスクリプトを書きます。Linuxでの環境変数を設定するためです。まずviやvimでファイルを作りましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi /etc/profile.d/jdk11.sh
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi /etc/profile.d/jdk11.sh
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>iを押して以下の内容を書きます。Javaを格納したパスを確認してください。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">JAVA_HOME&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>/usr/local/jdk-11.0.1
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">PATH&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">$PATH&lt;/span>:&lt;span style="color:#8be9fd;font-style:italic">$JAVA_HOME&lt;/span>/bin
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>esc⇨:wqで保存と終了。そしてすぐシェルスクリプトを今の状態に適用させます。sourceコマンドを使います。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">source&lt;/span> /etc/profile.d/jdk11.sh
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">source&lt;/span> /etc/profile.d/jdk11.sh
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでOpenJDK11は準備されました。私はCentOS7を使っているのですが、ubuntuなどの違うLinuxではまた手順も色々あるようです。とにかくインストールがちゃんと終わっているか&lt;code>java -version&lt;/code>で確認してみましょう。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -16849,9 +16849,9 @@ alt="Java version is 8">
 &lt;h2 id="使いたいjavaのバージュヨンを切り替える">使いたいJavaのバージュヨンを切り替える&lt;/h2>
 &lt;p>すでに違うバージョンのJDKがインストールされた場合は、次の手順で使いたいJavaのバージョンを選択できます。
 まず新しくインストールしたJavaを選択できるよう登録します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ alternatives --install /usr/bin/java java &lt;span style="color:#8be9fd;font-style:italic">$JAVA_HOME&lt;/span>/bin/java &lt;span style="color:#bd93f9">2&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>alternatives --install /usr/bin/java java &lt;span style="color:#8be9fd;font-style:italic">$JAVA_HOME&lt;/span>/bin/java &lt;span style="color:#bd93f9">2&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>登録が終わったら、以下のコマンドで現在登録されているJavaを表示します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ alternatives --config java
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>alternatives --config java
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>CentOSインストール時にすでに二つのバージョンのJavaがインストールされてましたね。Java11が3番目になったので3を入力します。これでJavaは準備オッケーです。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -16870,7 +16870,7 @@ alt="Jenkins Alter">
 &lt;figcaption>Jenkins Alter&lt;/figcaption>
 &lt;/figure>&lt;/p>
 &lt;p>ちなみに、JenkinsもまたJavaで作られているので場合によってはJava11のJVMで起動できます。Java11のJVMをJenkinsに登録するには以下の手順になります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi /etc/init.d/jenkins
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi /etc/init.d/jenkins
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Jenkinsの設定ファイルです。candidatesという部分に様々なバージョンのJVMの経路が機材されていますので、ここにOpenJDK11のbinフォルダのパスを追加します。esc⇨:wqで終了！&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -16890,11 +16890,11 @@ alt="Jenkins JVM">
 &lt;/figure>&lt;/p>
 &lt;h2 id="gradleもインストールしよう">Gradleもインストールしよう&lt;/h2>
 &lt;p>次にGradleをインストールします。macOSでは&lt;code>brew install gradle&lt;/code>で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>-Pオプションをつけると指定したフォルダにファイルを保存します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>zipファイルンなので、unzipコマンドで解凍します。-dもまたフォルダ（ディレクトリ）を指定するオプションです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo nano /etc/profile.d/gradle.sh
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo nano /etc/profile.d/gradle.sh
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>今回はnanoを使ってスクリプトを作ってみます。よりGUIに近い感じがしますね。nanoがなければ&lt;code>yum install nano&lt;/code>でインストールしてもいいし、viを使っても良いです。&lt;/p>
 &lt;p>私はどこでも使えるということ（環境によってはsudoの権限があるとしても、勝手に色々インストールできない場合もあるので)からviを使うことが多いですが、nanoはより直観的で使いやすいと思います。&lt;/p>
 &lt;p>&lt;figure
@@ -16918,10 +16918,10 @@ alt="Gradle SH">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">export&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">PATH&lt;/span>&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">${&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">GRADLE_HOME&lt;/span>&lt;span style="color:#f1fa8c">}&lt;/span>/bin:&lt;span style="color:#f1fa8c">${&lt;/span>&lt;span style="color:#8be9fd;font-style:italic">PATH&lt;/span>&lt;span style="color:#f1fa8c">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>nanoではctrl+xを押すと編集した内容を保存するかを聞いてきます。Yのあとエンターを押すと保存。US標準のキーボードを使う私にとっては:wqより入力が簡単で好きです。&lt;/p>
 &lt;p>あとは作られたスクリプトに実行の権限を与え、&lt;code>source&lt;/code>コマンドで環境変数として登録。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo chmod +x /etc/profile.d/gradle.sh
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo chmod +x /etc/profile.d/gradle.sh
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">source&lt;/span> /etc/profile.d/gradle.sh
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>chmod 755のようなコマンドを書いたことが多いですが、+xで実行の権限だけ与える方が習慣的には良さそうですね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ gradle -v
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>gradle -v
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>インストールに成功したかを確認するにはやはりバージョンの確認ですね。以下のような画面が表示されたらGradleのインストールも成功です。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -17029,7 +17029,7 @@ alt="Jenkins Gradle">
 &lt;p>Jenkinsの基本ポートは&lt;code>8080&lt;/code>です。このままJenkinsを起動すると、Webブラウザから&lt;code>Jenkinsを起動中のシステムのIPアドレス:8080&lt;/code>でJenkinsに接続できます。&lt;/p>
 &lt;p>しかし、Webアプリケーションを開発してみた経験のある方には8080というポートはあまり良い選択肢ではないことがわかるはずです。同じポートに設定されている二つ以上のサービスが問題を起こす可能性がありますからね。&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>&lt;/p>
 &lt;p>私はのちにTomcatを使うことがあるかもしれないと思い、Jenkinのポートは&lt;code>8088&lt;/code>に変えました。&lt;code>vi&lt;/code>や&lt;code>vim&lt;/code>&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>でJenkinsのシステムコンフィグファイルを開けます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo vim /etc/sysconfig/jenkins
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo vim /etc/sysconfig/jenkins
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そうすると、以下のような画面が現れます。少し下にスクロールしたら&lt;code>JENKINS_PORT&lt;/code>と、親切に書いてあるのが見えますね！&lt;code>I&lt;/code>を押してインサートモードに切り替え、好きなポートに変えましょう。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -17051,9 +17051,9 @@ alt="Jenkins Config Port">
 &lt;h2 id="起動初期パスワードの設定">起動〜初期パスワードの設定&lt;/h2>
 &lt;p>Jenkinsは初起動で初期パスワードを要求します。この初期パスワードが格納されてある位置は、基本的に&lt;code>/var/lib/jenkins/secrets/initialAdminPassword&lt;/code>というパスに保存されるようですが、OSなどの環境によってパスが変わる場合もありますからね。&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>でも、一度Jenkinsを起動したら初期設定のページからパスを確認できるので心配いりません。&lt;/p>
 &lt;p>ポート設定が終わったら（8080をそのまま使いたいならそのままでもいいです）、まずJenkinsを起動します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ service jenkins start
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>service jenkins start
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>[OK]&lt;/code>というメッセージが出力されるはずですが（ポート設定に問題がある場合もあるので）念の為起動状況を確認します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ service jenkins status
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>service jenkins status
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実は、仕事で１日前は元気だったJenkins先生が、いきなり接続できなくなっていたことがったのです。やはり人は何かよくないことを経験すると、慎重になるものです。&lt;code>Active: active (running)&lt;/code>というメッセージを確認できたら、いよいよJenkinsのページに接続です。&lt;/p>
 &lt;p>&lt;figure
 class="gallery-image"
@@ -17089,7 +17089,7 @@ alt="Jenkins Init Pass">
 &lt;figcaption>Jenkins Init Pass&lt;/figcaption>
 &lt;/figure>&lt;/p>
 &lt;p>やはりパスは&lt;code>/var/lib/jenkins/secrets/initialAdminPassword&lt;/code>でした。ポート設定と同じく、viやvimで中を覗き、そのパスワードを入力します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo vim /var/lib/jenkins/secrets/initialAdminPassword
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo vim /var/lib/jenkins/secrets/initialAdminPassword
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="プラグインと管理者アカウントの設定">プラグインと管理者アカウントの設定&lt;/h2>
 &lt;p>パスワードの入力に成功するとしばらくして、プラグインの設定画面が現れます。自分でプラグインを選んでも良さそうですが、私は自信がないのでオススメのボタンを押します。当たり前なことですが、プラグインは後ででもインストールできます。&lt;/p>
 &lt;p>&lt;figure
@@ -17222,12 +17222,12 @@ alt="Jenkins Mainpage">
 >Jenkinsのホームページ&lt;/a>に接続してみると、Linuxでのインストールの手順がありました。幸い、仕事で使うLinuxはAWSなのですが、RedHat Linux&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>と同じ手順でインストールできました。&lt;/p>
 &lt;h2 id="それではインストールしましょう">それではインストールしましょう&lt;/h2>
 &lt;p>まず、Jenkinsのリポジトリを持ってきます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでwget -Oはフォルダを読み、ファイルとして出力するオプションらしいですね。ここでも勉強になります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>rpmはパッケージをインストールする時使うコマンドなのですが、ここでは&amp;ndash;importオプションでキーを持って検証を行いますね。&lt;/p>
 &lt;p>ここまで終わったら、普通のパッケージと同じくyumでインストールできます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ yum install jenkins
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>yum install jenkins
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでインストールは終わり。問題なければ、ポートの設定をやって起動するまでです。&lt;/p>
 &lt;p>（続きます）&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">

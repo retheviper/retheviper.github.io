@@ -35,9 +35,9 @@ alt="構成図">
 &lt;p>ルーターのOSはLinuxとなっていますが、やはり重要なコマンドがいくつか足りていないです。代表的にパッケージ管理用の&lt;code>yum&lt;/code>や&lt;code>apt&lt;/code>、&lt;code>dnf&lt;/code>のどちらも搭載されていなく、CPUの性能も怪しいので重要な作業はまずmacで行うことにしました。&lt;/p>
 &lt;p>また、SSL証明書自体はRT-AC68Uで対応しているLet&amp;rsquo;s encryptを使います。こちらは有効期間が90日にすぎないですが、発給も更新も無料となっているのでこういう簡単な作業で使うには最適です。&lt;/p>
 &lt;p>まず、ターミナルでLet&amp;rsquo;s encryptをインストールします。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ brew install letsencrypt
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>brew install letsencrypt
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>インストールが終わったら、&lt;code>certbot&lt;/code>コマンドで証明書を作成できます。ただ、証明書を作成する前にDDNSを登録して置く必要があります。私はすでにルーターで提供している機能でドメインを登録してあるので、それをそのまま使います。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ sudo certbot certonly --manual
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo certbot certonly --manual
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コマンドを入力すると以下のような画面が出力されます。ただ、自分は何回か同じコマンドを実行しているので初めての実行で出力される画面は少し違う可能性はあります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Saving debug log to /var/log/letsencrypt/letsencrypt.log
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Plugins selected: Authenticator manual, Installer None
@@ -120,10 +120,10 @@ alt="構成図">
 &lt;p>コピーができたら、ルーターに接続します。&lt;/p>
 &lt;h2 id="ルーターでの設定2">ルーターでの設定(2)&lt;/h2>
 &lt;p>SSHでルーターに接続して以下のパスに移動します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /tmp/etc
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> /tmp/etc
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ディレクトリー内のファイルをみると、先ほどコピーしておいたファイルと同じものが置かれてあるのを確認できます。viでファイルをあけ、先ほどコピーしておいたもので上書きします。&lt;/p>
 &lt;p>cert.pemとkey.pemの上書きが終わったら、次にルーター内でのプロセス目録を確認します。すでに管理ページがhttpdsのサービスとして実行されているため、新しい証明書を適用するためには一回サービスを終了して再実行する必要があります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ps
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ps
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のコマンドを入力すると、現在実行中のプロセスの目録が出力されます。そのうち、&lt;code>httpds -s -i br0 -p 8443&lt;/code>があればそれを終了させます。8443は管理ページで指定したデフォルトのポート番号です。プロセスの左に出力されるのがプロセスのID(PID)なので覚えておきましょう。その後は以下のコマンドを入力します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># PIDが562の場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">kill&lt;/span> &lt;span style="color:#bd93f9">562&lt;/span>
@@ -163,7 +163,7 @@ alt="構成図">
 &lt;p>&lt;code>Node.js&lt;/code>の場合、&lt;code>$ node /node/index.js&lt;/code>みたいな簡単なコマンドで実行できますね。これをサービスに登録する場合は以下のようになります。&lt;/p>
 &lt;h2 id="serviceファイルを作成する">serviceファイルを作成する&lt;/h2>
 &lt;p>まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi /etc/systemd/system/NodeServer.service
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi /etc/systemd/system/NodeServer.service
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>それでは以下のような形で中を書いていきます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># サービスとしての設定&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">[&lt;/span>Unit&lt;span style="color:#ff79c6">]&lt;/span>
@@ -232,7 +232,7 @@ alt="構成図">
 &lt;p>ただYAMLファイルとフォルダー構成などが少し複雑なので、ここでは一つ一つのファイルの設定を述べてみようと思います。以下のYAML設定は、AMAZON Linuxを基準に書かれています。&lt;/p>
 &lt;h2 id="ansibleのインストール">Ansibleのインストール&lt;/h2>
 &lt;p>Ansibleは&lt;code>yum&lt;/code>、&lt;code>brew&lt;/code>、&lt;code>pip&lt;/code>、&lt;code>apt-get&lt;/code>でインストールできます。簡単ですね！ただ場合によってはPython2やPIPが必要となるので、事前にインストールしておきましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ yum install ansible
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>yum install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ brew install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ pip install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ sudo apt-get install ansible
@@ -505,7 +505,7 @@ alt="構成図">
 &lt;p>すでにBashにコマンドを追加した場合は以下の手順で移行ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>新規で追加する場合は、下の「プロファイルを作る」節のコマンドの代わりに以下を入力します。そのあとは同じ手順で進めてください。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.zprofile
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi ~/.zprofile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以下、前のポストです。&lt;/p>
 &lt;hr>
 &lt;p>パソコンではMS-DOSとWindowsしか使ってみたことのない私がmacを使ってかれこれ一年となります。macといえばやはり高く、Windowsとは全く違う環境なので使いづらいのではないかなと思っていました。動画や音楽の編集には最適だという話もありましたが、自分とは関係のない世界の話でした。&lt;/p>
@@ -514,7 +514,7 @@ alt="構成図">
 &lt;p>今回のポストはそのLinuxのショートカットをmacで使うための設定の話です。といっても、自分が研究した訳ではなく、インターネットで拾ってきた情報にすぎませんがね。でもこの設定をみるだけでも様々なコマンドやAliasを勉強できて、かなり貴重な資料ではないかと思います。誰か知りませんが、作った方には敬意を。&lt;/p>
 &lt;h2 id="プロファイルを作る">プロファイルを作る&lt;/h2>
 &lt;p>まずはBashのプロファイルを作ります。ターミナルで以下のように入力します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ vi ~/.bash_profile
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>vi ~/.bash_profile
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>bash_profile&lt;/code>と&lt;code>bashrc&lt;/code>の違いは、前者がターミナルを開くときすぐ適用される設定なら、後者はターミナルで改めてBashを実行した時に適用される設定という違いがあるらしいです。ただコマンドでわかりますが、現在ユーザーのホームにプロファイルを作るのでユーザーが変わる場合はまた同じことをする必要があります。&lt;/p>
 &lt;h2 id="プロファイルの内容">プロファイルの内容&lt;/h2>
 &lt;p>以下のコードをプロファイルに入れます。&lt;/p>
@@ -628,7 +628,7 @@ alt="構成図">
 &lt;li>２つ以上のファイルやフォルダがある場合はリストを出力&lt;/li>
 &lt;/ol>
 &lt;p>例えば &lt;code>/home/retheviper/task01&lt;/code>というフォルダに移動するとします。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> h &lt;span style="color:#6272a4"># ここでtab&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> h &lt;span style="color:#6272a4"># ここでtab&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/r &lt;span style="color:#6272a4"># ここでtab&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ &lt;span style="color:#8be9fd;font-style:italic">cd&lt;/span> home/retheviper/ &lt;span style="color:#6272a4"># 自動補完される&lt;/span>
@@ -708,7 +708,7 @@ alt="構成図">
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>メモリーとディスク、CPUの使用量をモニタリングできるため覚えておきたいコマンドですね。&lt;/p>
 &lt;h2 id="長い出力を少しづつ見たい">長い出力を少しづつ見たい&lt;/h2>
 &lt;p>&lt;code>ls -al&lt;/code>&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>などのコマンドでとある内容を出力する場合、リストが多すぎて画面に全部表示されない場合があります。こういうときは&lt;code>more&lt;/code>コマンドで出力がターミナルを全部満たした場合、エンターキーを押すことで次のリストを表示することになります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>$ ls -al | more
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>ls -al | more
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p>
 &lt;p>それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">

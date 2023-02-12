@@ -309,7 +309,7 @@
 &lt;p>&lt;a class="link" href="../swift-ui-first-impression-2/" >SwiftUIのポスト&lt;/a>の時も触れた状態管理ですが、Composeでも同じくGUIを扱うことになるので、状態管理が大事となります。今回はアプリとしての画面がひとつしかないので、複数の画面にまたがって状態を管理する必要はないかなと思いましたが、それでもやはり処理を行うためにはアプリ全体で共有する状態として管理が必要なものがいくつかありました。&lt;/p>
 &lt;p>ただ、上記ポストでも述べた通り、SwiftUIとComposeとは状態管理の方式が少し違います。SwiftUIでは状態がどこで使われるかによって明確に使われるアノテーションやクラスなどが変わっていたなら、Composeでは大体&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary?hl=ja#remember%28kotlin.Function0%29" target="_blank" rel="noopener"
 >remember()&lt;/a>と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja" target="_blank" rel="noopener"
->MutableState&lt;!-- raw HTML omitted -->&lt;/a>の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p>
+>&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>&lt;/a>の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p>
 &lt;p>まず、Composeでの状態は、以下のような三つの方法で定義することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// Delegateで定義する
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">var&lt;/span> isOn: Boolean &lt;span style="color:#ff79c6">by&lt;/span> remember { mutableStateOf(&lt;span style="color:#ff79c6">false&lt;/span>) }
@@ -517,7 +517,7 @@ alt="List View">
 &lt;h3 id="親子関係のviewが共有する状態">親子関係のViewが共有する状態&lt;/h3>
 &lt;p>さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、&lt;/p>
 &lt;p>実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで&lt;code>isOn&lt;/code>に親の状態を渡していますね。ただ、トグル時の挙動を&lt;code>@State&lt;/code>で定義したBooleanと結びつけるために&lt;code>isOn&lt;/code>として渡す際、&lt;code>$&lt;/code>をつけることに注目する必要があります。&lt;code>$&lt;/code>をつけることで、Booleanではなく、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/binding" target="_blank" rel="noopener"
->Binding&lt;!-- raw HTML omitted -->&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
+>&lt;code>Binding&amp;lt;Boolean&amp;gt;&lt;/code>&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
 >Toggle&lt;/a>の中でも親の状態を変更できるようになります。&lt;code>Toggle&lt;/code>は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である&lt;code>showFavoritesOnly&lt;/code>の値が変わるということです。&lt;/p>
 &lt;p>後でまた関連したポストを書きたいと思いますが、Jetpack Composeでも何となく似たような形で状態の管理ができる方法があります。例えば、&lt;code>@State&lt;/code>のように簡単な状態を管理するためには以下のような書き方ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// true/falseの状態
@@ -532,7 +532,7 @@ alt="List View">
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のような書き方はいわゆる&lt;a class="link" href="https://kotlinlang.org/docs/delegation.html" target="_blank" rel="noopener"
 >Delegation&lt;/a>によるもので、&lt;code>mutableStateOf&amp;lt;T&amp;gt;&lt;/code>が返すのは&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState" target="_blank" rel="noopener"
->MutableState&lt;!-- raw HTML omitted -->&lt;/a>ですが、&lt;code>by&lt;/code>を使うことで実際は&lt;code>Boolean&lt;/code>そのものを扱うようになります。&lt;/p>
+>&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>&lt;/a>ですが、&lt;code>by&lt;/code>を使うことで実際は&lt;code>Boolean&lt;/code>そのものを扱うようになります。&lt;/p>
 &lt;p>そして&lt;code>MutableState&amp;lt;T&amp;gt;&lt;/code>を分解し、以下のように状態と、状態を変化させる処理の処理を指定することもできます。これもまた、先ほどの&lt;code>Binding&lt;/code>のような役割をするようなものですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">// テキストの状態と値の変更
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4">&lt;/span>&lt;span style="color:#ff79c6">val&lt;/span> (content: String, onValueChange: (String) &lt;span style="color:#ff79c6">-&amp;gt;&lt;/span> Unit) = remember { mutableStateOf(&lt;span style="color:#f1fa8c">&amp;#34;&amp;#34;&lt;/span>) }
