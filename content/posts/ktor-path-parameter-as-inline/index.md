@@ -1,6 +1,6 @@
 ---
 title: "Path ParameterをInline classで受け取る"
-date: 2023-03-27
+date: 2023-03-26
 categories: 
   - ktor
 image: "../../images/ktor.jpg"
