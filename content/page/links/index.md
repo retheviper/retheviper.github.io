@@ -26,6 +26,10 @@ links:
     description: Kotlin / ユニットテストフレームワーク
     website: https://kotest.io/
     image: images/kotest.png
+  - title: Instancio
+    description: Java / テストデータ生成ライブラリ
+    website: https://www.instancio.org/
+    image: images/instancio.png
   - title: Mockk
     description: Kotlin / Mockingライブラリ
     website: https://github.com/mockk/mockk
