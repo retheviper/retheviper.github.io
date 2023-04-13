@@ -6,7 +6,6 @@ categories:
 image: "../../images/kotlin.jpg"
 tags:
   - kotlin
-  - java
   - compose
   - ios
 ---
