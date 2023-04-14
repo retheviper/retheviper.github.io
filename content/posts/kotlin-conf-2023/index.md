@@ -20,7 +20,7 @@ tags:
 
 ここではKotlin 1.8と、2.0になった場合のコンパイラのパフォーマンスの違いをまずグラフとして提示していました。当たり前ながら、2.0でかなり速度が上がったように見えます。同じ環境で20秒かかるものが、10秒に短縮されたということですね。
 
-![compile time comparison](./compilation-time-comparison.png)
+![compilation time comparison](./compilation-time-comparison.png)
 
 Andoridの公式言語としてKotlinが採用され、JavaからKotlinに移行した開発者の間でやはりビルドが遅くなったという話を聞いた覚えがあるのでこれはかなり嬉しい結果となっていますね。またコンパイラのパフォーマンスが上がるとintellijでのコンパイルも早くなるわけなのでより快適な開発環境になると思います。
 
