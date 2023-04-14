@@ -36,11 +36,11 @@ Andoridの公式言語としてKotlinが採用され、JavaからKotlinに移行
 
 [KT-11968](https://youtrack.jetbrains.com/issue/KT-11968/Research-and-prototype-namespace-based-solution-for-statics-and-static-extensions)に上がっているもので、JavaクラスにもCompanion objectのように、staticなメソッドやプロパティを追加できるようにしてほしいということです。
 
-例えば、今までは以下のようなことはできませんでした。
+例えば、今までは以下のようにJavaのクラスにCompanion objectを定義してインスタンスの生成なしで使うことはできませんでした。
 
 ```kotlin
 File.open("data.txt")
-fun File.Companion.open(name: String) // Compile error
+fun File.Companion.open(name: String)
 ```
 
 これを、`static`というキーワードを使って以下のように書けるようになるとのことです。
