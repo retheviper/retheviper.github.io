@@ -71,9 +71,29 @@ links:
     website: https://dagger.dev/hilt/
     image: images/kotlin.png
   - title: Glide
-    description: Android / 画像ロードフレームワーク
+    description: Android / 画像ロードライブラリ
     website: https://bumptech.github.io/glide/
     image: images/glide.svg
+  - title: Coil
+    description: Android / 画像ロードライブラリ
+    website: https://coil-kt.github.io/coil/
+    image: images/coil.png
+  - title: Kamel
+    description: Compose Multiplatform / 画像ロードライブラリ
+    website: https://github.com/Kamel-Media/Kamel
+    image: images/compose.png
+  - title: Voyager
+    description: Compose Multiplatform / ナビゲーション
+    website: https://github.com/adrielcafe/voyager
+    image: images/voyager.png
+  - title: PreCompose
+    description: Compose Multiplatform / ナビゲーション&状態管理コンポーネント
+    website: https://github.com/Tlaster/PreCompose
+    image: images/compose.png
+  - title: moko-mvvm
+    description: Compose Multiplatform / MVVMコンポーネント
+    website: https://github.com/icerockdev/moko-mvvm
+    website: images/moko.png
 menu:
     main: 
         weight: -50
