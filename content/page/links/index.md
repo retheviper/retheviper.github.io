@@ -93,7 +93,7 @@ links:
   - title: moko-mvvm
     description: Compose Multiplatform / MVVMコンポーネント
     website: https://github.com/icerockdev/moko-mvvm
-    website: images/moko.png
+    image: images/moko-mvvm.png
 menu:
     main: 
         weight: -50
