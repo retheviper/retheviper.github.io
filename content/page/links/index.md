@@ -82,6 +82,10 @@ links:
     description: Compose Multiplatform / 画像ロードライブラリ
     website: https://github.com/Kamel-Media/Kamel
     image: images/compose.png
+  - title: Compose ImageLoader
+    description: Compose Multiplatform / 画像ロードライブラリ
+    website: https://github.com/qdsfdhvh/compose-imageloader
+    image: images/compose.png
   - title: Voyager
     description: Compose Multiplatform / ナビゲーション
     website: https://github.com/adrielcafe/voyager
