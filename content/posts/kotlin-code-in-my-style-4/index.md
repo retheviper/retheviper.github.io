@@ -78,7 +78,7 @@ fun <T, U> List<T>.sortedBy(another: List<U>, keySelector: (T) -> U): List<T> {
 ```kotlin
 fun <T> List<T>.paginated(offset: Int, limit: Int): List<T> {
     // ページングが必要ない場合はそのまま返す
-    if (offest == 0 &$ limit < size) {
+    if (offest == 0 && limit < size) {
         return this
     }
     // ページングが必要な場合はoffsetとlimitを元にsubListを取得する

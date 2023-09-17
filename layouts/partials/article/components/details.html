@@ -9,21 +9,26 @@
     </header>
     {{ end }}
 
-    <h2 class="article-title">
-        <a href="{{ .RelPermalink }}">
-            {{- .Title -}}
-        </a>
-    </h2>
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="{{ .RelPermalink }}">
+                {{- .Title -}}
+            </a>
+        </h2>
+    
+        {{ with .Params.description }}
+        <h3 class="article-subtitle">
+            {{ . }}
+        </h3>
+        {{ end }}
+    </div>
 
-    {{ with .Params.description }}
-    <h3 class="article-subtitle">
-        {{ . }}
-    </h3>
-    {{ end }}
-
-    {{ if or (not .Date.IsZero) (.Site.Params.article.readingTime) }}
+    {{ $showReadingTime := .Params.readingTime | default (.Site.Params.article.readingTime) }}
+    {{ $showDate := not .Date.IsZero }}
+    {{ $showFooter := or $showDate $showReadingTime }}
+    {{ if $showFooter }}
     <footer class="article-time">
-        {{ if not .Date.IsZero }}
+        {{ if $showDate }}
             <div>
                 {{ partial "helper/icon" "date" }}
                 <time class="article-time--published">
@@ -32,7 +37,7 @@
             </div>
         {{ end }}
 
-        {{ if .Site.Params.article.readingTime }}
+        {{ if $showReadingTime }}
             <div>
                 {{ partial "helper/icon" "clock" }}
                 <time class="article-time--reading">
@@ -41,5 +46,16 @@
             </div>
         {{ end }}
     </footer>
+    {{ end }}
+
+    {{ if .IsTranslated }}
+        <footer class="article-translations">
+            {{ partial "helper/icon" "language" }}
+            <div>
+                {{ range .Translations }}
+                    <a href="{{ .Permalink }}" class="link">{{ .Language.LanguageName }}</a>
+                {{ end }}
+            </div>
+        </footer>
     {{ end }}
 </div>
