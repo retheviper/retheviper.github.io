@@ -5,7 +5,7 @@
 &lt;p>ただYAMLファイルとフォルダー構成などが少し複雑なので、ここでは一つ一つのファイルの設定を述べてみようと思います。以下のYAML設定は、AMAZON Linuxを基準に書かれています。&lt;/p>
 &lt;h2 id="ansibleのインストール">Ansibleのインストール&lt;/h2>
 &lt;p>Ansibleは&lt;code>yum&lt;/code>、&lt;code>brew&lt;/code>、&lt;code>pip&lt;/code>、&lt;code>apt-get&lt;/code>でインストールできます。簡単ですね！ただ場合によってはPython2やPIPが必要となるので、事前にインストールしておきましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>yum install ansible
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>yum install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ brew install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ pip install ansible
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ sudo apt-get install ansible
@@ -13,16 +13,16 @@
 &lt;h2 id="batchserveryml">batchserver.yml&lt;/h2>
 &lt;p>まずはサーバーごとのYAMLファイルを生成します。Ansible実行時に使われるのはこっちで、どのサーバーでどんな動作をするかを記述します。サーバーごとにしたいことに関しては別のYAMLファイルを用意し、共通、バッチサーバー、WEBAPサーバー用のYAMLファイルをそれぞれ作るというイメージです。&lt;/p>
 &lt;p>以下のコードは、バッチサーバーを想定した場合の例です。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>- &lt;span style="color:#ff79c6">hosts&lt;/span>: batchserver
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">become&lt;/span>: &lt;span style="color:#ff79c6">true&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">roles&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - common
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - batch
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>- &lt;span style="color:#f92672">hosts&lt;/span>: &lt;span style="color:#ae81ff">batchserver&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">become&lt;/span>: &lt;span style="color:#66d9ef">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">roles&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">common&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">batch&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>hosts&lt;/code>はhostsファイルに記述されたホストのことを意味します。ここで&lt;code>batchserver&lt;/code>と書くと、Ansibleの実行時は自動的にhostsファイルからbatchserverというグルーブに属している全サーバーに接続し同じ動きをします。全グループに対して実行したい場合は&lt;code>all&lt;/code>と書きましょう。&lt;/p>
 &lt;p>そして&lt;code>become&lt;/code>を&lt;code>true&lt;/code>に設定すると、接続先での全ての命令ががsudoとして実行されます。&lt;code>roles&lt;/code>はサーバーで行う行動を指定したYAMLファイルのことを記述していて、私の場合はどんなサーバーでも共通的に実行したことを書いた&lt;code>common&lt;/code>とバッチサーバーでだけ実行したい&lt;code>batch&lt;/code>を区分しておいたので両方を書いています。&lt;/p>
 &lt;h2 id="hosts">hosts&lt;/h2>
 &lt;p>このファイルは上述した通り、Ansibleで自動設定を行いたい接続先のことを書きます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>[batchserver]
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>[batchserver]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>192.168.0.1 ansible_ssh_user=batchuser1
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>192.168.0.2 ansible_ssh_user=batchuser2
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -33,91 +33,91 @@
 &lt;h2 id="roles--batch--tasks--mainyml">roles / batch / tasks / main.yml&lt;/h2>
 &lt;p>ここは&lt;code>batchserver.yml&lt;/code>で指定した&lt;code>roles&lt;/code>で、実際どんなことがしたいかを記述するYAMLファイルが入ります。&lt;code>roles&lt;/code>は同盟のフォルダーの下に作っておいたものしか実行できませんので注意してください。&lt;/p>
 &lt;p>本格的にやりたいことを書くファイルなので、どんな行動が指定できるかまず参考にしてください。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Create user groups
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">group&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.group_name } }&amp;#34;&lt;/span> &lt;span style="color:#6272a4"># マークダウンの仕様のためスペースを入れているが、実際はスペースなし&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">gid&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.group_id } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with_items&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#ff79c6">group_name: &amp;#39;group01&amp;#39;, group_id&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;101&amp;#39;&lt;/span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#ff79c6">group_name: &amp;#39;group02&amp;#39;, group_id&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;201&amp;#39;&lt;/span> }
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Create user groups&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">group&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.group_name } }&amp;#34;&lt;/span> &lt;span style="color:#75715e"># マークダウンの仕様のためスペースを入れているが、実際はスペースなし&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">gid&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.group_id } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">with_items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#f92672">group_name: &amp;#39;group01&amp;#39;, group_id&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;101&amp;#39;&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#f92672">group_name: &amp;#39;group02&amp;#39;, group_id&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;201&amp;#39;&lt;/span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Create users
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">user&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.user_name } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">password&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.user_passwd } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">uid&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.user_id } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">group&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item.user_group } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">shell&lt;/span>: /bin/bash
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with_items&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#ff79c6">user_name: &amp;#39;user01&amp;#39;, user_group: &amp;#39;group01&amp;#39;, user_id: &amp;#39;101&amp;#39;, user_passwd&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;user01&amp;#39;&lt;/span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#ff79c6">user_name: &amp;#39;user02&amp;#39;, user_group: &amp;#39;group02&amp;#39;, user_id: &amp;#39;201&amp;#39;, user_passwd&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;user02&amp;#39;&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Create users&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">user&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.user_name } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">password&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.user_passwd } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">uid&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.user_id } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">group&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item.user_group } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">shell&lt;/span>: &lt;span style="color:#ae81ff">/bin/bash&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">with_items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#f92672">user_name: &amp;#39;user01&amp;#39;, user_group: &amp;#39;group01&amp;#39;, user_id: &amp;#39;101&amp;#39;, user_passwd&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;user01&amp;#39;&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#f92672">user_name: &amp;#39;user02&amp;#39;, user_group: &amp;#39;group02&amp;#39;, user_id: &amp;#39;201&amp;#39;, user_passwd&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;user02&amp;#39;&lt;/span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name &lt;/span>: Create folders
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">file&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> path={ { item } }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> owner=user01
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> group=user01
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mode=0755
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> state=directory
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with_items&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - /user01
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name &lt;/span>: &lt;span style="color:#ae81ff">Create folders&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">file&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">path={ { item } }&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">owner=user01&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">group=user01&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">mode=0755&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">state=directory&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">with_items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">/user01&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Package install by yum
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">yum&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { packages } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">vars&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">packages&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - python2-pip
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - postgresql
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - postgresql-devel
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Package install by yum&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">yum&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { packages } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">vars&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">packages&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">python2-pip&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">postgresql&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">postgresql-devel&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Upgrade pip by shell command
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">shell&lt;/span>: bash -lc &amp;#34;pip install --upgrade pip&amp;#34;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Upgrade pip by shell command&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">shell&lt;/span>: &lt;span style="color:#ae81ff">bash -lc &amp;#34;pip install --upgrade pip&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Install python modules
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">pip&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">name&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#34;{ { item } }&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">executable&lt;/span>: pip
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with_items&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - cx_Oracle
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - psycopg2
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - boto3
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - paramiko
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install python modules&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">pip&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;{ { item } }&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">executable&lt;/span>: &lt;span style="color:#ae81ff">pip&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">with_items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">cx_Oracle&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">psycopg2&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">boto3&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">paramiko&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Copy files
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">copy&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> src= { { item.source } }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> dest= { { item.dest } }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> owner=root
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> group=root
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> mode=0755
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with_items&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#ff79c6">source: etc/somefile.zip, dest&lt;/span>: /etc/somefile.zip }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Copy files&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">copy&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">src= { { item.source } }&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">dest= { { item.dest } }&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">owner=root&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">group=root&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ae81ff">mode=0755&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">with_items&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - { &lt;span style="color:#f92672">source: etc/somefile.zip, dest&lt;/span>: &lt;span style="color:#ae81ff">/etc/somefile.zip }&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上から順番に、ユーザーグループ作成、ユーザー作成、フォルダー作成、&lt;code>yum&lt;/code>でパッケージインストール、シェルコマンドの実行、ファイル転送となります。結局はSSH接続してシェルスクリプトを実行するようなものですね。でもYAMLファイルにより簡単に設定できるということが良いところではないかと思います。なんども繰り返して実行しても良いですしね。&lt;/p>
 &lt;p>ただSSH接続したあとはYAMLファイルの上から一行づつ読みコマンドを実行していくので、実行したいことの順番には気をつける必要があります。例えば当たり前なことなんですが、ユーザーグループを作成する前に特定のグループにユーザーを作成するとかはできないので注意してください。&lt;/p>
 &lt;h2 id="roles--batch--files">roles / batch / files&lt;/h2>
 &lt;p>このフォルダーには転送に使いたいファイルをおきます。例えば上の&lt;code>main.yml&lt;/code>に書いた&lt;code>etc/somfile.zip&lt;/code>を転送したい場合は、このフォルダーの配下に同じパスのファイルを置きます。もちろん複数のファイルを転送することも、それぞれ違うフォルダーに分けておくことも可能です。&lt;/p>
 &lt;h2 id="roles--common--tasks--mainyml">roles / common / tasks / main.yml&lt;/h2>
 &lt;p>このファイルはどんなサーバーでも共通的に実行したいコマンドを集めています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Upgrade all packages by yum
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">yum&lt;/span>: name=* state=latest
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Upgrade all packages by yum&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">yum&lt;/span>: &lt;span style="color:#ae81ff">name=* state=latest&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Install openjdk 11
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">shell&lt;/span>: bash -lc &amp;#34;amazon-linux-extras install java-openjdk11&amp;#34;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Install openjdk 11&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">shell&lt;/span>: &lt;span style="color:#ae81ff">bash -lc &amp;#34;amazon-linux-extras install java-openjdk11&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ff79c6">name&lt;/span>: Correct java version selected
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">alternatives&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">name&lt;/span>: java
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">path&lt;/span>: /usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">Correct java version selected&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">alternatives&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">java&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">path&lt;/span>: &lt;span style="color:#ae81ff">/usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このファイルでやっていることは、&lt;code>yum&lt;/code>による全パッケージのアップデートと、OpenJDKのインストールです。JDKをインストールするだけではサーバーでJava実行時の基本バージョンがOpenJDK11にならないのでAlternativeからJavaのバージョンを選択するところまで入れています。同じやり方でPython3をインストールしてAlternativeで基本実行のバージョンを指定するなどのこともできます。&lt;/p>
 &lt;p>ここまでくるとAnsibleによる基本設定は終わり。難しくないですね！(深く入れば難しくなりそうですが)&lt;/p>
 &lt;h2 id="実行する">実行する&lt;/h2>
 &lt;p>それではPlaybookが用意されたので実行します。以下のコマンドで実行できます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 一般的な実行&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 一般的な実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ansible-playbook server.yml -i hosts
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># Dry runの場合(Playbookの文法チェック用)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># Dry runの場合(Playbookの文法チェック用)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ansible-playbook server.yml -i hosts -C
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># SSH接続ユーザー名を入れる場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># SSH接続ユーザー名を入れる場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>$ ansible-playbook server.yml -i hosts -u hostuser
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こちらも簡単ですね。実行時にSSH接続するユーザーのパスワードを要求される場合がありますが、これはあらかじめSSH接続するユーザーの公開鍵を登録しておくことで回避できます。&lt;code>sudo&lt;/code>の場合は接続先で&lt;code>visudo&lt;/code>から&lt;code>NOPASSWD&lt;/code>を設定しておくと便利です。&lt;/p>
 &lt;h2 id="最後に">最後に&lt;/h2>

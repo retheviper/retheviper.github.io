@@ -7,75 +7,75 @@
 &lt;p>2019/06/15 12:00:00 LOG0001: Job code 1234は正常終了しました。&lt;/p>
 &lt;/blockquote>
 &lt;p>また、ログファイルの最上段には&lt;code>---- Job Log ----&lt;/code>を入れ、これがログファイルであることを示したいです。このように基本要件を決め、実装していきます。私が実装したコードの簡略化したバージョンは以下となります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># ログファイルの存在有無を確認するためのosと日付を残すためのdatetimeをインポート&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> os
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> datetime
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ログファイルの存在有無を確認するためのosと日付を残すためのdatetimeをインポート&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> os
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> datetime
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># ログをかく関数(job_codeは与えられない場合があるのでデフォルト値を設定)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">writeLog&lt;/span>(log_code, job_code&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ログファイルのパスを指定(絶対経路)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_path &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;/log/program_log.log&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ログをかく関数(job_codeは与えられない場合があるのでデフォルト値を設定)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">writeLog&lt;/span>(log_code, job_code&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;&amp;#39;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ログファイルのパスを指定(絶対経路)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_path &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;/log/program_log.log&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ログコード判定によりメッセージを決める&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (log_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;LOGI001&amp;#39;&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> job_code &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;を実行します。&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (log_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;LOGI002&amp;#39;&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> job_code &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;は正常終了しました。&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (log_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;LOGW001&amp;#39;&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Job codeがありません。プログラムの起動に失敗しました。&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">elif&lt;/span> (log_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;LOGE001&amp;#39;&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> job_code &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;は異常終了しました。&amp;#39;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#ff79c6">=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;原因を特定できないエラーが発生しました。&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ログコード判定によりメッセージを決める&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (log_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;LOGI001&amp;#39;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> job_code &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;を実行します。&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> (log_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;LOGI002&amp;#39;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> job_code &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;は正常終了しました。&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> (log_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;LOGW001&amp;#39;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Job codeがありません。プログラムの起動に失敗しました。&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">elif&lt;/span> (log_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;LOGE001&amp;#39;&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Job code &amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> job_code &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;は異常終了しました。&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log_message &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;原因を特定できないエラーが発生しました。&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ログファイルが存在しない場合は先端にログであることを示すコードを含むファイルを生成&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (&lt;span style="color:#ff79c6">not&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>exists(log_path)):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(log_path, mode&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;a&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> log:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log&lt;span style="color:#ff79c6">.&lt;/span>write(&lt;span style="color:#f1fa8c">&amp;#39;----- Job Log -----&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># ログファイルがすでに存在する場合は追記する&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(log_path, mode&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;a&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> log:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log&lt;span style="color:#ff79c6">.&lt;/span>write(datetime&lt;span style="color:#ff79c6">.&lt;/span>datetime&lt;span style="color:#ff79c6">.&lt;/span>today()&lt;span style="color:#ff79c6">.&lt;/span>strftime(&lt;span style="color:#f1fa8c">&amp;#39;%Y/%m/&lt;/span>&lt;span style="color:#f1fa8c">%d&lt;/span>&lt;span style="color:#f1fa8c"> %H:%M:%S&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39; &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> log_code &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;: &amp;#39;&lt;/span> &lt;span style="color:#ff79c6">+&lt;/span> log_message &lt;span style="color:#ff79c6">+&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>&lt;span style="color:#f1fa8c">\n&lt;/span>&lt;span style="color:#f1fa8c">&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ログファイルが存在しない場合は先端にログであることを示すコードを含むファイルを生成&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (&lt;span style="color:#f92672">not&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>path&lt;span style="color:#f92672">.&lt;/span>exists(log_path)):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> open(log_path, mode&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;a&amp;#39;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> log:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log&lt;span style="color:#f92672">.&lt;/span>write(&lt;span style="color:#e6db74">&amp;#39;----- Job Log -----&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># ログファイルがすでに存在する場合は追記する&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> open(log_path, mode&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;a&amp;#39;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> log:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> log&lt;span style="color:#f92672">.&lt;/span>write(datetime&lt;span style="color:#f92672">.&lt;/span>datetime&lt;span style="color:#f92672">.&lt;/span>today()&lt;span style="color:#f92672">.&lt;/span>strftime(&lt;span style="color:#e6db74">&amp;#39;%Y/%m/&lt;/span>&lt;span style="color:#e6db74">%d&lt;/span>&lt;span style="color:#e6db74"> %H:%M:%S&amp;#39;&lt;/span>) &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39; &amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> log_code &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;: &amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> log_message &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;&lt;/span>&lt;span style="color:#ae81ff">\n&lt;/span>&lt;span style="color:#e6db74">&amp;#39;&lt;/span>)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでメインプログラムでロガーを呼び、そのタイミングでログコードやジョブコードを渡すだけでログは残されます。ログの種類を減らしたい、もしくは増やしたい場合はif文を修正するだけで対応できます。&lt;/p>
 &lt;h2 id="メインプログラムでロガーを呼び出す">メインプログラムでロガーを呼び出す&lt;/h2>
 &lt;p>メインプログラムでまずログを書く(ロガーを呼ぶ)タイミングを決めます。例えば今回はDBに接続するタスクがあったので、DBの接続に失敗した場合にロガーを書くようにしました。そのほかにも処理の開始や終了時のステータスなどに関してもログを残したいですね。&lt;/p>
 &lt;p>同じく簡略化したメインプログラムのコードは以下のような形です。先に作成して置いたロガーをインポートし、ログを出したい場合に呼び出すだけでいいです。ただロガーファイルの位置が実行するメインプログラムと違うパスにある場合はインポートの形が変わるので注意が必要です。ここではメインプログラムとロガーは同じパスから実行される場合を想定して実装しています。それでは下のコードをどうぞ。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 簡略化したメインプログラム&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 終了時のリターンコードと起動時の引数のためsysを、ログを書くためにロガーのwriteLog関数をインポート&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">import&lt;/span> sys
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">from&lt;/span> logger &lt;span style="color:#ff79c6">import&lt;/span> writeLog
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 簡略化したメインプログラム&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 終了時のリターンコードと起動時の引数のためsysを、ログを書くためにロガーのwriteLog関数をインポート&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sys
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> logger &lt;span style="color:#f92672">import&lt;/span> writeLog
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 起動時にコマンドラインから引数を受けるための変数宣言&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#ff79c6">=&lt;/span> sys&lt;span style="color:#ff79c6">.&lt;/span>argv
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 起動時にコマンドラインから引数を受けるための変数宣言&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#f92672">=&lt;/span> sys&lt;span style="color:#f92672">.&lt;/span>argv
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># 関数の例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">program&lt;/span>(job_code):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 処理開始の時点でログを書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#f1fa8c">&amp;#39;LOGI001&amp;#39;&lt;/span>, job_code)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 正常処理時の挙動を書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">try&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">print&lt;/span> (&lt;span style="color:#f1fa8c">&amp;#39;何かの処理を行う&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 正常終了のコードでログを書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#f1fa8c">&amp;#39;LOGI002&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 正常終了の場合は終了時のリターンコードが0&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">0&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 処理に問題が起きた場合の処理を書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">except&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 異常終了のコードでログを書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#f1fa8c">&amp;#39;LOGE001&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 異常終了の場合は終了時のリターンコードが9&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">9&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 関数の例&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">program&lt;/span>(job_code):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 処理開始の時点でログを書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#e6db74">&amp;#39;LOGI001&amp;#39;&lt;/span>, job_code)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 正常処理時の挙動を書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print (&lt;span style="color:#e6db74">&amp;#39;何かの処理を行う&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 正常終了のコードでログを書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#e6db74">&amp;#39;LOGI002&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 正常終了の場合は終了時のリターンコードが0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#f92672">.&lt;/span>exit(&lt;span style="color:#ae81ff">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 処理に問題が起きた場合の処理を書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">except&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 異常終了のコードでログを書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#e6db74">&amp;#39;LOGE001&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 異常終了の場合は終了時のリターンコードが9&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#f92672">.&lt;/span>exit(&lt;span style="color:#ae81ff">9&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># プログラムの起動部&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">if&lt;/span> __name__ &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;__main__&amp;#39;&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 引数(ジョブコード)が入力されなかった場合のチェック&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> (args[&lt;span style="color:#bd93f9">1&lt;/span>] &lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#ff79c6">None&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 警告終了のコードでログを書く&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#f1fa8c">&amp;#39;LOGW001&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># 警告終了の場合は終了時のリターンコードが1&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">1&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> program(args[&lt;span style="color:#bd93f9">1&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># プログラムの起動部&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">if&lt;/span> __name__ &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;__main__&amp;#39;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 引数(ジョブコード)が入力されなかった場合のチェック&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (args[&lt;span style="color:#ae81ff">1&lt;/span>] &lt;span style="color:#f92672">in&lt;/span> &lt;span style="color:#66d9ef">None&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 警告終了のコードでログを書く&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> writeLog(&lt;span style="color:#e6db74">&amp;#39;LOGW001&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># 警告終了の場合は終了時のリターンコードが1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#f92672">.&lt;/span>exit(&lt;span style="color:#ae81ff">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> program(args[&lt;span style="color:#ae81ff">1&lt;/span>])
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
 &lt;p>どんなログを吐き出して欲しいかによってロガーを呼び出す位置を決めます。そして引数を渡すことでどんな場合にどんなログを出力するかを決められます。実装が難しい作業ではないですが、こうやってロガーを分離して必要な時だけ呼び出すことでメインプログラムのコードがいくら長くなっても関数を呼び出すだけで済むという効率的な構造となっています。そもそも関数というものは、反復を減らすために書くものでもありますしね。&lt;/p>
 &lt;p>あと少し調べたところ、Pythonではモジュールとしてloggerをすでに提供しているとのことです。標準出力としてログのレベルを指定して文字列を出力できるらしいですね。これを応用してファイルに描くようにコードを書くこともまた良い方法になるのではないかと思います。&lt;/p>

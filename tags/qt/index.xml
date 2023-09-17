@@ -35,185 +35,185 @@
 &lt;h3 id="ファイル読み込み">ファイル読み込み&lt;/h3>
 &lt;p>まずはファイルを読み込むところから始めます。&lt;code>.vtt&lt;/code>ファイルはヘッダーに字幕の情報（言語コードなど）が書かれていて、その次からは字幕が表示される時間と字幕の文字列が繰り返されます。&lt;/p>
 &lt;p>素直に全行を読み込んでも良いかもですが、翻訳のAPIを呼び出すときに一日で利用できる文字数の制限というのがあったので、極力リクエストにのせるデータは減らしたかったです。なので、後で入れ替えするためのもとのファイルのデータと、翻訳のためAPIのリクエストパラメータにのせる二つのデータにわけで読み込むようにしました。いかがそのコードです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># get original contents from vtt file&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">get_content&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> source
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(file_path, &lt;span style="color:#f1fa8c">&amp;#39;r&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> file&lt;span style="color:#ff79c6">.&lt;/span>readlines()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, line &lt;span style="color:#ff79c6">in&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">enumerate&lt;/span>(original_contents):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> content &lt;span style="color:#ff79c6">=&lt;/span> line&lt;span style="color:#ff79c6">.&lt;/span>strip()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> source &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;:&amp;#39;&lt;/span>)[&lt;span style="color:#bd93f9">1&lt;/span>]&lt;span style="color:#ff79c6">.&lt;/span>strip()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;--&amp;gt;&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content &lt;span style="color:#ff79c6">and&lt;/span> content &lt;span style="color:#ff79c6">!=&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;&amp;#39;&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> original_contents, exported_contents
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># get original contents from vtt file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">get_content&lt;/span>(self, file_path: str):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents: dict[int, str] &lt;span style="color:#f92672">=&lt;/span> {}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">global&lt;/span> source
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> open(file_path, &lt;span style="color:#e6db74">&amp;#39;r&amp;#39;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents: list[str] &lt;span style="color:#f92672">=&lt;/span> file&lt;span style="color:#f92672">.&lt;/span>readlines()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> index, line &lt;span style="color:#f92672">in&lt;/span> enumerate(original_contents):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> content &lt;span style="color:#f92672">=&lt;/span> line&lt;span style="color:#f92672">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> source &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#e6db74">&amp;#39;&amp;#39;&lt;/span> &lt;span style="color:#f92672">and&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#f92672">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> source &lt;span style="color:#f92672">=&lt;/span> content&lt;span style="color:#f92672">.&lt;/span>split(&lt;span style="color:#e6db74">&amp;#39;:&amp;#39;&lt;/span>)[&lt;span style="color:#ae81ff">1&lt;/span>]&lt;span style="color:#f92672">.&lt;/span>strip()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#e6db74">&amp;#39;--&amp;gt;&amp;#39;&lt;/span> &lt;span style="color:#f92672">not&lt;/span> &lt;span style="color:#f92672">in&lt;/span> content &lt;span style="color:#f92672">and&lt;/span> content &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;&amp;#39;&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> exported_contents[index] &lt;span style="color:#f92672">=&lt;/span> content
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> original_contents, exported_contents
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>APIのパラメータには元の言語(source)と、翻訳したい言語(target)が必要となるので、Global変数として字幕のヘッダにある言語情報を&lt;code>source&lt;/code>に格納、翻訳したい行はインデックスと文字列をdictionaryとして格納します。そして最終的に元のデータと、翻訳対象のデータを返します。&lt;/p>
 &lt;h3 id="翻訳apiの呼び出し">翻訳APIの呼び出し&lt;/h3>
 &lt;p>抽出したデータのうち、翻訳対象のデータを渡してAPIを呼び出す部分です。APIには「1秒当たり10件のリクエストを許容」するという制約があり、翻訳した文字列を一行づつ送って翻訳してもらいながら、リクエストごとに120msを待つようにしました。基本的には&lt;a class="link" href="https://docs.python-requests.org/en/latest/" target="_blank" rel="noopener"
 >Requests&lt;/a>を使ってPOSTしているだけですが、もしエラーが返ってきたときはalertを表示してアプリを即終了するようにしています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># send translate request to papago and get translated message&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">send_request&lt;/span>(self, contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {}
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># send translate request to papago and get translated message&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">send_request&lt;/span>(self, contents: dict[int, str]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents: dict[int, str] &lt;span style="color:#f92672">=&lt;/span> {}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> headers &lt;span style="color:#ff79c6">=&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Id&amp;#39;&lt;/span>: client_id,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;X-Naver-Client-Secret&amp;#39;&lt;/span>: client_secret,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Content-Type&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;application/x-www-form-urlencoded; charset=UTF-8&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> headers &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;X-Naver-Client-Id&amp;#39;&lt;/span>: client_id,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;X-Naver-Client-Secret&amp;#39;&lt;/span>: client_secret,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Content-Type&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;application/x-www-form-urlencoded; charset=UTF-8&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> contents&lt;span style="color:#ff79c6">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> index, content &lt;span style="color:#f92672">in&lt;/span> contents&lt;span style="color:#f92672">.&lt;/span>items():
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> payload &lt;span style="color:#ff79c6">=&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;text&amp;#39;&lt;/span>: content,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;source&amp;#39;&lt;/span>: source,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;target&amp;#39;&lt;/span>: target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> payload &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;text&amp;#39;&lt;/span>: content,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;source&amp;#39;&lt;/span>: source,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;target&amp;#39;&lt;/span>: target
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response &lt;span style="color:#ff79c6">=&lt;/span> requests&lt;span style="color:#ff79c6">.&lt;/span>post(api_url, headers&lt;span style="color:#ff79c6">=&lt;/span>headers, data&lt;span style="color:#ff79c6">=&lt;/span>payload)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response &lt;span style="color:#f92672">=&lt;/span> requests&lt;span style="color:#f92672">.&lt;/span>post(api_url, headers&lt;span style="color:#f92672">=&lt;/span>headers, data&lt;span style="color:#f92672">=&lt;/span>payload)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>status_code &lt;span style="color:#ff79c6">==&lt;/span> &lt;span style="color:#bd93f9">200&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> body &lt;span style="color:#ff79c6">=&lt;/span> response&lt;span style="color:#ff79c6">.&lt;/span>json()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_text: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span> &lt;span style="color:#ff79c6">=&lt;/span> body[&lt;span style="color:#f1fa8c">&amp;#39;message&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;result&amp;#39;&lt;/span>][&lt;span style="color:#f1fa8c">&amp;#39;translatedText&amp;#39;&lt;/span>]
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents[index] &lt;span style="color:#ff79c6">=&lt;/span> translated_text
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> response&lt;span style="color:#f92672">.&lt;/span>status_code &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">200&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> body &lt;span style="color:#f92672">=&lt;/span> response&lt;span style="color:#f92672">.&lt;/span>json()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_text: str &lt;span style="color:#f92672">=&lt;/span> body[&lt;span style="color:#e6db74">&amp;#39;message&amp;#39;&lt;/span>][&lt;span style="color:#e6db74">&amp;#39;result&amp;#39;&lt;/span>][&lt;span style="color:#e6db74">&amp;#39;translatedText&amp;#39;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents[index] &lt;span style="color:#f92672">=&lt;/span> translated_text
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># wait for API&amp;#39;s limitation(only 10 request per second allowed)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sleep(&lt;span style="color:#bd93f9">0.12&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> msgBox &lt;span style="color:#ff79c6">=&lt;/span> QMessageBox()&lt;span style="color:#ff79c6">.&lt;/span>critical(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># wait for API&amp;#39;s limitation(only 10 request per second allowed)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sleep(&lt;span style="color:#ae81ff">0.12&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> msgBox &lt;span style="color:#f92672">=&lt;/span> QMessageBox()&lt;span style="color:#f92672">.&lt;/span>critical(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Error&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response&lt;span style="color:#ff79c6">.&lt;/span>json()[&lt;span style="color:#f1fa8c">&amp;#39;errorMessage&amp;#39;&lt;/span>],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> buttons&lt;span style="color:#ff79c6">=&lt;/span>QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Error&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response&lt;span style="color:#f92672">.&lt;/span>json()[&lt;span style="color:#e6db74">&amp;#39;errorMessage&amp;#39;&lt;/span>],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> buttons&lt;span style="color:#f92672">=&lt;/span>QMessageBox&lt;span style="color:#f92672">.&lt;/span>StandardButton&lt;span style="color:#f92672">.&lt;/span>Abort
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> msgBox &lt;span style="color:#ff79c6">==&lt;/span> QMessageBox&lt;span style="color:#ff79c6">.&lt;/span>StandardButton&lt;span style="color:#ff79c6">.&lt;/span>Abort:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#ff79c6">.&lt;/span>exit(&lt;span style="color:#bd93f9">255&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> msgBox &lt;span style="color:#f92672">==&lt;/span> QMessageBox&lt;span style="color:#f92672">.&lt;/span>StandardButton&lt;span style="color:#f92672">.&lt;/span>Abort:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#f92672">.&lt;/span>exit(&lt;span style="color:#ae81ff">255&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> translated_contents
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> translated_contents
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの保存">ファイルの保存&lt;/h3>
 &lt;p>ロジックとしてはここが最後です。元のファイルのある場所に翻訳された字幕ファイルを保存するために、元のファイルのパス、翻訳したものに入れ替えるための元のデータ、そしてAPIで翻訳した結果のデータを渡します。&lt;/p>
 &lt;p>基本的に翻訳したデータにはインデックスがkeyとして入っているので、そのキーを持って元のデータを入れ替えていきます。ここでヘッダには元の言語のコードが入っているので、翻訳した言語のコードに入れ替えます。そしてファイル名にも同じく言語のコードが入っているので、これもまた変えておきます。&lt;/p>
 &lt;p>全てのデータが入れ替えられ、ファイル名を決めたら保存して終了です。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># write translated contents to file&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">write_result&lt;/span>(self, file_path: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, original_contents: &lt;span style="color:#8be9fd;font-style:italic">list&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>], translated_contents: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">int&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>]):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents &lt;span style="color:#ff79c6">=&lt;/span> original_contents&lt;span style="color:#ff79c6">.&lt;/span>copy()
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># write translated contents to file&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">write_result&lt;/span>(self, file_path: str, original_contents: list[str], translated_contents: dict[int, str]):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents &lt;span style="color:#f92672">=&lt;/span> original_contents&lt;span style="color:#f92672">.&lt;/span>copy()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> index, content &lt;span style="color:#ff79c6">in&lt;/span> translated_contents&lt;span style="color:#ff79c6">.&lt;/span>items():
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> &lt;span style="color:#f1fa8c">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> content:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target) &lt;span style="color:#ff79c6">+&lt;/span> line_separator
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#ff79c6">=&lt;/span> content &lt;span style="color:#ff79c6">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> index, content &lt;span style="color:#f92672">in&lt;/span> translated_contents&lt;span style="color:#f92672">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> &lt;span style="color:#e6db74">&amp;#39;Language:&amp;#39;&lt;/span> &lt;span style="color:#f92672">in&lt;/span> content:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#f92672">=&lt;/span> content&lt;span style="color:#f92672">.&lt;/span>replace(source, target) &lt;span style="color:#f92672">+&lt;/span> line_separator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contents[index] &lt;span style="color:#f92672">=&lt;/span> content &lt;span style="color:#f92672">+&lt;/span> line_separator
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> root &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>dirname(file_path)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_name &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>basename(file_path)&lt;span style="color:#ff79c6">.&lt;/span>replace(source, target)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target_file_path &lt;span style="color:#ff79c6">=&lt;/span> os&lt;span style="color:#ff79c6">.&lt;/span>path&lt;span style="color:#ff79c6">.&lt;/span>join(root, file_name)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> root &lt;span style="color:#f92672">=&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>path&lt;span style="color:#f92672">.&lt;/span>dirname(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_name &lt;span style="color:#f92672">=&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>path&lt;span style="color:#f92672">.&lt;/span>basename(file_path)&lt;span style="color:#f92672">.&lt;/span>replace(source, target)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target_file_path &lt;span style="color:#f92672">=&lt;/span> os&lt;span style="color:#f92672">.&lt;/span>path&lt;span style="color:#f92672">.&lt;/span>join(root, file_name)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">with&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">open&lt;/span>(target_file_path, &lt;span style="color:#f1fa8c">&amp;#39;w&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">as&lt;/span> file:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file&lt;span style="color:#ff79c6">.&lt;/span>writelines(contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">with&lt;/span> open(target_file_path, &lt;span style="color:#e6db74">&amp;#39;w&amp;#39;&lt;/span>) &lt;span style="color:#66d9ef">as&lt;/span> file:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file&lt;span style="color:#f92672">.&lt;/span>writelines(contents)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルドロップダウン">ファイルドロップダウン&lt;/h3>
 &lt;p>せっかくGUIを使っているので、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QListWidget.html" target="_blank" rel="noopener"
 >QListWidget&lt;/a>にファイルをDrag &amp;amp; Dropすると勝手にファイル名が画面に表示され、翻訳対象にもなるようにしたかったです。ここはあまり自分がQtに詳しくないので、ネットで検索したものを流用しました。&lt;/p>
 &lt;p>基本的にはファイルをDrag &amp;amp; Dropすると、拡張子が&lt;code>.vtt&lt;/code>の場合にリストに追加されます。ここでファイルのフルパスを得ることができるのですが、画面上はファイル名だけを見えるようにして、フルパスは別のグローバル変数に格納するようにしています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># drop down file list&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">class&lt;/span> &lt;span style="color:#50fa7b">FileListView&lt;/span>(QListWidget):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> __init__(self, parent&lt;span style="color:#ff79c6">=&lt;/span>&lt;span style="color:#ff79c6">None&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#8be9fd;font-style:italic">super&lt;/span>(FileListView, self)&lt;span style="color:#ff79c6">.&lt;/span>__init__(parent)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>setAcceptDrops(&lt;span style="color:#ff79c6">True&lt;/span>)
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># drop down file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">FileListView&lt;/span>(QListWidget):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">def&lt;/span> __init__(self, parent&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">None&lt;/span>):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> super(FileListView, self)&lt;span style="color:#f92672">.&lt;/span>__init__(parent)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>setAcceptDrops(&lt;span style="color:#66d9ef">True&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragEnterEvent&lt;/span>(self, event):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">dragEnterEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> event&lt;span style="color:#f92672">.&lt;/span>mimeData()&lt;span style="color:#f92672">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>ignore()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dragMoveEvent&lt;/span>(self, event):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">dragMoveEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> event&lt;span style="color:#f92672">.&lt;/span>mimeData()&lt;span style="color:#f92672">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>ignore()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">dropEvent&lt;/span>(self, event):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>hasUrls:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>accept()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> url &lt;span style="color:#ff79c6">in&lt;/span> event&lt;span style="color:#ff79c6">.&lt;/span>mimeData()&lt;span style="color:#ff79c6">.&lt;/span>urls():
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_path &lt;span style="color:#ff79c6">=&lt;/span> url&lt;span style="color:#ff79c6">.&lt;/span>toLocalFile()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> file_path&lt;span style="color:#ff79c6">.&lt;/span>endswith(&lt;span style="color:#f1fa8c">&amp;#39;.vtt&amp;#39;&lt;/span>) &lt;span style="color:#ff79c6">and&lt;/span> &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path) &lt;span style="color:#ff79c6">not&lt;/span> &lt;span style="color:#ff79c6">in&lt;/span> original_files:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file path to list&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>append(&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>(file_path))
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#6272a4"># add file name to file list view&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>addItem(file_path&lt;span style="color:#ff79c6">.&lt;/span>split(&lt;span style="color:#f1fa8c">&amp;#39;/&amp;#39;&lt;/span>)[&lt;span style="color:#ff79c6">-&lt;/span>&lt;span style="color:#bd93f9">1&lt;/span>])
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">else&lt;/span>:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#ff79c6">.&lt;/span>ignore()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">dropEvent&lt;/span>(self, event):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> event&lt;span style="color:#f92672">.&lt;/span>mimeData()&lt;span style="color:#f92672">.&lt;/span>hasUrls:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>accept()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> url &lt;span style="color:#f92672">in&lt;/span> event&lt;span style="color:#f92672">.&lt;/span>mimeData()&lt;span style="color:#f92672">.&lt;/span>urls():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file_path &lt;span style="color:#f92672">=&lt;/span> url&lt;span style="color:#f92672">.&lt;/span>toLocalFile()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> file_path&lt;span style="color:#f92672">.&lt;/span>endswith(&lt;span style="color:#e6db74">&amp;#39;.vtt&amp;#39;&lt;/span>) &lt;span style="color:#f92672">and&lt;/span> str(file_path) &lt;span style="color:#f92672">not&lt;/span> &lt;span style="color:#f92672">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># add file path to list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#f92672">.&lt;/span>append(str(file_path))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e"># add file name to file list view&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>addItem(file_path&lt;span style="color:#f92672">.&lt;/span>split(&lt;span style="color:#e6db74">&amp;#39;/&amp;#39;&lt;/span>)[&lt;span style="color:#f92672">-&lt;/span>&lt;span style="color:#ae81ff">1&lt;/span>])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> event&lt;span style="color:#f92672">.&lt;/span>ignore()
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイル削除">ファイル削除&lt;/h3>
 &lt;p>リストにファイルを追加したら削除したい場合もあるかと思ったので、リストからファイルを選択してボタンを押すとリストから消えるようにしたかったです。これは以下のようなコードで実現しています。ボタンをクリックすると、リストで選択したものが消え、翻訳対象（フルパス）からも消えるようにしています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create remove button&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_remove_button&lt;/span>(self):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Remove file&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>remove_file)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> button
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># create remove button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">create_remove_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button &lt;span style="color:#f92672">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#f92672">.&lt;/span>setText(&lt;span style="color:#e6db74">&amp;#39;Remove file&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> button&lt;span style="color:#f92672">.&lt;/span>clicked&lt;span style="color:#f92672">.&lt;/span>connect(self&lt;span style="color:#f92672">.&lt;/span>remove_file)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> button
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># remove file from file list&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">remove_file&lt;/span>(self):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> original_files
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> selected_item &lt;span style="color:#ff79c6">in&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>selectedIndexes():
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> index &lt;span style="color:#ff79c6">=&lt;/span> selected_item&lt;span style="color:#ff79c6">.&lt;/span>row()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>list_view&lt;span style="color:#ff79c6">.&lt;/span>takeItem(index)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#ff79c6">.&lt;/span>pop(index)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># remove file from file list&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">remove_file&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">global&lt;/span> original_files
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> selected_item &lt;span style="color:#f92672">in&lt;/span> self&lt;span style="color:#f92672">.&lt;/span>list_view&lt;span style="color:#f92672">.&lt;/span>selectedIndexes():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> index &lt;span style="color:#f92672">=&lt;/span> selected_item&lt;span style="color:#f92672">.&lt;/span>row()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>list_view&lt;span style="color:#f92672">.&lt;/span>takeItem(index)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_files&lt;span style="color:#f92672">.&lt;/span>pop(index)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="言語選択">言語選択&lt;/h3>
 &lt;p>元の字幕ファイルの言語はヘッダから抽出できるのですが、どの言語に翻訳したいかは自分で選べるようにしました。ここは翻訳APIの使用を参考にして、翻訳可能な言語のコードをdictionaryとしています。あえてdictionaryとしている理由は、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QComboBox.html" target="_blank" rel="noopener"
 >QComboBox&lt;/a>のアイテムは画面に見えるものなので実際の言語名にしたかったからです。アイテムがdictionaryのキーとなっているので、選択したアイテムに対応するvalueが翻訳したい言語となるようにしています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># languages&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>supported_language_code: &lt;span style="color:#8be9fd;font-style:italic">dict&lt;/span>[&lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>, &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>] &lt;span style="color:#ff79c6">=&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Korean&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ko&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;English&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;en&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Japanese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ja&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(China)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-CN&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Chinese(Taiwan)&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;zh-TW&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Vietnamese&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;vi&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Indonesian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;id&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Thailand&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;th&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;German&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;de&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Russian&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;ru&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;Spanish&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;es&amp;#39;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f1fa8c">&amp;#39;French&amp;#39;&lt;/span>: &lt;span style="color:#f1fa8c">&amp;#39;fr&amp;#39;&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># languages&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>supported_language_code: dict[str, str] &lt;span style="color:#f92672">=&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Korean&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;ko&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;English&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;en&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Japanese&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;ja&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Chinese(China)&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;zh-CN&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Chinese(Taiwan)&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;zh-TW&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Vietnamese&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;vi&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Indonesian&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;id&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Thailand&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;th&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;German&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;de&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Russian&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;ru&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;Spanish&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;es&amp;#39;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#39;French&amp;#39;&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;fr&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create drop down menu&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_target_language_selector&lt;/span>(self):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label &lt;span style="color:#ff79c6">=&lt;/span> QLabel()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Select target language&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector &lt;span style="color:#ff79c6">=&lt;/span> QComboBox()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>addItems(supported_language_code&lt;span style="color:#ff79c6">.&lt;/span>keys())
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#ff79c6">.&lt;/span>textActivated&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>set_target_language)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">return&lt;/span> label, selector
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># create drop down menu&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">create_target_language_selector&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label &lt;span style="color:#f92672">=&lt;/span> QLabel()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> label&lt;span style="color:#f92672">.&lt;/span>setText(&lt;span style="color:#e6db74">&amp;#39;Select target language&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector &lt;span style="color:#f92672">=&lt;/span> QComboBox()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#f92672">.&lt;/span>addItems(supported_language_code&lt;span style="color:#f92672">.&lt;/span>keys())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> selector&lt;span style="color:#f92672">.&lt;/span>textActivated&lt;span style="color:#f92672">.&lt;/span>connect(self&lt;span style="color:#f92672">.&lt;/span>set_target_language)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> label, selector
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># set translate target language when dropdown menu selected&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">set_target_language&lt;/span>(self, selectd: &lt;span style="color:#8be9fd;font-style:italic">str&lt;/span>):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> supported_language_code
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">global&lt;/span> target
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target &lt;span style="color:#ff79c6">=&lt;/span> supported_language_code[selectd]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># set translate target language when dropdown menu selected&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">set_target_language&lt;/span>(self, selectd: str):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">global&lt;/span> supported_language_code
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">global&lt;/span> target
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> target &lt;span style="color:#f92672">=&lt;/span> supported_language_code[selectd]
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="翻訳ボタン">翻訳ボタン&lt;/h3>
 &lt;p>最後に翻訳ボタンを追加して、実際の翻訳はボタンを押下した時に行われるようにしました。ボタンを押すと、翻訳対象のファイルのパスをループしながらデータの読み込み、元の言語と翻訳したい言語が違うと翻訳APIの呼び出し、結果の保存という作業を行うようになっています。念の為処理が行われる間はこのボタンを非活性化するという処理も追加しています。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># create translate button&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">create_translate_button&lt;/span>(self):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button &lt;span style="color:#ff79c6">=&lt;/span> QPushButton()
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setText(&lt;span style="color:#f1fa8c">&amp;#39;Translate&amp;#39;&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>clicked&lt;span style="color:#ff79c6">.&lt;/span>connect(self&lt;span style="color:#ff79c6">.&lt;/span>translate_files)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># create translate button&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">create_translate_button&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button &lt;span style="color:#f92672">=&lt;/span> QPushButton()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button&lt;span style="color:#f92672">.&lt;/span>setText(&lt;span style="color:#e6db74">&amp;#39;Translate&amp;#39;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button&lt;span style="color:#f92672">.&lt;/span>clicked&lt;span style="color:#f92672">.&lt;/span>connect(self&lt;span style="color:#f92672">.&lt;/span>translate_files)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button&lt;span style="color:#f92672">.&lt;/span>setDisabled(&lt;span style="color:#66d9ef">False&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#6272a4"># read vtt file and do translate&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ff79c6">def&lt;/span> &lt;span style="color:#50fa7b">translate_files&lt;/span>(self):
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">True&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">for&lt;/span> file_path &lt;span style="color:#ff79c6">in&lt;/span> original_files:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents, exported_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>get_content(file_path)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">if&lt;/span> source &lt;span style="color:#ff79c6">==&lt;/span> target:
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#ff79c6">continue&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents &lt;span style="color:#ff79c6">=&lt;/span> self&lt;span style="color:#ff79c6">.&lt;/span>send_request(exported_contents)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>write_result(file_path, original_contents, translated_contents)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#ff79c6">.&lt;/span>translate_button&lt;span style="color:#ff79c6">.&lt;/span>setDisabled(&lt;span style="color:#ff79c6">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># read vtt file and do translate&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">def&lt;/span> &lt;span style="color:#a6e22e">translate_files&lt;/span>(self):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button&lt;span style="color:#f92672">.&lt;/span>setDisabled(&lt;span style="color:#66d9ef">True&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> file_path &lt;span style="color:#f92672">in&lt;/span> original_files:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> original_contents, exported_contents &lt;span style="color:#f92672">=&lt;/span> self&lt;span style="color:#f92672">.&lt;/span>get_content(file_path)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> source &lt;span style="color:#f92672">==&lt;/span> target:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">continue&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> translated_contents &lt;span style="color:#f92672">=&lt;/span> self&lt;span style="color:#f92672">.&lt;/span>send_request(exported_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>write_result(file_path, original_contents, translated_contents)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> self&lt;span style="color:#f92672">.&lt;/span>translate_button&lt;span style="color:#f92672">.&lt;/span>setDisabled(&lt;span style="color:#66d9ef">False&lt;/span>)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実際作ったツールで重要な部分は以上で、全体のソースコードは&lt;a class="link" href="https://github.com/retheviper/PythonTools/blob/master/PapagoVtt/papago_vtt.py" target="_blank" rel="noopener"
 >こちらから&lt;/a>確認できます。&lt;/p>
 &lt;h2 id="改善したい">改善したい&lt;/h2>
