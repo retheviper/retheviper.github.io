@@ -69,6 +69,27 @@ fun <T, U> List<T>.sortedBy(another: List<U>, keySelector: (T) -> U): List<T> {
 }
 ```
 
+この場合、以下のように使えます。
+
+```kotlin
+val sortedImages = images.sortedBy(imageBox.imageOrder) { it.id }
+```
+
+keySelectorでitすら省略したい場合は、以下のような方法もあります。
+
+```kotlin
+fun <T, U> List<T>.sortedBy(another: List<U>, keySelector: T.() -> U): List<T> {
+    val indexMap = another.mapIndexed { index, value -> value to index }.toMap()
+    return this.sortedBy { indexMap[keySelector(it)] }
+}
+```
+
+この場合、以下のように使えます。
+
+```kotlin
+val sortedImages = images.sortedBy(imageBox.imageOrder) { id }
+```
+
 ## Listのページング
 
 ページングはよくDBのクエリで行いますが、クエリでなくコードのみで処理したい場合もありますね。例えば、外部APIに対してリクエストを送る場合などです。この場合、ページングをどう実装するかが課題になります。
