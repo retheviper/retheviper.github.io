@@ -1,4 +1,162 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gradle on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/gradle/</link><description>Recent content in gradle on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 04 Nov 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/gradle/index.xml" rel="self" type="application/rss+xml"/><item><title>Gradleのdependenciesはどう書くべきか</title><link>https://retheviper.github.io/posts/gradle-dependencies/</link><pubDate>Mon, 04 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-dependencies/</guid><description>&lt;img src="https://retheviper.github.io/images/gradle.jpg" alt="Featured image of post Gradleのdependenciesはどう書くべきか" />&lt;p>現代のプログラミングは、半分インターネットでなされていると言っても過言ではないでしょう。言語やMWの公式ガイドラインだけではなく、ウェブ上の数多くのコミュニティで情報を得られる時代ですからね。そしてMavenやGradleのように、依存関係の管理自体がネットに繋がっていることを前提としているものもあります。私もそういうトレンドから離れてはなく、自分が書いているコードで問題が発生するととりあえず検索で調べてみる方です。時間はかかっても、大概はそうすることで解決できますね。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>gradle on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/gradle/</link><description>Recent content in gradle on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 21 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/gradle/index.xml" rel="self" type="application/rss+xml"/><item><title>Cloud BuildのCI/CDを高速化してみた</title><link>https://retheviper.github.io/posts/application-build-cache/</link><pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/application-build-cache/</guid><description>&lt;img src="https://retheviper.github.io/images/gcp.jpg" alt="Featured image of post Cloud BuildのCI/CDを高速化してみた" />&lt;p>CI/CDは一度インフラとアプリケーションを構築すれば、あまり変わることはありません。極端な話、期待通り動いてくれれば問題はないといえることです。しかし、場合によってはCI/CDのフローを見直すことも必要になります。アプリケーションの機能追加やインフラの変更などにはいつ変化があるかわからないし、緊急対応が必要な場合は迅速なデプロイが必要とされる場合もあるからです。そのため、CI/CDの高速化が非常に重要な課題となるケースもあります。&lt;/p>
+&lt;p>実は去年転職をしましたが、転職先の会社ではCI/CDの高速化が課題となっていました。前職では2週間に一回というリリースのサイクルがあったのですが、今回は一日でも数回のリリースがあるため何よりもそのため、CI/CDの高速化を行うために、いくつかの方法を試してみました。今回はその中で、最も効果があった方法を紹介します。&lt;/p>
+&lt;h2 id="インフラ構成">インフラ構成&lt;/h2>
+&lt;p>基本的には、以下のような構成になっています。&lt;/p>
+&lt;ul>
+&lt;li>GitHubにソースコードおよびCI/CDの構成ファイルを配置&lt;/li>
+&lt;li>Cloud Buildを利用してDockerコンテナをビルド&lt;/li>
+&lt;li>Cloud Runにデプロイ&lt;/li>
+&lt;/ul>
+&lt;p>この構成はFrontend, Backendともに同じで、データベースマイグレーションも同じ環境となっています。マイグレーションの時にはCloud RunでFlywayを実行してAlloyDBにマイグレーションを行っているようになっています。&lt;/p>
+&lt;h2 id="キャッシュで高速化">キャッシュで高速化&lt;/h2>
+&lt;p>CI/CDの高速化にはいくつかの方法がありますが、今回はキャッシュを利用することで高速化を行いました。&lt;/p>
+&lt;p>高速化のために考えられるのはいくつかの方法がありますが、まずは簡単な方法としてキャッシュを利用することにしました。今回利用したキャッシュは二つで、一つはGradleのキャッシュ、もう一つはDockerイメージのキャッシュです。&lt;/p>
+&lt;h3 id="gradleのキャッシュ">Gradleのキャッシュ&lt;/h3>
+&lt;p>まずGradleには&lt;a class="link" href="https://docs.gradle.org/current/userguide/build_cache.html" target="_blank" rel="noopener"
+>Build Cache&lt;/a>と&lt;a class="link" href="https://docs.gradle.org/current/userguide/configuration_cache.html" target="_blank" rel="noopener"
+>Configuration Cache&lt;/a>というものがあり、これらを有効にした場合、次回のビルドからはそれぞれ前回のビルドの成果物とビルド時の設定をキャッシュとして使うことになるのでビルドの時間をかなり短縮することができます。&lt;/p>
+&lt;p>これらのキャッシュを有効にするには、&lt;code>gradle.properties&lt;/code>ファイルに以下のように設定を行います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-properties" data-lang="properties">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">//&lt;/span> &lt;span style="color:#e6db74">build cache&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">org.gradle.caching&lt;/span>&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">//&lt;/span> &lt;span style="color:#e6db74">configuration cache&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">org.gradle.configuration-cache&lt;/span>&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">true&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="dockerイメージのキャッシュ">Dockerイメージのキャッシュ&lt;/h3>
+&lt;p>Gradleのキャッシュを有効にしても、CI/CDの環境で実際ビルドが走る時に利用できるキャッシュが存在しなければなりません。そのために利用したのがDockerのキャッシュです。Cloud Buildのフローが実行されるたびに前回のビルドの成果物をどこかにプッシュしておき、ビルドが走る時にそれを利用するとGradleのキャッシュを利用することができるようになります。&lt;/p>
+&lt;p>これを実現するためにはまず最初にCloud buildの構成ファイルは以前は以下のようになっていました。(一部抜粋)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">steps&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">build&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-t&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">api&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-f&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">api/Dockerfile&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Build&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">push&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Push&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;gcr.io/google.com/cloudsdktool/cloud-sdk:slim&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">run&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">services&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">update&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">$_SERVICE_NAME&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--platform=managed&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &amp;gt;-&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID,$_LABELS&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--region=$_DEPLOY_REGION&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--quiet&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Deploy&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">entrypoint&lt;/span>: &lt;span style="color:#ae81ff">gcloud&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">images&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のファイルでは、最初にコミットのハッシュでDockerイメージをビルドし、それをプッシュしています。その後、Cloud Runにデプロイするために、そのイメージを利用しています。この時、イメージのタグにはコミットのハッシュを利用しています。&lt;/p>
+&lt;p>ここでキャッシュを挟むようにすると、以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">steps&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-c&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &amp;gt;-&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> docker pull $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> || exit 0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Pull&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">entrypoint&lt;/span>: &lt;span style="color:#ae81ff">bash&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">build&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--cache-from&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-t&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-t&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">api&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;-f&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">api/Dockerfile&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Build&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">push&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Push (Cache)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">push&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Push (Latest)&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#e6db74">&amp;#39;gcr.io/google.com/cloudsdktool/cloud-sdk:slim&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">args&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">run&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">services&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">update&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">$_SERVICE_NAME&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--platform=managed&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &amp;gt;-&lt;span style="color:#e6db74">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74"> --labels=managed-by=gcp-cloud-build-deploy-cloud-run,commit-sha=$COMMIT_SHA,gcb-build-id=$BUILD_ID,gcb-trigger-id=$_TRIGGER_ID,$_LABELS&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--region=$_DEPLOY_REGION&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;--quiet&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">id&lt;/span>: &lt;span style="color:#ae81ff">Deploy&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">entrypoint&lt;/span>: &lt;span style="color:#ae81ff">gcloud&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">images&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のファイルでは、まず最初に前回のビルドの成果物をプルしています。これにより、前回のビルドの成果物を利用することができます。その後、ビルドでは&lt;code>--cache-from&lt;/code>オプションを利用して、前回のビルドの成果物をキャッシュとして利用しています。また、イメージのタグには&lt;code>latest&lt;/code>とコミットのハッシュを利用しています。そして最後にContainer Registryに&lt;code>latest&lt;/code>とコミット8種の両方をプッシュします。こうすると、Container Registryでは一つのイメージに対して二つのタグが付与され、次回のビルドでも&lt;code>latest&lt;/code>を利用できるようになります。&lt;/p>
+&lt;h3 id="dockerfileの修正">Dockerfileの修正&lt;/h3>
+&lt;p>Dockerイメージをビルドする際にDockerfileを使っていましたが、キャッシュをより効率的に利用するためにDockerfileを修正しました。修正前のDockerfileは以下のようになっていました。(一部抜粋)&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> eclipse-temurin:17&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> mkdir /api&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">WORKDIR&lt;/span>&lt;span style="color:#e6db74"> /api&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のDockerfileでは、まずGradleのビルドを行っていて、成果物はGradleの設定によりjarファイルとしてビルドされます。そしてCloud RunではリポジトリないのEntrypointを実行するように設定しているため、jarファイルを実行するようになっています。&lt;/p>
+&lt;p>一般的にはjarファイルだけを残すとコンテナのサイズを小さくすることができますが、今回はキャッシュを利用するためにjarファイル以外の成果物も残す必要があるので、ここは修正していません。ただ、Gradleのビルドが走る時に、毎回依存関係の解決を行うのは非常に時間がかかるので、依存関係の解決を行う部分だけをキャッシュするようにしました。結果は以下のようになります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> eclipse-temurin:17&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">WORKDIR&lt;/span>&lt;span style="color:#e6db74"> /api&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># dependency cache&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> build.gradle.kts settings.gradle.kts gradlew gradle.properties /api/&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> gradle /api/gradle&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> docker /api/docker&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> detekt /api/detekt&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> ./gradlew build -x test -x compileTestKotlin -x detekt &lt;span style="color:#f92672">||&lt;/span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># build app&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> src /api/src&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> resources /api/resources&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>デプロイではほとんどの場合、ソースコードの変更が行われます。なので、あまり変わることのないGradle関係のファイルだけを先にコピーして、ソースコードのない状態でビルドを行います。これにより、実際のアプリはビルドされずに依存関係の解決だけが行われます。それからソースコードをコピーしてビルドを行います。&lt;/p>
+&lt;p>なぜこのような構造にしたかというと、Dockerイメージのビルド時にはキャッシュが存在していても、コピーしたファイルに変更があった場合にキャッシュが無効になるためです。依存関係の更新があった場合は仕方なくキャッシュは効かなくなりますが、ソースコードの変更がない場合は依存関係の解決まではキャッシュが有効になるため、ビルドの時間を短縮することができます。&lt;/p>
+&lt;p>ここでは主にBackendの設定を紹介しましたが、Frontendの設定もDockerfileを同じように修正することでキャッシュを利用できるようにしています。backendと多少は設定が違いますが、基本的にはyarnもGradleと仕組みとしては同じく先に依存関係の解決を行うようにするだけです。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> node:18.17.1-slim AS base&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">WORKDIR&lt;/span>&lt;span style="color:#e6db74"> /app&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># dependency cache&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> package.json yarn.lock ./&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> yarn --frozen-lockfile&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> ./tsconfig.json ./&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> ./packages/app/package.json ./packages/app/package.json&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> cd ./packages/app &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> yarn &lt;span style="color:#f92672">||&lt;/span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># build app&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> base AS builder&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">WORKDIR&lt;/span>&lt;span style="color:#e6db74"> /app&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> ./packages/app/ ./packages/app/&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> --from&lt;span style="color:#f92672">=&lt;/span>base /app/packages/app ./packages/app&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> yarn build:app:production&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>データベースマイグレーションの場合、Cloud Buildで直接DBに接続してマイグレーションを行うのが難しかったのと、Backendと同様の設定をすることでDBアクセスは簡単にできたので基本的にはBackendと同じくDockerイメージを作成し、Cloud Run上でEntrypointのスクリプトを利用しFlywayを実行するようにしていました。&lt;/p>
+&lt;p>ただ、ここでBackendと同じDockerfileを使って同じくアプリをビルドしたあと、実際のアプリをCloud Runで実行するようになっていましたが、ここは必要なかったので（Cloud Runでは指定したポートからコンテナが応答するようにすればいいだけなので）アプリのビルドは行わなく、依存関係の解決だけを行うようにしました。ポートからの応答に関してはnginxを起動して応答するようにしています。&lt;/p>
+&lt;h2 id="最後に">最後に&lt;/h2>
+&lt;p>今回はCI/CDの高速化について紹介しました。キャッシュを利用することで、ビルドの時間が大幅に短縮できて、既存だと14分ほどかかっていたのが今は6分ほどになっているので、一日中でも数回のリリースが行われる現状はかなり大きい成果だと言えます。ただ、データベースのマイグレーションではCloud Runを使わないようにするなど依然として改善の余地はありますね。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>Gradleのdependenciesはどう書くべきか</title><link>https://retheviper.github.io/posts/gradle-dependencies/</link><pubDate>Mon, 04 Nov 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/gradle-dependencies/</guid><description>&lt;img src="https://retheviper.github.io/images/gradle.jpg" alt="Featured image of post Gradleのdependenciesはどう書くべきか" />&lt;p>現代のプログラミングは、半分インターネットでなされていると言っても過言ではないでしょう。言語やMWの公式ガイドラインだけではなく、ウェブ上の数多くのコミュニティで情報を得られる時代ですからね。そしてMavenやGradleのように、依存関係の管理自体がネットに繋がっていることを前提としているものもあります。私もそういうトレンドから離れてはなく、自分が書いているコードで問題が発生するととりあえず検索で調べてみる方です。時間はかかっても、大概はそうすることで解決できますね。&lt;/p>
 &lt;p>しかし、そんな便利ながらもネットで知識を求める行動にはリスクもあります。果たしてその情報が正しいかという問題ですね。まずコーディングに関する情報だと、私の基準では2年以上立っているものなら信じがたいものとなります。当時はそれが正解だったとしても、今はそうではない可能性がありますので。例えば同じライブラリーを使っているとしても、バージョンアップによりパッケージの構成が変わったり、メソッドのシグニチャーが変わったりしますが、ネットにある全ての情報がそのような変更まで全部反映しているとは思えません。実際動いたというコードが書かれているとしても、そのコードはあくまで普通のテキストであって、現在コンパイルして動かすことのできるものでもないですしね。&lt;/p>
 &lt;p>今回の主題である&lt;code>Gradleのdependenciesをどう書くべきか&lt;/code>というのも、そういう意味でのものです。私自身も今まで依存関係を書くときは、公式で提案しているコードやブログなどを参照してコピペしていました。しかし、そうしていると同じライブラリーでも&lt;code>complie&lt;/code>だったり&lt;code>implementation&lt;/code>だったり&lt;code>runtime&lt;/code>だったりしていて、かなり混乱するものでした。結局どんな書き方をとるとしてもその結果は同じように見えるのに、こうして区分している理由は何かと思いました。&lt;/p>
 &lt;p>そして結局、その疑問の答えは自分がとある問題に直面することで得られました。なので今回はただ単に理論の話ばかりではなく、問題が起こり得る場所とその解決法についてのものでもあります。&lt;/p>
@@ -140,59 +298,59 @@ alt="Gradle Implemenatation API"
 &lt;h2 id="generator-mainjava">[generator] Main.java&lt;/h2>
 &lt;p>generatorのJarを実行した時に呼ばれるメインクラスを作ります。ここでは一般的なJavaのメインメソッドと、Spring bootとしてのメインクラスの作法、JCommanderでコマンドライン引数をパースするための作法、Lombokが混在していますのでそれぞれに対する知識のない方には少し難しいコードになっているかもしれません。&lt;/p>
 &lt;p>ただ、実行されている時の動作としては単純なものになっているので、Springのアノテーションにある程度慣れている方ならすぐに理解できると思います。まずコードは以下のようになります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@SpringBootApplication&lt;/span> &lt;span style="color:#75715e">// Spring bootとしてのメインクラスにつける
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#a6e22e">@EnableAutoConfiguration&lt;/span>&lt;span style="color:#f92672">(&lt;/span>exclude &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">{&lt;/span> DataSourceAutoConfiguration&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">class&lt;/span> &lt;span style="color:#f92672">})&lt;/span> &lt;span style="color:#75715e">// H2関連エラーが出たので付けました
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Main&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> CommandLineRunner &lt;span style="color:#f92672">{&lt;/span>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@SpringBootApplication&lt;/span> &lt;span style="color:#75715e">// Spring bootとしてのメインクラスにつける&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@EnableAutoConfiguration&lt;/span>(exclude &lt;span style="color:#f92672">=&lt;/span> { DataSourceAutoConfiguration.&lt;span style="color:#a6e22e">class&lt;/span> }) &lt;span style="color:#75715e">// H2関連エラーが出たので付けました&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Main&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> CommandLineRunner {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Autowired&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> CoreProcessClass coreProcessClass&lt;span style="color:#f92672">;&lt;/span> &lt;span style="color:#75715e">// @Componentとなっている実際の処理クラス
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">run&lt;/span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#66d9ef">final&lt;/span> String&lt;span style="color:#f92672">...&lt;/span> args&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#66d9ef">throws&lt;/span> Exception &lt;span style="color:#f92672">{&lt;/span> &lt;span style="color:#75715e">// CommandLineRunnerを継承するして実行時の動作をオーバーライドする
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">final&lt;/span> CommandLineOptions options &lt;span style="color:#f92672">=&lt;/span> CommandLineOptions&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">parse&lt;/span>&lt;span style="color:#f92672">(&lt;/span>args&lt;span style="color:#f92672">);&lt;/span> &lt;span style="color:#75715e">// パースと同時にBeanを生成
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> coreProcessClass&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">startProcess&lt;/span>&lt;span style="color:#f92672">(&lt;/span>options&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">getArg1&lt;/span>&lt;span style="color:#f92672">,&lt;/span> options&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">getArg2&lt;/span>&lt;span style="color:#f92672">);&lt;/span> &lt;span style="color:#75715e">// 本処理開始
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> CoreProcessClass coreProcessClass; &lt;span style="color:#75715e">// @Componentとなっている実際の処理クラス&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#66d9ef">final&lt;/span> String&lt;span style="color:#f92672">[]&lt;/span> args&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#f92672">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SpringApplication&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">run&lt;/span>&lt;span style="color:#f92672">(&lt;/span>Main&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">class&lt;/span>&lt;span style="color:#f92672">,&lt;/span> args&lt;span style="color:#f92672">);&lt;/span> &lt;span style="color:#75715e">// メインメソッドとしては引数を渡すだけ
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">run&lt;/span>(&lt;span style="color:#66d9ef">final&lt;/span> String... args) &lt;span style="color:#66d9ef">throws&lt;/span> Exception { &lt;span style="color:#75715e">// CommandLineRunnerを継承するして実行時の動作をオーバーライドする&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> CommandLineOptions options &lt;span style="color:#f92672">=&lt;/span> CommandLineOptions.&lt;span style="color:#a6e22e">parse&lt;/span>(args); &lt;span style="color:#75715e">// パースと同時にBeanを生成&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> coreProcessClass.&lt;span style="color:#a6e22e">startProcess&lt;/span>(options.&lt;span style="color:#a6e22e">getArg1&lt;/span>, options.&lt;span style="color:#a6e22e">getArg2&lt;/span>); &lt;span style="color:#75715e">// 本処理開始&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>(&lt;span style="color:#66d9ef">final&lt;/span> String&lt;span style="color:#f92672">[]&lt;/span> args) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> SpringApplication.&lt;span style="color:#a6e22e">run&lt;/span>(Main.&lt;span style="color:#a6e22e">class&lt;/span>, args); &lt;span style="color:#75715e">// メインメソッドとしては引数を渡すだけ&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Data&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CommandLineOptions&lt;/span> &lt;span style="color:#f92672">{&lt;/span> &lt;span style="color:#75715e">// コマンドライン引数をパースするクラス
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// JCommanderを使用した引数の設定
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#a6e22e">@Parameter&lt;/span>&lt;span style="color:#f92672">(&lt;/span>names &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;-arg1&amp;#34;&lt;/span>&lt;span style="color:#f92672">,&lt;/span> description &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;File&amp;#34;&lt;/span>&lt;span style="color:#f92672">,&lt;/span> required &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>&lt;span style="color:#f92672">,&lt;/span> converter &lt;span style="color:#f92672">=&lt;/span> ArgumentsToFileConverter&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">class&lt;/span>&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#75715e">// 引数は文字列なので、コンバータクラスを使う
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">private&lt;/span> File arg1&lt;span style="color:#f92672">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CommandLineOptions&lt;/span> { &lt;span style="color:#75715e">// コマンドライン引数をパースするクラス&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Parameter&lt;/span>&lt;span style="color:#f92672">(&lt;/span>names &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;-arg2&amp;#34;&lt;/span>&lt;span style="color:#f92672">,&lt;/span> description &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;String&amp;#34;&lt;/span>&lt;span style="color:#f92672">,&lt;/span> required &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#75715e">// 普通の文字列の場合
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">private&lt;/span> String arg2&lt;span style="color:#f92672">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// JCommanderを使用した引数の設定&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Parameter&lt;/span>(names &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;-arg1&amp;#34;&lt;/span>, description &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;File&amp;#34;&lt;/span>, required &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>, converter &lt;span style="color:#f92672">=&lt;/span> ArgumentsToFileConverter.&lt;span style="color:#a6e22e">class&lt;/span>) &lt;span style="color:#75715e">// 引数は文字列なので、コンバータクラスを使う&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> File arg1;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#a6e22e">CommandLineOptions&lt;/span>&lt;span style="color:#f92672">()&lt;/span> &lt;span style="color:#f92672">{}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Parameter&lt;/span>(names &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;-arg2&amp;#34;&lt;/span>, description &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;String&amp;#34;&lt;/span>, required &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">true&lt;/span>) &lt;span style="color:#75715e">// 普通の文字列の場合&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> String arg2;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> CommandLineOptions &lt;span style="color:#a6e22e">parse&lt;/span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#66d9ef">final&lt;/span> String&lt;span style="color:#f92672">...&lt;/span> args&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#f92672">{&lt;/span> &lt;span style="color:#75715e">// 実際のパースを行うメソッド
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">try&lt;/span> &lt;span style="color:#f92672">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> CommandLineOptions options &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> CommandLineOptions&lt;span style="color:#f92672">();&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> JCommander&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">newBuilder&lt;/span>&lt;span style="color:#f92672">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">addObject&lt;/span>&lt;span style="color:#f92672">(&lt;/span>options&lt;span style="color:#f92672">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">acceptUnknownOptions&lt;/span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#66d9ef">true&lt;/span>&lt;span style="color:#f92672">)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">build&lt;/span>&lt;span style="color:#f92672">()&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">parse&lt;/span>&lt;span style="color:#f92672">(&lt;/span>args&lt;span style="color:#f92672">);&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> options&lt;span style="color:#f92672">;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span> &lt;span style="color:#66d9ef">catch&lt;/span> &lt;span style="color:#f92672">(&lt;/span>ParameterException e&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#f92672">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> e&lt;span style="color:#f92672">.&lt;/span>&lt;span style="color:#a6e22e">getJCommander&lt;/span>&lt;span style="color:#f92672">().&lt;/span>&lt;span style="color:#a6e22e">usage&lt;/span>&lt;span style="color:#f92672">();&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">throw&lt;/span> e&lt;span style="color:#f92672">;&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#a6e22e">CommandLineOptions&lt;/span>() {}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ArgumentsToFileConverter&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> IStringConverter&lt;span style="color:#f92672">&amp;lt;&lt;/span>File&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#f92672">{&lt;/span> &lt;span style="color:#75715e">// JCommanderで引数をオブジェクトに変えるためのクラス
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> CommandLineOptions &lt;span style="color:#a6e22e">parse&lt;/span>(&lt;span style="color:#66d9ef">final&lt;/span> String... args) { &lt;span style="color:#75715e">// 実際のパースを行うメソッド&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> CommandLineOptions options &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> CommandLineOptions();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> JCommander.&lt;span style="color:#a6e22e">newBuilder&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">addObject&lt;/span>(options)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">acceptUnknownOptions&lt;/span>(&lt;span style="color:#66d9ef">true&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">build&lt;/span>()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">parse&lt;/span>(args);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> options;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">catch&lt;/span> (ParameterException e) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> e.&lt;span style="color:#a6e22e">getJCommander&lt;/span>().&lt;span style="color:#a6e22e">usage&lt;/span>();
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">throw&lt;/span> e;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ArgumentsToFileConverter&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> IStringConverter&lt;span style="color:#f92672">&amp;lt;&lt;/span>File&lt;span style="color:#f92672">&amp;gt;&lt;/span> { &lt;span style="color:#75715e">// JCommanderで引数をオブジェクトに変えるためのクラス&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> File &lt;span style="color:#a6e22e">convert&lt;/span>&lt;span style="color:#f92672">(&lt;/span>&lt;span style="color:#66d9ef">final&lt;/span> String argument&lt;span style="color:#f92672">)&lt;/span> &lt;span style="color:#f92672">{&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> File&lt;span style="color:#f92672">(&lt;/span>argument&lt;span style="color:#f92672">);&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> File &lt;span style="color:#a6e22e">convert&lt;/span>(&lt;span style="color:#66d9ef">final&lt;/span> String argument) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> File(argument);
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;a class="link" href="http://jcommander.org" target="_blank" rel="noopener"
 >JCommander&lt;/a>を使うことでコマンドラインのパースは簡単にできます。ここでいうパースは単純に文字列だけを意味することではなく、必須項目としての指定(ない場合は例外となる)やオブジェクト変換などの様々なことができるという意味です。例えば引数として渡した文字列があるものはファイルパスだとしたら、それを読み込んでFileオブジェクト化したり複数の引数をListとして取得することもできます。&lt;/p>
 &lt;p>そしてパースしたオブジェクトを、本処理で使われるオブジェクトに渡すだけで終わり。意外と簡単に終わりますね。&lt;/p>
