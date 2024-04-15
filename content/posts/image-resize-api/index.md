@@ -191,7 +191,7 @@ fun asImage(rawData: ByteArray): Image {
 
 private fun asAnimatedGifWrapper(rawData: ByteArray): AnimatedGifWrapper {
     val gif = AnimatedGifReader.read(ImageSource.of(rawData))
-    return AnimatedGifWrapper(gif, rawData)
+    return AnimatedGifWrapper(gif)
 }
 
 private fun asImmutableImageWrapper(rawData: ByteArray, format: Format): ImmutableImageWrapper {
