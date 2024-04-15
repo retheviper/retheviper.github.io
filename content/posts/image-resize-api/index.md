@@ -199,7 +199,7 @@ private fun asImmutableImageWrapper(rawData: ByteArray, format: Format): Immutab
         Format.WEBP -> WebpImageReader().read(rawData)
         Format.GIF, Format.PNG, Format.JPEG -> ImageIOReader().read(rawData)
     }
-    return ImmutableImageWrapper(image, detectImageFormat(rawData))
+    return ImmutableImageWrapper(image)
 }
 ```
 
