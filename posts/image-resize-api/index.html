@@ -83,7 +83,7 @@
 </span></span><span style=display:flex><span>        <span style=color:#a6e22e>Format</span>.WEBP <span style=color:#f92672>-&gt;</span> WebpImageReader().read(rawData)
 </span></span><span style=display:flex><span>        <span style=color:#a6e22e>Format</span>.GIF, <span style=color:#a6e22e>Format</span>.PNG, <span style=color:#a6e22e>Format</span>.JPEG <span style=color:#f92672>-&gt;</span> ImageIOReader().read(rawData)
 </span></span><span style=display:flex><span>    }
-</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> ImmutableImageWrapper(image, detectImageFormat(rawData))
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> ImmutableImageWrapper(image)
 </span></span><span style=display:flex><span>}
 </span></span></code></pre></div><h3 id=リサイズ処理の共通化>リサイズ処理の共通化</h3><p>同じく、リサイズ処理も共通化します。ここでは、<code>resizeImage</code>というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した<code>resizeImmutableImage</code>と<code>resizeAnimatedGif</code>を使います。AnimatedGifのリサイズ処理はまた別途<code>writeAnimatedGif</code>というメソッドを作成して分けています。</p><p>ここでImageはsealed interfaceとして作成しているため、分岐処理はwhen式を使って網羅することができます。</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-kotlin data-lang=kotlin><span style=display:flex><span><span style=color:#66d9ef>suspend</span> <span style=color:#66d9ef>fun</span> <span style=color:#a6e22e>resizeImage</span>(image: Image, width: Int): Image {
 </span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>when</span> (image) {
