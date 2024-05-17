@@ -30,9 +30,10 @@ john.doWarmingUp()
 john.startToRun()
 
 // Scope Functionのletを使った場合
-var john = Person("John", 20, Gender.Male).apply {
-    doWarmingUp()
-    startToRun()
+var john = Person("John", 20, Gender.Male).let {
+    it.doWarmingUp()
+    it.startToRun()
+    it
 }
 ```
 
