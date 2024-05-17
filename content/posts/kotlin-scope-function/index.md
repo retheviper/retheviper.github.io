@@ -121,7 +121,7 @@ if (devMode) {
 ただ、一部ではオブジェクトの初期化として使うと便利と言ってました。確かに`this`を使うので、少しながら`it`を使う`let`よりコードが短くなり得るというメリットはありますね。
 
 ```kotlin
-// runを使うばあい
+// runを使う場合
 var result1 = server.run {
     port = 8080
     get("/members:$port")
