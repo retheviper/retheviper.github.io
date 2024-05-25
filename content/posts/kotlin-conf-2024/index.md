@@ -1,5 +1,5 @@
 ---
-title: "KotlinConf'24とKotlin 2.0の話"
+title: "KotlinConf'24を要約してみた"
 date: 2024-05-25
 categories: 
   - kotlin
