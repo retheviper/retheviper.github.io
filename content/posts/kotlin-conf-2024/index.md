@@ -6,7 +6,9 @@ categories:
 image: "../../images/kotlin.jpg"
 tags:
   - kotlin
+  - kotlinconf
   - compose
+  - ios
 ---
 
 今年のKotlinConfが開催されました。数日かけてのイベントなので、全てのセッションを見ることはできませんが、まずはキーノートの方で重要な情報をまとめてみました。全体のスケージュールは[こちら](https://kotlinconf.com/schedule/)から確認できて、[YouTubeでのライブ配信](https://www.youtube.com/@Kotlin/streams)も行われているので、興味がある方はぜひチェックしてみてください。
