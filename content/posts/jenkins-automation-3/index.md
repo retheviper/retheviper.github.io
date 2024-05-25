@@ -60,7 +60,7 @@ source /etc/profile.d/jdk11.sh
 
 これでOpenJDK11は準備されました。私はCentOS7を使っているのですが、ubuntuなどの違うLinuxではまた手順も色々あるようです。とにかくインストールがちゃんと終わっているか`java -version`で確認してみましょう。
 
-![Java version is 8](jenkins_java8.png)
+![Java version is 8](jenkins_java8.webp)
 
 あれ？Javaのバージョンが8です。すでにインストールされていたんですね。
 
@@ -81,7 +81,7 @@ alternatives --config java
 
 CentOSインストール時にすでに二つのバージョンのJavaがインストールされてましたね。Java11が3番目になったので3を入力します。これでJavaは準備オッケーです。
 
-![Jenkins Alter](jenkins_alter.png)
+![Jenkins Alter](jenkins_alter.webp)
 
 ちなみに、JenkinsもまたJavaで作られているので場合によってはJava11のJVMで起動できます。Java11のJVMをJenkinsに登録するには以下の手順になります。
 
@@ -91,7 +91,7 @@ vi /etc/init.d/jenkins
 
 Jenkinsの設定ファイルです。candidatesという部分に様々なバージョンのJVMの経路が機材されていますので、ここにOpenJDK11のbinフォルダのパスを追加します。esc⇨:wqで終了！
 
-![Jenkins JVM](jenkins_jvm.png)
+![Jenkins JVM](jenkins_jvm.webp)
 
 ## Gradleもインストールしよう
 
@@ -117,7 +117,7 @@ sudo nano /etc/profile.d/gradle.sh
 
 私はどこでも使えるということ（環境によってはsudoの権限があるとしても、勝手に色々インストールできない場合もあるので)からviを使うことが多いですが、nanoはより直観的で使いやすいと思います。
 
-![Gradle SH](gradle_sh.png)
+![Gradle SH](gradle_sh.webp)
 
 添付の画像のように、以下の内容を入力します。
 
@@ -143,7 +143,7 @@ gradle -v
 
 インストールに成功したかを確認するにはやはりバージョンの確認ですね。以下のような画面が表示されたらGradleのインストールも成功です。
 
-![Jenkins Gradle Version](gradle_version.png)
+![Jenkins Gradle Version](gradle_version.webp)
 
 最新のバージョンではSwift5をサポートするようですね。こちらもいつか扱いたいと思います。
 
@@ -155,19 +155,19 @@ gradle -v
 
 ウェブブラウザに`localhost:Jenkinsのポート番号`を入力してJenkinsのメイン画面に入ります。その後は、左のメニューから`Manage Jenkins`をクリックします。そうすると以下のような画面が現れます。
 
-![Jenkins Manage](jenkins_manage.png)
+![Jenkins Manage](jenkins_manage.webp)
 
 `Global Tool Configuration`を押します。ここがJenkinsで使われる環境変数的なものを設定する画面です。
 
-![Jenkins Global Tool Settings](jenkins_globaltoolsettings.png)
+![Jenkins Global Tool Settings](jenkins_globaltoolsettings.webp)
 
 JDK項目の`ADD JDK`を押します。`install automatically`というオプジョンが基本的にチェックされていますが、これはOracleのJavaしかインストールできないオプションです。またバージョンに制限があるので（私の場合はJava9までしか設定できませんでした）、チェックを外して`JAVA_HOME`にインストールしたJava11のパスをいれます。以下のような感じです。Nameも必要なので適当な文句をいれます。
 
-![Jenkins JDK](jenkins_jdk.png)
+![Jenkins JDK](jenkins_jdk.webp)
 
 次にGradleです。こちらもJavaと同様、自動インストールのオプションがあります。でも我々がインストールしたのよりはバージョンが低いですね。なのでこちらも自動インストールのオプションを外し、パスをいれます。以下のようになります。
 
-![Jenkins Gradle](jenkins_gradle.png)
+![Jenkins Gradle](jenkins_gradle.webp)
 
 `Save`を押して保存することを忘れずに！
 

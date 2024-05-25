@@ -27,7 +27,7 @@ sudo vim /etc/sysconfig/jenkins
 
 そうすると、以下のような画面が現れます。少し下にスクロールしたら`JENKINS_PORT`と、親切に書いてあるのが見えますね！`I`を押してインサートモードに切り替え、好きなポートに変えましょう。
 
-![Jenkins Config Port](jenkins_configport.png)
+![Jenkins Config Port](jenkins_configport.webp)
 
 書き換えが終わったら`ESC` ⇨ `:wq`で保存後終了を忘れずにしましょう。
 
@@ -49,11 +49,11 @@ service jenkins status
 
 実は、仕事で１日前は元気だったJenkins先生が、いきなり接続できなくなっていたことがったのです。やはり人は何かよくないことを経験すると、慎重になるものです。`Active: active (running)`というメッセージを確認できたら、いよいよJenkinsのページに接続です。
 
-![Jenkins Service Status](jenkins_servicestatus.png)
+![Jenkins Service Status](jenkins_servicestatus.webp)
 
 `Jenkinsを起動中のシステムのIPアドレス:ポーと番号`をWebブラウザに入力してJenkinsのページへ接続します。もちろん、起動中のシステムからは`localhost:8080`などでも接続できます。
 
-![Jenkins Init Pass](jenkins_initpass.png)
+![Jenkins Init Pass](jenkins_initpass.webp)
 
 やはりパスは`/var/lib/jenkins/secrets/initialAdminPassword`でした。ポート設定と同じく、viやvimで中を覗き、そのパスワードを入力します。
 
@@ -65,27 +65,27 @@ sudo vim /var/lib/jenkins/secrets/initialAdminPassword
 
 パスワードの入力に成功するとしばらくして、プラグインの設定画面が現れます。自分でプラグインを選んでも良さそうですが、私は自信がないのでオススメのボタンを押します。当たり前なことですが、プラグインは後ででもインストールできます。
 
-![Jenkins Init Plugins](jenkins_initplugins.png)
+![Jenkins Init Plugins](jenkins_initplugins.webp)
 
 オススメのボタンを押すと自動的にプラグインのインストールを進めてくれるので、待ちましょう。
 
-![Jenkins Installing Plugins](jenkins_installingplugins.png)
+![Jenkins Installing Plugins](jenkins_installingplugins.webp)
 
 プラグインのインストールが終わったら次は管理者アカウントの設定です。一つでも満たしてない項目があったら怒られるので全部書きます。
 
-![Jenkins Setup Admin](jenkins_setupadmin.png)
+![Jenkins Setup Admin](jenkins_setupadmin.webp)
 
 管理者アカウント設定の次は接続アドレスの設定。私は今のままでいいと思うので（仮想マシンでCentOSをインストールしてJenkinsを動かしています）そのままにします。
 
-![Jenkins Address Setting](jenkins_addresssetting.png)
+![Jenkins Address Setting](jenkins_addresssetting.webp)
 
 そして、Jenkinsが用意されたという画面が出ます。長かったですね…早速使うというボタンを押します。
 
-![Jenkins Ready](jenkins_ready.png)
+![Jenkins Ready](jenkins_ready.webp)
 
 ジャジャーン。ようやくたどり着きました。Jenkinsのメイン画面です。ここまでの旅も本当に長かったですね。それでもJenkinsは強力なツールなので、ここまでする価値があると私は思います。
 
-![Jenkins Mainpage](jenkins_mainpage.png)
+![Jenkins Mainpage](jenkins_mainpage.webp)
 
 それでは、次からは具体的にJenkins先生と共にどんなタスク（Job）を作り、実行したかを述べたいと思います。また会いましょう！
 

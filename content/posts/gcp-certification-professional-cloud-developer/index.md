@@ -44,7 +44,7 @@ tags:
 
 Google Cloud Certification Perks Webstoreから特典をもらえるコードがメールで送られてきました。もらえる特典の種類は随時変わるらしく、他のブログではBluetooth Speakerなどをもらえると書いてありましたが、私の場合は以下から選ぶようになっていました。
 
-![Google Cloud Certification Perks Webstore](perk.png)
+![Google Cloud Certification Perks Webstore](perk.webp)
 
 私はジッパーフードの方を選びたかったのですが、今回はサイズを2XLしか選べなかったので、今回はジッパーのない方を選んでいます。欲しいものが特になかったら、寄付できるオプションもありますのでそちらを選んでも良いかもですね。
 

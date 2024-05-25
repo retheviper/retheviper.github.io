@@ -114,7 +114,7 @@ Now 10 is String
 
 これを絵で表現すると以下の通りです。
 
-![Kotlin List Processing](kotlin_list_processing.png)
+![Kotlin List Processing](kotlin_list_processing.webp)
 *出典：Kotlin公式ドキュメント - [Sequences](https://kotlinlang.org/docs/sequences.html#iterable)*
 
 ##### Collectionのopreation
@@ -187,7 +187,7 @@ Now 6 is String
 
 これを絵で表現すると以下の通りです。
 
-![Kotlin Sequence Processing](kotlin_sequence_processing.png)
+![Kotlin Sequence Processing](kotlin_sequence_processing.webp)
 *出典：Kotlin公式ドキュメント - [Sequences](https://kotlinlang.org/docs/sequences.html#sequence)*
 
 処理の順番や仕組みが違うので、Collectionの時とは実装もかなり違うだろうと予想ができますね。では、こちらの実装を見ていきましょう。

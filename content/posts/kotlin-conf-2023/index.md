@@ -20,7 +20,7 @@ tags:
 
 ここではKotlin 1.8と、2.0になった場合のコンパイラのパフォーマンスの違いをまずグラフとして提示していました。当たり前ながら、2.0でかなり速度が上がったように見えます。同じ環境で20秒かかるものが、10秒に短縮されたということですね。
 
-![コンパイル時間の比較](compilation-time-comparison.png)
+![コンパイル時間の比較](compilation-time-comparison.webp)
 
 Andoridの公式言語としてKotlinが採用され、JavaからKotlinに移行した開発者の間でやはりビルドが遅くなったという話を聞いた覚えがあるのでこれはかなり嬉しい結果となっていますね。またコンパイラのパフォーマンスが上がるとintellijでのコンパイルも早くなるわけなのでより快適な開発環境になると思います。
 
@@ -152,17 +152,17 @@ val applicationState: StateFlow<State>
 
 このセッションで新しくKotlin Notebooksというものの発表がありました。今は[Jupyter Notebook](https://jupyter.org/)でもKotlinは使えるのですが、似たような機能をKotlin専用として開発したような感覚ですね。Jupyterそのものも有名で、動画の中ですでに多くの機能を紹介しているので説明よりはそのキャプチャを載せておきます。以下のような活用例が紹介されています。
 
-![プロトタイピング](kotlin-notebook-example-1.png)
+![プロトタイピング](kotlin-notebook-example-1.webp)
 
-![言語使用の学習(AIサポート)](kotlin-notebook-example-2.png)
+![言語使用の学習(AIサポート)](kotlin-notebook-example-2.webp)
 
-![アルゴリズムの検証(ソートのビジュアライズ)](kotlin-notebook-example-3.png)
+![アルゴリズムの検証(ソートのビジュアライズ)](kotlin-notebook-example-3.webp)
 
-![データ調査](kotlin-notebook-example-4.png)
+![データ調査](kotlin-notebook-example-4.webp)
 
-![データ分析](kotlin-notebook-example-5.png)
+![データ分析](kotlin-notebook-example-5.webp)
 
-![Plot生成](kotlin-notebook-example-6.png)
+![Plot生成](kotlin-notebook-example-6.webp)
 
 その他、自動完成やオンラインでのコードシェア対応、テーブルのソートとカラムの順番変更などができるという点が紹介で明らかになっています。
 

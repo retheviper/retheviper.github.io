@@ -173,7 +173,7 @@ interface SequencedMap<K,V> extends Map<K,V> {
 
 これらの新しいInterfaceが追加されることで、Collection全体の継承関係が以下のように変更されました。
 
-![Sequenced Collections](SequencedCollectionDiagram20220216.png)
+![Sequenced Collections](SequencedCollectionDiagram20220216.webp)
 *出典：OpenJDK - [JEP 431: Sequenced Collections](https://openjdk.org/jeps/431)*
 
 継承関係によってダウンキャストが発生する場合もあるかなと思いますが、Listの場合はSequencedCollectionを継承しているのでそのまま新しいメソッドを使うことができます。

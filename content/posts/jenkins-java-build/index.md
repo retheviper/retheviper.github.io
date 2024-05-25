@@ -23,15 +23,15 @@ Jenkinsを使う理由は、このJobのためです。Jobは`自動化された
 
 Jenkinsのメインページに入ります。何もJobがない状態なので、メイン画面に`create new jobs`というリンクがあることを確認できます。Jobが無い場合はこちらでもJobを生成することができます。しかし何かしらのJobがある場合は、左のメニューで`New item`をクリックすれば新しいJobの生成画面に移行します。どちらかをクリックします。
 
-![Jenkins Mainpage](jenkins_mainpage.png)
+![Jenkins Mainpage](jenkins_mainpage.webp)
 
 `Enter an item name`でJobの名前を指定します。また、下にはどんなJobを生成するかに対するいくつかのテンプレートがあります。ここでは`Freestyle project`を選びます。ちなみに、Job生成時に指定した名前と同じ名のフォルダがJenkinsの`Workspace`というフォルダの下に生成されるので、なるべく半角英文字・スペースなしで生成することをお勧めします。
 
-![Jenkins Create Job](jenkins_createjob.png)
+![Jenkins Create Job](jenkins_createjob.webp)
 
 Jobの名前とテンプレートを選んだなら、`Ok`を押してJobを生成します。
 
-![Jenkins Job Main](jenkins_jobmain.png)
+![Jenkins Job Main](jenkins_jobmain.webp)
 
 ここがJob設定のメイン画面です。画面の最上段にある各タブの機能は以下のようになります。
 
@@ -48,19 +48,19 @@ Jobの名前とテンプレートを選んだなら、`Ok`を押してJobを生�
 
 それでは本格的に今回のタスクを作ってみましょう。まずGitからJavaのコードを持ってくる必要があるので、`Source Code Management`からGitを選択します。
 
-![Jenkin Git Config](jenkins_gitconfigure.png)
+![Jenkin Git Config](jenkins_gitconfigure.webp)
 
 `Repository URL`にはGitのリポジトリを入力します。最初何も入力されてない時は接続エラーが出ていますが、URLを入力すると自動的にリポジトリへの接続を試し、問題がないとエラーは消えます。また、`Credentials`から接続するIDなどの認証情報を選択します。最初は何もないので、`Add`をクリックし新しい認証情報を入力しましょう。
 
 今の所、私の作ったリポジトリはブランチが一つしかないのですが、もし特定のブランチだけをPullしたい場合は`Branches to Build`のフィールドにブランチ名を入力することで指定できます。
 
-![Jenkins Git Credential](jenkins_gitcredential.png)
+![Jenkins Git Credential](jenkins_gitcredential.webp)
 
 他はデフォルト値で、GitのIDとパスワードだけを入力して`Add`を押せば終了。こちらで入力した認証情報は全域設定なので、他のJobでも使えます。
 
 認証情報まで無事入力ができたら、`Save`を押して一旦作業を保存しましょう。そうすると、以下のような画面に戻ります。
 
-![Jenkins Job Saved](jenkins_jobsaved.png)
+![Jenkins Job Saved](jenkins_jobsaved.webp)
 
 ## ビルドしてみる(1)
 
@@ -68,17 +68,17 @@ Jobの名前とテンプレートを選んだなら、`Ok`を押してJobを生�
 
 ビルドに成功したら、`#1`をクリックしてビルドの詳細を確認します。以下のような画面が現れます。
 
-![Jenkins Git Job](jenkins_gitjob1.png)
+![Jenkins Git Job](jenkins_gitjob1.webp)
 
 実際のビルドでどんな処理が行われたかを確認するには、左のメニューから`Console Output`をクリックします。Linuxのコンソールのような画面で表示されます。
 
-![Jenkins Git Job 2](jenkins_gitjob2.png)
+![Jenkins Git Job 2](jenkins_gitjob2.webp)
 
 ちゃんと指定した通り、Gitのリポジトリ（ブランチはマスター）からPullしてきたことを確認できます。コミットメッセージまで出力してくれてますね。
 
 Linuxのコンソールから`/var/lib/jenkins/workspace/`配下のフォルダを直接確認することもできますが、JenkinsのWebコンソールからもJobのワークスペースを確認することができます。左のメニューで`Back to Project`をクリックし、`Workspace`をクリックすると以下のような画面が現れます。
 
-![Jenkins Git Job 3](jenkins_gitjob3.png)
+![Jenkins Git Job 3](jenkins_gitjob3.webp)
 
 実際GitのPullが正しく行われ、フォルダとファイルが生成されたことをこちらで確認できます。
 
@@ -88,7 +88,7 @@ Linuxのコンソールから`/var/lib/jenkins/workspace/`配下のフォルダ�
 
 `Build`のタブに移動し、`Add build step`をクリック、ドロップダウンメニューから`Invoke Gradle script`を選択します。そして`Advanced...`をクリックしましょう。
 
-![Jenkins Gradle Config](jenkins_gradleconfigure1.png)
+![Jenkins Gradle Config](jenkins_gradleconfigure1.webp)
 
 ここで`Invoke Gradle`には前回のポストで入れといたGraldeをドロップダウンメニューで選択します。
 
@@ -96,7 +96,7 @@ Linuxのコンソールから`/var/lib/jenkins/workspace/`配下のフォルダ�
 
 もちろんGradleのコマンドではビルドファイルのパスを指定するオプションもあるので、`bootJar`だけでなく`-b SpringBootDemo/build.gradle bootJar`のようにコマンドを書いても同じくビルドはできます。
 
-![Jenkins Gradle Config 2](jenkins_gradleconfigure2.png)
+![Jenkins Gradle Config 2](jenkins_gradleconfigure2.webp)
 
 これでGradleでのビルド設定は終わり。次にGitの時と同じく、検証してみます。
 
@@ -104,11 +104,11 @@ Linuxのコンソールから`/var/lib/jenkins/workspace/`配下のフォルダ�
 
 ビルドの手順もGitの時と変わりません。`Build Now` → `#2` → `Console Output`の手順でビルドのコンソール出力を確認します。
 
-![Jenkins Gradle Build](jenkins_gradlebuild.png)
+![Jenkins Gradle Build](jenkins_gradlebuild.webp)
 
 無事Gradleでのビルドが終わりました。それではJarファイルがちゃんとできたか確認しましょう。
 
-![Jenkins Gradle Build JAR](jenkins_gradlebuildjar.png)
+![Jenkins Gradle Build JAR](jenkins_gradlebuildjar.webp)
 
 ちゃんと`build/libs`フォルダにJarファイルができたことを確認できます。
 

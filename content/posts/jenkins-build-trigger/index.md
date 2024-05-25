@@ -17,7 +17,7 @@ JenkinsのJobではこのような、条件によるJobの自動実行を設定�
 
 JenkinsでJobを生成すると、GeneralとSource Code Managementのタブの後にBuild Triggerというタブがあることを確認できます。プラグインの構成が違うと増えたり減ったりもするので一度確認してみてください。私はJenkinsをインストールするときオススメのプラグイン構成を選んでいるので、以下の構成になっています。
 
-![Jenkins Build Triggers](jenkins_build_triggers.png)
+![Jenkins Build Triggers](jenkins_build_triggers.webp)
 
 - Trigger builds remotely
 - Build after other projects are built
@@ -29,7 +29,7 @@ JenkinsでJobを生成すると、GeneralとSource Code Managementのタブの�
 
 ## Trigger builds remotely
 
-![Jenkins Build Triggers Remote](jenkins_trigger_remote.png)
+![Jenkins Build Triggers Remote](jenkins_trigger_remote.webp)
 
 これは、「遠隔」という表現通り、Jenkinsの管理コンソールに接続しなくてもJobを外部から実行できるようにするという意味です。このメニューを選ぶと、URLでJobをコールできるようになります。`Authentication Token`に認証として使うトークン名を入力すると、以下のようなURLでJobをコールできます。
 
@@ -40,13 +40,13 @@ JenkinsでJobを生成すると、GeneralとSource Code Managementのタブの�
 
 １番の設定は、パラメーターなしでただJobを実行するときに用います。２番目の場合は、パラメーターを渡したいときに使えますね。ここで受け取るパラメーターは、Generalタブで`This project is parameterized`をチェックし、パラメーターを追加すると設定できます。パラメーターで受け取った値はJobの中のシェルスクリプトなどで外部変数として使うことができます。
 
-![Jenkins Build Parameter](jenkins_build_parameter.png)
+![Jenkins Build Parameter](jenkins_build_parameter.webp)
 
 LinuxのCurlなど、外部からのコールが必要である時使うと便利な機能です。
 
 ## Build after other projects are built
 
-![Jenkins Build After](jenkins_build_after.png)
+![Jenkins Build After](jenkins_build_after.webp)
 
 JenkinsではJobを複数生成することができます。そしてJobを複数生成することはそれぞれ違う機能をするJobをそれぞれの目的に合わせて分けるという意味でしょう。ただ場合によってはそれらのJobを連携する必要もあるかもしれません。同じプログラムの中でもメソッドやクラスは分けてもそれらを繋いで使うことになりますので。
 
@@ -60,7 +60,7 @@ JenkinsではJobを複数生成することができます。そしてJobを複�
 
 ## Build periodically
 
-![Jnekins Build Period](jenkins_build_period.png)
+![Jnekins Build Period](jenkins_build_period.webp)
 
 時間による定期実行が欲しい場合はこちらのオプションを使います。`Schedule`の欄に、Jenkins固有のルールに合わせて周期を書くと自動的に条件に合わせてJobのビルドが繰り返されます。かなり複雑ではありますが、一旦紹介します。
 
@@ -93,23 +93,23 @@ JenkinsではJobを複数生成することができます。そしてJobを複�
 
 ## GitHub hook trigger for GITScm polling
 
-![Jenkins GitHub Hook](jenkins_github_hook.png)
+![Jenkins GitHub Hook](jenkins_github_hook.webp)
 
 このオプションは[GitHub](https://github.com)との連動で、リポジトリにPushが発生するとビルドが行われるということです。Jenkins内ではこのオプションを選ぶだけであまり複雑な設定はないですが、GitHubのリポジトリでPushが発生したということをJenkins側に知らせるための設定が必要となります。
 
 GitHubのリポジトリに入ると、上段に`Settings`というタブがあります。それをクリックし、さらに`Webhooks`というメニューに入ります。そうすると以下のような画面が現れます。
 
-![GitHub Webhook](github_webhook1.png)
+![GitHub Webhook](github_webhook1.webp)
 
 ここで`Add Webhooks`ボタンを押すと、また以下のような画面になります。
 
-![GitHub Webhook 2](github_webhook2.png)
+![GitHub Webhook 2](github_webhook2.webp)
 
 ここでも複雑な設定はいらなく、`Payload URL`にJenkinsのURL/github-webhookと書くだけです。例えばJenkinsのURLが`192.168.0.2:8080`だとすると、`http://192.168.0.2:8080/github-webhook/`と書きます。これでリポジトリにPushが発生したら、Jobは自動ビルドされます。WebサーバーでのGit管理もこれで簡単にできますね。
 
 ## Poll SCM
 
-![Jenkins Poll SCM](jenkins_poll_scm.png)'
+![Jenkins Poll SCM](jenkins_poll_scm.webp)'
 
 SCMとは、`Source Control Management(ソース管理構成)`のことです。[^1]GitやSVNなどのツールによる意味します。Poll SCMを選択すると、`Build periodically`同様`Schedule`の入力欄が現れます。ここに同じく周期を入力します。ただ何が違うかというと、設定した時間になっても必ずしもビルドが行われるのではないということです。設定した時間になるとソースの確認をして、そこで変更があった場合のみビルドが行われるらしいですね。GitやSVNの連動で使える設定みたいです。
 

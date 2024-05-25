@@ -14,7 +14,7 @@ tags:
 
 そんな中、今回はAWS認定の資格を受験しました。AWS認定資格の種類は以下の画像の通りですが、この中で自分が受験したのはデベロッパー - アソシエイトです。仕事でAWSの基本的なサービス(EC2とS3など)に触れたことがあり、AzureでもFunctionsとQueueによる簡単なサーバレスアプリを作ってみたり、Bastionなどのサービスを使ってみた経験があったので悩まずデベロッパーを選択。なんとか受かりましたが、少し使ってみただけで気安く挑戦するような資格ではなかったと実感しました…
 
-![AWS Certification](aws_certifications.png)
+![AWS Certification](aws_certifications.webp)
 *出典：AWS公式サイト - [AWS認定](https://aws.amazon.com/jp/certification/?nc1=h_ls)*
 
 ともかく、前回の[Java資格の時](../java-se-8-gold)でもそうであったように、今回も自分の観点からテストはどうだったかについて簡単に述べていきたいと思います。
@@ -65,7 +65,7 @@ CI/CD関連で問われる問題です。[CodePipeline](https://aws.amazon.com/j
 
 自分の場合は、以下のイメージを見てだいぶ理解ができたと思います。
 
-![AWS Code Sevices](aws_code_services.png)
+![AWS Code Sevices](aws_code_services.webp)
 *出典：AWS公式サイトトレーニングコース `Exam Readiness: AWS Certified Developer - Associate (Digital)`*
 
 以上の内容は、AWS公式の動画でよく説明してくれているので、一回は受講することをオススメします。

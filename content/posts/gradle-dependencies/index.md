@@ -38,7 +38,7 @@ tags:
 
 これらの関係を簡単な図として表現すると、このようになります。
 
-![Gradle Implemenatation API](gradle_implementation_api.png)
+![Gradle Implemenatation API](gradle_implementation_api.webp)
 
 ## 最後に
 

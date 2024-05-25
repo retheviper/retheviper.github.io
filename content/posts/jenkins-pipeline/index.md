@@ -27,7 +27,7 @@ Pipelineではgroovyを使って、実行したいコマンドやタスクなど
 
 Pipelineジョブ内のステージに関する実行履歴はGUIから表示され、簡単に確認できる実行ログを提供しています。以下のような画面です。
 
-![Jenkins Pipeline Stage View](jenkins_pipeline_stage_view.png)
+![Jenkins Pipeline Stage View](jenkins_pipeline_stage_view.webp)
 
 ## Pipeline作成チュートリアル
 
@@ -35,23 +35,23 @@ Pipelineジョブ内のステージに関する実行履歴はGUIから表示さ
 
 では、まずPipelineジョブを作成する手順を簡単に説明していきましょう。ジョブ作成画面からジョブ名を入力して、Pipelineを選択します。
 
-![Jenkins Create Pipeline](jenkins_create_pipeline.png)
+![Jenkins Create Pipeline](jenkins_create_pipeline.webp)
 
 ### Pipelineスクリプト
 
 Pipelineでジョブを作成すると、ジョブで実行する項目を指定する画面もFreestyleジョブとは違うものになります。ビルドトリガーなどの設定は同じですが、画面を下にスクロールしてみるとPipelineというタブがあることを確認できます。ここに直接スクリプトを書くか、Gitなどで管理しているスクリプトファイルを指定するかで何を実行するか選べられます。
 
-![Jenkins Pipeline Script](jenkins_pipeline_script1.png)
+![Jenkins Pipeline Script](jenkins_pipeline_script1.webp)
 
 しかし、いきなりスクリプトを書くのも難しいことです。まず画面の右にあるtry sample Pipeline...をクリックしてみましょう。まずはHello worldを選んでみます。
 
-![Jenkins Pipeline Script 2](jenkins_pipeline_script2.png)
+![Jenkins Pipeline Script 2](jenkins_pipeline_script2.webp)
 
 Pipelineのスクリプトはgroovyを使っていますが、groovyの文法をまず勉強する必要はありません。サンプルのコードは他にもあるので、それらを参考してどんな書き方をするかを確認しましょう。
 
 また、Pipelineスクリプトに慣れてない人のためにJenkinsではSnippet作成機能を提供しています。実行したいタスクをドロップダウンメニューから選び、必要なパラメータなどを入力すると自動的にスクリプトを生成してくれる便利な機能です。Pipelineのスクリプト入力欄の下にあるPipeline Syntaxをクリックすると以下のような画面が表示されます。
 
-![Jenkins Pipeline Snippet](jenkins_pipeline_snippet.png)
+![Jenkins Pipeline Snippet](jenkins_pipeline_snippet.webp)
 
 最初からスクリプトを手で書いても良いですが、どう書いたらわからない場合はこちらの機能を使いましょう。
 
@@ -59,15 +59,15 @@ Pipelineのスクリプトはgroovyを使っていますが、groovyの文法を
 
 完成したPipelineジョブを実行するとステージ別に成功と失敗の結果が表示されます。先ほど作成したHello Worldサンプルの場合の実行結果画面です。
 
-![Jenkins Pipeline Result](jenkins_pipeline_result1.png)
+![Jenkins Pipeline Result](jenkins_pipeline_result1.webp)
 
 ここでは各ステージをクリックすると、ステージ別に書いたタスクに対して結果を確認できます。Logsをクリックしてみましょう。
 
-![Jenkins Pipeline Result 2](jenkins_pipeline_result2.png)
+![Jenkins Pipeline Result 2](jenkins_pipeline_result2.webp)
 
 Log画面ではステージで実行したコマンドやタスクの結果がそれぞれ出力され、実行時間と共に詳細を確認することもできます。
 
-![Jenkins Pipeline Result 3](jenkins_pipeline_result3.png)
+![Jenkins Pipeline Result 3](jenkins_pipeline_result3.webp)
 
 ### Pipelineスクリプトの構造
 

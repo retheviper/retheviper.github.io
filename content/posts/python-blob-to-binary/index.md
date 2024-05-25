@@ -182,7 +182,7 @@ def GetImageFromTable(last_date):
         if len(rows) == 0:
             break
 
-        # 画像ファイル置き場に画像ファイル保存(イメージネーム.jpg)
+        # 画像ファイル置き場に画像ファイル保存(イメージネーム.webp)
         for image in rows:
             fileNameS = imageFolder + '/' + str(image[1]) + '.jpg'
             imageFile = open(fileNameS, 'wb+')
@@ -262,7 +262,7 @@ def uploadToS3(item_cd, path):
     s3 = boto3.resource('s3')
 
     try:
-        # サーバーに保存されたファイルを指定したパスに保存(file_path1/file_path2/file_path3/1_1_YYYYMMDD.jpg)
+        # サーバーに保存されたファイルを指定したパスに保存(file_path1/file_path2/file_path3/1_1_YYYYMMDD.webp)
         s3.Bucket(bucket_name).upload_file(imageFolder + '/' + item_cd + '.jpg', path + '/1_1_' + datetime.datetime.today().strftime('%Y%m%d%H%M%S') + '.jpg')
         print ('>> Image file uploaded. (Item code: ' + item_cd + ')')
     except:

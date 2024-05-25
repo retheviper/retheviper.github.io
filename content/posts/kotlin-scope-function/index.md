@@ -147,7 +147,7 @@ name?.let { println("name is not null") } ?: also { println("name is null") }
 
 [Kotlin Standard Library (let, run also, apply, with)](https://medium.com/@brijesh1794/kotlin-standard-library-let-run-also-apply-with-bb08473d29fd)では、5つのScope Functionのどれを使うか判断する基準を、フローチャートとして提示しています。以下は、そのフローチャートを簡単に翻訳したものです。どれを使うか悩ましい時は、こういう基準でコードを書いても良さそうですね。
 
-![Kotlin Select Scope Function](kotlin_select_scope_function.png)
+![Kotlin Select Scope Function](kotlin_select_scope_function.webp)
 
 ## 応用
 
