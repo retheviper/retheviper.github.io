@@ -175,7 +175,7 @@ for (i in 0..n) {
 
 これもまた、Kotlin 2.1からは`let`のようなinline関数を正しく解析できるようになるため、`break`や`continue`が使えるようになるとのことです。
 
-![Non-local break/continueの解決](non-local-break-continue.webp)
+![Non-local break/continueの解決](non-local-break-and-continue.webp)
 
 ### Contexts
 
