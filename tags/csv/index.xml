@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Csv on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/csv/</link><description>Recent content in Csv on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 27 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/csv/index.xml" rel="self" type="application/rss+xml"/><item><title>data classのListをCSVにする</title><link>https://retheviper.github.io/posts/kotlin-write-csv/</link><pubDate>Sat, 27 Aug 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-write-csv/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post data classのListをCSVにする" />&lt;p>アプリを書いていると、DBに保存した形とは違う形でデータを読み込んだり出力するケースが多いです。代表的に、多くのバックエンドアプリで採用しているREST APIがそうですね。APIの入力値と戻り値は、DBに保存されている形とは一致しないケースが多く、必要(リクエストを送信してきた側の都合)に合わせて適切にパラメータを受け取り、レスポンスを返すようになっています。そして時と場合によっては、人間が楽に読める形としてデータをまとめる必要もあります。そういった場合はExcelファイルやCSV、PDFといったいろいろなものを想定できますね。&lt;/p>
 &lt;p>今回のポストも場合も人が読める形のファイルとして、特にCSVを扱う場合にKotlin側の実装をどうやっていくかに関するものです。&lt;/p>
-&lt;h2 id="kotlinでcsvを扱う">KotlinでCSVを扱う&lt;/h2>
-&lt;p>KotlinのCSV読み込み/書き込みのライブラリとして&lt;a class="link" href="https://github.com/doyaaaaaken/kotlin-csv/" target="_blank" rel="noopener"
+&lt;h2 id="kotlinでcsvを扱う">KotlinでCSVを扱う
+&lt;/h2>&lt;p>KotlinのCSV読み込み/書き込みのライブラリとして&lt;a class="link" href="https://github.com/doyaaaaaken/kotlin-csv/" target="_blank" rel="noopener"
 >kotlin-csv&lt;/a>があり、JVMだけでなくKoltin/JSの場合でもこのライブラリを使って簡単にCSVを扱えます。更に&lt;a class="link" href="https://github.com/blackmo18/kotlin-grass" target="_blank" rel="noopener"
 >kotlin-grass&lt;/a>というライブラリもあり、&lt;code>kotlin-csv&lt;/code>との組み合わせででCSVのデータを簡単にdata classのListとしてまとめることもできますね。読み込みの際に指定できるデータのフォーマットやカスタムマッピングオプションなどの機能も豊富にあり、かなり使いやすく良いライブラリとなっています。&lt;/p>
 &lt;p>しかし、実は&lt;code>kotlin-csv&lt;/code>を使うときに問題が一つあります。先に述べた通りCSVにデータの出力そのものは可能なものとなっているのですが、読み込みの時にdata classへのマッピングには別のライブラリが必要であったように、data classのリストを書き込むには追加の処理が必要となります。これは、kotlin-csvの書き込み用のメソッドが以下のようになっているからです。&lt;/p>
@@ -11,8 +11,8 @@
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;code>rows&lt;/code>が書き込みで使うデータとなりますが、型が&lt;code>List&amp;lt;List&amp;lt;Any?&amp;gt;&amp;gt;&lt;/code>になっているので、列のデータを一つの行としてListに定義し、それをさらにListに格納することでCSVのデータ全体を定義する必要があります。これはつまり、data classのリストを書き込むためには、フィールド一つ一つを列として定義し、それらをListとしてまとめる必要があるということです。また、CSVには一般的にヘッダが含まれますが、&lt;code>List&amp;lt;List&amp;lt;Any?&amp;gt;&amp;gt;&lt;/code>の形だと最初の行にヘッダのみを定義した行は必要となることでもありますね。&lt;/p>
 &lt;p>一見複雑に見えますが、&lt;a class="link" href="https://kotlinlang.org/docs/reflection.html" target="_blank" rel="noopener"
 >reflection&lt;/a>を利用すると、data classのフィールド名とその値を得ることができますので、それを利用してdata classのListをこのメソッドに適した形に変えられます。これをヘッダを作る方法と、data classの値を行に変更する二つの段階で分けて説明していきます。&lt;/p>
-&lt;h3 id="data-classからヘッダを作る">data classからヘッダを作る&lt;/h3>
-&lt;p>まずはヘッダを作ります。ヘッダを作るには、data classからフィールドを取得し、そのフィールドの名前のみを取得するといいでしょう。&lt;code>id&lt;/code>というフィールドがあるとしたら、ヘッダもそのまま&lt;code>id&lt;/code>になるということです。フィールド名とは別の名前をつけたい場合はアノテーションを活用する方法を考えられますが、まずはフィールド名をそのまま使う方法から述べたいと思います。&lt;/p>
+&lt;h3 id="data-classからヘッダを作る">data classからヘッダを作る
+&lt;/h3>&lt;p>まずはヘッダを作ります。ヘッダを作るには、data classからフィールドを取得し、そのフィールドの名前のみを取得するといいでしょう。&lt;code>id&lt;/code>というフィールドがあるとしたら、ヘッダもそのまま&lt;code>id&lt;/code>になるということです。フィールド名とは別の名前をつけたい場合はアノテーションを活用する方法を考えられますが、まずはフィールド名をそのまま使う方法から述べたいと思います。&lt;/p>
 &lt;p>Kotlinのdata classから、フィールドを取得する方法が3つがあります。まずは、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/members.html" target="_blank" rel="noopener"
 >KClass.members&lt;/a>があります。ただ、これだとメソッドを含め、全てのメンバーを持ってくることになります。以下のようにですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Data&lt;/span>(&lt;span style="color:#66d9ef">val&lt;/span> id: Int, &lt;span style="color:#66d9ef">val&lt;/span> name: String)
@@ -43,8 +43,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>println(parameters) &lt;span style="color:#75715e">// [name, age]
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>多少強引な方法ではありますが、これでフィールドとして使うフィールド名は取得できました。では、次にアノテーションを使う場合を見ていきましょう。&lt;/p>
-&lt;h4 id="アノテーションを使う場合">アノテーションを使う場合&lt;/h4>
-&lt;p>フィールド名をそのままヘッダとして利用したくない場合は、アノテーションを活用できます。フィールドとしてStringを持つアノテーションを定義して、ヘッダを読み取るときにそのフィールドにつけたアノテーションを取得するという方法です。例えば、以下のようなアノテーションを定義したとしましょう。&lt;/p>
+&lt;h4 id="アノテーションを使う場合">アノテーションを使う場合
+&lt;/h4>&lt;p>フィールド名をそのままヘッダとして利用したくない場合は、アノテーションを活用できます。フィールドとしてStringを持つアノテーションを定義して、ヘッダを読み取るときにそのフィールドにつけたアノテーションを取得するという方法です。例えば、以下のようなアノテーションを定義したとしましょう。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Target&lt;/span>(&lt;span style="color:#a6e22e">AnnotationTarget&lt;/span>.PROPERTY)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">annotation&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CsvHeaderName&lt;/span>(&lt;span style="color:#66d9ef">val&lt;/span> value: String)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>アノテーションは、以下のようにdata classで使います。&lt;/p>
@@ -74,8 +74,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで、ヘッダのデータはできました。次は、このヘッダに合わせて下に出力する行としてdata classをListに変換するのみですね。&lt;/p>
-&lt;h3 id="data-classをlistに変える">data classをListに変える&lt;/h3>
-&lt;p>ヘッダの処理で既にやっていたように、data classをListに変換する場合でも処理は大きく変わりません。違う点は、フィールドから実際のデータを取得するだけですね。ここでは、コンストラクタからパラメータを取得した場合を想定してコードを書きましょう。&lt;/p>
+&lt;h3 id="data-classをlistに変える">data classをListに変える
+&lt;/h3>&lt;p>ヘッダの処理で既にやっていたように、data classをListに変換する場合でも処理は大きく変わりません。違う点は、フィールドから実際のデータを取得するだけですね。ここでは、コンストラクタからパラメータを取得した場合を想定してコードを書きましょう。&lt;/p>
 &lt;p>Kotlinのreflectionでフィールドの値を取得する場合はJavaと変わらなくて、取得したフィールドにdata classのインスタンスを渡すだけとなります。ただ、フィールドがnullの場合は考慮する必要があります。nullになってしまうと、その列自体がスキップされ、最終的に出力されたCSVのデータで列がずれる場合があるからです。なので、空白のStringを指定するなどで、行ごとの長さ(Listのサイズ)を合わせる必要があります。以下のようにですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>datas.map { d &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fieldNames.mapNotNull { name &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
@@ -141,8 +141,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> targetFile = targetFile
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでヘッダが先に行に書き込まれ、次の行からはdata classのフィールドに格納した実際の値が出力されることになりました。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>この度軽く「KotlinなんだからKotlin制のライブラリを使おう」と、軽い気持ちで採用したライブラリが想定していたものと違ったので困っていましたが、幸いJavaを使っていた時に&lt;a class="link" href="https://poi.apache.org/" target="_blank" rel="noopener"
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>この度軽く「KotlinなんだからKotlin制のライブラリを使おう」と、軽い気持ちで採用したライブラリが想定していたものと違ったので困っていましたが、幸いJavaを使っていた時に&lt;a class="link" href="https://poi.apache.org/" target="_blank" rel="noopener"
 >Apache POI&lt;/a>を使って似たような機能をするライブラリを作ってみた経験があったのでその知識を活かせたと言えます。当時はまだ駆け出しのエンジニア(今もそうと思っていますが)だったので大変苦労した思い出でもありますが、今はその経験があってこそ対処できたようなものなので大変ありがたい経験だったなと思いました。&lt;/p>
 &lt;p>上記のコードに対してはちょっとしたライブラリを作ってみたので、またどこかで活用してみたいものですね。色々と改善して、のちにMaven Repositoryのようなところでも公開できるようになったらなと思います。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

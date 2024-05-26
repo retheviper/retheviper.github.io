@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ci/Cd on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/ci/cd/</link><description>Recent content in Ci/Cd on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 21 Jan 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/ci/cd/index.xml" rel="self" type="application/rss+xml"/><item><title>Cloud BuildのCI/CDを高速化してみた</title><link>https://retheviper.github.io/posts/application-build-cache/</link><pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/application-build-cache/</guid><description>&lt;img src="https://retheviper.github.io/images/gcp.jpg" alt="Featured image of post Cloud BuildのCI/CDを高速化してみた" />&lt;p>CI/CDは一度インフラとアプリケーションを構築すれば、あまり変わることはありません。極端な話、期待通り動いてくれれば問題はないといえることです。しかし、場合によってはCI/CDのフローを見直すことも必要になります。アプリケーションの機能追加やインフラの変更などにはいつ変化があるかわからないし、緊急対応が必要な場合は迅速なデプロイが必要とされる場合もあるからです。そのため、CI/CDの高速化が非常に重要な課題となるケースもあります。&lt;/p>
 &lt;p>実は去年転職をしましたが、転職先の会社ではCI/CDの高速化が課題となっていました。前職では2週間に一回というリリースのサイクルがあったのですが、今回は一日でも数回のリリースがあるため何よりもそのため、CI/CDの高速化を行うために、いくつかの方法を試してみました。今回はその中で、最も効果があった方法を紹介します。&lt;/p>
-&lt;h2 id="インフラ構成">インフラ構成&lt;/h2>
-&lt;p>基本的には、以下のような構成になっています。&lt;/p>
+&lt;h2 id="インフラ構成">インフラ構成
+&lt;/h2>&lt;p>基本的には、以下のような構成になっています。&lt;/p>
 &lt;ul>
 &lt;li>GitHubにソースコードおよびCI/CDの構成ファイルを配置&lt;/li>
 &lt;li>Cloud Buildを利用してDockerコンテナをビルド&lt;/li>
 &lt;li>Cloud Runにデプロイ&lt;/li>
 &lt;/ul>
 &lt;p>この構成はFrontend, Backendともに同じで、データベースマイグレーションも同じ環境となっています。マイグレーションの時にはCloud RunでFlywayを実行してAlloyDBにマイグレーションを行っているようになっています。&lt;/p>
-&lt;h2 id="キャッシュで高速化">キャッシュで高速化&lt;/h2>
-&lt;p>CI/CDの高速化にはいくつかの方法がありますが、今回はキャッシュを利用することで高速化を行いました。&lt;/p>
+&lt;h2 id="キャッシュで高速化">キャッシュで高速化
+&lt;/h2>&lt;p>CI/CDの高速化にはいくつかの方法がありますが、今回はキャッシュを利用することで高速化を行いました。&lt;/p>
 &lt;p>高速化のために考えられるのはいくつかの方法がありますが、まずは簡単な方法としてキャッシュを利用することにしました。今回利用したキャッシュは二つで、一つはGradleのキャッシュ、もう一つはDockerイメージのキャッシュです。&lt;/p>
-&lt;h3 id="gradleのキャッシュ">Gradleのキャッシュ&lt;/h3>
-&lt;p>まずGradleには&lt;a class="link" href="https://docs.gradle.org/current/userguide/build_cache.html" target="_blank" rel="noopener"
+&lt;h3 id="gradleのキャッシュ">Gradleのキャッシュ
+&lt;/h3>&lt;p>まずGradleには&lt;a class="link" href="https://docs.gradle.org/current/userguide/build_cache.html" target="_blank" rel="noopener"
 >Build Cache&lt;/a>と&lt;a class="link" href="https://docs.gradle.org/current/userguide/configuration_cache.html" target="_blank" rel="noopener"
 >Configuration Cache&lt;/a>というものがあり、これらを有効にした場合、次回のビルドからはそれぞれ前回のビルドの成果物とビルド時の設定をキャッシュとして使うことになるのでビルドの時間をかなり短縮することができます。&lt;/p>
 &lt;p>これらのキャッシュを有効にするには、&lt;code>gradle.properties&lt;/code>ファイルに以下のように設定を行います。&lt;/p>
@@ -21,8 +21,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">//&lt;/span> &lt;span style="color:#e6db74">configuration cache&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">org.gradle.configuration-cache&lt;/span>&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">true&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="dockerイメージのキャッシュ">Dockerイメージのキャッシュ&lt;/h3>
-&lt;p>Gradleのキャッシュを有効にしても、CI/CDの環境で実際ビルドが走る時に利用できるキャッシュが存在しなければなりません。そのために利用したのがDockerのキャッシュです。Cloud Buildのフローが実行されるたびに前回のビルドの成果物をどこかにプッシュしておき、ビルドが走る時にそれを利用するとGradleのキャッシュを利用することができるようになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="dockerイメージのキャッシュ">Dockerイメージのキャッシュ
+&lt;/h3>&lt;p>Gradleのキャッシュを有効にしても、CI/CDの環境で実際ビルドが走る時に利用できるキャッシュが存在しなければなりません。そのために利用したのがDockerのキャッシュです。Cloud Buildのフローが実行されるたびに前回のビルドの成果物をどこかにプッシュしておき、ビルドが走る時にそれを利用するとGradleのキャッシュを利用することができるようになります。&lt;/p>
 &lt;p>これを実現するためにはまず最初にCloud buildの構成ファイルは以前は以下のようになっていました。(一部抜粋)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">steps&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">name&lt;/span>: &lt;span style="color:#ae81ff">gcr.io/cloud-builders/docker&lt;/span>
@@ -106,8 +106,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">images&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:latest&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のファイルでは、まず最初に前回のビルドの成果物をプルしています。これにより、前回のビルドの成果物を利用することができます。その後、ビルドでは&lt;code>--cache-from&lt;/code>オプションを利用して、前回のビルドの成果物をキャッシュとして利用しています。また、イメージのタグには&lt;code>latest&lt;/code>とコミットのハッシュを利用しています。そして最後にContainer Registryに&lt;code>latest&lt;/code>とコミット8種の両方をプッシュします。こうすると、Container Registryでは一つのイメージに対して二つのタグが付与され、次回のビルドでも&lt;code>latest&lt;/code>を利用できるようになります。&lt;/p>
-&lt;h3 id="dockerfileの修正">Dockerfileの修正&lt;/h3>
-&lt;p>Dockerイメージをビルドする際にDockerfileを使っていましたが、キャッシュをより効率的に利用するためにDockerfileを修正しました。修正前のDockerfileは以下のようになっていました。(一部抜粋)&lt;/p>
+&lt;h3 id="dockerfileの修正">Dockerfileの修正
+&lt;/h3>&lt;p>Dockerイメージをビルドする際にDockerfileを使っていましたが、キャッシュをより効率的に利用するためにDockerfileを修正しました。修正前のDockerfileは以下のようになっていました。(一部抜粋)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-dockerfile" data-lang="dockerfile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> eclipse-temurin:17&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> mkdir /api&lt;span style="color:#960050;background-color:#1e0010">
@@ -154,12 +154,12 @@
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> yarn build:app:production&lt;span style="color:#960050;background-color:#1e0010">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>データベースマイグレーションの場合、Cloud Buildで直接DBに接続してマイグレーションを行うのが難しかったのと、Backendと同様の設定をすることでDBアクセスは簡単にできたので基本的にはBackendと同じくDockerイメージを作成し、Cloud Run上でEntrypointのスクリプトを利用しFlywayを実行するようにしていました。&lt;/p>
 &lt;p>ただ、ここでBackendと同じDockerfileを使って同じくアプリをビルドしたあと、実際のアプリをCloud Runで実行するようになっていましたが、ここは必要なかったので（Cloud Runでは指定したポートからコンテナが応答するようにすればいいだけなので）アプリのビルドは行わなく、依存関係の解決だけを行うようにしました。ポートからの応答に関してはnginxを起動して応答するようにしています。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>今回はCI/CDの高速化について紹介しました。キャッシュを利用することで、ビルドの時間が大幅に短縮できて、既存だと14分ほどかかっていたのが今は6分ほどになっているので、一日中でも数回のリリースが行われる現状はかなり大きい成果だと言えます。ただ、データベースのマイグレーションではCloud Runを使わないようにするなど依然として改善の余地はありますね。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回はCI/CDの高速化について紹介しました。キャッシュを利用することで、ビルドの時間が大幅に短縮できて、既存だと14分ほどかかっていたのが今は6分ほどになっているので、一日中でも数回のリリースが行われる現状はかなり大きい成果だと言えます。ただ、データベースのマイグレーションではCloud Runを使わないようにするなど依然として改善の余地はありますね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>Jenkins Pipelineを使う</title><link>https://retheviper.github.io/posts/jenkins-pipeline/</link><pubDate>Sun, 26 Jan 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-pipeline/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkins Pipelineを使う" />&lt;p>前回までご紹介したJenkinsでのジョブ生成は、どちらかというと、古いやり方によるものでした。実際、2016年にJenkinsが2.0にアップデートされながら、スクリプトでジョブを作成できるPipelineというものが導入されていました。&lt;/p>
 &lt;p>Pipelineではgroovyを使って、実行したいコマンドやタスクなどをステージという単位で書きます。書いたスクリプトは上から順次実行され、各ステージごとに実行結果を画面上に表示してくれます。今までのJenkinsジョブと比べ使い方がかなり違うので、今回はそのPipelineジョブを作成する方法をサンプルを持って紹介したいと思います。&lt;/p>
-&lt;h2 id="pipeline使うと何が嬉しい">Pipeline使うと何が嬉しい？&lt;/h2>
-&lt;p>まずは普通のジョブと比べ、どんなメリットがあるかを知りたいですね。既存のFreestyleジョブでなく、PipelineでJenkinsのジョブを作成すると以下のようなメリットがあります。&lt;/p>
+&lt;h2 id="pipeline使うと何が嬉しい">Pipeline使うと何が嬉しい？
+&lt;/h2>&lt;p>まずは普通のジョブと比べ、どんなメリットがあるかを知りたいですね。既存のFreestyleジョブでなく、PipelineでJenkinsのジョブを作成すると以下のようなメリットがあります。&lt;/p>
 &lt;ul>
 &lt;li>スクリプトなので管理がしやすい
 &lt;ul>
@@ -188,9 +188,9 @@ class="gallery-image"
 data-flex-grow="133"
 data-flex-basis="321px"
 >&lt;/p>
-&lt;h2 id="pipeline作成チュートリアル">Pipeline作成チュートリアル&lt;/h2>
-&lt;h3 id="pipelineジョブの作成">Pipelineジョブの作成&lt;/h3>
-&lt;p>では、まずPipelineジョブを作成する手順を簡単に説明していきましょう。ジョブ作成画面からジョブ名を入力して、Pipelineを選択します。&lt;/p>
+&lt;h2 id="pipeline作成チュートリアル">Pipeline作成チュートリアル
+&lt;/h2>&lt;h3 id="pipelineジョブの作成">Pipelineジョブの作成
+&lt;/h3>&lt;p>では、まずPipelineジョブを作成する手順を簡単に説明していきましょう。ジョブ作成画面からジョブ名を入力して、Pipelineを選択します。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline.webp"
 width="1944"
 height="1540"
@@ -201,8 +201,8 @@ class="gallery-image"
 data-flex-grow="126"
 data-flex-basis="302px"
 >&lt;/p>
-&lt;h3 id="pipelineスクリプト">Pipelineスクリプト&lt;/h3>
-&lt;p>Pipelineでジョブを作成すると、ジョブで実行する項目を指定する画面もFreestyleジョブとは違うものになります。ビルドトリガーなどの設定は同じですが、画面を下にスクロールしてみるとPipelineというタブがあることを確認できます。ここに直接スクリプトを書くか、Gitなどで管理しているスクリプトファイルを指定するかで何を実行するか選べられます。&lt;/p>
+&lt;h3 id="pipelineスクリプト">Pipelineスクリプト
+&lt;/h3>&lt;p>Pipelineでジョブを作成すると、ジョブで実行する項目を指定する画面もFreestyleジョブとは違うものになります。ビルドトリガーなどの設定は同じですが、画面を下にスクロールしてみるとPipelineというタブがあることを確認できます。ここに直接スクリプトを書くか、Gitなどで管理しているスクリプトファイルを指定するかで何を実行するか選べられます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1.webp"
 width="1950"
 height="1532"
@@ -237,8 +237,8 @@ data-flex-grow="200"
 data-flex-basis="480px"
 >&lt;/p>
 &lt;p>最初からスクリプトを手で書いても良いですが、どう書いたらわからない場合はこちらの機能を使いましょう。&lt;/p>
-&lt;h3 id="pipelineの実行結果">Pipelineの実行結果&lt;/h3>
-&lt;p>完成したPipelineジョブを実行するとステージ別に成功と失敗の結果が表示されます。先ほど作成したHello Worldサンプルの場合の実行結果画面です。&lt;/p>
+&lt;h3 id="pipelineの実行結果">Pipelineの実行結果
+&lt;/h3>&lt;p>完成したPipelineジョブを実行するとステージ別に成功と失敗の結果が表示されます。先ほど作成したHello Worldサンプルの場合の実行結果画面です。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1.webp"
 width="842"
 height="922"
@@ -271,13 +271,13 @@ class="gallery-image"
 data-flex-grow="165"
 data-flex-basis="396px"
 >&lt;/p>
-&lt;h3 id="pipelineスクリプトの構造">Pipelineスクリプトの構造&lt;/h3>
-&lt;p>では、簡単にPipelineスクリプトがどんな構造となっているかもみていきましょう。Pipelineスクリプトはまず以下のようなコードで定義します。&lt;/p>
+&lt;h3 id="pipelineスクリプトの構造">Pipelineスクリプトの構造
+&lt;/h3>&lt;p>では、簡単にPipelineスクリプトがどんな構造となっているかもみていきましょう。Pipelineスクリプトはまず以下のようなコードで定義します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>pipeline &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// この中に実行するエージェントやステージを書く
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="実行エージェントの設定">実行エージェントの設定&lt;/h3>
-&lt;p>pipelineブロックを書いたら、次はpipelineを実行する環境を設定します。単純にJenkinsが起動しているインスタンスの中での実行ならagent anyと書くだけですが、最近はジョブを実行するためだけのDockerコンテナを使うことも多いようです。その場合は実行環境としてDockerコンテナを指定する必要がありますね。以下のようなコードでコンテナを指定します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="実行エージェントの設定">実行エージェントの設定
+&lt;/h3>&lt;p>pipelineブロックを書いたら、次はpipelineを実行する環境を設定します。単純にJenkinsが起動しているインスタンスの中での実行ならagent anyと書くだけですが、最近はジョブを実行するためだけのDockerコンテナを使うことも多いようです。その場合は実行環境としてDockerコンテナを指定する必要がありますね。以下のようなコードでコンテナを指定します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>pipeline &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> agent &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> docker &lt;span style="color:#f92672">{&lt;/span>
@@ -286,8 +286,8 @@ data-flex-basis="396px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ステージを作る">ステージを作る&lt;/h3>
-&lt;p>環境まで設定できたら、次は実行したいタスクを書きます。ここで大事なのはステージという概念です。Jenkinsの公式サイトではステージブロックを「Pipeline全体で実行するタスクの明確なサブセット」として定義しています。つまり、ステージ一つが一つのタスクの段階という意味でしょう。ステージの中では一つのタスク単位であるステップを定義し、ステップの中で実行するコマンドを書きます。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ステージを作る">ステージを作る
+&lt;/h3>&lt;p>環境まで設定できたら、次は実行したいタスクを書きます。ここで大事なのはステージという概念です。Jenkinsの公式サイトではステージブロックを「Pipeline全体で実行するタスクの明確なサブセット」として定義しています。つまり、ステージ一つが一つのタスクの段階という意味でしょう。ステージの中では一つのタスク単位であるステップを定義し、ステップの中で実行するコマンドを書きます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>pipeline &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> agent &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Docker環境
@@ -305,8 +305,8 @@ data-flex-basis="396px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Pipelineそのものに対する説明は以上となります。では、次に実際のPipelineジョブを書いたらどんな形になるのかを紹介します。&lt;/p>
-&lt;h3 id="pipelineスクリプト例題">Pipelineスクリプト例題&lt;/h3>
-&lt;p>以下のジョブをPipelineで作ると仮定して、簡単な例題を作ってみました。&lt;/p>
+&lt;h3 id="pipelineスクリプト例題">Pipelineスクリプト例題
+&lt;/h3>&lt;p>以下のジョブをPipelineで作ると仮定して、簡単な例題を作ってみました。&lt;/p>
 &lt;ol>
 &lt;li>実行環境はopenjdkコンテナ(rootユーザー)&lt;/li>
 &lt;li>Gitでソースコードをチェックアウト(ディレクトリはspringboot)&lt;/li>
@@ -349,12 +349,12 @@ data-flex-basis="396px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>まだPipelineのコードに慣れてないと難しいと思われるかもしれませんが、Pipeline Syntaxを活用するとすぐかけるものなので皆さんもぜひ挑戦してみてください。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>最初Jenkinsに接した時もこんなに便利なツールがあるとは！と思いましたが、Pipelineの導入でさらに便利かつ明確にタスクがわかるようになっていて驚きました。最近はAzure Pipelinesを少し触る機会があったのですが、そちらのジョブ作成もこのJenkinsのPipelineを意識した感じです。これからのCI/CDツールは多分言語や文法は違っても、どれもこのような形になるのではないかと思うくらい良い変化です。皆さんもぜひJenkinsのPipelineに触れて、快適なビルド・デプロイを楽しんてみてください。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>最初Jenkinsに接した時もこんなに便利なツールがあるとは！と思いましたが、Pipelineの導入でさらに便利かつ明確にタスクがわかるようになっていて驚きました。最近はAzure Pipelinesを少し触る機会があったのですが、そちらのジョブ作成もこのJenkinsのPipelineを意識した感じです。これからのCI/CDツールは多分言語や文法は違っても、どれもこのような形になるのではないかと思うくらい良い変化です。皆さんもぜひJenkinsのPipelineに触れて、快適なビルド・デプロイを楽しんてみてください。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>JenkinsでJarファイルをデプロイする</title><link>https://retheviper.github.io/posts/jenkins-java-deploy/</link><pubDate>Thu, 30 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-deploy/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJarファイルをデプロイする" />&lt;p>今回のポストではビルドしたJarファイルをデプロイするJobを作りたいと思います。デプロイといっても、実際このポストを書くきっかけとなったタスクは単純です。&lt;a class="link" href="../../../05/30/jenkins-javabuild" >前回のポスト&lt;/a>のようなJobで生成したJarファイルを違うサーバに転送して実行するだけです。これを繋いで一連の作業にした方が良いのではと思ったのですが、どうやらプロジェクトの設計はそうではなかったみたいです。理由は各サーバの利用目的が違うから、らしいです。&lt;/p>
 &lt;p>ともかく、JarファイルをSSHで転送するJobを作ります。もうすでにJarファイルをビルドするJobを作りましたので、そちらのソースを利用します。&lt;/p>
-&lt;h2 id="成果物の確保">成果物の確保&lt;/h2>
-&lt;p>まずJarファイルをどうやって新規Jobのワークスペースに持ってくるかを考えたいですね。単純には、前回生成したJobにビルドの後、シェルコマンドでファイルをコピーするようなタスクを追加することを考えられます。実際仕事でも一番最初に試した方法でもあります。&lt;/p>
+&lt;h2 id="成果物の確保">成果物の確保
+&lt;/h2>&lt;p>まずJarファイルをどうやって新規Jobのワークスペースに持ってくるかを考えたいですね。単純には、前回生成したJobにビルドの後、シェルコマンドでファイルをコピーするようなタスクを追加することを考えられます。実際仕事でも一番最初に試した方法でもあります。&lt;/p>
 &lt;p>でもファイルのパスやJarファイルの名称などが変わったりするとコマンドの修正が必要となりますし、あまりスマートな方法だとは思えません。なので今回はプラグインによる方法を使いたいと思います。Jenkinsのメイン画面から順番に&lt;code>Manage Jenkins&lt;/code>、&lt;code>Manage Plugins&lt;/code>をクリックしてプラグインのインストール画面に移動します。そして&lt;code>Availale&lt;/code>をクリックした後、右上の&lt;code>Filter&lt;/code>に&lt;code>Copy&lt;/code>を入力します。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall.webp"
 width="1680"
@@ -413,8 +413,8 @@ data-flex-grow="170"
 data-flex-basis="408px"
 >&lt;/p>
 &lt;p>狙い通り、ビルドしたファイルだけ保存できました。&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>&lt;code>*.jar&lt;/code>と指定していますが、それでもビルドされるファイルは一つしかなったので当たり前な結果ですね。ともかくこれでこちらのJobでの設定は終了です。次の作業に移行しましょう。&lt;/p>
-&lt;h2 id="成果物を引き継ぐ">成果物を引き継ぐ&lt;/h2>
-&lt;p>今回はデプロイ専用として&lt;code>JavaDeploy&lt;/code>というJobを生成してみました。こちらではまず保存した成果物をワークスペースに持ってくる設定が必要ですね。&lt;/p>
+&lt;h2 id="成果物を引き継ぐ">成果物を引き継ぐ
+&lt;/h2>&lt;p>今回はデプロイ専用として&lt;code>JavaDeploy&lt;/code>というJobを生成してみました。こちらではまず保存した成果物をワークスペースに持ってくる設定が必要ですね。&lt;/p>
 &lt;p>Jobの設定画面から&lt;code>Build&lt;/code>のタブに移動し、&lt;code>Add Build Step&lt;/code>をクリックしてみると&lt;code>Copy artifacts from another project&lt;/code>という項目がドロップダウンメニューに現れたことを確認できます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig.webp"
 width="1680"
@@ -451,8 +451,8 @@ data-flex-basis="408px"
 >&lt;/p>
 &lt;p>無事ビルドが終わり、成果物をコピーされました。&lt;/p>
 &lt;p>次にはこの成果物を他の環境に転送することですね。&lt;/p>
-&lt;h2 id="成果物を転送する1">成果物を転送する(1)&lt;/h2>
-&lt;p>sshによるファイル転送をするには、&lt;code>Publish over SSH&lt;/code>というプラグインが必要です。このプラグインを通じでSSH接続を行い、ファイル転送やリモートでのシェルコマンドが実行できます。プラグインのインストールメニューに移動し、sshでフィルターを指定すると目録からこのプラグインを見ることができます。&lt;/p>
+&lt;h2 id="成果物を転送する1">成果物を転送する(1)
+&lt;/h2>&lt;p>sshによるファイル転送をするには、&lt;code>Publish over SSH&lt;/code>というプラグインが必要です。このプラグインを通じでSSH接続を行い、ファイル転送やリモートでのシェルコマンドが実行できます。プラグインのインストールメニューに移動し、sshでフィルターを指定すると目録からこのプラグインを見ることができます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied.webp"
 width="1680"
 height="988"
@@ -487,8 +487,8 @@ data-flex-grow="170"
 data-flex-basis="408px"
 >&lt;/p>
 &lt;p>入力した情報に間違いがないと、&lt;code>Test configuration&lt;/code>を押した後に&lt;code>Success&lt;/code>が出力されます。設定を保存してJobに戻ります。&lt;/p>
-&lt;h2 id="成果物を転送する2">成果物を転送する(2)&lt;/h2>
-&lt;p>Jobdの設定に入って&lt;code>Build Environment&lt;/code>のタブにいくと、&lt;code>Send files or execute commands over SSH before the build starts&lt;/code>と&lt;code>Send files or execute commands over SSH after the build runs&lt;/code>の項目ができています。今は成果物を格納した後からSSHを開始したいので後者を選択します。もちろん&lt;code>Build&lt;/code>のタブにも&lt;code>Send files or execute commands over SSH&lt;/code>というメニューができるので、こちらで設定しても良いです。&lt;/p>
+&lt;h2 id="成果物を転送する2">成果物を転送する(2)
+&lt;/h2>&lt;p>Jobdの設定に入って&lt;code>Build Environment&lt;/code>のタブにいくと、&lt;code>Send files or execute commands over SSH before the build starts&lt;/code>と&lt;code>Send files or execute commands over SSH after the build runs&lt;/code>の項目ができています。今は成果物を格納した後からSSHを開始したいので後者を選択します。もちろん&lt;code>Build&lt;/code>のタブにも&lt;code>Send files or execute commands over SSH&lt;/code>というメニューができるので、こちらで設定しても良いです。&lt;/p>
 &lt;p>&lt;code>Name&lt;/code>ではJenkinsの設定から入力したSSH接続先のサーバーを選択します。そして&lt;code>Source files&lt;/code>では転送したいファイルのパスを入力します。あとはオプションですが、&lt;code>Remove prefix&lt;/code>でファイルパスを入力すると入力したところまでのパスが消えます。また、&lt;code>Remote directory&lt;/code>ではどのフォルダにファイルを転送するかを指定できます。&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1.webp"
 width="1680"
@@ -534,8 +534,8 @@ data-flex-grow="158"
 data-flex-basis="381px"
 >&lt;/p>
 &lt;p>テスト用のデモなので&lt;code>test&lt;/code>という字を出力するだけにしていますが、とにかく見事実行は成功です。今回のポストでのタスクもこれで終わりました。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>今回はただ単にファイルをコピーする作業を二つ繋げただけですが、ここからは既存のJarファイルの実行を終了し、新しくデプロイされたファイルを起動するなどのJobを作っていくなど連携の方法は色々ありそうです。何もかも応用次第ですからね！このポストを読まれる皆さんもJenkinsで自動化を試し、私以上に応用できることになるといいなと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回はただ単にファイルをコピーする作業を二つ繋げただけですが、ここからは既存のJarファイルの実行を終了し、新しくデプロイされたファイルを起動するなどのJobを作っていくなど連携の方法は色々ありそうです。何もかも応用次第ですからね！このポストを読まれる皆さんもJenkinsで自動化を試し、私以上に応用できることになるといいなと思います。&lt;/p>
 &lt;p>それでは、今回はここまで。また初心者向けの情報が集まったら、新しいポストでお目にかかりましょう。&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>
@@ -552,11 +552,11 @@ data-flex-basis="381px"
 &lt;/ol>
 &lt;/div></description></item><item><title>JenkinsでJavaプロジェクトをビルドする</title><link>https://retheviper.github.io/posts/jenkins-java-build/</link><pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-java-build/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post JenkinsでJavaプロジェクトをビルドする" />&lt;p>今回はJenkinsで一つのJobを生成することまでやりたいと思います。まず前回も書きましたが、私に要求されたタスクは次のようなことです。「GitにSpring Bootのアプリケーションがあるので、それをビルドするJobを作って欲しい」とのこと。リポジトリを覗き、JavaとGradleはインストールしたので早速Jobの生成に取り掛かることにしました。&lt;/p>
 &lt;p>今回は当時と似たような環境を作るためにあらかじめSpring Bootプロジェクトを作成してGitにアップロードしています。&lt;/p>
-&lt;h2 id="それでjobとは">それでJobとは？&lt;/h2>
-&lt;p>Jenkinsを使う理由は、このJobのためです。Jobは&lt;code>自動化されたタスク&lt;/code>で、実行の条件から頻度、タスクの内容を組み込むことができます。例えばGitのリポジトリに誰かがPushしたらJobを実行するように設定できるし、実行したら自動的にGitをPullするように設定できるということです。&lt;/p>
+&lt;h2 id="それでjobとは">それでJobとは？
+&lt;/h2>&lt;p>Jenkinsを使う理由は、このJobのためです。Jobは&lt;code>自動化されたタスク&lt;/code>で、実行の条件から頻度、タスクの内容を組み込むことができます。例えばGitのリポジトリに誰かがPushしたらJobを実行するように設定できるし、実行したら自動的にGitをPullするように設定できるということです。&lt;/p>
 &lt;p>なのでJenkinsをサーバ上で起動しておいて、必要に応じてJobを組んでおけば大変手間が省けるという話は全てこのJobのおかげだと言えます。今回はこのJobの生成の手順から説明しましょう。&lt;/p>
-&lt;h2 id="jobを生成する">Jobを生成する&lt;/h2>
-&lt;p>Jenkinsのメインページに入ります。何もJobがない状態なので、メイン画面に&lt;code>create new jobs&lt;/code>というリンクがあることを確認できます。Jobが無い場合はこちらでもJobを生成することができます。しかし何かしらのJobがある場合は、左のメニューで&lt;code>New item&lt;/code>をクリックすれば新しいJobの生成画面に移行します。どちらかをクリックします。&lt;/p>
+&lt;h2 id="jobを生成する">Jobを生成する
+&lt;/h2>&lt;p>Jenkinsのメインページに入ります。何もJobがない状態なので、メイン画面に&lt;code>create new jobs&lt;/code>というリンクがあることを確認できます。Jobが無い場合はこちらでもJobを生成することができます。しかし何かしらのJobがある場合は、左のメニューで&lt;code>New item&lt;/code>をクリックすれば新しいJobの生成画面に移行します。どちらかをクリックします。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage.webp"
 width="1280"
 height="706"
@@ -599,8 +599,8 @@ data-flex-basis="412px"
 &lt;li>&lt;code>Post-build Actions&lt;/code>: Jobのビルドが終わった後に遂行するアクションを指定します。他のJobをビルドするなどの行動が指定できます。&lt;/li>
 &lt;/ul>
 &lt;p>各タブはどんなプラグインをインストールしたかによって指定できる動作の項目が増えることがあります。また違うポストで扱うかもしれませんが、例えば&lt;code>Publish over SSH&lt;/code>という&lt;/p>
-&lt;h2 id="gitのレポジトリを設定">Gitのレポジトリを設定&lt;/h2>
-&lt;p>それでは本格的に今回のタスクを作ってみましょう。まずGitからJavaのコードを持ってくる必要があるので、&lt;code>Source Code Management&lt;/code>からGitを選択します。&lt;/p>
+&lt;h2 id="gitのレポジトリを設定">Gitのレポジトリを設定
+&lt;/h2>&lt;p>それでは本格的に今回のタスクを作ってみましょう。まずGitからJavaのコードを持ってくる必要があるので、&lt;code>Source Code Management&lt;/code>からGitを選択します。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure.webp"
 width="1440"
 height="838"
@@ -635,8 +635,8 @@ class="gallery-image"
 data-flex-grow="171"
 data-flex-basis="412px"
 >&lt;/p>
-&lt;h2 id="ビルドしてみる1">ビルドしてみる(1)&lt;/h2>
-&lt;p>これまででGitからPullするというタスクの設定は終わっています。ちゃんとタスクが意図通りに動作するかを検証するため、ビルドしてみましょう。左のメニューから&lt;code>Build now&lt;/code>をクリックすると、しばらくして左下の&lt;code>Build History&lt;/code>という領域に初めてのビルドが表示されることを確認できます。&lt;code>#1&lt;/code>の所に青い丸が付いていたらビルドが成功したという意味です。不安定だったら黄色、失敗だと赤の丸がつくのでビルドの状態を確認できます。&lt;/p>
+&lt;h2 id="ビルドしてみる1">ビルドしてみる(1)
+&lt;/h2>&lt;p>これまででGitからPullするというタスクの設定は終わっています。ちゃんとタスクが意図通りに動作するかを検証するため、ビルドしてみましょう。左のメニューから&lt;code>Build now&lt;/code>をクリックすると、しばらくして左下の&lt;code>Build History&lt;/code>という領域に初めてのビルドが表示されることを確認できます。&lt;code>#1&lt;/code>の所に青い丸が付いていたらビルドが成功したという意味です。不安定だったら黄色、失敗だと赤の丸がつくのでビルドの状態を確認できます。&lt;/p>
 &lt;p>ビルドに成功したら、&lt;code>#1&lt;/code>をクリックしてビルドの詳細を確認します。以下のような画面が現れます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1.webp"
 width="1440"
@@ -672,8 +672,8 @@ data-flex-grow="171"
 data-flex-basis="412px"
 >&lt;/p>
 &lt;p>実際GitのPullが正しく行われ、フォルダとファイルが生成されたことをこちらで確認できます。&lt;/p>
-&lt;h2 id="gradleの設定">Gradleの設定&lt;/h2>
-&lt;p>それでは次に、Gradleによるビルドの設定です。歯車のアイコンの付いた&lt;code>Configure&lt;/code>をクリックし、Jobの設定画面に戻ります。GradleでJarファイルをビルドするのが目的なので、GitでPullした後のタスクになりますね。&lt;/p>
+&lt;h2 id="gradleの設定">Gradleの設定
+&lt;/h2>&lt;p>それでは次に、Gradleによるビルドの設定です。歯車のアイコンの付いた&lt;code>Configure&lt;/code>をクリックし、Jobの設定画面に戻ります。GradleでJarファイルをビルドするのが目的なので、GitでPullした後のタスクになりますね。&lt;/p>
 &lt;p>&lt;code>Build&lt;/code>のタブに移動し、&lt;code>Add build step&lt;/code>をクリック、ドロップダウンメニューから&lt;code>Invoke Gradle script&lt;/code>を選択します。そして&lt;code>Advanced...&lt;/code>をクリックしましょう。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1.webp"
 width="1440"
@@ -699,8 +699,8 @@ data-flex-grow="171"
 data-flex-basis="412px"
 >&lt;/p>
 &lt;p>これでGradleでのビルド設定は終わり。次にGitの時と同じく、検証してみます。&lt;/p>
-&lt;h2 id="ビルドしてみる2">ビルドしてみる(2)&lt;/h2>
-&lt;p>ビルドの手順もGitの時と変わりません。&lt;code>Build Now&lt;/code> → &lt;code>#2&lt;/code> → &lt;code>Console Output&lt;/code>の手順でビルドのコンソール出力を確認します。&lt;/p>
+&lt;h2 id="ビルドしてみる2">ビルドしてみる(2)
+&lt;/h2>&lt;p>ビルドの手順もGitの時と変わりません。&lt;code>Build Now&lt;/code> → &lt;code>#2&lt;/code> → &lt;code>Console Output&lt;/code>の手順でビルドのコンソール出力を確認します。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild.webp"
 width="1440"
 height="838"
@@ -723,8 +723,8 @@ data-flex-grow="171"
 data-flex-basis="412px"
 >&lt;/p>
 &lt;p>ちゃんと&lt;code>build/libs&lt;/code>フォルダにJarファイルができたことを確認できます。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>Jenkinsでできることはこれだけではありません。ビルド終了後にデプロイのJobを作り、そのJobを実行するように連携もできれば、JUnitとの連携でテストを行えうように設定も可能です。なので今後のポストでは出来上がったJarファイルをテストしデプロイする方法について書きたいと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>Jenkinsでできることはこれだけではありません。ビルド終了後にデプロイのJobを作り、そのJobを実行するように連携もできれば、JUnitとの連携でテストを行えうように設定も可能です。なので今後のポストでは出来上がったJarファイルをテストしデプロイする方法について書きたいと思います。&lt;/p>
 &lt;p>また、Jobの設定で&lt;code>Build Environment&lt;/code>タブにある&lt;code>Delete workspace before build starts&lt;/code>というオプションをチェックしておくのも良いと思います。Jobの実行時にWorkspaceフォルダをまず掃除してからタスクを実行していきますが、これによって前回のビルドで生成されたファイルによる異常動作を防げられますので。&lt;/p>
 &lt;p>仕事で触れた部分が少ないのでまだ私も全部の機能を試した訳ではありませんが、Jenkinsは各種プラグインとその組み合わせによって可能性は無限大に違いのではないかと思うくらい良いツールです。また色々研究したいものですね。&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
@@ -739,8 +739,8 @@ data-flex-basis="412px"
 &lt;p>そしてJenkinsでどのようにJobを構成すればいいかもわからなかったので、まずJenkinsでどのようにJobを構成し自動化ができるかを調べることから始めました。&lt;/p>
 &lt;p>Jenkinsでは、Jobという名称のタスクを作り、とある行動を中に仕組み、それを一つの単位として実行することができます。全てのプログラムがそうでありますが、Linuxでのシェルスクリプトみたいに、繰り返す必要のある行為を自動化するようなものです。そして出来がったJobは手動実行するか、条件（トリガー）を指定して実行するようになります。&lt;/p>
 &lt;p>今回のタスクを振り返ってみましょう。JavaアプリケーションがGitにあります。それをPullし（Jenkinsが実行されているサーバにソースコードを持ってきて）、ビルド（実行可能なパッケージにする）する。これでJenkinsは最新のソースコードを確保しつつ、実行可能なアプリケーションをデプロイできる状態になります。それではまず必要な道具はJDKとGradleです。&lt;/p>
-&lt;h2 id="openjdkをインストールしましょう">OpenJDKをインストールしましょう&lt;/h2>
-&lt;p>まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>をインストールします。&lt;code>yum install java&lt;/code>をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。&lt;/p>
+&lt;h2 id="openjdkをインストールしましょう">OpenJDKをインストールしましょう
+&lt;/h2>&lt;p>まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>をインストールします。&lt;code>yum install java&lt;/code>をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>curl -OはURLからファイルをダウンロードして保存するということです。ダウンロードしたファイルは圧縮されているので解凍します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
@@ -765,8 +765,8 @@ data-flex-grow="144"
 data-flex-basis="346px"
 >&lt;/p>
 &lt;p>あれ？Javaのバージョンが8です。すでにインストールされていたんですね。&lt;/p>
-&lt;h2 id="使いたいjavaのバージュヨンを切り替える">使いたいJavaのバージュヨンを切り替える&lt;/h2>
-&lt;p>すでに違うバージョンのJDKがインストールされた場合は、次の手順で使いたいJavaのバージョンを選択できます。
+&lt;h2 id="使いたいjavaのバージュヨンを切り替える">使いたいJavaのバージュヨンを切り替える
+&lt;/h2>&lt;p>すでに違うバージョンのJDKがインストールされた場合は、次の手順で使いたいJavaのバージョンを選択できます。
 まず新しくインストールしたJavaを選択できるよう登録します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>alternatives --install /usr/bin/java java $JAVA_HOME/bin/java &lt;span style="color:#ae81ff">2&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>登録が終わったら、以下のコマンドで現在登録されているJavaを表示します。&lt;/p>
@@ -795,8 +795,8 @@ class="gallery-image"
 data-flex-grow="144"
 data-flex-basis="346px"
 >&lt;/p>
-&lt;h2 id="gradleもインストールしよう">Gradleもインストールしよう&lt;/h2>
-&lt;p>次にGradleをインストールします。macOSでは&lt;code>brew install gradle&lt;/code>で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。&lt;/p>
+&lt;h2 id="gradleもインストールしよう">Gradleもインストールしよう
+&lt;/h2>&lt;p>次にGradleをインストールします。macOSでは&lt;code>brew install gradle&lt;/code>で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>-Pオプションをつけると指定したフォルダにファイルを保存します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
@@ -836,8 +836,8 @@ data-flex-basis="346px"
 >&lt;/p>
 &lt;p>最新のバージョンではSwift5をサポートするようですね。こちらもいつか扱いたいと思います。&lt;/p>
 &lt;p>それではいよいよJenkinsに戻り、JenkinsにJDKとGradleを環境として登録します。&lt;/p>
-&lt;h2 id="jenkinsにjdkとgradleをつなげる">JenkinsにJDKとGradleをつなげる&lt;/h2>
-&lt;p>やっとJenkinsに戻りました。もうこれがJenkinsのポストかLinuxのポストカわからないくらいになっていましたが、とにかく戻ってきました。&lt;/p>
+&lt;h2 id="jenkinsにjdkとgradleをつなげる">JenkinsにJDKとGradleをつなげる
+&lt;/h2>&lt;p>やっとJenkinsに戻りました。もうこれがJenkinsのポストかLinuxのポストカわからないくらいになっていましたが、とにかく戻ってきました。&lt;/p>
 &lt;p>ウェブブラウザに&lt;code>localhost:Jenkinsのポート番号&lt;/code>を入力してJenkinsのメイン画面に入ります。その後は、左のメニューから&lt;code>Manage Jenkins&lt;/code>をクリックします。そうすると以下のような画面が現れます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage.webp"
 width="1280"
@@ -896,8 +896,8 @@ data-flex-basis="435px"
 &lt;/ol>
 &lt;/div></description></item><item><title>Jenkinsで何もかも楽にしたい(2)</title><link>https://retheviper.github.io/posts/jenkins-automation-2/</link><pubDate>Tue, 14 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-2/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(2)" />&lt;p>前回から続きます。Jenkinのインストールが終わったら、初期設定の番です。どんなことでも始めが一番面倒なものですが、それだけ初期設定をちゃんとやっていると後の作業が楽になるものですね。なので今回はJenkinsの初期設定に関してまず述べたいと思います。&lt;/p>
 &lt;p>Jenkinsの初期設定はだいたい以下の順になります。他にも色々しておいたら便利な設定があるかもしれませんが、あくまで初心者の私の観点が基準なので参考までにしてください。&lt;/p>
-&lt;h2 id="ポートの設定">ポートの設定&lt;/h2>
-&lt;p>Jenkinsの基本ポートは&lt;code>8080&lt;/code>です。このままJenkinsを起動すると、Webブラウザから&lt;code>Jenkinsを起動中のシステムのIPアドレス:8080&lt;/code>でJenkinsに接続できます。&lt;/p>
+&lt;h2 id="ポートの設定">ポートの設定
+&lt;/h2>&lt;p>Jenkinsの基本ポートは&lt;code>8080&lt;/code>です。このままJenkinsを起動すると、Webブラウザから&lt;code>Jenkinsを起動中のシステムのIPアドレス:8080&lt;/code>でJenkinsに接続できます。&lt;/p>
 &lt;p>しかし、Webアプリケーションを開発してみた経験のある方には8080というポートはあまり良い選択肢ではないことがわかるはずです。同じポートに設定されている二つ以上のサービスが問題を起こす可能性がありますからね。&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>&lt;/p>
 &lt;p>私はのちにTomcatを使うことがあるかもしれないと思い、Jenkinのポートは&lt;code>8088&lt;/code>に変えました。&lt;code>vi&lt;/code>や&lt;code>vim&lt;/code>&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>でJenkinsのシステムコンフィグファイルを開けます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo vim /etc/sysconfig/jenkins
@@ -913,8 +913,8 @@ data-flex-grow="151"
 data-flex-basis="363px"
 >&lt;/p>
 &lt;p>書き換えが終わったら&lt;code>ESC&lt;/code> ⇨ &lt;code>:wq&lt;/code>で保存後終了を忘れずにしましょう。&lt;/p>
-&lt;h2 id="起動初期パスワードの設定">起動〜初期パスワードの設定&lt;/h2>
-&lt;p>Jenkinsは初起動で初期パスワードを要求します。この初期パスワードが格納されてある位置は、基本的に&lt;code>/var/lib/jenkins/secrets/initialAdminPassword&lt;/code>というパスに保存されるようですが、OSなどの環境によってパスが変わる場合もありますからね。&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>でも、一度Jenkinsを起動したら初期設定のページからパスを確認できるので心配いりません。&lt;/p>
+&lt;h2 id="起動初期パスワードの設定">起動〜初期パスワードの設定
+&lt;/h2>&lt;p>Jenkinsは初起動で初期パスワードを要求します。この初期パスワードが格納されてある位置は、基本的に&lt;code>/var/lib/jenkins/secrets/initialAdminPassword&lt;/code>というパスに保存されるようですが、OSなどの環境によってパスが変わる場合もありますからね。&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>でも、一度Jenkinsを起動したら初期設定のページからパスを確認できるので心配いりません。&lt;/p>
 &lt;p>ポート設定が終わったら（8080をそのまま使いたいならそのままでもいいです）、まずJenkinsを起動します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>service jenkins start
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>[OK]&lt;/code>というメッセージが出力されるはずですが（ポート設定に問題がある場合もあるので）念の為起動状況を確認します。&lt;/p>
@@ -943,8 +943,8 @@ data-flex-basis="435px"
 >&lt;/p>
 &lt;p>やはりパスは&lt;code>/var/lib/jenkins/secrets/initialAdminPassword&lt;/code>でした。ポート設定と同じく、viやvimで中を覗き、そのパスワードを入力します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo vim /var/lib/jenkins/secrets/initialAdminPassword
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="プラグインと管理者アカウントの設定">プラグインと管理者アカウントの設定&lt;/h2>
-&lt;p>パスワードの入力に成功するとしばらくして、プラグインの設定画面が現れます。自分でプラグインを選んでも良さそうですが、私は自信がないのでオススメのボタンを押します。当たり前なことですが、プラグインは後ででもインストールできます。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="プラグインと管理者アカウントの設定">プラグインと管理者アカウントの設定
+&lt;/h2>&lt;p>パスワードの入力に成功するとしばらくして、プラグインの設定画面が現れます。自分でプラグインを選んでも良さそうですが、私は自信がないのでオススメのボタンを押します。当たり前なことですが、プラグインは後ででもインストールできます。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins.webp"
 width="1280"
 height="706"
@@ -1028,17 +1028,17 @@ data-flex-basis="435px"
 &lt;/div></description></item><item><title>Jenkinsで何もかも楽にしたい(1)</title><link>https://retheviper.github.io/posts/jenkins-automation-1/</link><pubDate>Mon, 13 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jenkins-automation-1/</guid><description>&lt;img src="https://retheviper.github.io/images/jenkins.jpg" alt="Featured image of post Jenkinsで何もかも楽にしたい(1)" />&lt;p>世の中、なんでも自動化がトレンドのようです。AIの話も究極的には、そういう自動化の範疇に入るようなものではないかと思います。まだ人間がAIに仕事を奪われるような時代になるまではもう少し時間がいるのでは、と思いますがね。&lt;/p>
 &lt;p>そういう意味で、&lt;a class="link" href="https://jenkins.io/" target="_blank" rel="noopener"
 >Jenkins&lt;/a>について調べました。もちろん、まだ何が何だかわからないひよっ子みたいな自分に「今回はJenkinsで面倒なことは全部自動化して手間を減らそう」みたいな考えがあったわけではなく、あくまで仕事で使われているから、というシンプルな理由です。&lt;/p>
-&lt;h2 id="それでjenkinsとは">それで、Jenkinsとは？&lt;/h2>
-&lt;p>そもそもJenkinsがどんなものか知りたい。仕事で使うということは、なんらかの理由があるはずです。また、この業界で使われるミドルウェアは、結局何か便利（手間を省ける）な面があるから使われるのでしょうね。ならJenkinsは何が便利で使いたくなるのか？という観点から調べてみました。&lt;/p>
-&lt;h3 id="継続的インテグレーション">継続的インテグレーション&lt;/h3>
-&lt;p>と言われましても…な気がしました。つまりビルドからテスト、検証などをしてくれるツールらしいです。最初はGitに連動して使うと言われましたので、もうバージョン管理をGitでしているのに、また何かツールを連携して使うメリットがあるのか？と思いましたが、この「継続的インテグレーション」という行動が自動化できるからいいということです。&lt;/p>
+&lt;h2 id="それでjenkinsとは">それで、Jenkinsとは？
+&lt;/h2>&lt;p>そもそもJenkinsがどんなものか知りたい。仕事で使うということは、なんらかの理由があるはずです。また、この業界で使われるミドルウェアは、結局何か便利（手間を省ける）な面があるから使われるのでしょうね。ならJenkinsは何が便利で使いたくなるのか？という観点から調べてみました。&lt;/p>
+&lt;h3 id="継続的インテグレーション">継続的インテグレーション
+&lt;/h3>&lt;p>と言われましても…な気がしました。つまりビルドからテスト、検証などをしてくれるツールらしいです。最初はGitに連動して使うと言われましたので、もうバージョン管理をGitでしているのに、また何かツールを連携して使うメリットがあるのか？と思いましたが、この「継続的インテグレーション」という行動が自動化できるからいいということです。&lt;/p>
 &lt;p>GitやSubversionでのバージョン管理をしても、誰がいつPushしたのか、ログを見るまではわからない。また、Pushしたことをわかったら人の手でテストをしてまたMergeするしかない。これがなんとJenkinsで解決できるということです。例えば誰かがPushしたらJenkinsに通知が送られ（これには別作業が要るらしいですが）、Pull・ビルド・JUnitでのテストまでしてくれて、結果を通知してくれるとか。また設定次第ではテストが無事終わったらデプロイ&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>もしてくれるすごいツールらしいです。&lt;/p>
-&lt;h2 id="でも使ってみないとわからない">でも使ってみないとわからない&lt;/h2>
-&lt;p>それでは早速Jenkinsのすごい自動化を経験するために、インストールから始めます。仕事で使う環境はLinux。すぐyumでインストールできるのではないかなと思いましたが、どうもそうではないようです。&lt;/p>
+&lt;h2 id="でも使ってみないとわからない">でも使ってみないとわからない
+&lt;/h2>&lt;p>それでは早速Jenkinsのすごい自動化を経験するために、インストールから始めます。仕事で使う環境はLinux。すぐyumでインストールできるのではないかなと思いましたが、どうもそうではないようです。&lt;/p>
 &lt;p>&lt;a class="link" href="https://jenkins.io/" target="_blank" rel="noopener"
 >Jenkinsのホームページ&lt;/a>に接続してみると、Linuxでのインストールの手順がありました。幸い、仕事で使うLinuxはAWSなのですが、RedHat Linux&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>と同じ手順でインストールできました。&lt;/p>
-&lt;h2 id="それではインストールしましょう">それではインストールしましょう&lt;/h2>
-&lt;p>まず、Jenkinsのリポジトリを持ってきます。&lt;/p>
+&lt;h2 id="それではインストールしましょう">それではインストールしましょう
+&lt;/h2>&lt;p>まず、Jenkinsのリポジトリを持ってきます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでwget -Oはフォルダを読み、ファイルとして出力するオプションらしいですね。ここでも勉強になります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key

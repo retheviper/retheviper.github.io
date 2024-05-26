@@ -12,23 +12,23 @@
 &lt;li>正常終了したらexitコード0となり、例外が発生するとexitコード9を出力して終了する&lt;/li>
 &lt;/ol>
 &lt;p>PostgreSQLの場合は参照するテーブルが多く、処理の順番があるので少し複雑にも感じられますが、まずはDBとの連動を試しみスクリプトを組むことにしました。&lt;/p>
-&lt;h2 id="pythonでdbを連動する">PythonでDBを連動する&lt;/h2>
-&lt;p>案外、PythonでDBに接続することはそんな難しいことではなかったです。それぞれ違うモジュールを使っていてコマンドにも違いがあるわけですが、検索してみると例題が多かったですね。Oracleの場合はホスト名、ポート、サービス名、ユーザー名、パスワードを用意します。使うモジュールは&lt;code>cx_Oracle&lt;/code>です。&lt;/p>
+&lt;h2 id="pythonでdbを連動する">PythonでDBを連動する
+&lt;/h2>&lt;p>案外、PythonでDBに接続することはそんな難しいことではなかったです。それぞれ違うモジュールを使っていてコマンドにも違いがあるわけですが、検索してみると例題が多かったですね。Oracleの場合はホスト名、ポート、サービス名、ユーザー名、パスワードを用意します。使うモジュールは&lt;code>cx_Oracle&lt;/code>です。&lt;/p>
 &lt;p>PostgreSQLの場合は、&lt;code>psycopg2&lt;/code>を使います。接続に必要となる情報はホスト名、ポート、DB名、ユーザー名、パスワードです。ただし、モジュールは両方&lt;code>pip&lt;/code>からインストールできますが、psycopg2の場合はライブラリー依存性があるのでAmazon Linuxを基準に&lt;code>postgresql-develop&lt;/code>をyumからインストールする必要があります。他は触れたことがないのでよくわかりませんが、CentOSも同様かと。psycopg2のインストールに問題が生じたらエラーメッセージを確認して、必要なPosgreSQLのライブラリーをインストールしましょう。&lt;/p>
 &lt;p>二つのDBに接続するための手順には少し違いがありますが、接続した後の処理は同じです(本当はSQL文の文法も少し違うようですが…)。それではOracleとPostgreSQLの接続方法と接続以後の処理を分けて説明しましょう。&lt;/p>
-&lt;h3 id="接続oracleの場合">接続(Oracleの場合)&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> cx_Oracle
+&lt;h3 id="接続oracleの場合">接続(Oracleの場合)
+&lt;/h3>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> cx_Oracle
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>tns &lt;span style="color:#f92672">=&lt;/span> cx_Oracle&lt;span style="color:#f92672">.&lt;/span>makedsn(&lt;span style="color:#e6db74">&amp;#39;ホスト名&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;ポート&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;サービス名&amp;#39;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect &lt;span style="color:#f92672">=&lt;/span> cx_Oracle&lt;span style="color:#f92672">.&lt;/span>connect(&lt;span style="color:#e6db74">&amp;#39;ユーザー名&amp;#39;&lt;/span>, &lt;span style="color:#e6db74">&amp;#39;パスワード&amp;#39;&lt;/span>, tns)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>cx_Oracleの&lt;code>makedsn&lt;/code>にホスト名、ポート、サービス名を入れます。そしてその情報を&lt;code>connect&lt;/code>を使う際にユーザー名、パスワードと共に入れます。これでOracleの接続設定は終わりです。&lt;/p>
-&lt;h3 id="接続postgresqlの場合">接続(PostgreSQLの場合)&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> psycopg2
+&lt;h3 id="接続postgresqlの場合">接続(PostgreSQLの場合)
+&lt;/h3>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> psycopg2
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>connect &lt;span style="color:#f92672">=&lt;/span> psycopg2&lt;span style="color:#f92672">.&lt;/span>connect(&lt;span style="color:#e6db74">&amp;#39;host=&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;ホスト名&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39; port=&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;ポート&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39; dbname=&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;DB名&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39; user=&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;ユーザー名&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39; password=&amp;#39;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#39;パスワード&amp;#39;&lt;/span>)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>PostgreSQLの場合はより簡単です。Linuxで使うコマンドラインツールの&lt;code>psql&lt;/code>みたいに、接続に必要な情報を文字列として並び&lt;code>connect&lt;/code>すれば終了です。&lt;/p>
-&lt;h3 id="db処理の共通部分">DB処理の共通部分&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 実際DBに接続してカーソルを取得&lt;/span>
+&lt;h3 id="db処理の共通部分">DB処理の共通部分
+&lt;/h3>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># 実際DBに接続してカーソルを取得&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cursor &lt;span style="color:#f92672">=&lt;/span> connect&lt;span style="color:#f92672">.&lt;/span>cursor()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># カーソルからSQL文の実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cursor&lt;span style="color:#f92672">.&lt;/span>execute(&lt;span style="color:#e6db74">&amp;#39;発行したいSQL文&amp;#39;&lt;/span>)
@@ -56,8 +56,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print row[&lt;span style="color:#ae81ff">0&lt;/span>] &lt;span style="color:#75715e"># column_1の内容が出力される&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print row &lt;span style="color:#75715e"># column_2の内容が出力される&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでDBの連動の基礎は終わりです。それでは早速、スクリプトのコードをいかに公開します。&lt;/p>
-&lt;h2 id="画像ファイルをs3へアップロードするコード">画像ファイルをS3へアップロードするコード&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># -*- coding: UTF-8 -*-&lt;/span>
+&lt;h2 id="画像ファイルをs3へアップロードするコード">画像ファイルをS3へアップロードするコード
+&lt;/h2>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># -*- coding: UTF-8 -*-&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> os&lt;span style="color:#f92672">,&lt;/span> sys&lt;span style="color:#f92672">,&lt;/span> cx_Oracle&lt;span style="color:#f92672">,&lt;/span> psycopg2&lt;span style="color:#f92672">,&lt;/span> json&lt;span style="color:#f92672">,&lt;/span> boto3&lt;span style="color:#f92672">,&lt;/span> datetime&lt;span style="color:#f92672">,&lt;/span> shutil
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>function_code &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#39;引数で受け取る&amp;#39;&lt;/span>

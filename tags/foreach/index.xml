@@ -3,8 +3,8 @@
 >Method Chaining&lt;/a>とLambdaに慣れてない、ということですね。&lt;/p>
 &lt;p>以上の理由から、私も普段はやはりList = ArrayListで、ループは拡張For文(たまに、Listの要素をいじって新しいインスタンスを新しく生成する場合はStream)というルールを当たり前のように守ってきていますが、ふとこれで本当に良いのか、いう疑問が湧いてきました。Javaも16までバージョンアップしていて、そろそろ関数型プログラミングに転換しても良い時期なのでは？だったり、自分の知っているものは正しいのかという検証をしてみたいという風にですね。&lt;/p>
 &lt;p>なので今更な感じではあるのですが、ちょっとしたベンチマークを兼ねて色々検証してみたり、考えてみました(本当は、ベンチマークがしてみたかっただけ)。&lt;/p>
-&lt;h2 id="ループの方法">ループの方法&lt;/h2>
-&lt;p>今更な紹介となりますが、そもそも今回のポストが今更な話をしているので、Collectionに関する4つのループ文の細かい話もして行こうかと思います。&lt;/p>
+&lt;h2 id="ループの方法">ループの方法
+&lt;/h2>&lt;p>今更な紹介となりますが、そもそも今回のポストが今更な話をしているので、Collectionに関する4つのループ文の細かい話もして行こうかと思います。&lt;/p>
 &lt;p>多くの場合、Collectionや配列のループ処理の方法は、以下の表通りに使われているのではないかと思います。&lt;/p>
 &lt;table>
 &lt;thead>
@@ -39,8 +39,8 @@
 &lt;p>ただ一つ、&lt;code>Stream&lt;/code>と&lt;code>forEach()&lt;/code>はどうでしょう。Javaでこれらが導入されてからもさらに時間が立っています。しかし、上述したとおり、依然として&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>は&lt;code>性能が劣る&lt;/code>から多く使われてないような気がしています(他にも、&lt;code>あえて使う理由がわからない&lt;/code>・&lt;code>わかりにくい&lt;/code>などの理由があると思いますが)。最初Java 1.8リリース当時にも、多くの人が性能のテストを行い、少なくとも性能面では既存の方式が有利という結論を出していて、今もそれはあまり変わってないようです。Javaのバージョンも16にまで上がったのですが、それまで行われたチューニングを踏まえても&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>が持つ根本的なアーキテクチャ(?)的な理由から、既存の方式よりも性能が劣るのはしょうがない、という風に認識されています。&lt;/p>
 &lt;p>しかし、誰かにそう言われたから、そう思うというのはあまり良い考え方ではないでしょう。また、前述のとおり、Javaはすでに16までバージョンアップを重ねていて、大抵の変化というのは新しい機能の追加となっていますが、裏では何かJVMやコンパイラのチューニングなどでなんらかの目に見えない改善があったのかもしれません。関数型としてのコードの書き方に慣れているかどうかは、その人の問題として、性能面で改善されているとしたら、よりモダンな方法を使わない理由がないですね。そして、本当に拡張For文が全ての場合で良いかどうかの検証もあらかじめしておく必要があると思います。&lt;/p>
 &lt;p>以上の理由から、まず検証で使う4つのループの紹介と、そのベンチマークについて紹介したいと思います。&lt;/p>
-&lt;h3 id="for文">For文&lt;/h3>
-&lt;p>まずは伝統的な形のFor文です。一部では&lt;code>c-style&lt;/code>とも呼ぶらしいですね。一番基本となるもので馴染みもありますが、やはり古い、という印象もあります。端的に、最近のいわゆる&lt;code>モダン&lt;/code>な言語では、このような形のループは使えない場合もありますね。基本的に以下のような形です。&lt;/p>
+&lt;h3 id="for文">For文
+&lt;/h3>&lt;p>まずは伝統的な形のFor文です。一部では&lt;code>c-style&lt;/code>とも呼ぶらしいですね。一番基本となるもので馴染みもありますが、やはり古い、という印象もあります。端的に、最近のいわゆる&lt;code>モダン&lt;/code>な言語では、このような形のループは使えない場合もありますね。基本的に以下のような形です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (&lt;span style="color:#66d9ef">int&lt;/span> i &lt;span style="color:#f92672">=&lt;/span> 0; i &lt;span style="color:#f92672">&amp;lt;&lt;/span> list.&lt;span style="color:#a6e22e">size&lt;/span>(); i&lt;span style="color:#f92672">++&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(list.&lt;span style="color:#a6e22e">get&lt;/span>(i));
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -68,8 +68,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただし、For文で指定されてあるインデックスが必ずループ対象の範囲内にあるかどうか、わからなくなる場合もあります。0から始まるインデックスで&lt;code>i - 1&lt;/code>を指定してしまったり、iの範囲が対象のCollectionや配列よりも大きくなり例外を投げることになることもあるでしょう。また、インデックスを利用した場合、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B8%E3%83%83%E3%82%AF%E3%83%8A%E3%83%B3%E3%83%90%E3%83%BC_%28%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0%29" target="_blank" rel="noopener"
 >マジックナンバー&lt;/a>になってしまう可能性もあるので、バグが発生する可能性が上がったり、可読性が悪くなるなどの問題があります。なので、インデックスを基準に処理をしたい場合は慎重にコードを作成する必要がありますね。&lt;/p>
-&lt;h2 id="拡張for文">拡張For文&lt;/h2>
-&lt;p>いわゆる&lt;code>for-each&lt;/code>文ですね。Colleciton/配列内の全要素を巡回しながら処理するには、これほど理解しやすく、安全なものはないかと思います。&lt;/p>
+&lt;h3 id="拡張for文">拡張For文
+&lt;/h3>&lt;p>いわゆる&lt;code>for-each&lt;/code>文ですね。Colleciton/配列内の全要素を巡回しながら処理するには、これほど理解しやすく、安全なものはないかと思います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (String element : list) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(element);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -161,8 +161,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#f92672">-&lt;/span>(low &lt;span style="color:#f92672">+&lt;/span> 1); &lt;span style="color:#75715e">// key not found&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="iterator">Iterator&lt;/h2>
-&lt;p>Iteratorは、個人的にあまり馴染まない(使いたくない)ものです。どのCollectionでもIteratorとして抽出ができてしまうので、CollectionよりもIteratorが主体になってしまうような感覚であり、定型文な書き方を矯正しているからです。少なくとも拡張ForではどんなCollectionのどんな要素を抽出して使っているのか明確ですが、Iteratorだとそれがわからないですね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="iterator">Iterator
+&lt;/h3>&lt;p>Iteratorは、個人的にあまり馴染まない(使いたくない)ものです。どのCollectionでもIteratorとして抽出ができてしまうので、CollectionよりもIteratorが主体になってしまうような感覚であり、定型文な書き方を矯正しているからです。少なくとも拡張ForではどんなCollectionのどんな要素を抽出して使っているのか明確ですが、Iteratorだとそれがわからないですね。&lt;/p>
 &lt;p>とにかく、そんなIteratorですが、ForでもWhileでもループをかけるという特徴があります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Forを使う&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (Iterator iterator &lt;span style="color:#f92672">=&lt;/span> values.&lt;span style="color:#a6e22e">iterator&lt;/span>(); iterator.&lt;span style="color:#a6e22e">hasNext&lt;/span>(); ) {
@@ -180,8 +180,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(iterator.&lt;span style="color:#a6e22e">next&lt;/span>().&lt;span style="color:#a6e22e">getBar&lt;/span>()); &lt;span style="color:#75715e">// 注意！&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>面白いことに、拡張For文のバイトコードは、Iteratorを使うコードになるということです。なので少なくとも拡張For文は、Iteratorよりは発展した形と言えるのかもしれません。&lt;/p>
-&lt;h2 id="foreach">forEach()&lt;/h2>
-&lt;p>モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかもしれません。何よりコードが短くなるのが好きですね。&lt;/p>
+&lt;h3 id="foreach">forEach()
+&lt;/h3>&lt;p>モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかもしれません。何よりコードが短くなるのが好きですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>list.&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実装としても、拡張For文の中でLambdaを実行するという単純な構造になっています。なので単純に考えて、拡張For文よりは性能が劣る可能性がありますね。以下はIterableの実装です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// IterableのforEach()&lt;/span>
@@ -207,8 +207,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#f92672">&amp;lt;&lt;/span>E&lt;span style="color:#f92672">&amp;gt;&lt;/span> E &lt;span style="color:#a6e22e">elementAt&lt;/span>(Object&lt;span style="color:#f92672">[]&lt;/span> es, &lt;span style="color:#66d9ef">int&lt;/span> index) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (E) es&lt;span style="color:#f92672">[&lt;/span>index&lt;span style="color:#f92672">]&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ベンチマークで検証してみると">ベンチマークで検証してみると&lt;/h2>
-&lt;p>この度も、JMHを使って簡単なベンチマークを作ってみました。実はstatic finalなフィールドとして宣言しておくとそのオブジェクトを全てのベンチマークで使い回してくれるのかな、と思っていましたが、どうやらそうではなかったみたいです。なので今回は、ちゃんと@Setupアノテーションを使ってフィールドの初期化をしてみました。実際のコードは以下のとおりです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ベンチマークで検証してみると">ベンチマークで検証してみると
+&lt;/h2>&lt;p>この度も、JMHを使って簡単なベンチマークを作ってみました。実はstatic finalなフィールドとして宣言しておくとそのオブジェクトを全てのベンチマークで使い回してくれるのかな、と思っていましたが、どうやらそうではなかったみたいです。なので今回は、ちゃんと@Setupアノテーションを使ってフィールドの初期化をしてみました。実際のコードは以下のとおりです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@State&lt;/span>(Scope.&lt;span style="color:#a6e22e">Thread&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">LoopTest&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -264,12 +264,12 @@ LoopTest.extendedLoop thrpt 25 13.186 ± 0.152 ops/s
 LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/code>&lt;/pre>&lt;p>やはり、4つのループがそれぞれ違う結果を見せているのがわかります。少なくとも、ここでは伝統的なFor文を使った方がもっとも性能の面では有利のように見えますね。なるべく拡張For文を使った方が良い、という根拠として&lt;code>性能はあまり変わらないから&lt;/code>というのはなんだったんだろう、と思うくらいの差があります。&lt;/p>
 &lt;p>しかし、本当にこれで、&lt;code>性能が良い方を選べば良い&lt;/code>という結論を出して良いのでしょうか？&lt;/p>
-&lt;h2 id="考えたいこと">考えたいこと&lt;/h2>
-&lt;p>処理としての結果が同じだとしたら、やはり性能の良い方を選びたくなるのは当然です。企業レベルの話だと、性能は費用と直結する問題でもありますしね。しかし、複雑化している現代のアプリケーションで考えるべきは、性能のみではありません。極端的な話だと、性能のためにをC、C++でWebアプリケーションを作るとしたら、他の言語に比べて生産性が下がってしまうでしょう。そして可読性や維持保守を考えず、性能を優先したコードだけを書いていくと、いわゆる&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%82%B2%E3%83%86%E3%82%A3%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0" target="_blank" rel="noopener"
+&lt;h2 id="考えたいこと">考えたいこと
+&lt;/h2>&lt;p>処理としての結果が同じだとしたら、やはり性能の良い方を選びたくなるのは当然です。企業レベルの話だと、性能は費用と直結する問題でもありますしね。しかし、複雑化している現代のアプリケーションで考えるべきは、性能のみではありません。極端的な話だと、性能のためにをC、C++でWebアプリケーションを作るとしたら、他の言語に比べて生産性が下がってしまうでしょう。そして可読性や維持保守を考えず、性能を優先したコードだけを書いていくと、いわゆる&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%82%B2%E3%83%86%E3%82%A3%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0" target="_blank" rel="noopener"
 >スパゲティコード&lt;/a>になってしまう可能性もあります。&lt;/p>
 &lt;p>なので、性能のみではなく、アプリケーションを開発するときには色々と考慮すべき要素があるのは確かです。例えば、Readability(可読性)、Error-proneness(エラー発生可能性)、Capability(処理能力)などがあるでしょう。今までは性能ばかりの話をしてきましたが、これらの観点から4つのループを比較してみたらどうでしょう。&lt;/p>
-&lt;h3 id="可読性とエラー発生可能性の側面から考える">可読性とエラー発生可能性の側面から考える&lt;/h3>
-&lt;p>拡張For文(forEach())では、Collectionそのものの要素をことができます。逆に、For文やIteratorでは可能ですね。ならば、Collectionや配列の中でとある条件と一致する要素だけのことしたい場合は、拡張For文よりもFor文やIteratorを使うべきであるようにも見えます。&lt;/p>
+&lt;h3 id="可読性とエラー発生可能性の側面から考える">可読性とエラー発生可能性の側面から考える
+&lt;/h3>&lt;p>拡張For文(forEach())では、Collectionそのものの要素をことができます。逆に、For文やIteratorでは可能ですね。ならば、Collectionや配列の中でとある条件と一致する要素だけのことしたい場合は、拡張For文よりもFor文やIteratorを使うべきであるようにも見えます。&lt;/p>
 &lt;p>しかし、観点を変えてみると、元のオブジェクトそのものが変わることで起こり得るサイドエフェクトが発生する場合も考えられます。こういう場合、元のオブジェクトを直接操作できるということはメリットではなくデメリットになってしまいますね。なので、どちらかというと、与えられたCollection/配列から条件に一致する要素だけを抽出して新しいCollection/配列のインスタンスを生成するのが正解の可能性もあります。そしてそれをよりわかりやすいコードとして実現できるのは拡張For文(forEach())ですね。例えば、以下のようにです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 元のリストが変わってしまう&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">filterFor&lt;/span>(List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> list) {
@@ -308,8 +308,8 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> list.&lt;span style="color:#a6e22e">stream&lt;/span>().&lt;span style="color:#a6e22e">filter&lt;/span>(element &lt;span style="color:#f92672">-&amp;gt;&lt;/span> element.&lt;span style="color:#a6e22e">length&lt;/span>() &lt;span style="color:#f92672">&amp;lt;=&lt;/span> 10).&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>良いコードは、短く、わかりやすいコードなのではないかと思っています。そしてわかり安いコードは、誰がメンテしてもバグを起こす可能性は低くなるはずでしょう。そういう観点からすると、伝統的なFor文とIteratorは、今は使うべきではないのかもしれません。&lt;/p>
-&lt;h3 id="処理能力の側面から考える">処理能力の側面から考える&lt;/h3>
-&lt;p>処理能力、というのはある程度性能ともつながるものですね。なので、性能という側面でもう一度考えてみます。互換性、汎用性などとも言える物かもしれません。ここで言いたいのは、Collection/配列がどんなものであれ、一定の性能を保証する実装を考える必要があるということです。&lt;/p>
+&lt;h3 id="処理能力の側面から考える">処理能力の側面から考える
+&lt;/h3>&lt;p>処理能力、というのはある程度性能ともつながるものですね。なので、性能という側面でもう一度考えてみます。互換性、汎用性などとも言える物かもしれません。ここで言いたいのは、Collection/配列がどんなものであれ、一定の性能を保証する実装を考える必要があるということです。&lt;/p>
 &lt;p>引数として&lt;code>List&lt;/code>をとり、なんらかの処理をループで行うメソッドを実装するとしましょう。今まであげてきた、4つのループのパターンのうちどれを選ぶべきかは、その引数の実装クラスが何になるかわからない、という面も考慮する必要があります。なぜなら、Listは色々な実装クラスを持つインタフェースだからです。&lt;/p>
 &lt;p>引数としてListをまず宣言しておくと、言語の仕様としてはListの実装クラスはどれでも許容することになりますね。なので引数として入ってくるのは&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ArrayList.html" target="_blank" rel="noopener"
 >ArrayList&lt;/a>になる可能性もあり、&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedList.html" target="_blank" rel="noopener"
@@ -341,7 +341,7 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LoopTest.extendedLoop thrpt &lt;span style="color:#ae81ff">25&lt;/span> 659.999 ± 47.702 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LoopTest.forEachLoop thrpt &lt;span style="color:#ae81ff">25&lt;/span> 780.463 ± 78.591 ops/s
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ArrayListとは真逆の結果になったのがわかります。特に、インデックスによるループは使えるものにならないほど性能が低く、拡張For文よりも&lt;code>forEach()&lt;/code>の性能が高いという、意外の結果となっています。このベンチマークでの数値が絶対的なものとは言えませんが、結果から推論できるのは、やはりArrayListのインデックスを利用する伝統的なFor文でのループが一番早かったからという理由だけで、全てのListをFor文で処理するというのは危ないということです。なので「どの実装クラスでも、平均的に良い性能を出してくれる」方式を選ぶ必要があるという結論を出せるでしょう。(それがおそらく拡張For文な気がします)&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>全ての場面で最適なコードを書くのは難しいことで、過去に書いたコードはいずれ改善しなければならないものとなりますね。あまりエンジニアとしての歴の長くない自分でも、たまに入社前のコードをみるとびっくりするくらいです。なんとか動くようなものは作ったものの、重複するコードや無駄なインスタンス作りなど、至る所に自分のミスが散らかっています。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>全ての場面で最適なコードを書くのは難しいことで、過去に書いたコードはいずれ改善しなければならないものとなりますね。あまりエンジニアとしての歴の長くない自分でも、たまに入社前のコードをみるとびっくりするくらいです。なんとか動くようなものは作ったものの、重複するコードや無駄なインスタンス作りなど、至る所に自分のミスが散らかっています。&lt;/p>
 &lt;p>なのでたまには、そのような過去の自分が書いたコードと向かい合って、それを直してみるのも良い経験になるのではないかと思ったりもします。特に今回みたいに、ループ処理は基本の中の基本ですが、その処理すらどれを選ぶかよくわかってないまま(そして副作用などは考えず)、ただひたすら書いてしまったものも多かったので、それに対する反省を兼ねて、そして自分の思うことの根拠を探すための勉強にもなりますので。そしてベンチマーク、意外と楽しいですので。これで自分の理論を証明していくのも良い経験ですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

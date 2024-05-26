@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rust on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/rust/</link><description>Recent content in Rust on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 30 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/rust/index.xml" rel="self" type="application/rss+xml"/><item><title>動的画像リサイズAPIを作る</title><link>https://retheviper.github.io/posts/image-resize-api/</link><pubDate>Sat, 30 Mar 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/image-resize-api/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post 動的画像リサイズAPIを作る" />&lt;p>この度は、動的画像リサイズのAPIを作りましたのでその紹介です。ここでおいう動的画像リサイズAPIとは、元の画像のURLとリサイズしたいサイズを指定すると、そのサイズにリサイズした画像を返すAPIです。&lt;/p>
-&lt;h2 id="目的">目的&lt;/h2>
-&lt;p>そもそも動的画像リサイズAPIを作る理由はなにか。それから説明しないとですね。今までは画像の配信において、エンドユーザが画像をアップロードする場合、あらかじめサムネイルの画像も作成してアップロードするようにしていました。&lt;/p>
+&lt;h2 id="目的">目的
+&lt;/h2>&lt;p>そもそも動的画像リサイズAPIを作る理由はなにか。それから説明しないとですね。今までは画像の配信において、エンドユーザが画像をアップロードする場合、あらかじめサムネイルの画像も作成してアップロードするようにしていました。&lt;/p>
 &lt;p>ただ、その方法だと全ての画面比と解像度に対応したサムネイルを作れないという問題があります。そのため代案として、フロントエンドから画面に最適化したサイズを指定して、APIからリサイズした画像を取得するようにしたいというのが目的です。&lt;/p>
-&lt;h2 id="設計技術選定">設計・技術選定&lt;/h2>
-&lt;p>APIはマイクロサービスとして、なるべくシンプルに作ることにしました。Getのエンドポイントを一つ持っていて、そこにクエリパラメータで元の画像のURLとリサイズしたいサイズを指定すると、リサイズした画像を返すというものです。フロントエンドではそのままimgタグに使えるようにしたいので、返すのは画像のデータそのまま（ヘッダーには&lt;code>Content-type&lt;/code>を指定）にします。また、リサイズだけでなく、画像の形式を変換することもできるようにします。&lt;/p>
+&lt;h2 id="設計技術選定">設計・技術選定
+&lt;/h2>&lt;p>APIはマイクロサービスとして、なるべくシンプルに作ることにしました。Getのエンドポイントを一つ持っていて、そこにクエリパラメータで元の画像のURLとリサイズしたいサイズを指定すると、リサイズした画像を返すというものです。フロントエンドではそのままimgタグに使えるようにしたいので、返すのは画像のデータそのまま（ヘッダーには&lt;code>Content-type&lt;/code>を指定）にします。また、リサイズだけでなく、画像の形式を変換することもできるようにします。&lt;/p>
 &lt;p>また、APIは&lt;a class="link" href="https://cloud.google.com/run?hl=ja" target="_blank" rel="noopener"
 >Cloud Run&lt;/a>上で動かすことにしました。既存のAPIもそうなので使い方を合わせるためでもあり、ローカルでの開発でもdocekr composeを使って楽に開発できるためです。他にもコンテンツの配信には&lt;a class="link" href="https://cloud.google.com/storage?hl=ja" target="_blank" rel="noopener"
 >Cloud Storage&lt;/a>を使っているので、それとの連携もしやすいためです。そして最終的に処理された画像は、Cloud CDNに保存され、2回目以降の呼び出しではキャッシュを返すようにします。&lt;/p>
@@ -14,8 +14,8 @@
 >ImageIO&lt;/a>なども検討しました。ただ、リサイズ対象の画像のフォーマットと、返すデータのフォーマットとしてWebPを処理する必要があったのですがそれに対応していないものが多かったです。&lt;/p>
 &lt;p>他に考えたものとしては、&lt;a class="link" href="http://www.graphicsmagick.org/" target="_blank" rel="noopener"
 >GraphicsMagick&lt;/a>のように画像の変換やリサイズを行うツールを使う方法もあります。こちらの場合はJavaから取得したデータを一度ファイルに書き出して、それをコマンドラインで実行するという方法になりますので、その分のI/Oコストがかかるため今回はScrimageを使うことにしました。&lt;/p>
-&lt;h2 id="リサイズ処理">リサイズ処理&lt;/h2>
-&lt;p>では、実際のAPIを書いていきます。Ktorは使い慣れているのもあり、今回はKtorでのAPI構築というよりはScrimageを使った画像のリサイズ処理が重要なので、その部分に焦点を当てていきます。&lt;/p>
+&lt;h2 id="リサイズ処理">リサイズ処理
+&lt;/h2>&lt;p>では、実際のAPIを書いていきます。Ktorは使い慣れているのもあり、今回はKtorでのAPI構築というよりはScrimageを使った画像のリサイズ処理が重要なので、その部分に焦点を当てていきます。&lt;/p>
 &lt;p>API全体で処理のフローは大まかに以下の通りです。&lt;/p>
 &lt;ol>
 &lt;li>クエリパラメータからurlとリサイズ後の大きさを取得&lt;/li>
@@ -25,16 +25,16 @@
 &lt;/ol>
 &lt;p>ここでScrimageを使った画像の処理は3〜4の部分ですが、実際のリサイズを行う前に取得した画像の形式をまず判定したり、画像のサイズを確認する必要もあります。理由としては処理の効率化のためですね。&lt;/p>
 &lt;p>今回はPNG, JPEG, WEBP, GIFの4つの形式に対して、リサイズ後にWEBPに変換するという処理を行うことにしています。ここで元の画像がWEBPだった場合、あえてWEBPに変換する必要はないです。また、リサイズが必要ない場合もあります。そのため、まずは画像の形式を判定して、リサイズが必要な場合のみリサイズ処理を行うようにします。&lt;/p>
-&lt;h3 id="画像の形式判定">画像の形式判定&lt;/h3>
-&lt;p>URLもしくはローカルストレージ（今回はCloud RunにCloud Storageをマウントする形で使っている）から画像を取得する際、その画像の形式を判定する必要があります。Scrimageでは画像の形式を判定するための&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/FormatDetector.java" target="_blank" rel="noopener"
+&lt;h3 id="画像の形式判定">画像の形式判定
+&lt;/h3>&lt;p>URLもしくはローカルストレージ（今回はCloud RunにCloud Storageをマウントする形で使っている）から画像を取得する際、その画像の形式を判定する必要があります。Scrimageでは画像の形式を判定するための&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/FormatDetector.java" target="_blank" rel="noopener"
 >FormatDetector&lt;/a>というクラスを提供しています。&lt;/p>
 &lt;p>使い方は簡単で、以下のように読み込んだ画像のデータをByteの配列で渡すだけです。API上では想定してないフォーマットが来た場合はエラーを返すようにしていて、ここで返す&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/Format.java" target="_blank" rel="noopener"
 >Format&lt;/a>はPNG, GIF, JPEG, WEBPでありScrimageのものをそのまま使っています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">detectImageFormat&lt;/span>(&lt;span style="color:#66d9ef">data&lt;/span>: ByteArray): Format {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">FormatDetector&lt;/span>.detect(&lt;span style="color:#66d9ef">data&lt;/span>).orElseThrow { IllegalArgumentException(&lt;span style="color:#e6db74">&amp;#34;Unsupported format&amp;#34;&lt;/span>) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="png-jpegの処理">PNG, JPEGの処理&lt;/h3>
-&lt;p>まず一番簡単なPNG, JPEGの場合です。これらの形式の場合、Scrimageの&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/ImmutableImage.java" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="png-jpegの処理">PNG, JPEGの処理
+&lt;/h3>&lt;p>まず一番簡単なPNG, JPEGの場合です。これらの形式の場合、Scrimageの&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/ImmutableImage.java" target="_blank" rel="noopener"
 >ImmutableImage&lt;/a>として扱うことになります。&lt;/p>
 &lt;p>ここで画像のデータをImmutableImageに変換するには&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/ImageReader.java" target="_blank" rel="noopener"
 >ImageReader&lt;/a>のインタフェースを実装したクラスを使います。&lt;a class="link" href="https://sksamuel.github.io/scrimage/" target="_blank" rel="noopener"
@@ -59,8 +59,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> bytes = resizedImage,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contentType = ContentType(&lt;span style="color:#e6db74">&amp;#34;image&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;webp&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="webpの場合">WEBPの場合&lt;/h3>
-&lt;p>WEBPの場合は、上記データ読み込む時点で&lt;code>WebpImageReader&lt;/code>を使う必要があります。その後のリサイズ処理はPNG, JPEGの場合と同じです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="webpの場合">WEBPの場合
+&lt;/h3>&lt;p>WEBPの場合は、上記データ読み込む時点で&lt;code>WebpImageReader&lt;/code>を使う必要があります。その後のリサイズ処理はPNG, JPEGの場合と同じです。&lt;/p>
 &lt;p>ただ、形式がWEBPの場合には&lt;a class="link" href="https://github.com/sksamuel/scrimage/tree/master/scrimage-webp" target="_blank" rel="noopener"
 >scrimage-webp&lt;/a>が提供している&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-webp/src/main/java/com/sksamuel/scrimage/webp/WebpImageReader.java" target="_blank" rel="noopener"
 >WebpImageReader&lt;/a>を使う必要があります。なので、形式に応じて読み込むクラスを変える必要があります。先ほどの&lt;code>asImmutableImage&lt;/code>の引数に形式を追加して、形式に応じて読み込むクラスを変えるようにします。&lt;/p>
@@ -71,8 +71,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他の処理はPNG, JPEGの場合と同じです。&lt;/p>
-&lt;h3 id="gifの場合">GIFの場合&lt;/h3>
-&lt;p>GIFの場合は、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/AnimatedGif.java" target="_blank" rel="noopener"
+&lt;h3 id="gifの場合">GIFの場合
+&lt;/h3>&lt;p>GIFの場合は、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/AnimatedGif.java" target="_blank" rel="noopener"
 >AnimatedGif&lt;/a>というクラスを使ってリサイズを行います。ImmutableImageと同じようにリサイズメソッドが用意されているので、それを使ってリサイズを行います。処理で使われるクラスが違うので、GIFの場合は別途メソッドを用意します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">asAnimatedGif&lt;/span>(rawData: ByteArray): AnimatedGif {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">AnimatedGifReader&lt;/span>.read(&lt;span style="color:#a6e22e">ImageSource&lt;/span>.of(rawData))
@@ -93,10 +93,10 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">encodeGif&lt;/span>(gif: AnimatedGif): ByteArray {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> gif.bytes(Gif2WebpWriter.DEFAULT)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="処理を共通化する">処理を共通化する&lt;/h2>
-&lt;p>ここまででPNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができました。ただ、それぞれの形式に対して処理を書いていると、処理が重複してしまうため、共通化する必要があります。特にImmutableImageとAnimatedGifの処理は似ているため、それらを共通化することにします。&lt;/p>
-&lt;h3 id="共通interfaceを作る">共通Interfaceを作る&lt;/h3>
-&lt;p>ScrimageではImmutableImageとAnimatedGifは別のクラスであるだけでなく、共通のInterfaceを持っていないため、まずはそれを作成する必要があります。ここでは、ImageというInterfaceを作成し、それを実装するクラスを作成します。それぞれのクラスはWrapperとして作成し、それぞれのクラスのプロパティをInterfaceのプロパティとして持つようにします。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="処理を共通化する">処理を共通化する
+&lt;/h2>&lt;p>ここまででPNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができました。ただ、それぞれの形式に対して処理を書いていると、処理が重複してしまうため、共通化する必要があります。特にImmutableImageとAnimatedGifの処理は似ているため、それらを共通化することにします。&lt;/p>
+&lt;h3 id="共通interfaceを作る">共通Interfaceを作る
+&lt;/h3>&lt;p>ScrimageではImmutableImageとAnimatedGifは別のクラスであるだけでなく、共通のInterfaceを持っていないため、まずはそれを作成する必要があります。ここでは、ImageというInterfaceを作成し、それを実装するクラスを作成します。それぞれのクラスはWrapperとして作成し、それぞれのクラスのプロパティをInterfaceのプロパティとして持つようにします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">sealed&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> &lt;span style="color:#a6e22e">Image&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> width: Int
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -114,8 +114,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> width: Int
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">get&lt;/span>() = immutableImage.width
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像取得の共通化">画像取得の共通化&lt;/h3>
-&lt;p>あとは外部に公開するAPIとして、&lt;code>asImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてWrapperを返すようにします。ここで、形式の判定は先ほど作成した&lt;code>detectImageFormat&lt;/code>を使います。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像取得の共通化">画像取得の共通化
+&lt;/h3>&lt;p>あとは外部に公開するAPIとして、&lt;code>asImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてWrapperを返すようにします。ここで、形式の判定は先ほど作成した&lt;code>detectImageFormat&lt;/code>を使います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">asImage&lt;/span>(rawData: ByteArray): Image {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (&lt;span style="color:#66d9ef">val&lt;/span> format = detectImageFormat(rawData)) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Format&lt;/span>.GIF &lt;span style="color:#f92672">-&amp;gt;&lt;/span> asAnimatedGifWrapper(rawData)
@@ -135,8 +135,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> ImmutableImageWrapper(image)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="リサイズ処理の共通化">リサイズ処理の共通化&lt;/h3>
-&lt;p>同じく、リサイズ処理も共通化します。ここでは、&lt;code>resizeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した&lt;code>resizeImmutableImage&lt;/code>と&lt;code>resizeAnimatedGif&lt;/code>を使います。AnimatedGifのリサイズ処理はまた別途&lt;code>writeAnimatedGif&lt;/code>というメソッドを作成して分けています。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="リサイズ処理の共通化">リサイズ処理の共通化
+&lt;/h3>&lt;p>同じく、リサイズ処理も共通化します。ここでは、&lt;code>resizeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した&lt;code>resizeImmutableImage&lt;/code>と&lt;code>resizeAnimatedGif&lt;/code>を使います。AnimatedGifのリサイズ処理はまた別途&lt;code>writeAnimatedGif&lt;/code>というメソッドを作成して分けています。&lt;/p>
 &lt;p>ここでImageはsealed interfaceとして作成しているため、分岐処理はwhen式を使って網羅することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">suspend&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">resizeImage&lt;/span>(image: Image, width: Int): Image {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (image) {
@@ -169,8 +169,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> resizedImage = imageWrapper.immutableImage.scaleToWidth(width)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> ImmutableImageWrapper(resizedImage, imageWrapper.format)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像のエンコード処理の共通化">画像のエンコード処理の共通化&lt;/h3>
-&lt;p>最後に、画像のエンコード処理も共通化します。ここでは、&lt;code>encodeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてエンコード処理を行うようにします。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像のエンコード処理の共通化">画像のエンコード処理の共通化
+&lt;/h3>&lt;p>最後に、画像のエンコード処理も共通化します。ここでは、&lt;code>encodeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてエンコード処理を行うようにします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">suspend&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">encodeImage&lt;/span>(image: Image): ByteArray {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (image) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">is&lt;/span> AnimatedGifWrapper &lt;span style="color:#f92672">-&amp;gt;&lt;/span> image.animatedGif.bytes(Gif2WebpWriter.DEFAULT)
@@ -179,23 +179,23 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで共通化も終わり、呼び出す側は&lt;code>asImage&lt;/code>, &lt;code>resizeImage&lt;/code>, &lt;code>encodeImage&lt;/code>の3つのメソッドを使うだけでリサイズ処理を行うことができます。サイズのチェックもImageの方でプロパティ化しているため、それを使ってリサイズが必要かどうかの判定も行うことができます。&lt;/p>
 &lt;p>あとはImageWriterなど、毎回インスタンスを生成する必要のないクラスは、シングルトンとして作成しておくとよいでしょう。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>だいぶ長くなってしまいましたが、ここまでで動的画像リサイズAPIの作成方法を紹介しました。Scrimageを使うことで、PNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができ、共通化することで処理の重複を防ぐことができました。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>だいぶ長くなってしまいましたが、ここまでで動的画像リサイズAPIの作成方法を紹介しました。Scrimageを使うことで、PNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができ、共通化することで処理の重複を防ぐことができました。&lt;/p>
 &lt;p>あとは、Cloud Run上で動かすためのDockerfileを作成し、Cloud Storageとの連携を行うことで、画像の配信を行うことができます。また、Cloud CDNを使うことで、2回目以降の呼び出しではキャッシュを返すようにすることで、負荷を軽減することができます。なかなか面白いプロジェクトでした。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>Kotlinのこれからを語る</title><link>https://retheviper.github.io/posts/kotlin-prospect/</link><pubDate>Sun, 22 May 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-prospect/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Kotlinのこれからを語る" />&lt;p>1年ほどサーバサイドKotlinを扱いながら、ふと「今のKotlinはどこまできていて、これからはどうなるんだろう」と思うようになりました。色々な観点があると思いますが、とりあえず市場においてどれほどの需要があり、展望（これからも積極的に採用され続けそう、苦戦しそうなどの）はどうかなど、いわゆるkotlinという言語の「ステータス」について自分が感じていることについて考えてみたくなったというわけです。&lt;/p>
 &lt;p>最近のトレンドを見ると、一つの言語において専門家になるというよりはさまざまな言語を使いこなせる、いわゆる&lt;code>Polyglot&lt;/code>なプログラマが求められていて、常識みたいになっているとも言われているようです。確かに私自信もその経験があるかどうかは関係なく、案件によりさまざまな言語に触れるケースを多くみています。そして今は充実したドキュメントや記事をインターネットに溢れていて、UdemyやCourseraなど良質の講義を提供するサイトも色々とあるので経験がない言語だとしても入門が難しくてできないとは言えない時代になっている感覚でもあります。なので、自分が現在使っている言語がメインストリームに属してあるかどうかの問題は以前よりは重要でなくなった、といえるかもしれません。&lt;/p>
 &lt;p>ただ、立場や観点によっては一つの言語に集中したい場合もあるかと思います。例えば学生や、未経験からエンジニアに転職しようとする人にいきなり二つ以上の言語を扱えるように注文するのは難しいことでしょう。エンジニアの追求する技術においてもそうです。フロントエンドエンジニアがいきなり今すぐ使う予定でもないGoやJavaのようなバックエンドで使われる言語を勉強する必要はないはずです。そして会社としては、複数の言語を扱えるエンジニアを求めるということは採用において非常に厳しい条件となるはずです。なので、依然として市場において一つの言語のステータスというのは無視できないものなのではないかと私は思っています。&lt;/p>
 &lt;p>というわけで、今回は多少主観的な観点からの話になりますが、他の言語や分野で、Kotlinという言語の展望について考えてみたことを述べたいと思います。それでは、どうぞ。&lt;/p>
-&lt;h2 id="vs-java">vs Java&lt;/h2>
-&lt;h3 id="better-javaという捉え方">Better javaという捉え方&lt;/h3>
-&lt;p>Kotlin(JVM)をJavaと比べると、コンパイル結果がバイトコードを生成するため、「Javaと互換性が完璧であり、性能もまた変わらない」というのが世間一般でいうKotlinの評価ではないかと思います。その上拡張関数やCoroutine、スコープ関数、Null安全性などさまざまな機能が揃っているので、表面上は&lt;code>better java&lt;/code>と読んでも良いのではないかと思わせる面もあります。それに、JavaのバージョンアップでJVMの改良が行われると、結局それもKotlinの改善につながることとなりますね。Javaも1.8以降は半年に1回のリリース政策によりバージョンアップが早くなっていまずが、まだアプリケーションエンジニアの立場からするとKotlinと比べ惜しいところもなくはないかなと思います。&lt;/p>
+&lt;h2 id="vs-java">vs Java
+&lt;/h2>&lt;h3 id="better-javaという捉え方">Better javaという捉え方
+&lt;/h3>&lt;p>Kotlin(JVM)をJavaと比べると、コンパイル結果がバイトコードを生成するため、「Javaと互換性が完璧であり、性能もまた変わらない」というのが世間一般でいうKotlinの評価ではないかと思います。その上拡張関数やCoroutine、スコープ関数、Null安全性などさまざまな機能が揃っているので、表面上は&lt;code>better java&lt;/code>と読んでも良いのではないかと思わせる面もあります。それに、JavaのバージョンアップでJVMの改良が行われると、結局それもKotlinの改善につながることとなりますね。Javaも1.8以降は半年に1回のリリース政策によりバージョンアップが早くなっていまずが、まだアプリケーションエンジニアの立場からするとKotlinと比べ惜しいところもなくはないかなと思います。&lt;/p>
 &lt;p>ここまでの話だと、Kotlinは完璧にJavaを代替できる言語であるかのように聞こえます。つまり、これからは全くJavaを使う理由はなくて、何もかもKotlinに移行するという選択肢しかないかのようにですね。しかし、業界の事情はどうなのでしょうか。&lt;/p>
 &lt;p>まずJavaの歴史から考えてみましょう。Javaは長い間、「世界で最もよく使われる言語」であって、他の言語が人気を得た今でもTop 5に入るほどの人気な言語となっています&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>。そしてこれが示唆するのは、単純に今の人気、つまり、「これからも使われる可能性」だけの話ではなく、「今まで使われた回数」が圧倒的に高いということも意味するという点です。今まで作られた多くのシステムやアプリケーションがJava基盤になっているので、余程のことがない限りは維持保守や機能の拡張においてJavaのエンジニアを求めることになるでしょう。&lt;/p>
 &lt;p>また、こういう側面もあります。JVM言語としてJavaのメリットを活かしつつ、より発展したコードを書けるというコンセプトで登場した言語はKotlinだけではないということです。今までClojure・Scala・Groovyなどさまざまな言語が登場し、それぞれの言語がそれなりの需要や分野を確保・拡張できてはいるものの、そのうちどれも「Javaを超えた」という評価をもらってはいないのが現状かと思います。同じくKotlinの場合も、その立場が他のJVM言語と大きく変わっているとは言えないものではないでしょうか。なので、「JVM言語だ」「Javaよりモダンだ」という特徴は、少なくともKotlinが今後Javaを超えられるという根拠にはならないかと思っています。&lt;/p>
 &lt;p>モバイルではAndroidの言語としてJavaよりKotlinを採用する例が多くなっているかと思いますが、これはOracleとGoogleの訴訟絡みでJavaを1.8しか使えなかったことも理由の一つかと思います。現在Javaがよく使われているWebの場合、OpenJDKのバージョンに特に法理的な問題もなく、Java 17からはOracleJDKも無償で利用できるようになったので、モバイルとはまた状況は違うのではないかと個人的には思っています。&lt;/p>
 &lt;p>もちろん、上記の問題はJetbrainsでもその点は最初から認識していたため、最初からKotlinがJavaと相互運用できる言語として設計した部分はあります。なので、あくまで既存のJavaアプリケーションをKotlinでリプレイスする、というよりは、部分的な移行から新規開発で占有率を徐々に上げていくことを目標としているのではないかと思います。その戦略は十分に納得できるもので、あとは企業の方でJavaとKotlinという二つの言語を同時に運用することに抵抗がなければ、Javaを使っていた場合でも問題なくKotlinを受け入れられると思います。実際、自分の場合でもJavaからKotlinの移行は全く問題ありませんでした。&lt;/p>
-&lt;h3 id="kotlinも強くなる">Kotlinも強くなる&lt;/h3>
-&lt;p>最近のフレームワークやライブラリの方をみると、まだKotlinがモバイル以外の分野での認知度は劣るものの、少しづつJavaがメインストリームであった分野で採用されているケースが増えてきているような気もします。例えば、自分が仕事で使っている&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.kotlin" target="_blank" rel="noopener"
+&lt;h3 id="kotlinも強くなる">Kotlinも強くなる
+&lt;/h3>&lt;p>最近のフレームワークやライブラリの方をみると、まだKotlinがモバイル以外の分野での認知度は劣るものの、少しづつJavaがメインストリームであった分野で採用されているケースが増えてきているような気もします。例えば、自分が仕事で使っている&lt;a class="link" href="https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.kotlin" target="_blank" rel="noopener"
 >Spring boot&lt;/a>、&lt;a class="link" href="https://github.com/FasterXML/jackson-module-kotlin" target="_blank" rel="noopener"
 >Jackson&lt;/a>、&lt;a class="link" href="https://github.com/awslabs/aws-sdk-kotlin" target="_blank" rel="noopener"
 >AWS SDK&lt;/a>などウェブアプリケーションで有名なものがKotlinに対応していて、他にも&lt;a class="link" href="https://www.jooq.org/doc/latest/manual/getting-started/jooq-and-kotlin/" target="_blank" rel="noopener"
@@ -218,13 +218,13 @@
 >Koin&lt;/a>、&lt;a class="link" href="https://github.com/Kodein-Framework/Kodein-DI" target="_blank" rel="noopener"
 >Kodein-DI&lt;/a>などがそうですね。なので、Javaの世界に寄生していた数年前とは違って、Kotlinだけでもウェブアプリケーションを十分構築できるレベルまできているのではないか、というのが自分の考えです。&lt;/p>
 &lt;p>結論として、まだ二つの言語を比べると、Javaの方が圧倒的に規模はでかく、知名度でも上にあるのですが、Kotlinも競争できる力を身につけてきたので、これからは十分状況が変わる可能性がある、と思っています。&lt;/p>
-&lt;h2 id="vs-go">vs Go&lt;/h2>
-&lt;h3 id="早いの美徳">「早い」の美徳&lt;/h3>
-&lt;p>仕事でGoを使っている立場からすると、Kotlinに比べGoの優越な側面はやはり「とにかく早い」ということではないかと思います。基本的にネイティブにコンパイルされる言語なのでランタイム性能も優秀なはずですが、コンパイルもビルドもとにかく早いのは確かに良いなと思いました。特に、コードの修正後にユニットテストで検証してみることが多いのですが、Kotlinのプロジェクトと比べるととにかく早いのでストレスがないですね。(Kotlinの場合は使っているウェブフレームワークがSpringで、テストケースがより多い、ビルド時にはシングルスレッドでやっているということもありますが)&lt;/p>
+&lt;h2 id="vs-go">vs Go
+&lt;/h2>&lt;h3 id="早いの美徳">「早い」の美徳
+&lt;/h3>&lt;p>仕事でGoを使っている立場からすると、Kotlinに比べGoの優越な側面はやはり「とにかく早い」ということではないかと思います。基本的にネイティブにコンパイルされる言語なのでランタイム性能も優秀なはずですが、コンパイルもビルドもとにかく早いのは確かに良いなと思いました。特に、コードの修正後にユニットテストで検証してみることが多いのですが、Kotlinのプロジェクトと比べるととにかく早いのでストレスがないですね。(Kotlinの場合は使っているウェブフレームワークがSpringで、テストケースがより多い、ビルド時にはシングルスレッドでやっているということもありますが)&lt;/p>
 &lt;p>そのほかにもGitHubのパッケージをそのまま使えたり、別途ライブラリを使わなくてもstructをすぐにJSONとして扱える(&lt;code>omitempty&lt;/code>とかも便利な場面がある)なところは印象的で、かなりウェブ開発に特化されているなという印象までありました。ネイティブなのでビルドして生成されるバイナリのサイズが小さいのも良いですね。これらの特徴からして、最近トレンドとなっているサーバレスやマイクロサービスなどおいてはKotlinよりGoを採用した方が有利な面が多いかなと思います。&lt;/p>
 &lt;p>まだサーバがクラウド上のVMに移行したばかりの頃は、JVMを使う言語の問題はだいたいマシンスペックの向上により無視できました。しかし、サーバレスとマイクロサービスアーキテクチャが流行りながらJVMの特徴が再び問題となってきていますね。まずサーバレスだと、JVMが完璧にロードされるまで時間がかかるる上に、さらにコールドスタートにも時間がかかります&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>。また、マイクロサービスにおいては、JVMが占めるヒープメモリとストレージが増えることでインスタンスごとのコストが増えるという問題が挙げられています。&lt;/p>
-&lt;h3 id="kotlin--遅い">Kotlin != 遅い&lt;/h3>
-&lt;p>このような問題に対して、サーバレスだと&lt;a class="link" href="https://site.kotless.io/" target="_blank" rel="noopener"
+&lt;h3 id="kotlin--遅い">Kotlin != 遅い
+&lt;/h3>&lt;p>このような問題に対して、サーバレスだと&lt;a class="link" href="https://site.kotless.io/" target="_blank" rel="noopener"
 >Kotless&lt;/a>のようなフレームワークが開発されていたり、&lt;a class="link" href="https://www.graalvm.org/" target="_blank" rel="noopener"
 >GraalVM&lt;/a>を利用してネイティブビルドができる&lt;a class="link" href="https://ja.quarkus.io/" target="_blank" rel="noopener"
 >Quarkus&lt;/a>や&lt;a class="link" href="https://github.com/spring-projects-experimental/spring-native" target="_blank" rel="noopener"
@@ -236,12 +236,12 @@
 >Go 1.18でジェエリックが導入&lt;/a>されていますが、&lt;a class="link" href="https://planetscale.com/blog/generics-can-make-your-go-code-slower" target="_blank" rel="noopener"
 >ジェネリックにより遅くなる可能性がある&lt;/a>という話もあり、これからもしGoに新しい機能が追加されるとしたら、それがコンパイル速度やランタイム性能に影響を及ぼす可能性もあるかなと思います。&lt;/p>
 &lt;p>なので、KotlinとGoという二つの言語で考えると、少なくともパフォーマンスという観点だけではGoにこだわる必要はないかなと思います。しかし、アプリケーションの開発において言語を選ぶ基準はパフォーマンスだけでなく、生産性やクラウドで対応している言語、エンジニアが確保できるかなど色々な側面があるので、Goの代わりにKotlinを選んだほうが効率的だとは言えないのも事実です。自分が転職を決めた時も、サーバサイドではGoのエンジニアを募集している企業の方がKotlinより多かったのですが、単純にパフォーマンスが基準だとしたらこのようなことにはならなかったでしょう。Googleが推している言語であるとか、パフォーマンスだけでなく生産性の面でも優れているなどさまざまな理由が複合的に作用した結果だと言えるものかと思います。&lt;/p>
-&lt;h3 id="それでも有利なのは">それでも有利なのは&lt;/h3>
-&lt;p>あとは、そもそもの知名度の問題ですね。Kotlinにおいて、ネイティブイメージのビルドができ、性能が劣らないとしても、多くの場合はKotlinをモバイル(Android限定)用の言語だと認識しているのが一般的かなと思います。なので、このような認識がエンジニアと企業で変わらない限り、これからもGoの方がサーバサイドでは市場において優位に立つという状況がしばらくは続くのではないかと思っています。&lt;/p>
+&lt;h3 id="それでも有利なのは">それでも有利なのは
+&lt;/h3>&lt;p>あとは、そもそもの知名度の問題ですね。Kotlinにおいて、ネイティブイメージのビルドができ、性能が劣らないとしても、多くの場合はKotlinをモバイル(Android限定)用の言語だと認識しているのが一般的かなと思います。なので、このような認識がエンジニアと企業で変わらない限り、これからもGoの方がサーバサイドでは市場において優位に立つという状況がしばらくは続くのではないかと思っています。&lt;/p>
 &lt;p>他にも、Goはその書きやすさからや入門のしやすさの人気もあると思いますが、それを踏まえると比較的書き方が複雑なKotlinの方が劣るのではないかという推測もできそうですね。自分にとってはKotlinの書き方が簡潔で良い感覚ですが、Goの書き方を簡潔だと思っている方もいるようです。確かに、キーワードが少なく、それらを覚えるのに労力が比較的少ないなら、よりロジックに集中した書き方ができるはずですね。Goで作られたアプリやCLIツールなどが増えているのも、そのような特徴からのものなのではないでしょうか。自分の場合は簡単なツールを作るときはPythonで書くのを好みますが、同じく気軽にコードが書ける稼働かの観点でいうと、KotlinよりGoが優れているとも言える気がします。なので、個人の趣味やサイドプロジェクトなどでよく使われ、それがまた人気につながるだろうと思うと、Goを好むエンジニアが増えるのもおかしくはないですね。&lt;/p>
-&lt;h2 id="vs-rust">vs Rust&lt;/h2>
-&lt;h3 id="最強の性能">最強の性能？&lt;/h3>
-&lt;p>GCがないので同じネイティブでありながらもGoより性能が優秀だというRustですが、これもまたKotlinと同じく、知名度の問題で苦戦しているところがあるかなと思います。そもそもC/C++を代替するのが開発の目的でもあったため仕方ないのかもしれませんが、どちらかというとエンベデッドで使われるイメージがどうしてもあるような気がしますね。意外と&lt;a class="link" href="https://www.figma.com/" target="_blank" rel="noopener"
+&lt;h2 id="vs-rust">vs Rust
+&lt;/h2>&lt;h3 id="最強の性能">最強の性能？
+&lt;/h3>&lt;p>GCがないので同じネイティブでありながらもGoより性能が優秀だというRustですが、これもまたKotlinと同じく、知名度の問題で苦戦しているところがあるかなと思います。そもそもC/C++を代替するのが開発の目的でもあったため仕方ないのかもしれませんが、どちらかというとエンベデッドで使われるイメージがどうしてもあるような気がしますね。意外と&lt;a class="link" href="https://www.figma.com/" target="_blank" rel="noopener"
 >Figma&lt;/a>、&lt;a class="link" href="https://1password.com/jp/" target="_blank" rel="noopener"
 >1Password&lt;/a>、&lt;a class="link" href="https://discord.com/" target="_blank" rel="noopener"
 >Discord&lt;/a>、&lt;a class="link" href="https://www.dropbox.com/" target="_blank" rel="noopener"
@@ -262,48 +262,48 @@
 >poem&lt;/a>のようなGUIやウェブフレームワークなどがたくさん開発されていますが、これもまた特に調査してみないとわからないくらいです。&lt;/p>
 &lt;p>さまざまなベンチマークでその性能が検証されていて、使ってみたエンジニアからも評判の高いものとなっているRustですが、やはり知名度が低いので、企業からも採用するのはかなり難しい判断になるでしょう。実際Jetbrainsの去年の設問では&lt;a class="link" href="https://www.jetbrains.com/ja-jp/lp/devecosystem-2021/rust/#Rust_how-do-you-use-rust" target="_blank" rel="noopener"
 >Rustは趣味もしくは個人用途、サイドプロジェクトで使う&lt;/a>と答えた割合のエンジニアが多かったのを見ると、やはり企業の需要はあまりようです。ただ、逆にいうと、このようにRustに好意的なエンジニアが増え、さまざまなプロジェクトで使われ始めるといつか市場の状況も変わっていく可能性もあるということです。先ほど述べたGoのケースのように、比較的に歴史の短い若い言語でも十分その価値を立証できるのであれば市場でもメインストリームに合流できます。なので、Rustの未来はむしろ明るく、これからが期待される言語だと個人的には思っています。ただ、人気を得た後も、ウェブアプリケーションを開発するよりは今まで通りエンベデッド・システムプログラミングに特化していきそうな気がしますね。&lt;/p>
-&lt;h3 id="kotlinをネイティブにしたら">Kotlinをネイティブにしたら&lt;/h3>
-&lt;p>RustをKotlinとの比較をするとしたら、Kotlin/Nativeがあるので、言語自体でできることはそう変わらないものの、Rustがエンベデッドやシステムプログラミングという分野でC/C++を代替していく傾向があるのに対して、これといった成果があまり見当たらないというのが問題かなと思います。特にKotlin/NativeはLLVM基盤なので、GraalVMによるネイティブコンバイるができるウェブフレームワークが登場している今はますますそのポジションが曖昧なものになっている気もします。Object-CやC/C++とのinteropができると言われていますが、そのようなユースケースだとそもそもObject-CやC/C++といった言語を使った方が色々と有利なのではないでしょうか。もちろん、Rustには所有権のような概念があり、他の言語と比べプログラミングが難しいとされているので、Kotlin/Nativeを採用した方がコーディングは楽になるかもしれません。でも、Nativeを追求するならやはりパフォーマンスが重視される場面が多いので、そこではGCのあるKotlinが不利な気がしますね。このような面からすると、やはりKotlin/Nativeのポジショニングが難しそうな気がします。&lt;/p>
+&lt;h3 id="kotlinをネイティブにしたら">Kotlinをネイティブにしたら
+&lt;/h3>&lt;p>RustをKotlinとの比較をするとしたら、Kotlin/Nativeがあるので、言語自体でできることはそう変わらないものの、Rustがエンベデッドやシステムプログラミングという分野でC/C++を代替していく傾向があるのに対して、これといった成果があまり見当たらないというのが問題かなと思います。特にKotlin/NativeはLLVM基盤なので、GraalVMによるネイティブコンバイるができるウェブフレームワークが登場している今はますますそのポジションが曖昧なものになっている気もします。Object-CやC/C++とのinteropができると言われていますが、そのようなユースケースだとそもそもObject-CやC/C++といった言語を使った方が色々と有利なのではないでしょうか。もちろん、Rustには所有権のような概念があり、他の言語と比べプログラミングが難しいとされているので、Kotlin/Nativeを採用した方がコーディングは楽になるかもしれません。でも、Nativeを追求するならやはりパフォーマンスが重視される場面が多いので、そこではGCのあるKotlinが不利な気がしますね。このような面からすると、やはりKotlin/Nativeのポジショニングが難しそうな気がします。&lt;/p>
 &lt;p>結論としては、Kotlin(JVM)とRustはそれぞれ特化した分野が違っていて、大きな変化がない限り互いの領域を蝕むことなく発展していきそうです。どちらかというとKotlin/Nativeが直接的なライバルになる可能性はありますが、そもそものポジショニングが曖昧なところがあるので、Nativeがどうしても必要な場面ではRustが使われる可能性が高いのではないか、という気がしています。&lt;/p>
-&lt;h2 id="vs-python">vs Python&lt;/h2>
-&lt;h3 id="万能ツール">万能ツール&lt;/h3>
-&lt;p>ここ数年で最も人気を得ている言語の一つ、Pythonの場合は、Kotlinと比べて見るとどうでしょうか。まず自分の場合だと、日常での自動化や簡単なツールを作る場面ではPythonの方をよく使っていて、本格的なウェブアプリケーションを開発するとしたらKotlinを選ぶことが多いです。もちろん、なんでもできる言語なので大規模のアプリケーションを作るのにPythonがNGというわけではないです。実際Uber、Google、PayPal、Netflixなど有種の企業がPythonを使っていて、あの有名なInstagramのサーバサイドもPythonで書かれていると言われていますね。&lt;/p>
+&lt;h2 id="vs-python">vs Python
+&lt;/h2>&lt;h3 id="万能ツール">万能ツール
+&lt;/h3>&lt;p>ここ数年で最も人気を得ている言語の一つ、Pythonの場合は、Kotlinと比べて見るとどうでしょうか。まず自分の場合だと、日常での自動化や簡単なツールを作る場面ではPythonの方をよく使っていて、本格的なウェブアプリケーションを開発するとしたらKotlinを選ぶことが多いです。もちろん、なんでもできる言語なので大規模のアプリケーションを作るのにPythonがNGというわけではないです。実際Uber、Google、PayPal、Netflixなど有種の企業がPythonを使っていて、あの有名なInstagramのサーバサイドもPythonで書かれていると言われていますね。&lt;/p>
 &lt;p>ただやはり、PythonはデータサイエンスやAIといった分野でよく使われているイメージがあり、使いやすく、そこまで性能が求められていない場面でなら良いものの、個人的にはその限界が明確であることが問題かなという気もします。本格的な業務用のアプリを開発した経験がないのであくまで印象と推測の話となりますが、Pythonをサーバサイドに取り入れている企業は大概がスタートアップであって、サービスが古くなるとインタープリター言語特有のメンテが難しくなるという問題が出てくる可能性が高いではないかと思いますね。JavaScriptの例もありますが、Pythonのタイプヒントはあくまでヒントであって、TypeScriptのようにコンパイルタイムで検出できるエラーを確実にわかるわけでもないです。あとは性能ですが、&lt;a class="link" href="https://wiki.python.org/moin/GlobalInterpreterLock" target="_blank" rel="noopener"
 >GIL&lt;/a>のような問題もあります。このような問題を認識しているため、検証用のアプリ(プロトタイプ)をPythonで書いてから他の言語に移行するという例もあるのかなと思ったりしています。&lt;/p>
-&lt;h3 id="pythonだけの領域でもないが">Pythonだけの領域でもないが&lt;/h3>
-&lt;p>逆にKotlinでいうと、Jupyterを使えるなど&lt;a class="link" href="https://kotlinlang.org/docs/data-science-overview.html#kotlin-libraries" target="_blank" rel="noopener"
+&lt;h3 id="pythonだけの領域でもないが">Pythonだけの領域でもないが
+&lt;/h3>&lt;p>逆にKotlinでいうと、Jupyterを使えるなど&lt;a class="link" href="https://kotlinlang.org/docs/data-science-overview.html#kotlin-libraries" target="_blank" rel="noopener"
 >Kotlinでもデータサイエンスに使える&lt;/a>のですが、すでにPythonが市場支配的な言語になっているところでどこまで伸びるかが問題な気がしますね。JetBrainsが主張するように、Pythonと比べ「静的型付け、Null安全性、パフォーマンス」というのは確かにKotlinが持つメリットではあるのですが、そもそものユーザ数が増える何かがないと占有率を上げるのはかなり難しくないのではないかと思います。Pythonは入門が簡単なので講座も多く、実際エンジニアではない人も使うケースが多いのですが、Kotlinはまだそのような面では弱い印象ですね。&lt;/p>
 &lt;p>以上のことからして、Pythonは依然としてデータサイエンスなど元々強かった分野に対してはこれからも需要が大きく変わることはなさそうです。ウェブという分野では競合になる可能性はありますが、どちらかというとKotlinを採用した方がより安定した開発ができるので大規模なアプリの開発ではKotlin、小規模ではPythonという形になるのではないかと思います。もちろん、大規模のアプリを開発するにあたってはまたの選択肢があるのでKotlinではない他の言語が採用される可能性の方が高そうですが、あくまで二つの言語を比べた場合の話となります。&lt;/p>
-&lt;h2 id="vs-javascript">vs JavaScript&lt;/h2>
-&lt;h3 id="多芸多才">多芸多才&lt;/h3>
-&lt;p>一つの言語でなんでもできちゃう言語が何かというと、過去はJava、少し前はPython、そして今はなんといってもJavaScriptではないかと思います。フロントエンド、バックエンド、モバイル、データサイエンスなどさまざまな分野で活躍している言語ですね。ランタイムの性能が問題となっている部分に対しても&lt;a class="link" href="https://deno.land/" target="_blank" rel="noopener"
+&lt;h2 id="vs-javascript">vs JavaScript
+&lt;/h2>&lt;h3 id="多芸多才">多芸多才
+&lt;/h3>&lt;p>一つの言語でなんでもできちゃう言語が何かというと、過去はJava、少し前はPython、そして今はなんといってもJavaScriptではないかと思います。フロントエンド、バックエンド、モバイル、データサイエンスなどさまざまな分野で活躍している言語ですね。ランタイムの性能が問題となっている部分に対しても&lt;a class="link" href="https://deno.land/" target="_blank" rel="noopener"
 >Deno&lt;/a>のような新しいランタイムが登場したり、V8エンジンの持続的な改善によりだんだん補完されていって、静的型付けに関してもTypeScriptの台頭によって解決されています。まさに無敵の言語のようにも見えます。&lt;/p>
 &lt;p>フロントエンドにおいてはJavaScript以外は考えられない&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>というのもあり、&lt;a class="link" href="https://webassembly.org/" target="_blank" rel="noopener"
 >WebAssembly&lt;/a>のような技術も発達していますが、これはまたウェブの画面描画だけでなく違う方向に向かっているような感じなので、これから何かあって(あるとは思いませんが)色々な分野で使われなくなるとしてもJavaScriptそのものが使われなくなることはないでしょう。そして同じ意味で、Kotlinがそのような分野に進出するのもかなりハードルが高いと思います。&lt;/p>
-&lt;h3 id="kotlinでフロントエンド">Kotlinでフロントエンド？&lt;/h3>
-&lt;p>Kotlinで言えば、Kotlin/JVMとKotlin/Native以外に3つの軸として存在しているのが&lt;a class="link" href="https://kotlinlang.org/docs/js-overview.html" target="_blank" rel="noopener"
+&lt;h3 id="kotlinでフロントエンド">Kotlinでフロントエンド？
+&lt;/h3>&lt;p>Kotlinで言えば、Kotlin/JVMとKotlin/Native以外に3つの軸として存在しているのが&lt;a class="link" href="https://kotlinlang.org/docs/js-overview.html" target="_blank" rel="noopener"
 >Kotlin/JS&lt;/a>であり、JetBrainsの発信を見るとそこそこ力を入れている感覚ではあります。他にも、&lt;a class="link" href="https://www.jetbrains.com/ja-jp/lp/compose-mpp/" target="_blank" rel="noopener"
 >Compose Multiplatform&lt;/a>を通じて、モバイルだけでなくウェブやデスクトップアプリにおいてもKotlinでGUIを作成できるようになったので、なるべく自分のサイドプロジェクトなどではKotlinで完結したいと思っている私の場合はこちらも応援したいと思っています。ただ、まだモバイル以外ではそこまでメジャーではなく、新しい技術の問題(ライブラリの不足、バージョンアップによる変化が激しいなど)が考えられるのでしばらくは様子見な感じですね。あと自分のような特殊な目的がない場合は、個人でも企業側としても無理して採用すべきメリットが薄いという問題もあるかなと思います。&lt;/p>
 &lt;p>バックエンドだとKotlinが競合になる可能性はまだ十分ではないかと思います。特に、今までJavaが採用されていた分野だと主にJVMの安定性や数値計算の精度など検証された安全性というものがあるので、これから言語を変えるとしたらKotlinを採用する確率が高いのではないかと思っているところですが、そのような分野だと、最初からJavaScriptによるバックエンドの採用は考えない可能性が高そうです。スタートアップのようにエンジニアの求人が難しく、使われる技術の数を減らしてなるべく工数の削減しようとするか、Pythonのようにプロトタイプのアプリを作るかなどの特殊な状況ではない限り積極的にバックエンドの言語としてJavaScriptを採用する例はあまりなさそうな気がしていて、これからもおそらくそれは大きく変化していく気はしません。ただ、自分のようにKotlinで何もかも解決したい、という方がJavaScript側にもいらっしゃるとしたら、そこはまた話が変わってくるかもしれませんね。フロントエンド、バックエンド、モバイル、デスクトップまで対応したい場合にはJavaScript以上のものがないので、その会社や個人の目的次第でJavaScriptが採用される可能性は高く、そのような状況こそKotlinは採用されない可能性が高いかなと思います。&lt;/p>
-&lt;h2 id="vs-dart">vs Dart&lt;/h2>
-&lt;h3 id="guiの最強者">GUIの最強者？&lt;/h3>
-&lt;p>Dartの場合は、言語そのものというよりは&lt;a class="link" href="https://flutter.dev/" target="_blank" rel="noopener"
+&lt;h2 id="vs-dart">vs Dart
+&lt;/h2>&lt;h3 id="guiの最強者">GUIの最強者？
+&lt;/h3>&lt;p>Dartの場合は、言語そのものというよりは&lt;a class="link" href="https://flutter.dev/" target="_blank" rel="noopener"
 >Flutter&lt;/a>が最近熱いですね。最初はモバイルでクロスプラットフォーム開発ができるということで注目されたものですが、Dartに対してはFlutterの最大の競合は&lt;a class="link" href="https://reactnative.dev/" target="_blank" rel="noopener"
 >React Native&lt;/a>だと言えるかなと思いますが、それも最近のトレンドを見ると少しづつ逆転してきているような気がします。もちろんこれはあくまでも「クロスプラットフォーム用のフレームワーク」という基準での比較であり、実際は色々と複雑な事情があるでしょう。例えば、フロントエンドエンジニアがモバイルの開発も担当していて、フロントエンドのライブラリとしてはReactを使っているなどの状況を考えると、ここでいきなりFlutterを採用する可能性は低くなるはずですので。&lt;/p>
 &lt;p>自分が思うにDartの最大の問題は、その最初の意図(JavaScriptを代替するという)はともかく、言語そのものの印象が薄いということです。少しだけ触ってみた感覚では、いわゆるC-Family言語としての馴染みはあっても、特段ここが魅力的だというところはあまり感じ取れなかったです。それが今はFlutterのおかがで使用率は上がってきていますが、それ以外の分野ではどうかなという疑問がまだあります。&lt;/p>
-&lt;h3 id="可能性は他にもあるかもだけど">可能性は他にもあるかもだけど&lt;/h3>
-&lt;p>ただ、以前からGoogleの次世代OSである&lt;a class="link" href="https://fuchsia.dev/" target="_blank" rel="noopener"
+&lt;h3 id="可能性は他にもあるかもだけど">可能性は他にもあるかもだけど
+&lt;/h3>&lt;p>ただ、以前からGoogleの次世代OSである&lt;a class="link" href="https://fuchsia.dev/" target="_blank" rel="noopener"
 >Fuchsia&lt;/a>ではメインの開発環境となるという噂もあり、FuchsiaそのものがどんなOSになるかはまだ不明な状態ですが、もし噂通りAndroidの次世代のOSになるとしたら、ネイティブの開発そのものがDartによるものにもなり得る可能性はありますね。もしそうなると、ChromeOSを含めレガシーの環境を捨てることになるので、公式の開発の言語にKotlinを指定した時とは比べ物にならないインパクトがあることを想定すると、なかなか想像できない事態です。&lt;/p>
 &lt;p>もちろんDartもプログラミング言語なので、これからのフレームワークやライブラリの開発次第でいくらでも状況は変わる可能性があります。&lt;a class="link" href="https://github.com/yissachar/awesome-dart" target="_blank" rel="noopener"
 >こちらのリポジトリ&lt;/a>を参照すると、サーバサイドのフレームワークもすでにいくつか存在しているので、自分の考えているKotlinで全てを解決する、という目標においてはむしろDartの方がやりやすい可能性がありますね。Kotlinの方だと&lt;a class="link" href="https://kotlinlang.org/lp/mobile/" target="_blank" rel="noopener"
 >Kotlin/Multiiplatform Mobile&lt;/a>がありますが、これはどちらかというとビジネスロジックの共通化を目標としているものなので、結局iOSのコードを書く必要があります。もちろん、一部の企業でやっているように「UIはFlutterで、ビジネスロジックはネイティブで」ということもできるかとは思いますが、あまりメジャーなやり方にならないかなと思います。実際、Swiftの場合も&lt;a class="link" href="https://vapor.codes/" target="_blank" rel="noopener"
 >Vapor&lt;/a>のようなフレームワークがあり、サーバサイドでも十分使えるということをアピールしていますが、採用しているエンジニアや企業が限りなく少ないというのを見ると、単純に「できる」だけでは十分ではなさそうですので。&lt;/p>
-&lt;h3 id="モバイルでも強くなっていく">モバイルでも強くなっていく&lt;/h3>
-&lt;p>特に今年開催された&lt;a class="link" href="https://io.google/2022/intl/ja/" target="_blank" rel="noopener"
+&lt;h3 id="モバイルでも強くなっていく">モバイルでも強くなっていく
+&lt;/h3>&lt;p>特に今年開催された&lt;a class="link" href="https://io.google/2022/intl/ja/" target="_blank" rel="noopener"
 >Google I/O&lt;/a>で確認できるように、Flutter 3ではさらにパフォーマンスの向上やFlutter Desktopの正式リリースなど様々な面での発展を見せていて、これからもFlutterの未来は明るく見えます。Flutterを採用している企業も増えてきているので、このような発展の恩恵を受け入れるのは結局時間の問題に過ぎない気がします。もちろん、ネイティブアプリの開発においても需要はこれからもあり得ると思いますが、クロスプラットフォームアプリでも事足りる分野が増えてくるとしたら、どちらがメインストリームになるかは目に見えるようなものですね。&lt;/p>
 &lt;p>このような状況では、今の占有率においてKotlinのホームグラウンドとなっていると言っても過言ではないモバイルの分野で、Flutterの成長ぶりはある意味、Kotlinにおいては脅威のようなものではないかという気がします。なので、これからKotlinならではのメリットをより強化していく必要がありそうですね。先の述べたKotlin/Multiplatform Mobileのようなものが、その役割をしてくれるのではないかと期待しています。そのほかでも、Kotlinでできることは多いので、分野を問わない連携を強化していくと十分Kotlinを利用するメリットはこれからも出てくるでしょう。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>今回は、いつもと違って自分の考えが中心になる記事なので、色々と偏った判断があるかもしれませんが、とりあえずKotlinエンジニアとしての感想をまとめてみました。もちろん、自分の知見が足りてなく、モバイルやフロントエンド、データサイエンティスト、DevOpsエンジニアなど色々な分野で活躍されている方からしたら色々と間違っているか、的確ではない情報や判断も目立つかなとも思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回は、いつもと違って自分の考えが中心になる記事なので、色々と偏った判断があるかもしれませんが、とりあえずKotlinエンジニアとしての感想をまとめてみました。もちろん、自分の知見が足りてなく、モバイルやフロントエンド、データサイエンティスト、DevOpsエンジニアなど色々な分野で活躍されている方からしたら色々と間違っているか、的確ではない情報や判断も目立つかなとも思います。&lt;/p>
 &lt;p>ただ、一人のエンジニアとして、ただの時流を淡々と見つめているよりは、目指す目標に対して使っている技術や興味のいくものに注目し、自分なりの判断をしてみるのもまた必要なものではないかという気がして、このような記事を作成することになりました。また、このような記事を作成することで、この後に色々な変化があって自分の展望がどれだけあっているか、実際と比べてみるのもまた有意義な振り返りとなりそうな気もします。&lt;/p>
 &lt;p>今回はあまり情報がなく、Twitterにでもつぶやいたら良いかも知れない雑談に近いものですが、少しでもここでKotlinのことを改めて認識できたという方がいらっしゃるなら幸いです。&lt;/p>
 &lt;p>では、また！&lt;/p>
@@ -330,8 +330,8 @@
 >Polyglot Programmer&lt;/a>の時代だという概念もあり、多くのプログラミング言語が互いの良いところを吸収しながらどれも似たようなものになったという評価もありますが、私の場合は、あくまで自分に合うのは何かを探るという感覚としてRustという新しい言語を接してみたいと思っています。&lt;/p>
 &lt;p>なので、今回はまずこちらの&lt;a class="link" href="https://doc.rust-jp.rs/book-ja/title-page.html" target="_blank" rel="noopener"
 >The Rust Programming Language&lt;/a>を読みながら、興味深かった部分について、自分が今まで経験してみた他のプログラミング言語と比べながら感想を述べたいと思います。ドキュメントが長く、自分の理解もまだ浅いのでまずは一部だけを紹介しましょう。&lt;/p>
-&lt;h2 id="loop">Loop&lt;/h2>
-&lt;p>Rustでは伝統の&lt;code>for&lt;/code>と&lt;code>while&lt;/code>以外にも、ループの条件を指定しない(無限ループ)&lt;code>loop&lt;/code>というのがありました。特定の条件でループを終了したい場合のみ、&lt;code>break&lt;/code>することで終了できます。例えば以下のような形です。&lt;/p>
+&lt;h2 id="loop">Loop
+&lt;/h2>&lt;p>Rustでは伝統の&lt;code>for&lt;/code>と&lt;code>while&lt;/code>以外にも、ループの条件を指定しない(無限ループ)&lt;code>loop&lt;/code>というのがありました。特定の条件でループを終了したい場合のみ、&lt;code>break&lt;/code>することで終了できます。例えば以下のような形です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">loop&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// do something
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
@@ -359,8 +359,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// do something
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>個人的に&lt;code>while(true)&lt;/code>や条件式を指定しない&lt;code>for&lt;/code>は、慣習でしかなく、直感的な理解を招くものではないと思いますので、&lt;code>loop&lt;/code>というキーワードを設けた方がコードの可読性という面ではよりわかり安いものなのではないかと思いました。細かい部分ではありますが、一回仕様としてとして決まるとなかなか変更できないものなので、どんなキーワードを使うかを決めるということも言語の設計においては大事だという気がします。&lt;/p>
-&lt;h2 id="array">Array&lt;/h2>
-&lt;p>Rustでは配列のindexを基準に一部を抽出するとき、以下のような書き方をします。参照(&lt;code>&amp;amp;&lt;/code>)を利用して定義する必要があって、標準出力する形も少し独特ですね。また、indexを指定して切り出したものは「所有権のない別のデータ型」として定義されています。ここで切り抜いた配列の一部を、Rustでは&lt;code>slice&lt;/code>と呼んでいるらしいです。&lt;/p>
+&lt;h2 id="array">Array
+&lt;/h2>&lt;p>Rustでは配列のindexを基準に一部を抽出するとき、以下のような書き方をします。参照(&lt;code>&amp;amp;&lt;/code>)を利用して定義する必要があって、標準出力する形も少し独特ですね。また、indexを指定して切り出したものは「所有権のない別のデータ型」として定義されています。ここで切り抜いた配列の一部を、Rustでは&lt;code>slice&lt;/code>と呼んでいるらしいです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> arr &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>];
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> slice &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">&amp;amp;&lt;/span>arr[&lt;span style="color:#ae81ff">1&lt;/span>&lt;span style="color:#f92672">..&lt;/span>&lt;span style="color:#ae81ff">3&lt;/span>];
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -387,8 +387,8 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">arr&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> []&lt;span style="color:#66d9ef">int&lt;/span>{&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">slice&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#a6e22e">arr&lt;/span>[&lt;span style="color:#ae81ff">1&lt;/span>:&lt;span style="color:#ae81ff">3&lt;/span>]
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Println&lt;/span>(&lt;span style="color:#a6e22e">slice&lt;/span>) &lt;span style="color:#75715e">// [1 2]
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="immutability">Immutability&lt;/h2>
-&lt;p>Rustでの変数の宣言は基本的に&lt;code>let&lt;/code>一つで、不変になります。もちろん可変できる変数を定義するのは不可能ではなくて、以下のように&lt;code>mut&lt;/code>キーワードを使うことで値を再代入することはできます。例えば以下のようにです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="immutability">Immutability
+&lt;/h2>&lt;p>Rustでの変数の宣言は基本的に&lt;code>let&lt;/code>一つで、不変になります。もちろん可変できる変数を定義するのは不可能ではなくて、以下のように&lt;code>mut&lt;/code>キーワードを使うことで値を再代入することはできます。例えば以下のようにです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> &lt;span style="color:#66d9ef">mut&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println!(&lt;span style="color:#e6db74">&amp;#34;The value of x is: &lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, x); &lt;span style="color:#75715e">// The value of x is: 5
@@ -415,8 +415,8 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">x&lt;/span> &lt;span style="color:#f92672">:=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">x&lt;/span> = &lt;span style="color:#ae81ff">6&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Println&lt;/span>(&lt;span style="color:#a6e22e">x&lt;/span>) &lt;span style="color:#75715e">// 6
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="shadowing">Shadowing&lt;/h2>
-&lt;p>これは全く予想できなかった部分ですが、Rustのドキュメントには変数にシャドーイングを使えると紹介されています。&lt;code>mut&lt;/code>キーワードをつけると再代入は可能なので、それで良いのではという気もしますが、変数を不変にしながら、違うデータ型として定義し直す場合などに使えるという説明でした。&lt;/p>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="shadowing">Shadowing
+&lt;/h2>&lt;p>これは全く予想できなかった部分ですが、Rustのドキュメントには変数にシャドーイングを使えると紹介されています。&lt;code>mut&lt;/code>キーワードをつけると再代入は可能なので、それで良いのではという気もしますが、変数を不変にしながら、違うデータ型として定義し直す場合などに使えるという説明でした。&lt;/p>
 &lt;p>Rustではシャドーイングを使って以下のようなコードを作成できます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> x &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#ae81ff">5&lt;/span>;
@@ -462,13 +462,13 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Println&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;After the decision block, x:&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">x&lt;/span>) &lt;span style="color:#75715e">// After the decision block, x: 2
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように他の言語だとなるべく使わないように誘導しているシャドーイングですが、Rustでは一つの機能として紹介しているのが面白いところでした。これもまた、後述する「所有権」というものと強く関係しているような気がします。&lt;/p>
-&lt;h2 id="ownership">Ownership&lt;/h2>
-&lt;p>他の言語と比べたときに、Rustならではの特徴と言えるものは所有権ではないでしょうか。今まで私はGCのない言語を触ってみたことがないので、これはかなり興味深い概念でした。例えばKotlinの場合はNativeでコンパイルする場合、&lt;a class="link" href="https://blog.jetbrains.com/kotlin/2021/05/kotlin-native-memory-management-update/#kn-gc" target="_blank" rel="noopener"
+&lt;h2 id="ownership">Ownership
+&lt;/h2>&lt;p>他の言語と比べたときに、Rustならではの特徴と言えるものは所有権ではないでしょうか。今まで私はGCのない言語を触ってみたことがないので、これはかなり興味深い概念でした。例えばKotlinの場合はNativeでコンパイルする場合、&lt;a class="link" href="https://blog.jetbrains.com/kotlin/2021/05/kotlin-native-memory-management-update/#kn-gc" target="_blank" rel="noopener"
 >参照カウント&lt;/a>を使うと言われています。JavaやPython, Goの場合はGCが働いて参照されていないオブジェクトが占めているメモリを解放することになりますね。&lt;/p>
 &lt;p>しかし、Rustでは定数、不動小数点数、論理値、文字というスカラー型を除いた全ての参照型に関しては「一度使われたらメモリは解放される」「スコープを外れたら解放される」という原則を持っているようです。参照型とスカラー型という区分はJavaのプリミティブ型と参照型の関係を思い出させるところがありますね。より積極的かつ攻撃的なメモリ解放が行われるという違いはありますが。&lt;/p>
 &lt;p>基本的には一回使った変数に対しては2回使えなかったり、値の変更ができないかと思った方が良い、ということかなと思いますが、他にも色々と興味深いものがありました。&lt;/p>
-&lt;h3 id="move">Move&lt;/h3>
-&lt;p>所有権と関係する概念で、ムーブがあります。変数とデータが実際どうやって相互作用するかによるものらしいです。早速下のコードを見ていきましょう。なんの問題もなさそうなものです。&lt;/p>
+&lt;h3 id="move">Move
+&lt;/h3>&lt;p>所有権と関係する概念で、ムーブがあります。変数とデータが実際どうやって相互作用するかによるものらしいです。早速下のコードを見ていきましょう。なんの問題もなさそうなものです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s1 &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;hello&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> s2 &lt;span style="color:#f92672">=&lt;/span> s1;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -524,8 +524,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">s1&lt;/span> = &lt;span style="color:#e6db74">&amp;#34;world&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Println&lt;/span>(&lt;span style="color:#a6e22e">fmt&lt;/span>.&lt;span style="color:#a6e22e">Sprintf&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;s1 = %s, s2 = %s&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">s1&lt;/span>, &lt;span style="color:#a6e22e">s2&lt;/span>)) &lt;span style="color:#75715e">// s1 = world, s2 = hello
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Rustで明示的にコピーをしない場合はデータそのものが移動してしまうというのは確かにコーディング時には気を使わないといけないものですが、幸いコンパイルタイムで確認できる問題であり、他の言語を扱うときには思わぬ挙動をする可能性がある習慣を矯正してくれる可能性もあるかなと思うと、良い仕様ではなイカという気もしますね。&lt;/p>
-&lt;h2 id="closure">Closure&lt;/h2>
-&lt;p>Rustではclosureを関数内の関数として定義することももちろん可能ですが、&lt;code>|val| val + x&lt;/code>の形式で書きます。他の言語でlambdaと呼ばわれているものですね。多少は独特な書き方な気もしますが、型の省略が可能なのが他の言語と比べ便利なものな気がします。もちろん型の明示的な表記もできるので、以下のような使い方ができます。&lt;/p>
+&lt;h2 id="closure">Closure
+&lt;/h2>&lt;p>Rustではclosureを関数内の関数として定義することももちろん可能ですが、&lt;code>|val| val + x&lt;/code>の形式で書きます。他の言語でlambdaと呼ばわれているものですね。多少は独特な書き方な気もしますが、型の省略が可能なのが他の言語と比べ便利なものな気がします。もちろん型の明示的な表記もできるので、以下のような使い方ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-rust" data-lang="rust">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fn&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// i32の引数を必要とする場合
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">let&lt;/span> closure_annotated &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">|&lt;/span>i: &lt;span style="color:#66d9ef">i32&lt;/span>&lt;span style="color:#f92672">|&lt;/span> -&amp;gt; &lt;span style="color:#66d9ef">i32&lt;/span> { i &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span> };
@@ -566,15 +566,15 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">let&lt;/span> double &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#f92672">|&lt;/span>x&lt;span style="color:#f92672">|&lt;/span> &lt;span style="color:#ae81ff">2&lt;/span> &lt;span style="color:#f92672">*&lt;/span> x;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> println!(&lt;span style="color:#e6db74">&amp;#34;3 doubled: &lt;/span>&lt;span style="color:#e6db74">{}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>, apply_to_3(double)); &lt;span style="color:#75715e">// 3 doubled: 6
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>まだドキュメントの半分の読んでなく、実際に何かしらのアプリを作ってみたわけでもないので今回のポストだけでは十分ではないというのは十分承知のつもりですが、久々に違う言語を学びながら、色々と興味深いところが多かったのでひとまず感想を書いてみました。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>まだドキュメントの半分の読んでなく、実際に何かしらのアプリを作ってみたわけでもないので今回のポストだけでは十分ではないというのは十分承知のつもりですが、久々に違う言語を学びながら、色々と興味深いところが多かったのでひとまず感想を書いてみました。&lt;/p>
 &lt;p>噂ではRustのコンパイラは優秀で、そのコンパイラの指示通りにアプリを組むだけでのかなり勉強になる瞬間が多いというのと、言語自体の設計が良いという話だったので、これからも勉強しながら気づいたことや感じたこと、学んだことについてブログにまとめていきたいと思います。今回のポストだけでの企画として終わらせたくないので、今年はこれで頑張っていきたいですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>個人的な2021年のロードマップ</title><link>https://retheviper.github.io/posts/my-roadmap-in-2021/</link><pubDate>Sun, 24 Jan 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/my-roadmap-in-2021/</guid><description>&lt;img src="https://retheviper.github.io/images/map.jpg" alt="Featured image of post 個人的な2021年のロードマップ" />&lt;p>エンジニアとして働いていると会社の方針・クライアントの要求・経歴のような、自分の意思以外のところから自分の技術スタックを決まってしまう場合が決して少なくないと思います。会社は利益集団なので、致し方ないのですが、個人としてはどうでしょうか。私は、エンジニアは常にトレンドとともに前に進むべき職種なので、業務としてはあまり機会がないとしても、やはり自分で何かロードマップを立てて、独学でもスキルアップを図るべきたと思っています。&lt;/p>
 &lt;p>例えば私は、どんな案件でも主にJavaとSpringのサーバサイドエンジニアか、Jenkins・Shell・Linuxを触るインフラエンジニアとして働いたことが多いのですが、何か一つは自分のアプリやサービスを作ってみたいと思っています。このような目標ないしは願望がある場合、それを成すためには何が必要か、と考えるようになり、そこから適合なプラットフォームは？言語は？フレームワークは？という風に考え始めて、そのうちでもっとも自分にとって合理的な道を選ぶようになります。何が合理的か、という基準は人それぞれですが(主観だけで決められるものでもないし)、会社が自分のエンジニアとしての目標を考えてくれる可能性は低いので、とにかくこういう目標設定は自分でなすべきでしょう。&lt;/p>
 &lt;p>そういう意味で、今年の自分のロードマップを、「やりたいこと」と「良さそうなこと」という基準からいくつか立ててみました。まだロードマップとしては何一つ計画を具体化してないので、ただの興味に近いものなのかもしれませんが…とにかく、今の時点で興味を持っているものや考えていることについて、Google Trendを持って語ります。軽く、「こいつは2021年にこういうものに注目するんだな」と思ってください。&lt;/p>
-&lt;h2 id="言語">言語&lt;/h2>
-&lt;h3 id="typescript">TypeScript&lt;/h3>
-&lt;p>いつまでになるかはわかりませんが、少なくともここ数年はJavaScriptの天下が続きそうですね。ただ、なぜそうかというと、Webの標準であるという強力な基盤がある上に、今はNode.jsやElectronのおかげでブラウザ以外でも使える場面が多いから、ということだけでは説明が難しくなりつつあるという側面もある印象です。今はもはやコーディングを学び始めるきっかけや入門の言語としてJavaScriptに触れるケースが多いし、SPAの登場以来からサーバサイドよりもフロントエンドの重要さが増してきたという感覚でもありますね。アプリケーションというのは、結局はユーザのためにデザインされるものであるということを考えると、より画面に密接な言語が持つ権限の方が大きくなるのは当然なのかもしれません。&lt;/p>
+&lt;h2 id="言語">言語
+&lt;/h2>&lt;h3 id="typescript">TypeScript
+&lt;/h3>&lt;p>いつまでになるかはわかりませんが、少なくともここ数年はJavaScriptの天下が続きそうですね。ただ、なぜそうかというと、Webの標準であるという強力な基盤がある上に、今はNode.jsやElectronのおかげでブラウザ以外でも使える場面が多いから、ということだけでは説明が難しくなりつつあるという側面もある印象です。今はもはやコーディングを学び始めるきっかけや入門の言語としてJavaScriptに触れるケースが多いし、SPAの登場以来からサーバサイドよりもフロントエンドの重要さが増してきたという感覚でもありますね。アプリケーションというのは、結局はユーザのためにデザインされるものであるということを考えると、より画面に密接な言語が持つ権限の方が大きくなるのは当然なのかもしれません。&lt;/p>
 &lt;p>そしてバックエンドだけをみるとしても、最近はなるべくサーバサイドの役割を減らしていくか、細かく分けていく感覚ですね。&lt;a class="link" href="https://www.redhat.com/ja/topics/microservices" target="_blank" rel="noopener"
 >マイクロサービス&lt;/a>、&lt;a class="link" href="https://www.atmarkit.co.jp/ait/articles/1803/12/news012.html" target="_blank" rel="noopener"
 >BFF&lt;/a>、サーバレスのようなキーワードが流行っているのがその証拠だと思います。もちろんJavaScriptという言語そのものの発達によるものもあるとは思いますが、アプリケーションのアーキテクチャやデザインの思想そのものが変わっているので、仕方ないことです。&lt;/p>
@@ -583,8 +583,8 @@
 &lt;p>このように思ったときに、目に入ってきたのがTypeScriptでした。TypeScriptは以前、Udemyの講座で接したことがあり、気に入っていましたが、最近はかなり人気を得ているらしいですね。実際どうかは、まずGoogle Trendで確認してみました。&lt;/p>
 &lt;script type="text/javascript" src="https://ssl.gstatic.com/trends_nrtr/2431_RC04/embed_loader.js">&lt;/script>&lt;script type="text/javascript"> trends.embed.renderExploreWidget("TIMESERIES", {"comparisonItem":[{"keyword":"typescript","geo":"","time":"today 5-y"}],"category":0,"property":""}, {"exploreQuery":"date=today%205-y&amp;q=typescript","guestPath":"https://trends.google.com:443/trends/embed/"}); &lt;/script>
 &lt;p>結果をみると、確かにTypeScriptに対する興味は日々増えていっているような気がします。おそらくAngular・React・Vueのような有名フレームワークやライブラリからTypeScriptに公式対応し始めたのも理由と思いますし、やはり静的型付けの方が生産性が上がるというところがわかったきたからなのでしょう。私はJavaから触れた人間なので、静的型付けのできるTypeScriptの方を学んだ方が良いかなと思います。&lt;/p>
-&lt;h3 id="go-or-rust">Go or Rust&lt;/h3>
-&lt;p>個人的には、JVM言語が好きですが、やはり高水準言語&amp;amp;VMを挟む構造ということもあり、より低水準に近い言語も扱ってみたいと思っています。今すぐに必要なわけではないのですが、やはりハードウェア制御やバイナリデータを扱うなど、低水準言語ならではのことがやってみたいという純粋な好奇心が理由です。最近はIOTなどでC言語の人気も高くなっていたりしますが、組み込み系ならまだしも、いわゆる「応用ソフトウェア」を開発する身としては、CやC++、もしくはそれよりも古い言語よりは、GoやRustのような言語に触れてみた方が良さそうな気もします。&lt;/p>
+&lt;h3 id="go-or-rust">Go or Rust
+&lt;/h3>&lt;p>個人的には、JVM言語が好きですが、やはり高水準言語&amp;amp;VMを挟む構造ということもあり、より低水準に近い言語も扱ってみたいと思っています。今すぐに必要なわけではないのですが、やはりハードウェア制御やバイナリデータを扱うなど、低水準言語ならではのことがやってみたいという純粋な好奇心が理由です。最近はIOTなどでC言語の人気も高くなっていたりしますが、組み込み系ならまだしも、いわゆる「応用ソフトウェア」を開発する身としては、CやC++、もしくはそれよりも古い言語よりは、GoやRustのような言語に触れてみた方が良さそうな気もします。&lt;/p>
 &lt;p>ただ、悩ましいのは、それでGoとRustのうち、どれを選ぶかということです。性能だけを考えたら、当然Rustなのかもしれません。多くの場合、Rustが性能ではGoより優れていると言われていますね。実際の例として、音声チャットツールで有名な&lt;a class="link" href="https://discord.com/" target="_blank" rel="noopener"
 >Discord&lt;/a>はGoからRustに移行しましたが、これが&lt;a class="link" href="https://blog.discord.com/why-discord-is-switching-from-go-to-rust-a190bbca2b1f" target="_blank" rel="noopener"
 >性能のため&lt;/a>だったと言っています。ただ、言語を学ぶこと自体の難易度は、やはりRustの方がGoより高いらしいですね。そして一般的に、生産性の方はGoが優れていると言われています。&lt;/p>
@@ -608,8 +608,8 @@ property: "",
 );
 &lt;/script>
 &lt;p>結果だけをみると、やはりRustの方がすごい人気を得ているように見えますが、まだGoの方が優位にはありますね。なので、こちらの方が(急ぎでもないので)、もう少し観望しながら、ゆっくり決めようと思っています。&lt;/p>
-&lt;h3 id="kotlin">Kotlin&lt;/h3>
-&lt;p>今はJavaのいう&lt;code>Write once, run everywhere&lt;/code>が、どの言語でも同じようなことができていて(逆にJavaでできない分野はありますが)、それでもJVM言語は依然として魅力的だと思っています。最初からJVMがヒープを設定するのでメモリ管理という面でも安定的で、パフォーマンスも今流行りの高水準言語に比べても優秀な方ですね。また、10年以上世界でもっとも人気な言語だったので、ライブラリ・フレームワーク・リファレンスも豊富ですね。また、バイトコードだけを生成すればいいので、コンパイルする前の言語はどれでも良いです。なのでJava以外でも&lt;a class="link" href="https://www.scala-lang.org" target="_blank" rel="noopener"
+&lt;h3 id="kotlin">Kotlin
+&lt;/h3>&lt;p>今はJavaのいう&lt;code>Write once, run everywhere&lt;/code>が、どの言語でも同じようなことができていて(逆にJavaでできない分野はありますが)、それでもJVM言語は依然として魅力的だと思っています。最初からJVMがヒープを設定するのでメモリ管理という面でも安定的で、パフォーマンスも今流行りの高水準言語に比べても優秀な方ですね。また、10年以上世界でもっとも人気な言語だったので、ライブラリ・フレームワーク・リファレンスも豊富ですね。また、バイトコードだけを生成すればいいので、コンパイルする前の言語はどれでも良いです。なのでJava以外でも&lt;a class="link" href="https://www.scala-lang.org" target="_blank" rel="noopener"
 >Scala&lt;/a>、&lt;a class="link" href="https://clojure.org" target="_blank" rel="noopener"
 >Clojure&lt;/a>、&lt;a class="link" href="https://groovy-lang.org" target="_blank" rel="noopener"
 >Groovy&lt;/a>、&lt;a class="link" href="https://www.jython.org" target="_blank" rel="noopener"
@@ -624,9 +624,9 @@ property: "",
 >Kotlin/Native&lt;/a>や&lt;a class="link" href="https://kotlinlang.org/docs/reference/js-overview.html" target="_blank" rel="noopener"
 >Kotlin/JS&lt;/a>など他の言語でコンパイルできるという点も良いですね(実際Wantedlyでは、&lt;a class="link" href="https://www.wantedly.com/companies/wantedly/post_articles/282562" target="_blank" rel="noopener"
 >すでにKotlin Multiplatformを導入&lt;/a>しているらしいです)。そして何より、Kotlinを開発しているのがJetBrainなので、Intellijでは完璧なサポートができるというところも無視できないメリットです。ほんと少しだけですが、使ってみた鑑賞としても、完成度がかなり高い感じの言語だったので(Swiftよりも)、そのようなところからKotlinの未来はかなり明るいと思っています。&lt;/p>
-&lt;h2 id="フレームワーク--ライブラリ">フレームワーク &amp;amp; ライブラリ&lt;/h2>
-&lt;h3 id="svelte">Svelte&lt;/h3>
-&lt;p>先ほど少しJavaScriptの話をしましたが、JavaScriptそのものの需要や重要性については語るまでもないとはいうものの、そのJavaScriptのフレームワーク・ライブラリはどれが良いかという課題だけは、少なくとも数年でこれが正解と言えるような状態ではないかと思います。ここ数年で幾多のフレームワークやライブラリが生まれ、消えていってますね。幸い、いわゆるフロントエンド3強のAngular・React・Vueの中ではReactが勝者になりつつある雰囲気ではあります。Google Trendの結果も、それを見せていますね。&lt;/p>
+&lt;h2 id="フレームワーク--ライブラリ">フレームワーク &amp;amp; ライブラリ
+&lt;/h2>&lt;h3 id="svelte">Svelte
+&lt;/h3>&lt;p>先ほど少しJavaScriptの話をしましたが、JavaScriptそのものの需要や重要性については語るまでもないとはいうものの、そのJavaScriptのフレームワーク・ライブラリはどれが良いかという課題だけは、少なくとも数年でこれが正解と言えるような状態ではないかと思います。ここ数年で幾多のフレームワークやライブラリが生まれ、消えていってますね。幸い、いわゆるフロントエンド3強のAngular・React・Vueの中ではReactが勝者になりつつある雰囲気ではあります。Google Trendの結果も、それを見せていますね。&lt;/p>
 &lt;script type="text/javascript">
 trends.embed.renderExploreWidget(
 "TIMESERIES",
@@ -662,8 +662,8 @@ trends.embed.renderExploreWidget(
 { exploreQuery: "date=today%205-y&amp;q=svelte", guestPath: "https://trends.google.com:443/trends/embed/" }
 );
 &lt;/script>
-&lt;h3 id="flutter">Flutter&lt;/h3>
-&lt;p>今はWebアプリケーションばかり書いている私ですが、モバイルの方にも興味があり、どのような言語とフレームワークがあるかだけは把握しておきたいと思っています。そして最近は、モバイルは多くの場合ネイティブよりもハイブリッド・クロースプラットフォームの方が多くなっているような気がします。正確なデータや統計をみたわけではないのであくまで推測に過ぎないのですが、多くの場合ネイティブアプリに投資する時間や予算の余裕のないスタートアップやベンチャー企業の場合は、とりあえずハイブリッド・クロースプラットフォームを好むような印象です。もちろん、複雑な演算やOS特有の機能を使うとしたらやはりネイティブと言われていますが、個人的な経験からだと、意外とハイブリッド・クロースプラットフォームでもできることは多いのでもうOSレベルでもなく、機器固有の機能を活用する必要がなければ大体ハイブリッド・クロースプラットフォームでも事足りるのでは、と思います。&lt;/p>
+&lt;h3 id="flutter">Flutter
+&lt;/h3>&lt;p>今はWebアプリケーションばかり書いている私ですが、モバイルの方にも興味があり、どのような言語とフレームワークがあるかだけは把握しておきたいと思っています。そして最近は、モバイルは多くの場合ネイティブよりもハイブリッド・クロースプラットフォームの方が多くなっているような気がします。正確なデータや統計をみたわけではないのであくまで推測に過ぎないのですが、多くの場合ネイティブアプリに投資する時間や予算の余裕のないスタートアップやベンチャー企業の場合は、とりあえずハイブリッド・クロースプラットフォームを好むような印象です。もちろん、複雑な演算やOS特有の機能を使うとしたらやはりネイティブと言われていますが、個人的な経験からだと、意外とハイブリッド・クロースプラットフォームでもできることは多いのでもうOSレベルでもなく、機器固有の機能を活用する必要がなければ大体ハイブリッド・クロースプラットフォームでも事足りるのでは、と思います。&lt;/p>
 &lt;p>(ここで個人的な経験というものは、iOS 14から導入されたウィージェット機能を活かした簡単なアプリを作ってみたいなと思い調べたところ、OS固有の機能なので難しいのではないかと思ったものが、意外とReact NativeやFlutterでも十分できるということがわかったことです)&lt;/p>
 &lt;p>そして、昔はただのWebViewでできていたアプリも多かったような気がしますが、それならあえてモバイルアプリとして作る必要がないですね(PWAならわかりますが)。でもそのような形のアプリがあったからか、Webの技術から影響され生まれたバイブリッドモバイルアプリのフレームワークもかなり多いような印象です。なのでJavaScriptでコードを書いたり、JavaScriptのフレームワークを基盤にしてアプリを書けるフレームワークがかなり多いですね。例えば&lt;a class="link" href="https://cordova.apache.org" target="_blank" rel="noopener"
 >Apache Cordova&lt;/a>、&lt;a class="link" href="https://ionicframework.com" target="_blank" rel="noopener"
@@ -717,22 +717,22 @@ property: "",
 &lt;li>&lt;a class="link" href="https://qiita.com/taneba/items/9903064aaaffdf041022" target="_blank" rel="noopener"
 >React Nativeを採用すべきか〜Shopifyに学ぶ&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;h2 id="ハードウェア">ハードウェア&lt;/h2>
-&lt;h3 id="apple-silicon-mac">Apple silicon Mac&lt;/h3>
-&lt;p>私はもともと20年ほどOSはMicrosoftの製品ばかりを使ってきたものです。それがたまたま、iPhoneやiPadから初めてAppleの製品に触れてから思ったよりも自分との相性がよかったので(仕事でLinuxを使っていたので気軽にターミナルを使えるという点が大きいのですが)、今後も引き続きMacを使いたいと思っています。少なくとも、自分の環境ではMacではないと困ることはあっても、Windowsでないと困ることはあまりないですので。&lt;/p>
+&lt;h2 id="ハードウェア">ハードウェア
+&lt;/h2>&lt;h3 id="apple-silicon-mac">Apple silicon Mac
+&lt;/h3>&lt;p>私はもともと20年ほどOSはMicrosoftの製品ばかりを使ってきたものです。それがたまたま、iPhoneやiPadから初めてAppleの製品に触れてから思ったよりも自分との相性がよかったので(仕事でLinuxを使っていたので気軽にターミナルを使えるという点が大きいのですが)、今後も引き続きMacを使いたいと思っています。少なくとも、自分の環境ではMacではないと困ることはあっても、Windowsでないと困ることはあまりないですので。&lt;/p>
 &lt;p>なので、自然にApple Silicon Macにも興味を持ったわけなのですが、やはりいきなりCPUのアーキテクチャが変わるということは、やはり互換性を担保できない問題があるので、その問題に対してAppleはどのような形で解決策を出すのだろう、という疑問を持っていました。発表直後に&lt;a class="link" href="https://jp.techcrunch.com/2020/07/11/the-real-reason-why-apple-is-putting-apple-slicon-on-the-mac" target="_blank" rel="noopener"
 >色々な記事&lt;/a>を読んでみてから予想できたのは、少なくとも「性能(演算・発熱・電力消耗を含め)はIntelより優れている」というところでしたが、それはアーキテクチャがより進んだ工程で作られているからか、それともカスタマイズによるものか、またどれだけ優れているかというのはわからない状態でした。なので「2年で移行する」という話を信じ、まずは様子を見ようとしていました。&lt;/p>
 &lt;p>そして今はM1チップのMacが色々とでていて、その性能も検証されていますね。確かなのは性能だけを見ると既存のIntel Macを買う理由はもはやないかのように見えます。さすがに互換性という不安要素があるのに、CPUのアーキテクチャを変えるという宣言をするぐらいのものではあると思います。しかし、やはりエンジニアたる身としては、互換性と安定性にまず目が行くものです。なぜなら、私は最初のメジャーバージョンは必ず、何かわかってない問題を抱えている可能性が高いというのを経験で実感しているからです。実際、Bluetooth問題や初期化が難しい点、スリープモードから起き上がらない問題などが一部で報告されていて、外装ディスプレイも公式的には1台しか対応しないという問題もあります(おそらく、Thunderbolt 3の大域幅の問題なのではないかと思います)。また、続々とUniversalバイナリやM1 Nativeでコンパイルされたアプリも発表されていますが、やはりまだそうではないアプリもたくさんあるので、不安ではありますね。&lt;/p>
 &lt;p>しかし、それでもいつかはApple Siliconに全てのMacが転換されるだろうし、いますぐM1チップ搭載モデルを購入しないとしても、十分注目する価値はあるのではないかと思っています。いや、注目だけでなく、今年は16インチMacbook Proのフルチェンジの噂もあるので、もしそれが本当なら自分も乗り換えるのではないかと思っているくらいです。もしそれが出るなら、M1チップ搭載モデルの問題としてあげられたところを改善(少なくとも、外装ディスプレイの件や&lt;a class="link" href="https://9to5mac.com/2021/01/21/macos-big-sur-11-2-rc-now-available" target="_blank" rel="noopener"
 >Bluetooth問題&lt;/a>は改善されそうです)されるはずで、今のアプリケーションのM1 Native対応の速度を見ると年内には意外と多くのアプリをNativeに使えるのではないかと思われます。まだまだこれからが注目なのですが、JavaScript中心の開発を行う方にとっては今のM1搭載モデルも十分メリットがあるのではないかと思います(AdoptOpenjdkはまだx64のみなので私は見送りですが…)。また、最近&lt;a class="link" href="https://www.theverge.com/2021/1/21/22242107/linux-apple-m1-mac-port-corellium-ubuntu-details" target="_blank" rel="noopener"
 >M1搭載モデルでLinuxを使える&lt;/a>ようになったので、ホームサーバとしてこれらのMacを考慮してみるのも良いチョイスかと思います。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>まだJavaとSpringも全ての機能を使いこなしているとも言えない自分が、今から新しい言語やフレームワークを学ぶという計画を立てるのは無理な話なのかしれません。これはいつも悩ましい主題です。一つの言語に関する知識やスキルを極めていった方が良いか、それとも常にトレンドを追いながら幅広い分野のスキルセットを持つべきか。深い知識も、広い知識も持っていて良いものではありますが、自分がこれから積み上げるキャリアを完成するにはどれがより効率的かという疑問は解消されないものです。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>まだJavaとSpringも全ての機能を使いこなしているとも言えない自分が、今から新しい言語やフレームワークを学ぶという計画を立てるのは無理な話なのかしれません。これはいつも悩ましい主題です。一つの言語に関する知識やスキルを極めていった方が良いか、それとも常にトレンドを追いながら幅広い分野のスキルセットを持つべきか。深い知識も、広い知識も持っていて良いものではありますが、自分がこれから積み上げるキャリアを完成するにはどれがより効率的かという疑問は解消されないものです。&lt;/p>
 &lt;p>自分なりの答えを出すとしたら、トレンドを追った方が、より自分の持つスキルセットの深さを増して行く方にも作用するのではないかという気はします。JavaしかできないものなのでJavaのAPIを借りて例え話をすると、Java 1.8では他の言語の持つClosureから影響されてLambdaが導入されましたね。その他にもvarの型推論やテキストブロックなどの改善もまた違う言語から影響されたものです。このような変化は、そもそもJavaの開発者たちが他の言語に注目しなかったら起こらなかったことでしょう。なので、「他と比較することで自分をより深く理解することにもなる」のではないでしょうか。そういう意味からすると、自分がすでに持っているスキルセットのみでなく、業界の動向や流行りを早くキャッチして受け入れることこそ重要ではないかと思ったりもします。&lt;/p>
 &lt;p>この度はだいぶ主観的な意見だけ語る場となってしましましたが、どうでしょうか。またこれから自分の考えも、トレンドも変わっていくかもしれませんが、今は私の結論が紹介できただけでよかったかなと思います。そして、こうやって色々と自分の知らない分野について調べたり勉強したりするほど、自分には何もないなと実感でき、良い刺激になります。これからも色々と勉強していかないとですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>最近注目しているものたち</title><link>https://retheviper.github.io/posts/personal-interests-in-this-time/</link><pubDate>Mon, 29 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/personal-interests-in-this-time/</guid><description>&lt;img src="https://retheviper.github.io/images/magic.jpg" alt="Featured image of post 最近注目しているものたち" />&lt;p>常に勉強し続けなければならないのがこの業界の定めとは思いますが、変化は日々加速されていて、何に従って何を頼れば良いかわからない時もありますね。新しい言語が続々登場してくるなかでも、昔は性能の問題で注目されてなかった言語がいきなり人気を得たり、当たり前と思っていたパラダイムがひっくり返されたりもします。今はJavaScriptの時代と行っても過言ではない状況に来ていると思いますが、今後はどうなるのでしょうか。いくつか、個人的に興味をもったIT業界の動向についてまとめてみました。&lt;/p>
-&lt;h2 id="apple-silicon-mac">Apple Silicon mac&lt;/h2>
-&lt;p>こないだ、Appleの開発者向けイベントである&lt;a class="link" href="https://developer.apple.com/videos/play/wwdc2020/101" target="_blank" rel="noopener"
+&lt;h2 id="apple-silicon-mac">Apple Silicon mac
+&lt;/h2>&lt;p>こないだ、Appleの開発者向けイベントである&lt;a class="link" href="https://developer.apple.com/videos/play/wwdc2020/101" target="_blank" rel="noopener"
 >「WWDC2020」&lt;/a>が開催されました。毎年必ずライブで見ているわけではないのですが(深夜に始まるので…)、最近はテレワークをしていて通勤時間がなくなっているのもあり、最初から最後までライブで見ることができました。&lt;/p>
 &lt;p>iOSやiPadOS、macOSの変化ももちろん興味深かったのですが、やはり今回のイベントで最も印象的なものがなんだったかというと、macのメインプロセッサが&lt;a class="link" href="https://www.apple.com/newsroom/2020/06/apple-announces-mac-transition-to-apple-silicon" target="_blank" rel="noopener"
 >Apple製のものに変わる&lt;/a>ということでしたね。自分はPowerPC時代のmacは経験したことがありませんが、PPCからIntelへの転換は成功的だったので、今回もそうなると思います。個人的にiPadも使っているのですが、あまりIntelのCPUに比べ性能が劣るという印象は受けたこともありませんでした。&lt;/p>
@@ -744,31 +744,31 @@ property: "",
 >Rosetta2&lt;/a>や&lt;a class="link" href="https://developer.apple.com/documentation/xcode/building_a_universal_macos_binary" target="_blank" rel="noopener"
 >Universal Binary2&lt;/a>が優秀だとしてもどこかで互換性や性能の問題は起こり得ると思うので要注意とは思います。Officeのデモンストレーションは、今よりもパフォーマンスが優れているように見えたのでよかったのですが、事務職の人があえてmacを使う理由はそもそもないので…&lt;/p>
 &lt;p>他、すでに$500でA12Zを搭載したmacを借りることができるようなので、意外とすぐに新プロセッサmacの性能や互換性問題は明らかになるかもしれませんね。まずはそこに注目かな、と思っています。性能のみならず、作業時の温度や電力消費量もどれだけ改善されたか、知りたいところですね。来週あたりでベンチマークを見れるのではないかと思っています。&lt;/p>
-&lt;h2 id="deno">Deno&lt;/h2>
-&lt;p>JavaScriptはあまり触ってないので、Node.jsにも詳しくないわけですが、やはり昨今のWebアプリだとNode.jsなしでは話にならない時代になっていますね。自分の場合はTypeScriptの方でJavaScriptよりも良い印象を受けたので、NodeでもネイティブなTypeScriptサポートができるといいなと思っていました。それが、Nodeの開発者によって&lt;a class="link" href="https://deno.land" target="_blank" rel="noopener"
+&lt;h2 id="deno">Deno
+&lt;/h2>&lt;p>JavaScriptはあまり触ってないので、Node.jsにも詳しくないわけですが、やはり昨今のWebアプリだとNode.jsなしでは話にならない時代になっていますね。自分の場合はTypeScriptの方でJavaScriptよりも良い印象を受けたので、NodeでもネイティブなTypeScriptサポートができるといいなと思っていました。それが、Nodeの開発者によって&lt;a class="link" href="https://deno.land" target="_blank" rel="noopener"
 >Deno&lt;/a>という新しいランタイムが登場したらしいです。&lt;/p>
 &lt;p>基本的にNodeでの反省点(async/awaitのような？)から作っているもののようで、その他にも特徴としてはTypeScriptのコンパイラを内蔵していて、いちいちコンパイルしなくても(JavaScirptにトランスパイルしなくても)使えるというところが自分にとっては最大のメリットのように思われます。&lt;/p>
 &lt;p>ただDenoの問題だと、やはり既存のNode.js用モジュールを使えない、というところと、TypeScriptのコンパイルが遅いというところがあげられています。Rustを使って自体のTypeScriptコンパイラを作るという計画があるらしいですが、いつになったら完成できるかわからないのでしばらくDenoを使ったプロジェクトはあまり発券できないかもですね。&lt;/p>
-&lt;h2 id="blazor">Blazor&lt;/h2>
-&lt;p>5月には&lt;a class="link" href="https://news.microsoft.com/build2020" target="_blank" rel="noopener"
+&lt;h2 id="blazor">Blazor
+&lt;/h2>&lt;p>5月には&lt;a class="link" href="https://news.microsoft.com/build2020" target="_blank" rel="noopener"
 >「Microsoft Build 2020」&lt;/a>にて、&lt;a class="link" href="https://devblogs.microsoft.com/aspnet/blazor-webassembly-3-2-0-now-available" target="_blank" rel="noopener"
 >Blazor WebAssemblyのリリース発表&lt;/a>がありました。これで.NETとC#による、ブラウザから実行可能なWebアプリケーションを作成できるらしいです。&lt;/p>
 &lt;p>Node.jsを使ったWebアプリケーションのメリットとして、よく「一つの言語でサーバサイドとクライアントサイドの両方を開発できる」ことがあげられていますが、このようにJavaScriptを使わなくてもそれが可能になるようなフレームワーク＆ランタイムが登場することもあるのですね。JavaScirptも良い言語ですが、そもそもの限界が明確なので、C#のようなコンパイル言語をブラウザ上で使えるのは逆のパターン(JavaScriptをサーバサイドで使う)に比べ良いところが多いのではないかと思います。&lt;/p>
 &lt;p>また、BlazorファミリーとしてPWAの実装ができるBlazor PWA、ElectronとWebViewでのデスクトップアプリが実装できるBlazor Hybrid、HTML要素なしでネイティブアプリが実装できるBlazor Nativeも続々登場する予定だというので、これに刺激を受け他のコンパイル言語でもブラウザで実行できるようになるのではないかと思います。&lt;/p>
 &lt;p>WSLやGitHubもありますが、いろいろな意味で最近のMicrosoftの変化と投資はすごいものですね…&lt;/p>
-&lt;h2 id="flutter-for-web">Flutter for web&lt;/h2>
-&lt;p>iOSとAndroidの二つのプラットフォームのアプリを同時に開発でき、同じく機能するReact Nativeに比べ性能でもネイティブアプリに劣らないことがメリットという&lt;a class="link" href="https://flutter.dev" target="_blank" rel="noopener"
+&lt;h2 id="flutter-for-web">Flutter for web
+&lt;/h2>&lt;p>iOSとAndroidの二つのプラットフォームのアプリを同時に開発でき、同じく機能するReact Nativeに比べ性能でもネイティブアプリに劣らないことがメリットという&lt;a class="link" href="https://flutter.dev" target="_blank" rel="noopener"
 >Flutter&lt;/a>ですが、最近Flutterを利用したWebアプリケーションも続々登場しているようです。そもそもFlutterを書くための言語である&lt;a class="link" href="https://dart.dev" target="_blank" rel="noopener"
 >Dart&lt;/a>が、次世代JavaScirptを目標に開発されたものなのでおかしいことではないのですが、こうやって一つの言語でモバイルとWebアプリケーションの両方を開発できるということはBlazorの場合と同じく魅力的です。&lt;/p>
 &lt;p>ただ、Googleが開発しているというところから、DartではなくKotlinでよかったのでは？という気持ちはありますね。また、自社のサービスをすぐ見捨てる傾向のあるGoogleなのでいつまでFlutterが生き残ることができるか、ということも疑問として残っています。MicrosoftのXamarinがいまいちになっているので、モバイルだけはFlutterを採用して開発するようなこともあるのではないかと思いますが、Webアプリケーションを開発するとしたらC#を利用できるBlazorの方がより魅力的ではないかと思います。&lt;/p>
-&lt;h2 id="rust">Rust&lt;/h2>
-&lt;p>ポストC、C++として注目されている&lt;a class="link" href="https://www.rust-lang.org" target="_blank" rel="noopener"
+&lt;h2 id="rust">Rust
+&lt;/h2>&lt;p>ポストC、C++として注目されている&lt;a class="link" href="https://www.rust-lang.org" target="_blank" rel="noopener"
 >Rust&lt;/a>ですが、最近はこの言語の人気が恐ろしいほどですね。まだエンタプライズレベルでは、既存に構築しているシステムや熟練されたエンジニアがいないなどの理由でRustが使われているケースはあまりないようですが、CやC++と同等のパフォーマンスを見せながらも安定的という面が最大のメリットと言われているらしいです。&lt;/p>
 &lt;p>個人的にはWebアプリケーションレベルであまりシステムと直接関わるようなことをする場合はないのですが、PWAの登場などWebアプリケーションでもデスクトップ並みの性能を求められることがあったり、Javaでは直接扱うことのできないバイナリファイルの扱いなどで限界を感じていたりしているので、Rustのような言語が扱えたらより良いアプリケーションを作れるようになるのでは、と思っています。&lt;/p>
 &lt;p>特に、コミュニケーションツールとして有名な&lt;a class="link" href="https://discord.com" target="_blank" rel="noopener"
 >Discord&lt;/a>がもともと使っていた&lt;a class="link" href="https://golang.org" target="_blank" rel="noopener"
 >Golang&lt;/a>をあえてRustに交替したとの記事もあったので、同じくCとC++の代替言語として開発されたGolangさえも圧倒するメリットとは一体何かという疑問が湧いてきて、ますます気になっているところです。最近人気のKotlinの場合も、おそらくJavaと完全互換できるという特徴がなかったら成功できなかったと思いますが、互換性もない言語に転換するほどRustが持っているメリットとは一体なんなのか、知りたいですね。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>いろいろな技術と変化があり、幸せのような、プレッシャーを感じるような複雑な気持ちではありますが、どれも肯定的な変化をもたらしてくれている、と思っています。特に、各言語の変化に関してはJavaのモットーである&lt;code>Write once, run everywhere&lt;/code>がどの言語でもより発展した形として実現されているところをみているようですね。結局どの言語も似たようなものになりつつあるような感覚もするのですが、逆にいうともうどの言語を使うかはあまり関係ない時代になりつつある気もします。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>いろいろな技術と変化があり、幸せのような、プレッシャーを感じるような複雑な気持ちではありますが、どれも肯定的な変化をもたらしてくれている、と思っています。特に、各言語の変化に関してはJavaのモットーである&lt;code>Write once, run everywhere&lt;/code>がどの言語でもより発展した形として実現されているところをみているようですね。結局どの言語も似たようなものになりつつあるような感覚もするのですが、逆にいうともうどの言語を使うかはあまり関係ない時代になりつつある気もします。&lt;/p>
 &lt;p>なので、いったんはそのような変化についていけられるよう、自分のスキルを磨くことですね。どの言語を使うかがあまり重要ではなくなるということは、つまりその言語で何ができるかがより重要ということになると思うので、今の自分にできる言語を使ってさまざまな経験をしてみるのが優先すべきことではないかという気がします。あまり実装ができない最近ですが、個人的なプロジェクトでも進めながら経験してみたくなりました。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

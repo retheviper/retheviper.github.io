@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Enum on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/enum/</link><description>Recent content in Enum on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 27 Oct 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/enum/index.xml" rel="self" type="application/rss+xml"/><item><title>Enumを使いましょう</title><link>https://retheviper.github.io/posts/java-enum/</link><pubDate>Sun, 27 Oct 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-enum/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post Enumを使いましょう" />&lt;p>JavaのEnumは興味深いものです。読みやすく、同時に複数の値を持たせるということが魅力的です。なので複数のクラスで共通のコード値を扱う必要があったり、DBに連携する場合に使うと便利ですね。私も現在の仕事では積極的に活用しています。また、完全なクラスとして機能しているので単に定数のため使うだけでなく、処理を記述することも可能なので活用できる範囲はかなり広いのでは、と思います。&lt;/p>
 &lt;p>なので今回はJavaのEnumの活用法やメリットについて、自分の経験と調べたことをまとめ紹介したいと思います。&lt;/p>
-&lt;h2 id="読みやすい">読みやすい&lt;/h2>
-&lt;p>コードが読みやすいということは、つまり維持補修に有利ということですね。個人的にはプログラミングの段階は「とにかく動く物を作る」→「共通(重複)処理をメソッドやクラスで分離する」→「他人がみてもわかりやすいコードにする」順に進むべきだと思います。そして全ての段階が最初の設計からできていればなおさらですね。&lt;/p>
+&lt;h2 id="読みやすい">読みやすい
+&lt;/h2>&lt;p>コードが読みやすいということは、つまり維持補修に有利ということですね。個人的にはプログラミングの段階は「とにかく動く物を作る」→「共通(重複)処理をメソッドやクラスで分離する」→「他人がみてもわかりやすいコードにする」順に進むべきだと思います。そして全ての段階が最初の設計からできていればなおさらですね。&lt;/p>
 &lt;p>テーブルにとあるコード値が項目として存在するとしましょう。DBの種類によってはその項目を&lt;code>boolean&lt;/code>にすることもできますが、&lt;code>char(1)&lt;/code>になる場合もあります。そしてこういった場合はそのコード値は二つの状態だけでなく、3つ以上の状態を持つ場合もありますね。サンプルとしてJava内での状態をStringとして持ち、DBには&lt;code>char(1)&lt;/code>として記録するとしましょう。そういう場合は以下のようなコードが必要となるはずです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Stringで記述されている状態をDBのコード値に変換するメソッドの例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> String &lt;span style="color:#a6e22e">toCodeValue&lt;/span>(String status) {
@@ -65,8 +65,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// コード値を抽出したいときのコード&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String itemCodeValue &lt;span style="color:#f92672">=&lt;/span> item.&lt;span style="color:#a6e22e">getStatus&lt;/span>().&lt;span style="color:#a6e22e">getCodeValue&lt;/span>();
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="複数の値を持つことが可能">複数の値を持つことが可能&lt;/h2>
-&lt;p>そこまで読み易くはならないのでは？と思われる可能性もありますね。確かに、一つの定数につき値が一つだけの場合はそうかもしれません。しかし、Enumの良いところは、定数に複数の値を持たせることも可能ということです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="複数の値を持つことが可能">複数の値を持つことが可能
+&lt;/h2>&lt;p>そこまで読み易くはならないのでは？と思われる可能性もありますね。確かに、一つの定数につき値が一つだけの場合はそうかもしれません。しかし、Enumの良いところは、定数に複数の値を持たせることも可能ということです。&lt;/p>
 &lt;p>例えば二つ以上のDBを使っていて、同じ項目を片方のテーブルは&lt;code>char(1)&lt;/code>、またの方は&lt;code>boolean&lt;/code>で管理しているとしましょう。Enumでは両方を一つの定数として管理することができます。それがどういうことか、以下のコードで確認してみましょう。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Getter&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@AllArgsConstructor&lt;/span>
@@ -122,8 +122,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Enumerated&lt;/span>(EnumType.&lt;span style="color:#a6e22e">STRING&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> StringEnum codeValue1;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="classらしき活用">Classらしき活用&lt;/h2>
-&lt;p>Enumはクラスなので、もちろん処理を持たせる方法もあります。処理を持たせるというのは難しく感じるかもしれませんが、処理をメソッドと思えば良いだけの話です。メソッドのフィールド化する方法についてはLambdaに関する&lt;a class="link" href="../java-functional-interface" >以前のポスト&lt;/a>を参照してください。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="classらしき活用">Classらしき活用
+&lt;/h2>&lt;p>Enumはクラスなので、もちろん処理を持たせる方法もあります。処理を持たせるというのは難しく感じるかもしれませんが、処理をメソッドと思えば良いだけの話です。メソッドのフィールド化する方法についてはLambdaに関する&lt;a class="link" href="../java-functional-interface" >以前のポスト&lt;/a>を参照してください。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@AllArgsConstructor&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">enum&lt;/span> CalculateEnum {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -144,6 +144,6 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Integer type_1 &lt;span style="color:#f92672">=&lt;/span> CalculateEnum.&lt;span style="color:#a6e22e">TYPE_1&lt;/span>.&lt;span style="color:#a6e22e">calculate&lt;/span>(10); &lt;span style="color:#75715e">// 10&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Integer type_2 &lt;span style="color:#f92672">=&lt;/span> CalculateEnum.&lt;span style="color:#a6e22e">TYPE_2&lt;/span>.&lt;span style="color:#a6e22e">calculate&lt;/span>(10); &lt;span style="color:#75715e">// 20&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>共通の部品として使われるものが重複されていると管理もその値の理解も難しくなり、余計なコードが増えるますね。これをEnumで克服できるということを伝えたかったのですが、いかがでしょうか。ただ、定数を必ずEnumにする必要があるかは、よく考えてみる問題だと思います。場合によってはテーブルとして管理した方が良いのかもしれません。そしてある特定のクラス内でしか使われていないなら、あえてEnumを作る必要もないでしょう。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>共通の部品として使われるものが重複されていると管理もその値の理解も難しくなり、余計なコードが増えるますね。これをEnumで克服できるということを伝えたかったのですが、いかがでしょうか。ただ、定数を必ずEnumにする必要があるかは、よく考えてみる問題だと思います。場合によってはテーブルとして管理した方が良いのかもしれません。そしてある特定のクラス内でしか使われていないなら、あえてEnumを作る必要もないでしょう。&lt;/p>
 &lt;p>それでもこのようにAPIの活用方法を理解し、覚えておくと、どこかで使っていい場合が現れるのではないかと思います。最初はLambdaをただの「読みづらいコード」としか認識していなかった私も、Functionの存在を知ってからは積極的に使っています。知識のみでなく、その知識を適材適所で活かしていけるようになることが真のプログラマーと思います。まずその判断は難しいかもしれませんが、知識を先に持つことで見えてくるものもあるのではないでしょうか。なので、これからも新しく得られた知識があれば、このブログで紹介していきたいと思います。&lt;/p></description></item></channel></rss>

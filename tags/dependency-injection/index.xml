@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Dependency Injection on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/dependency-injection/</link><description>Recent content in Dependency Injection on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 22 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/dependency-injection/index.xml" rel="self" type="application/rss+xml"/><item><title>newしたインスタンスの中でBeanを使いたい</title><link>https://retheviper.github.io/posts/spring-bean-with-yaml/</link><pubDate>Sun, 22 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-bean-with-yaml/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post newしたインスタンスの中でBeanを使いたい" />&lt;p>一般的なJavaプロジェクトなら、外部設定ファイル(YAML)を記載してその値を読み込む場合なら私の&lt;a class="link" href="../java-yaml-for-configuration" >以前のポスト&lt;/a>のようにできます。しかし、今回はSpringプロジェクトとして同じようなことをするようになりました。SpringはYAMLを読み込む時に固有の仕様や使い方がありますね。そしてそうやって読み込んだYAMLの値はBeanに設定することができて、アプリケーションの中ではどこでも&lt;code>@Autowired&lt;/code>を使って呼び出せるというメリットがあります。&lt;/p>
 &lt;p>しかし、そんな便利なDIですが、使い方の難点もあります。例えば、普通にnewして使うインスタンスのなかで&lt;code>@Autowired&lt;/code>は使えない問題があるということです。今回もかなりハマっていたことなのですが、Builderでオブジェクトを作成するようにして、使用者が指定してない値はYAMLから取得したBeanを使いたかったです。でもBuilderだと新しいインスタンスを作ってしまうので、Beanを読み込めなくなっていたのでかなりはまりました。&lt;/p>
 &lt;p>結果的には違う方法をとると、&lt;code>@Autowired&lt;/code>なしでもBeanを取得することができるということがわかったので、今回のポストではそれに至るまでの過程をコードを持って述べていきたいと思います。YAMLの作成から、newしたインスタンス内でBeanを取得して使う方法を紹介します。&lt;/p>
-&lt;h2 id="yamlからbeanを作る">YAMLからBeanを作る&lt;/h2>
-&lt;p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。&lt;/p>
+&lt;h2 id="yamlからbeanを作る">YAMLからBeanを作る
+&lt;/h2>&lt;p>Springではapplication.ymlに以下のように記載して、特定のYAMLを読み込むという指定ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">spring&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">profiles&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">active&lt;/span>: &lt;span style="color:#ae81ff">buildingdefault&lt;/span>
@@ -28,8 +28,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> String material;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="yamlから複数の設定を読み込みたい時">YAMLから複数の設定を読み込みたい時&lt;/h2>
-&lt;p>YAMLから設定値を読み込む際に、設定を複数を記載して状況に合わせて使いたい場合もあります。もちろんYAMLでは配列での記載ができますし、Springで読み込む時もこれをListにすることができます。なのでどうやって複数の設定をBeanにするかを説明します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="yamlから複数の設定を読み込みたい時">YAMLから複数の設定を読み込みたい時
+&lt;/h2>&lt;p>YAMLから設定値を読み込む際に、設定を複数を記載して状況に合わせて使いたい場合もあります。もちろんYAMLでは配列での記載ができますし、Springで読み込む時もこれをListにすることができます。なのでどうやって複数の設定をBeanにするかを説明します。&lt;/p>
 &lt;p>YAMLでは以下のように記載します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">settings&lt;/span>:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#f92672">preset-name&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;default&amp;#34;&lt;/span>
@@ -54,8 +54,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Material&lt;span style="color:#f92672">&amp;gt;&lt;/span> presets;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>のちにこのクラスからListを取得して、presetNameで各設定値を探すだけで簡単に使えるようになります。&lt;/p>
-&lt;h2 id="builderからbeanを使う失敗の例">BuilderからBeanを使う(失敗の例)&lt;/h2>
-&lt;p>今までの設定で、普通のSpringアプリケーション内ではBeanをDIして使うことができるようになります。しかし、今回はDIなしてBeanを取得する方法を説明するためのポストになっていますので、その過程を説明します。&lt;/p>
+&lt;h2 id="builderからbeanを使う失敗の例">BuilderからBeanを使う(失敗の例)
+&lt;/h2>&lt;p>今までの設定で、普通のSpringアプリケーション内ではBeanをDIして使うことができるようになります。しかし、今回はDIなしてBeanを取得する方法を説明するためのポストになっていますので、その過程を説明します。&lt;/p>
 &lt;p>まず自分がやりたかったことは、先に述べましたが、Builderの中でYAMLの値を読み込んでいるBeanを使うことでした。ここでYAMLに記載した値はデフォルト値として使われて、必要に応じて一部の項目だけbuild()時に上書きしたいです。まず試して、ダメだったコードは以下のようなものです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Building&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -80,8 +80,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Builderを使うと、まずBuilderのインスタンスを新しく生成するしかないです。そしてnewしたインスタンスの中では&lt;code>@Autowired&lt;/code>で記載していても、DIがまともにできません。実際上のようなコードを書くと、BeanのフィールドがNullになっていることを確認できます。&lt;/p>
 &lt;p>なのでDIのことは忘れて、newしたインスタンスの中でBeanを取得できる方法をとります。&lt;/p>
-&lt;h2 id="applicationcontextproviderを作る">ApplicationContextProviderを作る&lt;/h2>
-&lt;p>ApplicationContextは、SpringでBeanの生成やオブジェクト間の関係設定など様々な機能を担当するインタフェースです。ここで重要なのは、ApplicationContextがSpringアプリケーションを起動する時予め登録されたBeanを生成して管理するということです。つまり、このインタフェースにアクセスできればBeanを取得できるということになります。&lt;/p>
+&lt;h2 id="applicationcontextproviderを作る">ApplicationContextProviderを作る
+&lt;/h2>&lt;p>ApplicationContextは、SpringでBeanの生成やオブジェクト間の関係設定など様々な機能を担当するインタフェースです。ここで重要なのは、ApplicationContextがSpringアプリケーションを起動する時予め登録されたBeanを生成して管理するということです。つまり、このインタフェースにアクセスできればBeanを取得できるということになります。&lt;/p>
 &lt;p>ただ、ApplicationContextそのものはあくまでインタフェースであるため、インスタンスを取得するためにはその役割をするクラスを作成する必要があります。以下のコードでインスタンスを取れるようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Component&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ApplicationContextProvider&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> ApplicationContextAware {
@@ -97,8 +97,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>構造は簡単で、フィールドにApplicationContextがあって、それに対するGetterとSetterがあるだけです。これで動くのも不思議ですが、Springアプリケーションが動作すると自動的にApplicationContextのインスタンスがSetterを通じてフィールドにセットされます。ただ、このクラスのインスタンをnewしては使えなくなるのでフィールドとGetterはstaticにしておきます。&lt;/p>
-&lt;h2 id="builderからbeanを使う成功の例">BuilderからBeanを使う(成功の例)&lt;/h2>
-&lt;p>それでは、ApplicationContextのインスタンスを取得できるようになりましたので、Builderを修正します。&lt;/p>
+&lt;h2 id="builderからbeanを使う成功の例">BuilderからBeanを使う(成功の例)
+&lt;/h2>&lt;p>それでは、ApplicationContextのインスタンスを取得できるようになりましたので、Builderを修正します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Building&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#a6e22e">BuildingBuilder&lt;/span>() {
@@ -134,12 +134,12 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>修正したコードを動かしてみると、BeanのフィールドがNullではなくちゃんとYAMLから読み込んだ値が入っていることを確認できます。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。&lt;/p></description></item><item><title>SpringのDIはコンストラクターでしましょう</title><link>https://retheviper.github.io/posts/spring-dependency-injection/</link><pubDate>Mon, 09 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-dependency-injection/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post SpringのDIはコンストラクターでしましょう" />&lt;p>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり&lt;code>@Autowired&lt;/code>によるDI&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>ではないかと思います。初めてSpringに接したときはオブジェクトが&lt;code>new&lt;/code>なしでも動くと言うことが何ともいえない不思議なことに見えました。これがデザインパターンの一つであるということを知ってからはますますすごいなぁと思いましたね。やはり良いコードを書くためには、様々な方面での工夫が必要なものですね。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>Springを使いながら、恥ずかしくも実際アプリケーションの内部ではどんなことが起きているかを知らなかったので今回は失敗したのではないかと思います。ただ単に動くことを確認するだけでなく、こうして自分の使っている言語やフレームワークの特性をちゃんと理解していないとこのようにハマることはなかったでしょう。なので新しい知識を得た同時に、自分に対する反省もすることになりました。これからはちゃんと自分が使っているものはどう、なぜ動くのかをちゃんと理解してから使わないとですね。&lt;/p></description></item><item><title>SpringのDIはコンストラクターでしましょう</title><link>https://retheviper.github.io/posts/spring-dependency-injection/</link><pubDate>Mon, 09 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-dependency-injection/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post SpringのDIはコンストラクターでしましょう" />&lt;p>Springの代表的な特徴といえば、それは色々ありますが、一つをあげるとしたらやはり&lt;code>@Autowired&lt;/code>によるDI&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>ではないかと思います。初めてSpringに接したときはオブジェクトが&lt;code>new&lt;/code>なしでも動くと言うことが何ともいえない不思議なことに見えました。これがデザインパターンの一つであるということを知ってからはますますすごいなぁと思いましたね。やはり良いコードを書くためには、様々な方面での工夫が必要なものですね。&lt;/p>
 &lt;p>とにかく、こうも重要で便利なDIですが、最近Spring Bootを触りながら気になったことがありました。今までは当たり前のように、&lt;code>@Autowired&lt;/code>はフィールドに宣言していましたが、今回の案件ではコンストラクターにつけている場合がありました。なぜ一部はフィールドにつけ、一部はコンストラクターにつけるんだろう？と思いましたね。結果的には全てのアノテーションをコンストラクターにつけることになりましたが、それが特にフィールドにつける場合との違いを理解させたわけではないので、少し調べてみました。&lt;/p>
 &lt;p>結論からいうと、大概の場合に&lt;code>@Autowired&lt;/code>はフィールドよりはコンストラクターにつけた方がいいらしいです。そしてこれを(フィールドやコンストラクターに&lt;code>@Autowired&lt;/code>をつけることを)、それぞれ「フィールドインジェクション」と「コンストラクターインジェクション」と呼ぶらしいです。では、これらをコードを持って説明していきましょう。&lt;/p>
-&lt;h2 id="field-injection">Field Injection&lt;/h2>
-&lt;p>まずインジェクションのために以下のようなコンフィギュレーションクラス&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>を定義したとしましょう。&lt;/p>
+&lt;h2 id="field-injection">Field Injection
+&lt;/h2>&lt;p>まずインジェクションのために以下のようなコンフィギュレーションクラス&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>を定義したとしましょう。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Mapper&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> ModelMapper {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -158,8 +158,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> Mapper mapper;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>自分が最初にSpring Frameworkについて学んだ時はこのようなフィールドインジェクトションが一般的でした。しかし、フィールドインジェクションでは致命的な問題があリます。ここでフィールドがNullだった場合もプログラムは動作するということです。クラスの動作に必要な要件が整ってないのにもかかわらず、プログラムが動作してしまうのはバグを呼ぶこととなりますね。なのでフィールドインジェクションはよくないです。&lt;/p>
-&lt;h2 id="setter-injection">Setter Injection&lt;/h2>
-&lt;p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。&lt;/p>
+&lt;h2 id="setter-injection">Setter Injection
+&lt;/h2>&lt;p>実は、インジェクションはSetterを通じても可能らしいです。あまり一般的な方式ではありませんが、これをセッターインジェクションと呼び、コードで表現すると以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Service&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ItemServiceImpl&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> ItemService {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -171,8 +171,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Setterによるインジェクションの問題は、フィールドインジェクションと同じです。Setterで必要なオブジェクトが注入されたかどうかと関係なくプログラムは動く可能性がありますね。この問題を解決できるのが、次に紹介するコンストラクターインジェクションです。&lt;/p>
-&lt;h2 id="constructor-injection">Constructor Injection&lt;/h2>
-&lt;p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。&lt;/p>
+&lt;h2 id="constructor-injection">Constructor Injection
+&lt;/h2>&lt;p>コンストラクターによるインジェクションはコンストラクターインジェクションと呼び、コードは以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Service&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ItemServiceImpl&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> ItemService {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -187,8 +187,8 @@
 &lt;p>また、コンストラクターインジェクションだと、循環参照&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>の問題を事前に防ぐことができるというメリットがあります。フィールドインジェクションやセッターインジェクションでは実際のコードが呼ばれるまでは問題を発見することができませんが、コンストラクターインジェクションで循環参照が発生する場合はSpringアプリケーションを起動する時に警告が出力されます。&lt;/p>
 &lt;p>また、フィールドインジェクションの場合はそのクラスの単体テストができないという問題もあります。Autowiredアノテーションがついているフィールドに対してオブジェクトを注入できる方法がないですので。Setterを使うと一旦注入はできるようになりますが、あえてSetterを使う理由はないですね。&lt;/p>
 &lt;p>コンストラクターインジェクションが良いもう一つの理由は、フィールドをfinal宣言できるということです。フィールドにfinalをつけることでクラス内でオブジェクトが変更されることを防止できるので、より安全になります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今までは自分も当たり前のことのようにフィールドインジェクションを使っていましたが、フィールドインジェクションの問題を知ってからはなるべくコンストラクターインジェクションとしてコードを書くようにしています。あえてそうしなくても、IntelliJでは常にコンストラクターインジェクションを使うことと警告まで出すみたいで、Springの公式のドキュメントでもそういう言及がありました。これは今までの認識を変えざるを得ません。&lt;/p>
 &lt;p>SpringだけでなくJavaコーディングの話をすると、コンストラクターは基本的に書かなくても暗黙的に引数なしのものが生成されるのがJavaの仕様ですね。Singletonクラスや引数の初期化なしで動くと問題になるクラスではこれを防ぐためにわざとコンストラクターを書くこととなっています。なので常にコンストラクターは明示的に書いておく習慣も大事ですね。こういうことも含めて考えると、コンストラクターを記述することの重要性がわかるような気もします。やはり良いコードを書くには、様々な方面での工夫は必要なものですね！&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Scrimage on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/scrimage/</link><description>Recent content in Scrimage on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 30 Mar 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/scrimage/index.xml" rel="self" type="application/rss+xml"/><item><title>動的画像リサイズAPIを作る</title><link>https://retheviper.github.io/posts/image-resize-api/</link><pubDate>Sat, 30 Mar 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/image-resize-api/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post 動的画像リサイズAPIを作る" />&lt;p>この度は、動的画像リサイズのAPIを作りましたのでその紹介です。ここでおいう動的画像リサイズAPIとは、元の画像のURLとリサイズしたいサイズを指定すると、そのサイズにリサイズした画像を返すAPIです。&lt;/p>
-&lt;h2 id="目的">目的&lt;/h2>
-&lt;p>そもそも動的画像リサイズAPIを作る理由はなにか。それから説明しないとですね。今までは画像の配信において、エンドユーザが画像をアップロードする場合、あらかじめサムネイルの画像も作成してアップロードするようにしていました。&lt;/p>
+&lt;h2 id="目的">目的
+&lt;/h2>&lt;p>そもそも動的画像リサイズAPIを作る理由はなにか。それから説明しないとですね。今までは画像の配信において、エンドユーザが画像をアップロードする場合、あらかじめサムネイルの画像も作成してアップロードするようにしていました。&lt;/p>
 &lt;p>ただ、その方法だと全ての画面比と解像度に対応したサムネイルを作れないという問題があります。そのため代案として、フロントエンドから画面に最適化したサイズを指定して、APIからリサイズした画像を取得するようにしたいというのが目的です。&lt;/p>
-&lt;h2 id="設計技術選定">設計・技術選定&lt;/h2>
-&lt;p>APIはマイクロサービスとして、なるべくシンプルに作ることにしました。Getのエンドポイントを一つ持っていて、そこにクエリパラメータで元の画像のURLとリサイズしたいサイズを指定すると、リサイズした画像を返すというものです。フロントエンドではそのままimgタグに使えるようにしたいので、返すのは画像のデータそのまま（ヘッダーには&lt;code>Content-type&lt;/code>を指定）にします。また、リサイズだけでなく、画像の形式を変換することもできるようにします。&lt;/p>
+&lt;h2 id="設計技術選定">設計・技術選定
+&lt;/h2>&lt;p>APIはマイクロサービスとして、なるべくシンプルに作ることにしました。Getのエンドポイントを一つ持っていて、そこにクエリパラメータで元の画像のURLとリサイズしたいサイズを指定すると、リサイズした画像を返すというものです。フロントエンドではそのままimgタグに使えるようにしたいので、返すのは画像のデータそのまま（ヘッダーには&lt;code>Content-type&lt;/code>を指定）にします。また、リサイズだけでなく、画像の形式を変換することもできるようにします。&lt;/p>
 &lt;p>また、APIは&lt;a class="link" href="https://cloud.google.com/run?hl=ja" target="_blank" rel="noopener"
 >Cloud Run&lt;/a>上で動かすことにしました。既存のAPIもそうなので使い方を合わせるためでもあり、ローカルでの開発でもdocekr composeを使って楽に開発できるためです。他にもコンテンツの配信には&lt;a class="link" href="https://cloud.google.com/storage?hl=ja" target="_blank" rel="noopener"
 >Cloud Storage&lt;/a>を使っているので、それとの連携もしやすいためです。そして最終的に処理された画像は、Cloud CDNに保存され、2回目以降の呼び出しではキャッシュを返すようにします。&lt;/p>
@@ -14,8 +14,8 @@
 >ImageIO&lt;/a>なども検討しました。ただ、リサイズ対象の画像のフォーマットと、返すデータのフォーマットとしてWebPを処理する必要があったのですがそれに対応していないものが多かったです。&lt;/p>
 &lt;p>他に考えたものとしては、&lt;a class="link" href="http://www.graphicsmagick.org/" target="_blank" rel="noopener"
 >GraphicsMagick&lt;/a>のように画像の変換やリサイズを行うツールを使う方法もあります。こちらの場合はJavaから取得したデータを一度ファイルに書き出して、それをコマンドラインで実行するという方法になりますので、その分のI/Oコストがかかるため今回はScrimageを使うことにしました。&lt;/p>
-&lt;h2 id="リサイズ処理">リサイズ処理&lt;/h2>
-&lt;p>では、実際のAPIを書いていきます。Ktorは使い慣れているのもあり、今回はKtorでのAPI構築というよりはScrimageを使った画像のリサイズ処理が重要なので、その部分に焦点を当てていきます。&lt;/p>
+&lt;h2 id="リサイズ処理">リサイズ処理
+&lt;/h2>&lt;p>では、実際のAPIを書いていきます。Ktorは使い慣れているのもあり、今回はKtorでのAPI構築というよりはScrimageを使った画像のリサイズ処理が重要なので、その部分に焦点を当てていきます。&lt;/p>
 &lt;p>API全体で処理のフローは大まかに以下の通りです。&lt;/p>
 &lt;ol>
 &lt;li>クエリパラメータからurlとリサイズ後の大きさを取得&lt;/li>
@@ -25,16 +25,16 @@
 &lt;/ol>
 &lt;p>ここでScrimageを使った画像の処理は3〜4の部分ですが、実際のリサイズを行う前に取得した画像の形式をまず判定したり、画像のサイズを確認する必要もあります。理由としては処理の効率化のためですね。&lt;/p>
 &lt;p>今回はPNG, JPEG, WEBP, GIFの4つの形式に対して、リサイズ後にWEBPに変換するという処理を行うことにしています。ここで元の画像がWEBPだった場合、あえてWEBPに変換する必要はないです。また、リサイズが必要ない場合もあります。そのため、まずは画像の形式を判定して、リサイズが必要な場合のみリサイズ処理を行うようにします。&lt;/p>
-&lt;h3 id="画像の形式判定">画像の形式判定&lt;/h3>
-&lt;p>URLもしくはローカルストレージ（今回はCloud RunにCloud Storageをマウントする形で使っている）から画像を取得する際、その画像の形式を判定する必要があります。Scrimageでは画像の形式を判定するための&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/FormatDetector.java" target="_blank" rel="noopener"
+&lt;h3 id="画像の形式判定">画像の形式判定
+&lt;/h3>&lt;p>URLもしくはローカルストレージ（今回はCloud RunにCloud Storageをマウントする形で使っている）から画像を取得する際、その画像の形式を判定する必要があります。Scrimageでは画像の形式を判定するための&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/FormatDetector.java" target="_blank" rel="noopener"
 >FormatDetector&lt;/a>というクラスを提供しています。&lt;/p>
 &lt;p>使い方は簡単で、以下のように読み込んだ画像のデータをByteの配列で渡すだけです。API上では想定してないフォーマットが来た場合はエラーを返すようにしていて、ここで返す&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/Format.java" target="_blank" rel="noopener"
 >Format&lt;/a>はPNG, GIF, JPEG, WEBPでありScrimageのものをそのまま使っています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">detectImageFormat&lt;/span>(&lt;span style="color:#66d9ef">data&lt;/span>: ByteArray): Format {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">FormatDetector&lt;/span>.detect(&lt;span style="color:#66d9ef">data&lt;/span>).orElseThrow { IllegalArgumentException(&lt;span style="color:#e6db74">&amp;#34;Unsupported format&amp;#34;&lt;/span>) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="png-jpegの処理">PNG, JPEGの処理&lt;/h3>
-&lt;p>まず一番簡単なPNG, JPEGの場合です。これらの形式の場合、Scrimageの&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/ImmutableImage.java" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="png-jpegの処理">PNG, JPEGの処理
+&lt;/h3>&lt;p>まず一番簡単なPNG, JPEGの場合です。これらの形式の場合、Scrimageの&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/ImmutableImage.java" target="_blank" rel="noopener"
 >ImmutableImage&lt;/a>として扱うことになります。&lt;/p>
 &lt;p>ここで画像のデータをImmutableImageに変換するには&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/ImageReader.java" target="_blank" rel="noopener"
 >ImageReader&lt;/a>のインタフェースを実装したクラスを使います。&lt;a class="link" href="https://sksamuel.github.io/scrimage/" target="_blank" rel="noopener"
@@ -59,8 +59,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> bytes = resizedImage,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contentType = ContentType(&lt;span style="color:#e6db74">&amp;#34;image&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;webp&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="webpの場合">WEBPの場合&lt;/h3>
-&lt;p>WEBPの場合は、上記データ読み込む時点で&lt;code>WebpImageReader&lt;/code>を使う必要があります。その後のリサイズ処理はPNG, JPEGの場合と同じです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="webpの場合">WEBPの場合
+&lt;/h3>&lt;p>WEBPの場合は、上記データ読み込む時点で&lt;code>WebpImageReader&lt;/code>を使う必要があります。その後のリサイズ処理はPNG, JPEGの場合と同じです。&lt;/p>
 &lt;p>ただ、形式がWEBPの場合には&lt;a class="link" href="https://github.com/sksamuel/scrimage/tree/master/scrimage-webp" target="_blank" rel="noopener"
 >scrimage-webp&lt;/a>が提供している&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-webp/src/main/java/com/sksamuel/scrimage/webp/WebpImageReader.java" target="_blank" rel="noopener"
 >WebpImageReader&lt;/a>を使う必要があります。なので、形式に応じて読み込むクラスを変える必要があります。先ほどの&lt;code>asImmutableImage&lt;/code>の引数に形式を追加して、形式に応じて読み込むクラスを変えるようにします。&lt;/p>
@@ -71,8 +71,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他の処理はPNG, JPEGの場合と同じです。&lt;/p>
-&lt;h3 id="gifの場合">GIFの場合&lt;/h3>
-&lt;p>GIFの場合は、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/AnimatedGif.java" target="_blank" rel="noopener"
+&lt;h3 id="gifの場合">GIFの場合
+&lt;/h3>&lt;p>GIFの場合は、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/AnimatedGif.java" target="_blank" rel="noopener"
 >AnimatedGif&lt;/a>というクラスを使ってリサイズを行います。ImmutableImageと同じようにリサイズメソッドが用意されているので、それを使ってリサイズを行います。処理で使われるクラスが違うので、GIFの場合は別途メソッドを用意します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">asAnimatedGif&lt;/span>(rawData: ByteArray): AnimatedGif {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">AnimatedGifReader&lt;/span>.read(&lt;span style="color:#a6e22e">ImageSource&lt;/span>.of(rawData))
@@ -93,10 +93,10 @@
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">encodeGif&lt;/span>(gif: AnimatedGif): ByteArray {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> gif.bytes(Gif2WebpWriter.DEFAULT)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="処理を共通化する">処理を共通化する&lt;/h2>
-&lt;p>ここまででPNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができました。ただ、それぞれの形式に対して処理を書いていると、処理が重複してしまうため、共通化する必要があります。特にImmutableImageとAnimatedGifの処理は似ているため、それらを共通化することにします。&lt;/p>
-&lt;h3 id="共通interfaceを作る">共通Interfaceを作る&lt;/h3>
-&lt;p>ScrimageではImmutableImageとAnimatedGifは別のクラスであるだけでなく、共通のInterfaceを持っていないため、まずはそれを作成する必要があります。ここでは、ImageというInterfaceを作成し、それを実装するクラスを作成します。それぞれのクラスはWrapperとして作成し、それぞれのクラスのプロパティをInterfaceのプロパティとして持つようにします。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="処理を共通化する">処理を共通化する
+&lt;/h2>&lt;p>ここまででPNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができました。ただ、それぞれの形式に対して処理を書いていると、処理が重複してしまうため、共通化する必要があります。特にImmutableImageとAnimatedGifの処理は似ているため、それらを共通化することにします。&lt;/p>
+&lt;h3 id="共通interfaceを作る">共通Interfaceを作る
+&lt;/h3>&lt;p>ScrimageではImmutableImageとAnimatedGifは別のクラスであるだけでなく、共通のInterfaceを持っていないため、まずはそれを作成する必要があります。ここでは、ImageというInterfaceを作成し、それを実装するクラスを作成します。それぞれのクラスはWrapperとして作成し、それぞれのクラスのプロパティをInterfaceのプロパティとして持つようにします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">sealed&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> &lt;span style="color:#a6e22e">Image&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> width: Int
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -114,8 +114,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> width: Int
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">get&lt;/span>() = immutableImage.width
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像取得の共通化">画像取得の共通化&lt;/h3>
-&lt;p>あとは外部に公開するAPIとして、&lt;code>asImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてWrapperを返すようにします。ここで、形式の判定は先ほど作成した&lt;code>detectImageFormat&lt;/code>を使います。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像取得の共通化">画像取得の共通化
+&lt;/h3>&lt;p>あとは外部に公開するAPIとして、&lt;code>asImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてWrapperを返すようにします。ここで、形式の判定は先ほど作成した&lt;code>detectImageFormat&lt;/code>を使います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">asImage&lt;/span>(rawData: ByteArray): Image {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (&lt;span style="color:#66d9ef">val&lt;/span> format = detectImageFormat(rawData)) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Format&lt;/span>.GIF &lt;span style="color:#f92672">-&amp;gt;&lt;/span> asAnimatedGifWrapper(rawData)
@@ -135,8 +135,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> ImmutableImageWrapper(image)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="リサイズ処理の共通化">リサイズ処理の共通化&lt;/h3>
-&lt;p>同じく、リサイズ処理も共通化します。ここでは、&lt;code>resizeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した&lt;code>resizeImmutableImage&lt;/code>と&lt;code>resizeAnimatedGif&lt;/code>を使います。AnimatedGifのリサイズ処理はまた別途&lt;code>writeAnimatedGif&lt;/code>というメソッドを作成して分けています。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="リサイズ処理の共通化">リサイズ処理の共通化
+&lt;/h3>&lt;p>同じく、リサイズ処理も共通化します。ここでは、&lt;code>resizeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した&lt;code>resizeImmutableImage&lt;/code>と&lt;code>resizeAnimatedGif&lt;/code>を使います。AnimatedGifのリサイズ処理はまた別途&lt;code>writeAnimatedGif&lt;/code>というメソッドを作成して分けています。&lt;/p>
 &lt;p>ここでImageはsealed interfaceとして作成しているため、分岐処理はwhen式を使って網羅することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">suspend&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">resizeImage&lt;/span>(image: Image, width: Int): Image {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (image) {
@@ -169,8 +169,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> resizedImage = imageWrapper.immutableImage.scaleToWidth(width)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> ImmutableImageWrapper(resizedImage, imageWrapper.format)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像のエンコード処理の共通化">画像のエンコード処理の共通化&lt;/h3>
-&lt;p>最後に、画像のエンコード処理も共通化します。ここでは、&lt;code>encodeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてエンコード処理を行うようにします。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="画像のエンコード処理の共通化">画像のエンコード処理の共通化
+&lt;/h3>&lt;p>最後に、画像のエンコード処理も共通化します。ここでは、&lt;code>encodeImage&lt;/code>というメソッドを作成し、それぞれの形式に応じてエンコード処理を行うようにします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">suspend&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">encodeImage&lt;/span>(image: Image): ByteArray {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">when&lt;/span> (image) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">is&lt;/span> AnimatedGifWrapper &lt;span style="color:#f92672">-&amp;gt;&lt;/span> image.animatedGif.bytes(Gif2WebpWriter.DEFAULT)
@@ -179,7 +179,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで共通化も終わり、呼び出す側は&lt;code>asImage&lt;/code>, &lt;code>resizeImage&lt;/code>, &lt;code>encodeImage&lt;/code>の3つのメソッドを使うだけでリサイズ処理を行うことができます。サイズのチェックもImageの方でプロパティ化しているため、それを使ってリサイズが必要かどうかの判定も行うことができます。&lt;/p>
 &lt;p>あとはImageWriterなど、毎回インスタンスを生成する必要のないクラスは、シングルトンとして作成しておくとよいでしょう。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>だいぶ長くなってしまいましたが、ここまでで動的画像リサイズAPIの作成方法を紹介しました。Scrimageを使うことで、PNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができ、共通化することで処理の重複を防ぐことができました。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>だいぶ長くなってしまいましたが、ここまでで動的画像リサイズAPIの作成方法を紹介しました。Scrimageを使うことで、PNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができ、共通化することで処理の重複を防ぐことができました。&lt;/p>
 &lt;p>あとは、Cloud Run上で動かすためのDockerfileを作成し、Cloud Storageとの連携を行うことで、画像の配信を行うことができます。また、Cloud CDNを使うことで、2回目以降の呼び出しではキャッシュを返すようにすることで、負荷を軽減することができます。なかなか面白いプロジェクトでした。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

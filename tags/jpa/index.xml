@@ -6,17 +6,17 @@
 >MySQL&lt;/a>に移行するシステムも増えてきていますね。しかし、ここでDBのクエリーやプラグインに依存した部分が多ければ多いほど移行は難しくなる可能性があります。微妙に違うカラムのデータ型から、互換性のないクエリーや機能などを全面的に検討する必要がありますね。なのでSQL文はなるべく単純にした方が、移植生が上がります。&lt;/p>
 &lt;p>最後に、処理の容易さなのですが、現在DBの主流であるRDBSの場合は、徹底的にデータをいかに効率的に保存するかが最も重要な課題となっているものです。正規化を終えたテーブル構造は、データを加工するには適合していません。なのでアプリでは必要に応じてエンティティを作って使いますが、そのエンティティに合わせてSQLを書く際はまた複雑なJoinやWhereなどを描かなければならなくなりますね。エンティティの中に他のエンティティがま他入っていたりする場合はJoinをするか、しないかのケースまで考えてクエリーを描かなければなりません。&lt;/p>
 &lt;p>このような理由からして、自分はなるべく複雑なクエリーを排除し、なるべくアプリ中心的に開発できる方法はないかと思っていました。初めはJDBCに触れ、そのあとはMyBatisを使うようになっていましたが、MyBatisを使ってもケース別にクエリーを書く必要があるのはまた同じでした。(プラスで、xmlが必要となることもありますね)最近はテレワークにより通勤時間がなくなり、仕事が終わった後は勉強をかねて自作アプリを実装していますが、ここでより簡単に、またよりアプリに優しいDBのAPIがないかと思っていましたが、そこで発見したのがJPAでした。&lt;/p>
-&lt;h2 id="jpaとは">JPAとは&lt;/h2>
-&lt;p>JPAは&lt;a class="link" href="https://www.oracle.com/java/technologies/persistence-jsp.htm" target="_blank" rel="noopener"
+&lt;h2 id="jpaとは">JPAとは
+&lt;/h2>&lt;p>JPAは&lt;a class="link" href="https://www.oracle.com/java/technologies/persistence-jsp.htm" target="_blank" rel="noopener"
 >Java Persistence API&lt;/a>の略で、Javaが提供する標準APIです。ただ、標準APIだとしても、Interfaceとして定義しているだけなので、これを実装したものが必要となります。JPAを実装したものとして有名なのが&lt;a class="link" href="https://hibernate.org" target="_blank" rel="noopener"
 >Hibernate&lt;/a>で、これをさらに使いやすく整理したモジュールとして&lt;a class="link" href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#reference" target="_blank" rel="noopener"
 >Spring Data JPA&lt;/a>が存在しています。&lt;/p>
 &lt;p>だいぶ序論が長くなりましたが、結論的に今回言いたいことが何かというと、Spring Data JPAを使うと他のライブラリやフレームワークを使うよりも楽に開発ができるということです。おそらくSQL中心的な開発に関しては自分と同じようなことを考えていた人が他にもいたらしく、JPAは単純なクエリーを自動で作ってくれたり、自動でテーブルのJoinをしてくれるなど全くSQLに触れなくてもDBを扱うことを可能にしてくれています。同じくORMとしてよく使われているMyBatisに比べても、JPAを使った方がより効率的なのではないかな、と個人的には考えています。その理由からか、海外では他のORMよりもJPAを使っている割合の方が圧倒的に高いようでした。なのでもし今もMyBatisを使っている方がいらっしゃるなら、ぜひJPAを一度は使ってみて欲しいところです。&lt;/p>
 &lt;p>では、実際にJPA(Spring Data JPA)の特徴と使用法を、一つづつ紹介しましょう。&lt;/p>
-&lt;h3 id="jpaの特徴">JPAの特徴&lt;/h3>
-&lt;p>まずはJPAの特徴です。正確には特徴というよりは、JPAを使う場合のメリットに近いのではないかと思います。&lt;/p>
-&lt;h4 id="自動グラフ探索">自動グラフ探索&lt;/h4>
-&lt;p>まず、このようなクラスがあるとします。&lt;/p>
+&lt;h3 id="jpaの特徴">JPAの特徴
+&lt;/h3>&lt;p>まずはJPAの特徴です。正確には特徴というよりは、JPAを使う場合のメリットに近いのではないかと思います。&lt;/p>
+&lt;h4 id="自動グラフ探索">自動グラフ探索
+&lt;/h4>&lt;p>まず、このようなクラスがあるとします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Team&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">long&lt;/span> id;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> String name;
@@ -41,22 +41,22 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Player player &lt;span style="color:#f92672">=&lt;/span> repository.&lt;span style="color:#a6e22e">findById&lt;/span>(1);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Playerが所属したTeamを取得する&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Team team &lt;span style="color:#f92672">=&lt;/span> player.&lt;span style="color:#a6e22e">getTeam&lt;/span>();
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="性能の最適化">性能の最適化&lt;/h3>
-&lt;p>自動的にグラフ探索をしてくれるところをみると、まさかPlayerテーブルを照会するたびにTeamテーブルも照会しているような無駄なことをしているわけではないか、と思われそうですが、実際はLazy Loadingにより、Teamは&lt;code>getTeam()&lt;/code>を実行した時点でまたのSelect文を発行して照会していることになります。なので、Playerだけの情報が必要な場合はその情報しか照会しないことになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="性能の最適化">性能の最適化
+&lt;/h3>&lt;p>自動的にグラフ探索をしてくれるところをみると、まさかPlayerテーブルを照会するたびにTeamテーブルも照会しているような無駄なことをしているわけではないか、と思われそうですが、実際はLazy Loadingにより、Teamは&lt;code>getTeam()&lt;/code>を実行した時点でまたのSelect文を発行して照会していることになります。なので、Playerだけの情報が必要な場合はその情報しか照会しないことになります。&lt;/p>
 &lt;p>では、場合によっては数回もトランザクションが発生するのではないか、という疑問もあり得ると思いますが、これをJPAではキャッシュとバッチ、フェッチタイプの指定で解決しているようです。これらは以下のように作動します。&lt;/p>
 &lt;ul>
 &lt;li>キャッシュ：同じエンティティに対して(同一トランザクションならば)2回目以降のSelectはキャッシュから照会する&lt;/li>
 &lt;li>バッチ：バッチメソッドを提供し、一回のコミットで複数のクエリを転送する機能を実装している&lt;/li>
 &lt;li>フェッチタイプ：アノテーションによりLazy Loadingをするか、最初からJoinして照会するかを選択可能&lt;/li>
 &lt;/ul>
-&lt;h4 id="自動クエリ生成">自動クエリ生成&lt;/h4>
-&lt;p>先にRepositoryからオブジェクトを取得する例を照会しましたが、これが可能になるのはJPAが自動的に生成してくれるクエリーがあるからです。JPAが提供するアノテーションやインタフェースを使うとこで、自動生成されるクエリーを利用することができます。&lt;/p>
+&lt;h4 id="自動クエリ生成">自動クエリ生成
+&lt;/h4>&lt;p>先にRepositoryからオブジェクトを取得する例を照会しましたが、これが可能になるのはJPAが自動的に生成してくれるクエリーがあるからです。JPAが提供するアノテーションやインタフェースを使うとこで、自動生成されるクエリーを利用することができます。&lt;/p>
 &lt;p>つまり、エンティティとして利用するクラスとJPAをアノテーションとインタフェースに紐づけておくといちいちクエリーを作成してオブジェクトにマッピングする必要がなくなるということです。もちろん自作クエリーを使うこともできるので、自動生成されるクエリーを使いたい場合も問題ないです。&lt;/p>
 &lt;p>このクエリーの生成は、エンティティのCRUDだけに限ることではありません。エンティティに変更が生じた場合(フィールドを追加する必要がある場合)は、DDLも自動的に作成してくれます。ここで自動生成されるDDLをDrop-Createにするか、AlterにするかはアプリケーションプロパティのHibernate設定でできます。&lt;/p>
-&lt;h3 id="jpaの使用法">JPAの使用法&lt;/h3>
-&lt;p>では、実際のJPAをコードとしてはどう使えるかをみていきましょう。&lt;/p>
-&lt;h4 id="entity">Entity&lt;/h4>
-&lt;p>JPAでは、エンティティとそのフィールド(テーブルのカラムや参照関係)をアノテーションによって簡単に定義することができます。例えば以下のようになります。&lt;/p>
+&lt;h3 id="jpaの使用法">JPAの使用法
+&lt;/h3>&lt;p>では、実際のJPAをコードとしてはどう使えるかをみていきましょう。&lt;/p>
+&lt;h4 id="entity">Entity
+&lt;/h4>&lt;p>JPAでは、エンティティとそのフィールド(テーブルのカラムや参照関係)をアノテーションによって簡単に定義することができます。例えば以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Entityとして指定する&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Entity&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Car&lt;/span> {
@@ -81,8 +81,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Insurance&lt;span style="color:#f92672">&amp;gt;&lt;/span> insurances;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやってEntityにはGetter・Setterをつけておくことで、Selectした時点でこのクラスに紐づくCompanyはInsuranceのようなテーブルの情報も参照できるようになります。&lt;/p>
-&lt;h4 id="repository">Repository&lt;/h4>
-&lt;p>JPAでは、いくつかのRepositoryというインタフェースを提供しています。よく使われているものは、&lt;a class="link" href="https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html" target="_blank" rel="noopener"
+&lt;h4 id="repository">Repository
+&lt;/h4>&lt;p>JPAでは、いくつかのRepositoryというインタフェースを提供しています。よく使われているものは、&lt;a class="link" href="https://docs.spring.io/spring-data/jpa/docs/current/api/org/springframework/data/jpa/repository/JpaRepository.html" target="_blank" rel="noopener"
 >JpaRepository&lt;/a>や&lt;a class="link" href="https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/CrudRepository.html" target="_blank" rel="noopener"
 >CrudRepository&lt;/a>、&lt;a class="link" href="https://docs.spring.io/spring-data/commons/docs/current/api/org/springframework/data/repository/PagingAndSortingRepository.html" target="_blank" rel="noopener"
 >PagingAndSortingRepository&lt;/a>などがあって、それぞれ基本的に提供しているメソッドが異なります。例えばCrudRepositoryは普通にCRUDのためのメソッド(Selectに該当するfind()、Upsertに該当するsave()、Deleteに該当するdelete()など)を基本的に提供していて、PagingAndSortingRepositoryの場合はページング(ページネーション)に対応したメソッドを提供しているなど、基本的によく使われるメソッドが揃っています。例えば以下のようなものです。&lt;/p>
@@ -112,16 +112,16 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Query&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;select c from Car c where c.name = ?1&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>Car&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">findByName&lt;/span>(String name);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="他に">他に&lt;/h2>
-&lt;p>2018年には、&lt;a class="link" href="https://spring.io/projects/spring-data-jdbc" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="他に">他に
+&lt;/h2>&lt;p>2018年には、&lt;a class="link" href="https://spring.io/projects/spring-data-jdbc" target="_blank" rel="noopener"
 >Spring Data JDBC&lt;/a>というものも発表されています。Spring Data JPAとJDBCのAPIの間にはJPA + Hibernateという階層を経由することに比べ、Spring Data JDBCは直接JDBCのAPIを呼び出すことで性能面での利点があるらしいですね。他にも実装をより単純化することでJPAの持つ問題を解消しているらしいですね。例えばキャッシュやLazy Loadingをなくしたとか(JPAのメリットとして紹介しましたが…)&lt;/p>
 &lt;p>ただ、Spring Data JDBCは2018年にリリースされたばかりのものなので、クエリーメソッドだけでクエリーを自動生成してくれるなどの機能には対応してなかったり、テーブルやカラムの命名規則がJPAと違うなど、JPAからマイグレートするにはまだいろいろと考慮しなければならない点が多いように思われます。こういうところは、まるでNode.jsとDenoの関係みたいですね。&lt;/p>
 &lt;p>Spring Data JDBCは自分でもあまり詳しくなく、サンプルコードをみてテストしてみただけなのですが、すでにSpring Data JPAの経験がある人ならすぐにでも適応できそうな構成となっていました。パッケージは変わってもアノテーションやインタフェースそのものの使い方が大きく変わっている訳でもないので、感覚的には大差ありません。&lt;code>@Entity&lt;/code>のようなアノテーションを使う必要がなくなったというところが目立つくらいでした。なので、個人的なプロジェクトでは一度試してみるのも良いかもしれません。(エンタープライズレベルでは、まだ検証すべきところがあると思うので)&lt;/p>
 &lt;p>また、Spring 5からReactiveなプログラミングのできる&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/html/web-reactive.htm" target="_blank" rel="noopener"
 >Webflux&lt;/a>が紹介されたことと共に、同じくNon-blockingに対応する&lt;a class="link" href="https://spring.io/projects/spring-data-r2dbc" target="_blank" rel="noopener"
 >Spring R2DBC&lt;/a>というものも注目されているようです。既存のSpringプロジェクトにWebfluxを今すぐ導入する必要はないらしいのでSpring R2DBCも今すぐ導入する必要はないのかもしれませんが、Non-blockingによって性能を改善できる場合&lt;sup id="fnref:3">&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref">3&lt;/a>&lt;/sup>は確実に存在するので、場合によっては導入を考慮する価値があるのかもしれませんね。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>自分の場合、Springでアプリケーションを作りながらなるべく&lt;code>XML&lt;/code>を排除しJavaのコードだけで全てを管理したかったため、クエリーを自動生成してくれるというところで惹かれていましたが、実際に使ってみると使い方も簡単で(癖はあると思いますが)、テーブルが途中で変わっても簡単に直せるというところがかなり魅力的なものですね。占有率としては標準ということもあり、JPAが他のORMと比べよく使われているようですが、自分みたいにMyBatisしか扱ったことのない方には一度触れてみて損はないかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>自分の場合、Springでアプリケーションを作りながらなるべく&lt;code>XML&lt;/code>を排除しJavaのコードだけで全てを管理したかったため、クエリーを自動生成してくれるというところで惹かれていましたが、実際に使ってみると使い方も簡単で(癖はあると思いますが)、テーブルが途中で変わっても簡単に直せるというところがかなり魅力的なものですね。占有率としては標準ということもあり、JPAが他のORMと比べよく使われているようですが、自分みたいにMyBatisしか扱ったことのない方には一度触れてみて損はないかと思います。&lt;/p>
 &lt;p>JPAの他にも紹介したようにSpring Dataだけでもいろいろなライブラリが存在していてそれぞれの思想が違うので、やっと一つを少しわかったくらいではまだまだ先が遠いような気もしていますね。でもこうやって、一つのライブラリが作られた経緯や思想を調べるだけでも得られる知識は多く、どれも無駄にはならないと思われるくらい新鮮なものなので、意味のあることとなっていると思います。またこうやって情報を集めつつ、それが誰かにとっては貴重な情報になるといいですね。今後もいろいろ調べてブログに載せて行きます。では、また！&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>

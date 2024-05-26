@@ -4,21 +4,21 @@
 >Flutter&lt;/a>, &lt;a class="link" href="https://developer.android.com/jetpack/compose" target="_blank" rel="noopener"
 >Jetpack Compose&lt;/a>には少し触れたことがあったためSwiftUIで「画面を構成する方式」については少し理解しているつもりでした。しかし、やはりバックエンドでは存在しない機能がありました。&lt;/p>
 &lt;p>今回はそのSwiftUIの話となりますが、中でも私が注目した機能もしくは概念について述べたいと思います。&lt;/p>
-&lt;h2 id="swiftui">SwiftUI&lt;/h2>
-&lt;p>まずは、SwiftUIそのものに対して簡単に紹介しましょう。SwiftUIはいわゆる宣言型(Declarative)UIのフレームワークで、&lt;a class="link" href="https://ja.reactjs.org/" target="_blank" rel="noopener"
+&lt;h2 id="swiftui">SwiftUI
+&lt;/h2>&lt;p>まずは、SwiftUIそのものに対して簡単に紹介しましょう。SwiftUIはいわゆる宣言型(Declarative)UIのフレームワークで、&lt;a class="link" href="https://ja.reactjs.org/" target="_blank" rel="noopener"
 >React&lt;/a>や&lt;a class="link" href="https://vuejs.org/" target="_blank" rel="noopener"
 >Vue&lt;/a>などのフロントエンドからの影響が見えます。要するに、画面を構成する要素(Widget, Component, Materialなどフレームワークやライブラリによって呼び方は様々ですが)を一つのオブジェクトとして「宣言」し、それらの要素の組み合わせによって一つの画面を完成するという形になっているということです。このような宣言型UIはSwiftUIだけでなく、モバイルに限定してもReact NativeやFlutter、Jetpack Composeなど様々なフレームワークやライブラリで採択しているものでもあります。&lt;/p>
 &lt;p>そして、要素の実装についてもフレームワークやライブラリによって色々と方法が分かれますが、SwiftUIでは、個別の要素はViewといい、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/view" target="_blank" rel="noopener"
 >View&lt;/a>というprotocolをstructとして実装していきます。なので、一覧を表示する画面であれば、一つの行としてデータを表示するView、その行をリストとして表示するためのView、さらに一覧の上や下にメニューを表示するViewなどが一つ一つのstructとして定義されていく形ということです。&lt;/p>
 &lt;p>このような画面の作り方は、フレームワークのパラダイム・コンセプトとして決まってあるものなので、それに従って実装を進めることには私のようにバックグラウンドが全く違うエンジニアでも特に問題はないかなと思います。&lt;/p>
 &lt;p>ただ、実際のアプリを作るとしましょう。画面に対してはフレームワークで提示する通り要素を実装して作ったとしたら、アプリを実行してなんらかの処理を行うためにはバックエンドを繋げるか、アプリ内でなんらかの処理を行うかなど「ロジック」とつなげる必要があるはずです。ここで常にとは言い難いのですが、バックエンドでは見慣れない概念が出てくる場合があります。「状態」というものです。&lt;/p>
-&lt;h2 id="状態">状態&lt;/h2>
-&lt;p>バックエンドのアプリを実装している場合は、リクエストがあり、それに対してのレスポンス（HTTPステータスのみだとしても）がある、という明確なプロセスがありますね。この一連の処理には、「途中で変化する」という概念はありません。この場合のデータは永続化されるか、処理が終了するまでの一時的な物が多いです。&lt;/p>
+&lt;h2 id="状態">状態
+&lt;/h2>&lt;p>バックエンドのアプリを実装している場合は、リクエストがあり、それに対してのレスポンス（HTTPステータスのみだとしても）がある、という明確なプロセスがありますね。この一連の処理には、「途中で変化する」という概念はありません。この場合のデータは永続化されるか、処理が終了するまでの一時的な物が多いです。&lt;/p>
 &lt;p>しかし、画面の世界だと話は変わってきます。多くのモバイルアプリではスライダ、ボタン、テキストボックスなどいろいろな要素で構成されてあり、それらの要素に関する状態が常に変わってくるケースもあるのです。ファイルをダウンロードしている状態を表示するためのプログレスバーがあるとしたら、単純に進行状況を見せるとしたら一つのスレッドを割り当てて処理するだけで良いでしょう。&lt;/p>
 &lt;p>ここで一つ、もしダウンロードに「一時停止」のような機能があったらどうでしょうか。プロセスが進行中にボタンを押下したら止まり、再度押下したら再開されるような機能です。他にも色々と考慮すべきものはあるかと思いますが、この「停止している」「再開した」という概念をどこかに記憶しておく必要はあるでしょう。つまり、画面においてのユーザの入力に対して、なんらかの処理を実際に行うまで記憶しておくための機構が必要ということですね。&lt;/p>
 &lt;p>SwiftUIでももちろん、状態を管理するためのものがあります。ただ、ユースケースで考えると画面の要素(View)一つに限って必要なものか、それとも複数の要素において必要なものか、複数の画面（アプリ全体）にかけて必要なものかという、スコープによって必要な状態は違うものになります。View一つで必要なものをアプリ全体で管理する必要もなければ、複雑になりがちだからですね。なので、ここではそのスコープ別に状態を管理するためにどんなものがあるのかについて述べていきたいと思います。&lt;/p>
-&lt;h3 id="個別viewの状態">個別Viewの状態&lt;/h3>
-&lt;p>まずは最も小さい単位、Viewの場合です。先に述べた、一覧の画面が良い例になりそうですね。Appleのチュートリアルでは、以下のような一覧の画面を作ることになります。&lt;/p>
+&lt;h3 id="個別viewの状態">個別Viewの状態
+&lt;/h3>&lt;p>まずは最も小さい単位、Viewの場合です。先に述べた、一覧の画面が良い例になりそうですね。Appleのチュートリアルでは、以下のような一覧の画面を作ることになります。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list.webp"
 width="860"
 height="1756"
@@ -94,8 +94,8 @@ data-flex-basis="117px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように、一つのViewにおいて状態を管理するためには、&lt;code>@State&lt;/code>を使うことになります。&lt;/p>
-&lt;h3 id="親子関係のviewが共有する状態">親子関係のViewが共有する状態&lt;/h3>
-&lt;p>さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、&lt;/p>
+&lt;h3 id="親子関係のviewが共有する状態">親子関係のViewが共有する状態
+&lt;/h3>&lt;p>さて、一つのViewでの状態を管理することはできましたが、次に気になるのは複数のView、特に親子関係になるView間でどうやって状態を共有できるかです。たとえば先ほどの一覧画面だと、一つ一つの行がViewになっているものなのですが、&lt;/p>
 &lt;p>実は、親のViewから子Viewに状態を渡すというのは、すでに先ほどのコードに表れています。「お気に入りだけを表示するかどうか」のトグルがあるのですが、ここで&lt;code>isOn&lt;/code>に親の状態を渡していますね。ただ、トグル時の挙動を&lt;code>@State&lt;/code>で定義したBooleanと結びつけるために&lt;code>isOn&lt;/code>として渡す際、&lt;code>$&lt;/code>をつけることに注目する必要があります。&lt;code>$&lt;/code>をつけることで、Booleanではなく、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/binding" target="_blank" rel="noopener"
 >&lt;code>Binding&amp;lt;Boolean&amp;gt;&lt;/code>&lt;/a>という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
 >Toggle&lt;/a>の中でも親の状態を変更できるようになります。&lt;code>Toggle&lt;/code>は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である&lt;code>showFavoritesOnly&lt;/code>の値が変わるということです。&lt;/p>
@@ -120,8 +120,8 @@ data-flex-basis="117px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// テキストフィールドに状態を表示し、変化があった場合は状態を変更させる
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>TextField(&lt;span style="color:#66d9ef">value&lt;/span> = content, onValueChange = onValueChange)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやって他の要素に状態の変更を可能にするためには、基本的にその状態をラップしているオブジェクトを利用するという考えは、SwiftUIでもJetpack Composeでも一緒のようです。ただ、&lt;code>$&lt;/code>というキーワードを使ってラッパーにアクセスできるSwiftと、状態のオブジェクトをどうやって宣言するかを考える必要のあるKotlinの違いがまた面白いポイントです。&lt;/p>
-&lt;h3 id="アプリ全体で共有する状態">アプリ全体で共有する状態&lt;/h3>
-&lt;p>さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかもしれません。&lt;/p>
+&lt;h3 id="アプリ全体で共有する状態">アプリ全体で共有する状態
+&lt;/h3>&lt;p>さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかもしれません。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu.webp"
 width="732"
 height="1466"
@@ -224,8 +224,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 状態の定義
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">val&lt;/span> appState = rememberApplicationState()
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="永続化できる状態">永続化できる状態&lt;/h3>
-&lt;p>今までの状態は、アプリが実行中のみ有効なものでした。それだけでも十分な場合もありますが、場合によっては状態を永続化したい場合もあるでしょう。例えば、学習用のアプリだとしたらどこまで進行したかなどを保存しておきたいかなと思います。このような種のデータは、アプリを再起動しても変わらないことを期待しますね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="永続化できる状態">永続化できる状態
+&lt;/h3>&lt;p>今までの状態は、アプリが実行中のみ有効なものでした。それだけでも十分な場合もありますが、場合によっては状態を永続化したい場合もあるでしょう。例えば、学習用のアプリだとしたらどこまで進行したかなどを保存しておきたいかなと思います。このような種のデータは、アプリを再起動しても変わらないことを期待しますね。&lt;/p>
 &lt;p>もちろん、この場合のためにDBがあり、ネットワーク機能のあるアプリならサーバ側にデータを保存したりするでしょう。ただ、この場合は「状態」とは言えないものですね。なぜなら、状態は画面の更新を伴うものだからです。画面をタッチした回数を、画面に表示しながら同時に保存しておきたい場合は毎回DBの更新と参照で実装したくない場合もあるかなと思います。そこで使えるのが、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/appstorage" target="_blank" rel="noopener"
 >@AppStorage&lt;/a>です。これを使うことで、画面の更新と永続化を同時に行うことができます。&lt;/p>
 &lt;p>また、チュートリアルによると、いくつかデフォルトとして保存されているデータに関してもこのアノテーションでアクセスできるようにになっています。一覧画面に表示される「お気に入り」ボタンの例ですが、ボタンのアイコンを&lt;code>@AppStorage&lt;/code>から参照するようになっています。コードは以下です。（一部省略）&lt;/p>
@@ -234,8 +234,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> @AppStorage(&lt;span style="color:#e6db74">&amp;#34;Favorite.iconType&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">var&lt;/span> iconType: IconType = .heart
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>いかがでしたか。自分の感想としては、やはり今まで自分が触れてきた分野とは全く違う概念やアプローチが多かったので、大変興味深いと思いつつ、「これであっているのか」という疑問もかなり湧いてくるような経験となっています。全く経験のない分野に足を踏み入れるのは常にそういうものなのかもしれませんが。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>いかがでしたか。自分の感想としては、やはり今まで自分が触れてきた分野とは全く違う概念やアプローチが多かったので、大変興味深いと思いつつ、「これであっているのか」という疑問もかなり湧いてくるような経験となっています。全く経験のない分野に足を踏み入れるのは常にそういうものなのかもしれませんが。&lt;/p>
 &lt;p>ただこれで、ある程度アプリを作る場合にどうやって処理を行うべきかについての疑問の一つは解けたような気がします。本当は画面を作る分、他にも色々と新しい概念が出てきたり、画面のレイアウトやUXの観点で色々と難しいものが出てくるかもしれませんが、とにかく「動く」ものを作れそうな気はしますね。何卒自分のようにバックエンドのみを経験してきた形にとって参考できるような記事となっていればと思います。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>SwiftUIを触ってみた〜その1〜</title><link>https://retheviper.github.io/posts/swift-ui-first-impression-1/</link><pubDate>Sun, 31 Jul 2022 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/swift-ui-first-impression-1/</guid><description>&lt;img src="https://retheviper.github.io/images/swift.jpg" alt="Featured image of post SwiftUIを触ってみた〜その1〜" />&lt;p>今までの自分のキャリアを振り返ってみると、仕事としての経験はバックエンドばかりで、画面側の実装にはあまり関わったことがありません。しかし、スタンドアロンのアプリを作るためには、ウェブ・モバイル・デスクトップを問わず画面が必要となるので、いつかは画面側の実装もできるようになる必要があるかなと常に思っているところです。&lt;/p>
 &lt;p>画面を作るといっても、どんな分野のエンジニアとしてキャリアパスを考えているか、どのような企業で働きたいか、慣れている言語は何であるかなど色々と考慮すべき要素は多いのですが、自分の場合はKotlinに慣れているのもあり、ウェブ・モバイル・デスクトップアプリに全部対応できるという点から&lt;a class="link" href="https://www.jetbrains.com/lp/compose-mpp" target="_blank" rel="noopener"
@@ -243,14 +243,14 @@ data-flex-basis="119px"
 >SwiftUI&lt;/a>を勉強したいと思っています。&lt;/p>
 &lt;p>さて、言語とフレームワークを決めてからは実践ですね。&lt;a class="link" href="https://developer.apple.com/tutorials/swiftui" target="_blank" rel="noopener"
 >公式のチュートリアル&lt;/a>が充実していたので、まずはこちらの方をすすめながら感じたSwiftやSwiftUIで印象的だった部分についてまとめてみたいと思います。もちろん、自分は仕事としてモバイルアプリの実装に関わったことがないのでコンテンツとしては粗末なものとなるかなと思いますが、もし自分のようにKotlinのバックグラウンドからSwiftに触れてみようと思っている方や、バックエンドのみのキャリアからGUIに初めて触れる方、もしくはKotlinとSwiftのどちらかに興味を持っている方には参考になる内容となればと思います。&lt;/p>
-&lt;h2 id="swift">Swift&lt;/h2>
-&lt;p>まずは言語そのものから。KotlinとSwiftはよく似ているという話を聞くことがありますが、正確に「どこが」というのはやはり触れてみる前はわからないものです。似ているという表現は共通点があるという意味なので、何に基準を置くかによって挙げられる共通点は色々と変わってくるものだからです。&lt;/p>
+&lt;h2 id="swift">Swift
+&lt;/h2>&lt;p>まずは言語そのものから。KotlinとSwiftはよく似ているという話を聞くことがありますが、正確に「どこが」というのはやはり触れてみる前はわからないものです。似ているという表現は共通点があるという意味なので、何に基準を置くかによって挙げられる共通点は色々と変わってくるものだからです。&lt;/p>
 &lt;p>例えば、言語デザインの観点でOOP志向的で、関数型的な要素があり、GCが存在する、ということでも共通点は発見できます。もしくは、言語の使用としてキーワードや書き方の印象が似ているという意味にもなれますね。細かくは、セミコロンを使わなくて良いという点も挙げられますね。&lt;/p>
 &lt;p>なので、まずは上記のチュートリアルを進行しながら、肌で感じた感覚から、Kotlinに比べたSwiftはどのようなものだったかを述べていきたいと思います。&lt;/p>
-&lt;h3 id="kotlinに似ているもの">Kotlinに似ているもの&lt;/h3>
-&lt;p>では、まずKotlinに似ているなと感じたところから述べていきます。似ているとしても、あくまで「肌の感触」なものなので、厳密には違う仕様になっているものも多いのですが、ここでの基準は「Kotlinでできたことをどれほど近い感覚で再現できるか」となっていますので（といっても個人的な感想ですが）、参考までに。&lt;/p>
-&lt;h4 id="computed-properties">Computed properties&lt;/h4>
-&lt;p>まず、プロパティの話からです。Kotlinではdata classを定義するとき、プロパティを以下のような二つの方法で定義することができます。&lt;/p>
+&lt;h3 id="kotlinに似ているもの">Kotlinに似ているもの
+&lt;/h3>&lt;p>では、まずKotlinに似ているなと感じたところから述べていきます。似ているとしても、あくまで「肌の感触」なものなので、厳密には違う仕様になっているものも多いのですが、ここでの基準は「Kotlinでできたことをどれほど近い感覚で再現できるか」となっていますので（といっても個人的な感想ですが）、参考までに。&lt;/p>
+&lt;h4 id="computed-properties">Computed properties
+&lt;/h4>&lt;p>まず、プロパティの話からです。Kotlinではdata classを定義するとき、プロパティを以下のような二つの方法で定義することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Student&lt;/span>(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> age: Int
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) {
@@ -268,8 +268,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>まだ一つしたあげてないのですが、これだけでもなんとなく「KotlinとSwiftが似ている」の意味が少しは見えてきた気がしますね。処理を伴うプロパティを扱える、という仕様がそうですが、型の定義もそうで、キーワードは少し違うけど大体似たような感覚でコードが読めるというところがそうです。&lt;/p>
 &lt;p>ただ、やはり違う部分もありますね。data classに対して、SwiftはGoやRustのようにstructを使えるというところがそうかなと思います。もちろんSwiftにもClassはあるので、目的によってどれかを選ぶようになるらしいです。という面では、またなんとなくKotlinでdata classとclassを分けて使うという点と似ているような気もしますね。&lt;/p>
-&lt;h4 id="extension">Extension&lt;/h4>
-&lt;p>次は、拡張です。Kotlinではオブジェクトについて、そのオブジェクトの外にメソッドやプロパティを定義することができますね。これらを拡張関数や拡張プロパティと呼び、以下のように定義することができます。&lt;/p>
+&lt;h4 id="extension">Extension
+&lt;/h4>&lt;p>次は、拡張です。Kotlinではオブジェクトについて、そのオブジェクトの外にメソッドやプロパティを定義することができますね。これらを拡張関数や拡張プロパティと呼び、以下のように定義することができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> Student.isUnderAge: Boolean
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">get&lt;/span>() = age &amp;lt; &lt;span style="color:#ae81ff">18&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以前このブログでも述べたことのある&lt;a class="link" href="https://www.amazon.co.jp/dp/B08WXCRVD2/ref=dp-kindle-redirect?_encoding=UTF8&amp;amp;btkr=1" target="_blank" rel="noopener"
@@ -283,8 +283,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のようにSwiftには&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Extensions.html" target="_blank" rel="noopener"
 >Extension&lt;/a>が別途キーワードとして存在していて、新しくclassやstructを定義するかのような感覚で関数やプロパティを付け加えることができます。個人的な感想としてはRustの&lt;a class="link" href="https://doc.rust-jp.rs/book-ja/ch05-03-method-syntax.html" target="_blank" rel="noopener"
 >メソッド&lt;/a>と似ている形で、一つの&lt;code>extension&lt;/code>の中にまとめられるところがむしろKotlinより整頓された感覚なので良さげですね。Kotlinの場合、一つのオブジェクトに対しての拡張が複数あると少し汚くも見えるので…&lt;/p>
-&lt;h4 id="string-interpolation">String Interpolation&lt;/h4>
-&lt;p>Javaの場合でもそうで、多くの言語では文字列と、違う変数として格納してある値を一つの文字列にまとめる場合は&lt;code>format()&lt;/code>を使うか、文字列に変換して結合するケースが多いかなと思います。Kotlinでもそのような使い方はもちろんできますが、&lt;a class="link" href="https://kotlinlang.org/docs/basic-types.html#string-templates" target="_blank" rel="noopener"
+&lt;h4 id="string-interpolation">String Interpolation
+&lt;/h4>&lt;p>Javaの場合でもそうで、多くの言語では文字列と、違う変数として格納してある値を一つの文字列にまとめる場合は&lt;code>format()&lt;/code>を使うか、文字列に変換して結合するケースが多いかなと思います。Kotlinでもそのような使い方はもちろんできますが、&lt;a class="link" href="https://kotlinlang.org/docs/basic-types.html#string-templates" target="_blank" rel="noopener"
 >String template&lt;/a>があるので、簡単に文字列の中で違う値を埋め込むことができます。例えば以下のようなものですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> world = &lt;span style="color:#e6db74">&amp;#34;World&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>println(&lt;span style="color:#e6db74">&amp;#34;Hello, &lt;/span>&lt;span style="color:#e6db74">$world&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
@@ -292,8 +292,8 @@ data-flex-basis="119px"
 >String Interpolation&lt;/a>があるので、同じことができます。少し書き方が変わっているのですが、機能的にはほぼ一緒です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">let&lt;/span> world = &lt;span style="color:#e6db74">&amp;#34;World&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">&amp;#34;Hello, &lt;/span>&lt;span style="color:#e6db74">\(&lt;/span>world&lt;span style="color:#e6db74">)&lt;/span>&lt;span style="color:#e6db74">!&amp;#34;&lt;/span>)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="arguments">Arguments&lt;/h4>
-&lt;p>Kotlinでは、関数のパラメータにデフォルト値を設定することで、簡単にオーバーロードを実現でき、そのパラメータが渡されてない場合の処理にも対応できます。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="arguments">Arguments
+&lt;/h4>&lt;p>Kotlinでは、関数のパラメータにデフォルト値を設定することで、簡単にオーバーロードを実現でき、そのパラメータが渡されてない場合の処理にも対応できます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// timesに指定した数値分、stringを標準出力する
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">printHello&lt;/span>(string: String, times: Int = &lt;span style="color:#ae81ff">1&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> repeat(times) {
@@ -334,8 +334,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>printHello(&lt;span style="color:#e6db74">&amp;#34;world&amp;#34;&lt;/span>) &lt;span style="color:#75715e">// stringを省略&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>関数を定義する側からしたらあまり似ていないような気もするのですが、呼び出す側としてはかなり似たような形でコードが書けるのが特徴的かなと思います。&lt;/p>
-&lt;h4 id="range">Range&lt;/h4>
-&lt;p>Kotlinでは&lt;a class="link" href="https://kotlinlang.org/docs/ranges.html#:~:text=values%20using%20the-,rangeTo%28%29,-function%20from%20the" target="_blank" rel="noopener"
+&lt;h4 id="range">Range
+&lt;/h4>&lt;p>Kotlinでは&lt;a class="link" href="https://kotlinlang.org/docs/ranges.html#:~:text=values%20using%20the-,rangeTo%28%29,-function%20from%20the" target="_blank" rel="noopener"
 >rangeTo()&lt;/a>を使って、簡単に数値の範囲を定義することができます。この関数は&lt;a class="link" href="https://kotlinlang.org/docs/keyword-reference.html#operators-and-special-symbols" target="_blank" rel="noopener"
 >operator&lt;/a>として定義されているので、&lt;code>..&lt;/code>で簡単に使えます。こうやって定義したRangeでは、最小値と最大値の取得や、Listに変換するなど色々なことができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Rangeの定義
@@ -366,10 +366,10 @@ data-flex-basis="119px"
 &lt;p>しかし、Swiftの&lt;a class="link" href="https://developer.apple.com/documentation/swift/range" target="_blank" rel="noopener"
 >Range&lt;/a>は&lt;code>Range&amp;lt;Bound&amp;gt;&lt;/code>という型で、当然Rangeから取得できる最小値や最大値も&lt;a class="link" href="https://developer.apple.com/documentation/swift/rangeexpression/bound/" target="_blank" rel="noopener"
 >Bound&lt;/a>の型となっています。IntやLongとはまた別の型になるので、場合によっては注意して使う必要があるかもしれません。&lt;/p>
-&lt;h3 id="swiftだけのもの">Swiftだけのもの&lt;/h3>
-&lt;p>今まではKotlinユーザの観点から、Kotlinとどれだけ同じ感覚でコードを書けるか、ということを述べていましたが、ここからは少し間隔が違うなと思ったところを少しまとめてみようと思います。&lt;/p>
-&lt;h4 id="メソッドプロパティコールでの省略">メソッド・プロパティコールでの省略&lt;/h4>
-&lt;p>Kotlinでは、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html" target="_blank" rel="noopener"
+&lt;h3 id="swiftだけのもの">Swiftだけのもの
+&lt;/h3>&lt;p>今まではKotlinユーザの観点から、Kotlinとどれだけ同じ感覚でコードを書けるか、ということを述べていましたが、ここからは少し間隔が違うなと思ったところを少しまとめてみようと思います。&lt;/p>
+&lt;h4 id="メソッドプロパティコールでの省略">メソッド・プロパティコールでの省略
+&lt;/h4>&lt;p>Kotlinでは、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html" target="_blank" rel="noopener"
 >apply()&lt;/a>のように自分自身を指しているのが明確な場合、&lt;code>this&lt;/code>を省略することができます。以下のようにですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Student&lt;/span>(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> name: String,
@@ -396,8 +396,8 @@ data-flex-basis="119px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> showFavoritesOnly ? &lt;span style="color:#e6db74">&amp;#34;Favorite &lt;/span>&lt;span style="color:#e6db74">\(&lt;/span>title&lt;span style="color:#e6db74">)&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span> : title
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="protocol">Protocol&lt;/h4>
-&lt;p>Swiftでは&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Protocols.html" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="protocol">Protocol
+&lt;/h4>&lt;p>Swiftでは&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Protocols.html" target="_blank" rel="noopener"
 >Protocol&lt;/a>というものがあり、JavaやKotlinのinterfaceと大体同じ感覚で使えます。ここまでだとあまり差はないように思いますが、実際にはstructやclass、enumなどを定義するときには、必要に応じでprotocolを採用(adopt)する必要があるというところが体験できる違いかなと思います。&lt;/p>
 &lt;p>例えば、Kotlinで一つのdata classを定義するとしたら、以下のようなメンバが自動て追加されます。&lt;/p>
 &lt;ul>
@@ -415,8 +415,8 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 >CaseIterable&lt;/a>、同一化を比較したい場合は&lt;a class="link" href="https://developer.apple.com/documentation/swift/equatable" target="_blank" rel="noopener"
 >Equatable&lt;/a>を採用するなどです。&lt;/p>
 &lt;p>もちろんJavaやKotlinでも必要に応じてintefaceやannotationを使う必要はありますが、SwiftだとKotlinで気軽に使える機能がstructやclassなどを定義した時点では揃ってない可能性があるので、ここは気をつけるべきところですね。&lt;/p>
-&lt;h4 id="some">some&lt;/h4>
-&lt;p>Swiftでは少し変わった感覚のキーワードがあるます。そのキーワードの説明するために、まずは以下のようなprotocolとstructの定義があるとしましょう。&lt;/p>
+&lt;h4 id="some">some
+&lt;/h4>&lt;p>Swiftでは少し変わった感覚のキーワードがあるます。そのキーワードの説明するために、まずは以下のようなprotocolとstructの定義があるとしましょう。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">protocol&lt;/span> &lt;span style="color:#a6e22e">Something&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">func&lt;/span> &lt;span style="color:#a6e22e">define&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -436,8 +436,8 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;p>つまり、&lt;code>some&lt;/code>はとあるprotocolを満足する何かしらのインスタンスを示すものです。Swiftではそれを満足するオブジェクトであってもprotocolを直接変数の型や関数の戻り値として定義して直接使うことはできない場合があります。その場合に&lt;code>some&lt;/code>を使うことで問題を回避できます。JavaやKotlinでinterfaceを使って、その具体的な実装は問わなく使うのと一緒だと言えます。このキーワードのおかげで、SwiftUIでは&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/view" target="_blank" rel="noopener"
 >View&lt;/a>を満足して入れば画面を構成するどんなコンポーネントとして扱えるようになります。&lt;/p>
 &lt;p>ただ、interfaceを扱うのとは概念的に同じだとしても、コードを書く側の感覚としては全く違うのでここは注意しなければならないと思います。&lt;/p>
-&lt;h4 id="compiler-control-statements">Compiler Control Statements&lt;/h4>
-&lt;p>Swiftには&lt;a class="link" href="https://docs.swift.org/swift-book/ReferenceManual/Statements.html#ID538" target="_blank" rel="noopener"
+&lt;h4 id="compiler-control-statements">Compiler Control Statements
+&lt;/h4>&lt;p>Swiftには&lt;a class="link" href="https://docs.swift.org/swift-book/ReferenceManual/Statements.html#ID538" target="_blank" rel="noopener"
 >Compiler Control Statements&lt;/a>という仕様があり、コンパイル時の処理を指定できます。例えば、SwiftUIのチュートリアルでは一つのアプリを実装して、OSによって違う機能を実現するためにこれを利用しているケースがあります。以下がその例です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-swift" data-lang="swift">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// watchOSで起動する場合は、通知を使う&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#if&lt;/span> &lt;span style="color:#75715e">os&lt;/span>(&lt;span style="color:#75715e">watchOS&lt;/span>)
@@ -451,7 +451,7 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">#endif&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Kotlinの場合もAndroidでアプリを実装する場合はこのような設定が必要になる場面もあるかもしれませんが、バックエンドの経験上ではコードによりコンパイラをコントロールするというケースはあまりなかったので、かなり新鮮な感覚でした。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>いかがでしたか。SwiftUIの話をするつもりが、Swiftのことだけでかなりの量になってしまったので、SwiftUIについては次のポストで述べようかなと思っています。しかし、Swiftだけでもかなり興味深いところが多かったので、やはりチュートリアルを触ってみて色々な経験ができたので良い選択をしたかなと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>いかがでしたか。SwiftUIの話をするつもりが、Swiftのことだけでかなりの量になってしまったので、SwiftUIについては次のポストで述べようかなと思っています。しかし、Swiftだけでもかなり興味深いところが多かったので、やはりチュートリアルを触ってみて色々な経験ができたので良い選択をしたかなと思います。&lt;/p>
 &lt;p>また、やはりKotlinとSwiftがなんとなく似ている部分があるのは感覚的には確かなので、やはりどちらかの経験があると残りの片方への入門もしやすくなるのかなという感覚はあります。これは外国語の教育（自分の専攻です）でいうスキーマ、いわゆるバックグラウンドの知識ある故のことだろうなと思うと、少しうれしくもなりますね。やはりKotlinやってよかったなと思います。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

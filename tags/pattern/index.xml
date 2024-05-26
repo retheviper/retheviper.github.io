@@ -5,8 +5,8 @@
 >AWS SDK&lt;/a>を使うと簡単に実装ができます。事実、こちらの昨日もアップロード先のパスとファイルだけあれば良いものとなっているので、実装というまででもないですね。&lt;/p>
 &lt;p>ただ、この機能が呼び出されたとき、渡されたアップロード先のパスが「正しいもの」であるかを確認する必要がありました。つまり、業務上ファイルをS3に格納する際に決まったパスのルールがあって、この機能からはパラメータとして渡されたパスが規定のパターンと一致するかどうかを一度チェックする必要がありました。&lt;/p>
 &lt;p>渡されたパスが「正しいもの」かどうかをチェックするための機能は、何で作ったら良いでしょうか。そしてどう作った方が良いでしょうか。色々な方法があるかと思いますが、まずここでは自分がどう実装したかを紹介していきたいと思います。&lt;/p>
-&lt;h2 id="文字列のパターンは正規表現で">文字列のパターンは正規表現で&lt;/h2>
-&lt;p>まず、ファイルのアップロード先(保存先)パスは文字列であり、特定のパターンである必要があります。文字列が特定のパターンで構成されているかどうかの判定は、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE" target="_blank" rel="noopener"
+&lt;h2 id="文字列のパターンは正規表現で">文字列のパターンは正規表現で
+&lt;/h2>&lt;p>まず、ファイルのアップロード先(保存先)パスは文字列であり、特定のパターンである必要があります。文字列が特定のパターンで構成されているかどうかの判定は、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE" target="_blank" rel="noopener"
 >正規表現&lt;/a>を使いますね。なので、「正しいもの」としてのパスのパターンは、正規表現としてあらかじめ宣言しておいて、渡されたパラメータがそれと一致するかをチェックすることとします。ただ、Javaでは正規表現を使って文字列のパターンを判定する方法がいくつかありますので、それらのうちにどれを選ぶべきかを考える必要があります。例えば、以下の方法がありますね。&lt;/p>
 &lt;ol>
 &lt;li>&lt;code>Pattern.matches()&lt;/code>を使う&lt;/li>
@@ -37,8 +37,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// String.matches()を使う場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">boolean&lt;/span> stringMatches &lt;span style="color:#f92672">=&lt;/span> value.&lt;span style="color:#a6e22e">matches&lt;/span>(patternRegex);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;code>Matcher&lt;/code>や&lt;code>Predicate&lt;/code>を使う場合、部分一致を選べられるので、部分一致の場合はこれらを使うしかなさそうです。しかし、完全一致が必要な場合は何を基準に、どれを選ぶべきでしょうか。どれも同じような結果を出すのであれば、より効率的な方法を選びたくなります。そして、この場合、考えられるのは性能です。つまり、どれを使った時にもっとも早く判定の結果を得られるかということです。&lt;/p>
-&lt;h2 id="どれも同じなら性能で">どれも同じなら性能で&lt;/h2>
-&lt;p>前述の通り、文字列が与えられた正規表現のパターンと一致するかどうかを判断する様々な方法があるので、中でももっとも早いのはどれか、測定したいと思います。いわゆるストップウォッチ方式(処理終了時点の時間から、処理開始時点の時間を引く)が簡単ですが、より正確な比較がしたかったためOpenjdkから提供する&lt;a class="link" href="https://openjdk.java.net/projects/code-tools/jmh" target="_blank" rel="noopener"
+&lt;h2 id="どれも同じなら性能で">どれも同じなら性能で
+&lt;/h2>&lt;p>前述の通り、文字列が与えられた正規表現のパターンと一致するかどうかを判断する様々な方法があるので、中でももっとも早いのはどれか、測定したいと思います。いわゆるストップウォッチ方式(処理終了時点の時間から、処理開始時点の時間を引く)が簡単ですが、より正確な比較がしたかったためOpenjdkから提供する&lt;a class="link" href="https://openjdk.java.net/projects/code-tools/jmh" target="_blank" rel="noopener"
 >JMH&lt;/a>を使ってベンチマークを作りました。Java特有の起動が遅い問題で測定に影響が出るのを防ぐためか、何回かのウォーミングアップも含めて測定をしてくれるので、良いですね。&lt;/p>
 &lt;p>実際にベンチマークを行うため使ったコードは、以下の通りです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">RegexTest&lt;/span> {
@@ -121,8 +121,8 @@ RegexTest.stringMatches thrpt 25 0.609 ± 0.005 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> Pattern.&lt;span style="color:#a6e22e">matches&lt;/span>(regex, &lt;span style="color:#66d9ef">this&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これもまた、単に&lt;code>Pattern.matches()&lt;/code>を呼び出しているだけなので、遅いわけですね。ただ一つ違う点は、比較対象となる自分自身のインスタンスが必要なため、&lt;code>Pattern&lt;/code>とは違ってstaticメソッドではないというところといえますが、これは性能に影響する部分ではないので、ベンチマークでも誤差範囲の中の結果となったと思います。&lt;/p>
-&lt;h2 id="実際のvalidatorを作る">実際のValidatorを作る&lt;/h2>
-&lt;p>では、性能で&lt;code>Matcher&lt;/code>と&lt;code>Predicate&lt;/code>が有利であるということがわかったので、あとはこれを利用して、渡されたパスが許容できるものかどうかを判定するValidatorを作ります。今の案件ではJava 11を使うので、&lt;code>Predicate&lt;/code>を選びました。&lt;/p>
+&lt;h2 id="実際のvalidatorを作る">実際のValidatorを作る
+&lt;/h2>&lt;p>では、性能で&lt;code>Matcher&lt;/code>と&lt;code>Predicate&lt;/code>が有利であるということがわかったので、あとはこれを利用して、渡されたパスが許容できるものかどうかを判定するValidatorを作ります。今の案件ではJava 11を使うので、&lt;code>Predicate&lt;/code>を選びました。&lt;/p>
 &lt;p>パスのパターンは複数あるので、配列やリストとしてパターンを指定して起きます。また、&lt;code>Predicate&lt;/code>で判定するので、あらかじめ指定したパターンでインスタンスを作成しておいて、判定が必要なときはパターンの配列やリストをループさせて、一致するものがあるかどうかを返すと良いでしょう。この要件から、実際のコードは以下のようになりました(パスの正規表現は、実際の業務とは違うものとなっていますが)。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@NoArgsConstructor&lt;/span>(access &lt;span style="color:#f92672">=&lt;/span> AccessLevel.&lt;span style="color:#a6e22e">PRIVATE&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">StorageValidator&lt;/span> {
@@ -159,8 +159,8 @@ RegexTest.stringMatches thrpt 25 0.609 ± 0.005 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上で、渡されたパスが想定のパターンと一致するものかどうか判定することができるようになりました。簡単ですね。&lt;/p>
-&lt;h3 id="番外kotlinで書いてみたら">番外：Kotlinで書いてみたら？&lt;/h3>
-&lt;p>今回のポストの内容とはあまり関係のないものですが、ちょっとした興味本位から、Javaで作成したValidatorをKotlinのコードに変えてみました。幸い、intellijには、Javaで書かれたコードをKotlinに変えてくれる便利な機能がありますので簡単にできます。そもそもKotlinを作ったのがJetbrain社なので、Kotlinを普及するための機能であるとは思いますが、おかげでJavaプログラマがKotlinに入門するのも簡単になりますね。&lt;/p>
+&lt;h3 id="番外kotlinで書いてみたら">番外：Kotlinで書いてみたら？
+&lt;/h3>&lt;p>今回のポストの内容とはあまり関係のないものですが、ちょっとした興味本位から、Javaで作成したValidatorをKotlinのコードに変えてみました。幸い、intellijには、Javaで書かれたコードをKotlinに変えてくれる便利な機能がありますので簡単にできます。そもそもKotlinを作ったのがJetbrain社なので、Kotlinを普及するための機能であるとは思いますが、おかげでJavaプログラマがKotlinに入門するのも簡単になりますね。&lt;/p>
 &lt;p>&lt;code>static final&lt;/code>なフィールドをKotlinでは&lt;code>companion object&lt;/code>として扱うことになるらしく、コード自体はそう変わらない感覚です。ただ、Kotlinでは&lt;code>stream()&lt;/code>を呼び出さなくてもCollectionから直接呼び出すことのできるメソッド(&lt;code>any&lt;/code>)があったり、&lt;code>List.of()&lt;/code>も&lt;code>listOf()&lt;/code>で代替できるのですが、自動変換ではそこまでしてくれなかったので、そういうところ自分で変えるしかないです。それで完成したコードは、以下の通りです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">StorageValidator&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -181,8 +181,8 @@ RegexTest.stringMatches thrpt 25 0.609 ± 0.005 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">PATH_PATTERN_UPLOAD&lt;/span>.any { predicate &lt;span style="color:#f92672">-&amp;gt;&lt;/span> predicate.test(path) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>本当は、正規表現を使って文字列がパターンと一致するかどうかを判定する、という機能を作るのはそう難しいことではないですね。どちらかというと、正規表現そのものの書き方が難しいのでは、と思います。ただ、最近は&lt;a class="link" href="https://regexr.com" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>本当は、正規表現を使って文字列がパターンと一致するかどうかを判定する、という機能を作るのはそう難しいことではないですね。どちらかというと、正規表現そのものの書き方が難しいのでは、と思います。ただ、最近は&lt;a class="link" href="https://regexr.com" target="_blank" rel="noopener"
 >RegExr&lt;/a>、&lt;a class="link" href="https://www.regextester.com" target="_blank" rel="noopener"
 >RegEx Testing&lt;/a>、&lt;a class="link" href="https://regex101.com" target="_blank" rel="noopener"
 >regular expressions 101&lt;/a>など、その場で入力した正規表現をテストしながら作成できるオンラインのツールなども多いので、じっくり時間をかけるといくらでも必要なパターンに合わせたものを作ることができると思います。&lt;/p>

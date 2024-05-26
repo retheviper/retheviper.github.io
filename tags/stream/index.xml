@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Stream on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/stream/</link><description>Recent content in Stream on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 13 Jun 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/stream/index.xml" rel="self" type="application/rss+xml"/><item><title>Sequenceは常にいいか</title><link>https://retheviper.github.io/posts/kotlin-collection-and-sequence/</link><pubDate>Sun, 13 Jun 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-collection-and-sequence/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Sequenceは常にいいか" />&lt;p>とある処理を書く方法が色々ある場合は、どれを選んだ方がもっとも良いかと悩ましくなります。こういう場合は、コードの読みやすさやコードの長さ、予想される問題のようなさまざまな観点からそれぞれの方式を比較してどれを選ぶか判断することになりますね。ただ、このような観点から判断するのは多くの場合「書き方が全く違う」場合に有効であって、そもそも似たようなコードを書くことになる場合は他の観点からも考える必要があります。ほんの少しだけ違うから、見た目だけでは違いがわからない場合。こういう時はそのAPIの内部、メカニズムからちゃんと考えて選ぶ必要がありますね。&lt;/p>
 &lt;p>そういう意味で、今回はKotlinのCollectionの処理に使える方法の二つ、「Collectionのoperation直接使う」場合と「Sequenceに変換してから処理する」場合の違いに関して述べたいと思います。&lt;/p>
-&lt;h2 id="処理方式の違い">処理方式の違い&lt;/h2>
-&lt;p>Javaでは、Collectionの要素を持って処理をする方法は色々とありますが、大きく分けて1.8以前の方法(&lt;code>for&lt;/code>や&lt;code>while&lt;/code>などを利用したループ)と1.8以降の方法(&lt;code>Stream&lt;/code>を使った方法)があると言ってもいいのではないかと思います。この二つの方法はそもそもベースとなっているパラダイムそのものが違うので、コードを書くスタイルから大きく違います。例えば同じ処理をしたい場合でも、以下のコードで確認できるように、見た目が完全に違います。&lt;/p>
+&lt;h2 id="処理方式の違い">処理方式の違い
+&lt;/h2>&lt;p>Javaでは、Collectionの要素を持って処理をする方法は色々とありますが、大きく分けて1.8以前の方法(&lt;code>for&lt;/code>や&lt;code>while&lt;/code>などを利用したループ)と1.8以降の方法(&lt;code>Stream&lt;/code>を使った方法)があると言ってもいいのではないかと思います。この二つの方法はそもそもベースとなっているパラダイムそのものが違うので、コードを書くスタイルから大きく違います。例えば同じ処理をしたい場合でも、以下のコードで確認できるように、見た目が完全に違います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// forループの場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">filterEven&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> list &lt;span style="color:#f92672">=&lt;/span> List.&lt;span style="color:#a6e22e">of&lt;/span>(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
@@ -39,13 +39,13 @@
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">filterEvenStream&lt;/span>(): List&amp;lt;String&amp;gt; = listOf(&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">6&lt;/span>, &lt;span style="color:#ae81ff">7&lt;/span>, &lt;span style="color:#ae81ff">8&lt;/span>, &lt;span style="color:#ae81ff">9&lt;/span>, &lt;span style="color:#ae81ff">10&lt;/span>).stream().filter { &lt;span style="color:#66d9ef">it&lt;/span> %&lt;span style="color:#ae81ff">2&lt;/span> &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span> }.map { &lt;span style="color:#66d9ef">it&lt;/span>.toString() }.limit(&lt;span style="color:#ae81ff">3&lt;/span>).collect(&lt;span style="color:#a6e22e">Collectors&lt;/span>.toList())
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>上記のコードは見た目ではあまり違いがわからないですね。処理やロジックが大きく変わる訳でもありません。使い方があまり変わらなく、結果としても同じようなものを期待できるとしたら、やはり次に気にすべきは「性能」ではないかと思います。特にCollectionよりもSequenceの方がより性能がいいという話もありますので、それならなるべくSequenceを使った方が絶対良いはずですね。&lt;/p>
 &lt;p>しかし、それを事実と受け止めるとしたら、いくつかの疑問が残ります。常にSequenceの方が性能で有利だとしたら、なぜCollectionからFunctional functionを呼び出す時は内部でSequenceに変換するようにするのでなく、わざわざ&lt;code>asSequence()&lt;/code>を呼び出して明示的な変換をさせるのでしょうか？もしくはなぜCollectionでもFunctional functionを呼び出せるようにしているのでしょうか？これはつまり、SequenceがCollectionよりも性能がよくなるのは「とある条件下に限る」ということではないでしょうか。なので、今回は主に性能の観点から、CollectionとSequenceの違いについて述べましょう。&lt;/p>
-&lt;h3 id="lazy-evaluation">Lazy evaluation&lt;/h3>
-&lt;p>KotlinのSequenceは、元々JavaのStreamと同じ名前になる予定だったそうです。これはただの偶然ではなく、実際の処理もStreamに似ているからです。何が似ているかというと、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E9%81%85%E5%BB%B6%E8%A9%95%E4%BE%A1" target="_blank" rel="noopener"
+&lt;h3 id="lazy-evaluation">Lazy evaluation
+&lt;/h3>&lt;p>KotlinのSequenceは、元々JavaのStreamと同じ名前になる予定だったそうです。これはただの偶然ではなく、実際の処理もStreamに似ているからです。何が似ているかというと、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E9%81%85%E5%BB%B6%E8%A9%95%E4%BE%A1" target="_blank" rel="noopener"
 >Lazy evaluation&lt;/a>という概念です。これは簡単に言いますと、「なるべく処理を遅延させる = 必要とされるまでは処理をしない」ということですね。そして多くの場合、Sequenceを使うとこのLazy evaluationのおかげで性能がよくなるという話があります。これはつまり、Sequenceは処理を遅延することでCollectionより良い性能を期待できる、ということになるでしょう。&lt;/p>
 &lt;p>しかし、単純に処理を遅延させることががなぜ性能を向上させる事になるのか、すぐに納得は行きません。まず、ループ処理の中で「必要によって処理をするかどうかを決定する」という概念がピンと来ないですね。我々が認識しているループ処理とは、対象となるデータモデルの全要素を巡回しながら処理をするという意味ですので。&lt;/p>
 &lt;p>だからSequenceを使った方が性能がよくなると言っても、パフォーマンスはさまざまな要素によって劣化も向上もするものなので、その話だけを信じて全ての処理をSequenceに変えるということは危ないです。そもそもSequenceがそんなに良いものであれば、全てのIterableなオブジェクトをなぜSequenceとして処理しないか、という疑問も湧いてきますね。なので、まずはCollectionとSequenceでFunctional functionがどう違うか、コードどそれを実行した結果で説明したいと思います。&lt;/p>
-&lt;h4 id="eager-evaluationのcollection">Eager evaluationのCollection&lt;/h4>
-&lt;p>CollectionでのFunctional functionは、Eager evalutionと言われています。これはLazy evaluationの逆で、必要とされてなくてもとりあえず処理を行っておくということです。こうする場合期待できることは、メモリ上にすでに処理の結果が残っていて、複数回呼ばれた場合はそのキャッシュを使うことができるということですね。&lt;/p>
+&lt;h4 id="eager-evaluationのcollection">Eager evaluationのCollection
+&lt;/h4>&lt;p>CollectionでのFunctional functionは、Eager evalutionと言われています。これはLazy evaluationの逆で、必要とされてなくてもとりあえず処理を行っておくということです。こうする場合期待できることは、メモリ上にすでに処理の結果が残っていて、複数回呼ばれた場合はそのキャッシュを使うことができるということですね。&lt;/p>
 &lt;p>Eager evaluationだと、Functional functionが呼ばれるたび、その全要素に対しての処理をまず行うことになります。例えば、以下のような処理を書いたとしましょう。&lt;code>onEach()&lt;/code>は処理の流れを視覚化するためのものです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>listOf(&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">6&lt;/span>, &lt;span style="color:#ae81ff">7&lt;/span>, &lt;span style="color:#ae81ff">8&lt;/span>, &lt;span style="color:#ae81ff">9&lt;/span>, &lt;span style="color:#ae81ff">10&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .filter { &lt;span style="color:#66d9ef">it&lt;/span> %&lt;span style="color:#ae81ff">2&lt;/span> &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span> }
@@ -87,8 +87,8 @@ data-flex-basis="630px"
 >
 &lt;em>出典：Kotlin公式ドキュメント - &lt;a class="link" href="https://kotlinlang.org/docs/sequences.html#iterable" target="_blank" rel="noopener"
 >Sequences&lt;/a>&lt;/em>&lt;/p>
-&lt;h5 id="collectionのopreation">Collectionのopreation&lt;/h5>
-&lt;p>Collectionでの処理は上記の通りですが、実装としてはどうでしょうか。ここではCollectionでの&lt;code>map()&lt;/code>のコードを見ていきたいと思います。コードとしては以下のようになっています。&lt;/p>
+&lt;h5 id="collectionのopreation">Collectionのopreation
+&lt;/h5>&lt;p>Collectionでの処理は上記の通りですが、実装としてはどうでしょうか。ここではCollectionでの&lt;code>map()&lt;/code>のコードを見ていきたいと思います。コードとしては以下のようになっています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">inline&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &amp;lt;&lt;span style="color:#a6e22e">T&lt;/span>, &lt;span style="color:#a6e22e">R&lt;/span>&amp;gt; &lt;span style="color:#a6e22e">Iterable&lt;/span>&amp;lt;T&amp;gt;.map(transform: (T) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> R): List&amp;lt;R&amp;gt; {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> mapTo(ArrayList&amp;lt;R&amp;gt;(collectionSizeOrDefault(&lt;span style="color:#ae81ff">10&lt;/span>)), transform)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -102,8 +102,8 @@ data-flex-basis="630px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでわかるのは、一つのFunctional functionが呼ばれるたびにListに対するループが発生し、さらに新しいListを作ることになるということです。なので上記のサンプルコードの場合だとループは6回、Listの作成は4回であるといえます。&lt;code>onEach()&lt;/code>を除外するとしてもループは3回なので、かなり多い印象ですね。&lt;/p>
 &lt;p>ここで考えられるものは、「Sequenceの方が性能がいい」という話は、Sequenceを使った場合にこのようなループ回数やListの作成を減らせられるということになるのではないか、ということですね。Sequenceではどんな処理をしていて、実際にこのようなループやListを作る回数などを減らしているということでしょうか。同じ処理を書いた場合にSequenceではどのようなことが起きるかを見ていきましょう。&lt;/p>
-&lt;h4 id="lazy-evaluationのsequence">Lazy evaluationのSequence&lt;/h4>
-&lt;p>Collectionは、&lt;code>asSequence()&lt;/code>を呼び出すことで簡単にSequenceによる処理に変換することができます。ただ、このコードを実際に走らせるためにはJavaのStreamと同じく終端処理が必要となるのがポイントです。これも「必要とされるまでは実際の処理を行わない」Lazy evaluationの特徴といえます。例えば以下のようなコードを書いたとしましょう。&lt;/p>
+&lt;h4 id="lazy-evaluationのsequence">Lazy evaluationのSequence
+&lt;/h4>&lt;p>Collectionは、&lt;code>asSequence()&lt;/code>を呼び出すことで簡単にSequenceによる処理に変換することができます。ただ、このコードを実際に走らせるためにはJavaのStreamと同じく終端処理が必要となるのがポイントです。これも「必要とされるまでは実際の処理を行わない」Lazy evaluationの特徴といえます。例えば以下のようなコードを書いたとしましょう。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>listOf(&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">6&lt;/span>, &lt;span style="color:#ae81ff">7&lt;/span>, &lt;span style="color:#ae81ff">8&lt;/span>, &lt;span style="color:#ae81ff">9&lt;/span>, &lt;span style="color:#ae81ff">10&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .asSequence() &lt;span style="color:#75715e">// Sequenceに変換
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> .filter { &lt;span style="color:#66d9ef">it&lt;/span> %&lt;span style="color:#ae81ff">2&lt;/span> &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#ae81ff">0&lt;/span> }
@@ -145,8 +145,8 @@ data-flex-basis="556px"
 &lt;em>出典：Kotlin公式ドキュメント - &lt;a class="link" href="https://kotlinlang.org/docs/sequences.html#sequence" target="_blank" rel="noopener"
 >Sequences&lt;/a>&lt;/em>&lt;/p>
 &lt;p>処理の順番や仕組みが違うので、Collectionの時とは実装もかなり違うだろうと予想ができますね。では、こちらの実装を見ていきましょう。&lt;/p>
-&lt;h5 id="sequenceでのoperation">Sequenceでのoperation&lt;/h5>
-&lt;p>Collectionと同じく、Sequenceの&lt;code>map()&lt;/code>の実装を覗いてみましょう。先程のコードでSequenceの&lt;code>map()&lt;/code>は中間処理であり、新しいCollectionを作り出すわけではないということはわかりました。実装を見ると、以下のようになっていて、処理結果が反映されたSequenceを返しているのがわかります。&lt;/p>
+&lt;h5 id="sequenceでのoperation">Sequenceでのoperation
+&lt;/h5>&lt;p>Collectionと同じく、Sequenceの&lt;code>map()&lt;/code>の実装を覗いてみましょう。先程のコードでSequenceの&lt;code>map()&lt;/code>は中間処理であり、新しいCollectionを作り出すわけではないということはわかりました。実装を見ると、以下のようになっていて、処理結果が反映されたSequenceを返しているのがわかります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &amp;lt;&lt;span style="color:#a6e22e">T&lt;/span>, &lt;span style="color:#a6e22e">R&lt;/span>&amp;gt; &lt;span style="color:#a6e22e">Sequence&lt;/span>&amp;lt;T&amp;gt;.map(transform: (T) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> R): Sequence&amp;lt;R&amp;gt; {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> TransformingSequence(&lt;span style="color:#66d9ef">this&lt;/span>, transform)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -170,8 +170,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のコードの実行結果と実装でわかるように、Sequenceを使う場合は一つの要素を単位として処理を行っていくので、CollectionでFunctional functionを使う場合に発生し得る不要な処理(毎回Listを生成する、前要素に対してmapを行うなど)を減らせると期待できます。なので元のCollectionが大きい場合やoperationが多い場合はSequenceの方がより良いように見えます。&lt;/p>
 &lt;p>ただ、性能の観点で考えると、CollectionとSequenceの違いはもう一つ考慮すべきところがあります。それはデータ構造の違いです。&lt;/p>
-&lt;h2 id="stateless">Stateless&lt;/h2>
-&lt;p>JavaのStreamでもそうでしたが、Sequenceは状態(State)を持たないのが特徴です。ここで状態を持たないということは、持っている要素の数や順番などに対しての情報がないということを意味します。なぜかというと、SequenceがIteratorに基づいているものだからです。そしてそれが原因で、処理の種類によってCollectionよりも性能は劣る可能性もまたあります。&lt;/p>
+&lt;h2 id="stateless">Stateless
+&lt;/h2>&lt;p>JavaのStreamでもそうでしたが、Sequenceは状態(State)を持たないのが特徴です。ここで状態を持たないということは、持っている要素の数や順番などに対しての情報がないということを意味します。なぜかというと、SequenceがIteratorに基づいているものだからです。そしてそれが原因で、処理の種類によってCollectionよりも性能は劣る可能性もまたあります。&lt;/p>
 &lt;p>先に使っていたサンプルコードを持って考えてみましょう。サンプルコードでは、Sequenceの終端処理としてListを返すために&lt;code>toList()&lt;/code>を呼び出していました。これは、「状態を持たない」ものから「状態を持つ」ものに変換することですね。簡単なやり方としては、MutableなListを作って、全要素を一つづつ&lt;code>add()&lt;/code>していく方法があるでしょう。実際はどうでしょうか？まずは&lt;code>toList()&lt;/code>のコードをみてみましょう。以下がその実装です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &amp;lt;&lt;span style="color:#a6e22e">T&lt;/span>&amp;gt; &lt;span style="color:#a6e22e">Sequence&lt;/span>&amp;lt;T&amp;gt;.toList(): List&amp;lt;T&amp;gt; {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">this&lt;/span>.toMutableList().optimizeReadOnlyList()
@@ -234,8 +234,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>単純ですが、Sequenceを一度Listに変換してsortした後、またSequenceに変えて返していますね。ここでListに変えるために呼び出している関数は&lt;code>toMutableList()&lt;/code>なので、結局&lt;code>toList()&lt;/code>を呼び出す場合と同じようなことが起きるということです。なので、状態を必要とする操作の場合は要素数が多ければ多いほど性能はCollectionより劣化しやすい、ということがわかります。&lt;/p>
 &lt;p>ただ、逆に状態が必要にならない場合は、Collectionと違って中間結果のListを作成しなくなるので、依然としてSequenceが良い性能を見せるだろうと思えます。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>だいぶ話が長くなりましたが、性能の観点でどれを選ぶべきか、という話の結論としては、「どんな処理をするか」によるということになりますね。簡単に整理すると、以下のようになるかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>だいぶ話が長くなりましたが、性能の観点でどれを選ぶべきか、という話の結論としては、「どんな処理をするか」によるということになりますね。簡単に整理すると、以下のようになるかと思います。&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -277,10 +277,10 @@ data-flex-basis="556px"
 &lt;p>では、また！&lt;/p></description></item><item><title>9からの新メソッドめぐり</title><link>https://retheviper.github.io/posts/java-new-methods-from-9-to-11/</link><pubDate>Wed, 30 Dec 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-new-methods-from-9-to-11/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 9からの新メソッドめぐり" />&lt;p>仕事ではJava 11を扱うことが多いのですが、正直、自分の書いたコードを振り返ってみると、Java 9から新しく追加されたメソッドはあまり使ってないのが現実です。しかし、これら新しいメソッドたちは冗長さを隠してくれるシンタックスシュガーとして存在するだけでなく、性能や機能面でより優れているものもあるので、いますぐ使わないとしても目は通しておきたいものが多いなと思っています。&lt;/p>
 &lt;p>2021年は次のLTSバージョンとなる17の登場が予告されている時点なので、今更な感はありますが、そろそろ私もSEになってから2年になるので、今回は今年、自分が書いたコードへの反省を含め、Java 9〜11まで新しく追加されたメソッドたちの中から、良さそうな(よく使えそうな)ものを選別してみました。そして今回のポストは、そう選別したメソッドの簡単な紹介となります。&lt;/p>
 &lt;p>多くの場合、これらのメソッドを使える環境だとしたらJava 11を導入しているはずなのであまり意味はないのかもしれませんが、それぞれのメソッド名の右に、該当メソッドがどのバージョンから導入されたかを記入していますので参考にしてください。&lt;/p>
-&lt;h2 id="stream">Stream&lt;/h2>
-&lt;p>StreamこそJava 8のキモではないかと思います。そしてJava 9では、そのStreamの問題を色々と改善したり、より簡単に使えるようなメソッドを用意しています。なので、既存のforループにしか慣れてない人でも、簡単に入門できるようになったのではないかと思います。&lt;/p>
-&lt;h3 id="iterate-9">Iterate (9)&lt;/h3>
-&lt;p>&lt;code>iterate()&lt;/code>というメソッド名だけではすぐに意味がわからない場合もあると思いますが、このメソッドは伝統的なFor文と同じような構文でStreamでの処理を書くことができるようになります。つまり、「初期化・ループの継続条件・カウンタ変数の更新」を書くことで、Streaｍの要素数を決めることができるという意味です。例えば、以下のような書き方ができます。&lt;/p>
+&lt;h2 id="stream">Stream
+&lt;/h2>&lt;p>StreamこそJava 8のキモではないかと思います。そしてJava 9では、そのStreamの問題を色々と改善したり、より簡単に使えるようなメソッドを用意しています。なので、既存のforループにしか慣れてない人でも、簡単に入門できるようになったのではないかと思います。&lt;/p>
+&lt;h3 id="iterate-9">Iterate (9)
+&lt;/h3>&lt;p>&lt;code>iterate()&lt;/code>というメソッド名だけではすぐに意味がわからない場合もあると思いますが、このメソッドは伝統的なFor文と同じような構文でStreamでの処理を書くことができるようになります。つまり、「初期化・ループの継続条件・カウンタ変数の更新」を書くことで、Streaｍの要素数を決めることができるという意味です。例えば、以下のような書き方ができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 0~9までを出力&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(0, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">&amp;lt;&lt;/span> 10, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">+&lt;/span> 1).&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはつまり、以下のコードと同じ意味を持ちます。&lt;/p>
@@ -294,21 +294,21 @@ data-flex-basis="556px"
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Aで三角形を出力&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>, s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> s &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>).&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>継続条件を指定しないと、無限ループになってしまうのでは？と思われそうですね。確かにそうですが、同じくJava 9でStreamの要素数の上限を指定できる新しいメソッドが追加されています。次に紹介するものがそれです。&lt;/p>
-&lt;h3 id="takewhile-9">takeWhile (9)&lt;/h3>
-&lt;p>以前、Streamの問題として「途中でやめられない」と書きましたが、Java 9から導入された&lt;code>takeWhile()&lt;/code>メソッドを使うと、途中で処理を終了するようなことができるようになりました。既存にあった&lt;code>limit()&lt;/code>の場合は、「指定された回数分」という限界がありましたが、こちらはPredicate型の条件を指定できるというところが違います。&lt;/p>
+&lt;h3 id="takewhile-9">takeWhile (9)
+&lt;/h3>&lt;p>以前、Streamの問題として「途中でやめられない」と書きましたが、Java 9から導入された&lt;code>takeWhile()&lt;/code>メソッドを使うと、途中で処理を終了するようなことができるようになりました。既存にあった&lt;code>limit()&lt;/code>の場合は、「指定された回数分」という限界がありましたが、こちらはPredicate型の条件を指定できるというところが違います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// AAAAAAAAAまで出力する&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>, s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> s &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">takeWhile&lt;/span>(s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> s.&lt;span style="color:#a6e22e">length&lt;/span>() &lt;span style="color:#f92672">&amp;lt;&lt;/span> 10)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println);
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>なので、&lt;code>iterate()&lt;/code>の継続条件を書いてない場合には&lt;code>takeWhile()&lt;/code>を使ってどの条件で処理が終わるかを明示した方が良いですね。&lt;/p>
-&lt;h3 id="dropwhile-9">dropWhile (9)&lt;/h3>
-&lt;p>&lt;code>dropWhile()&lt;/code>は、その名からも推測できますが、&lt;code>takeWhile()&lt;/code>と真逆の機能をするメソッドです。このメソッドはStreamから与えられた条件と一致する要素を除いて、残りの要素を返却します。&lt;/p>
+&lt;h3 id="dropwhile-9">dropWhile (9)
+&lt;/h3>&lt;p>&lt;code>dropWhile()&lt;/code>は、その名からも推測できますが、&lt;code>takeWhile()&lt;/code>と真逆の機能をするメソッドです。このメソッドはStreamから与えられた条件と一致する要素を除いて、残りの要素を返却します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// AAAAAから出力する&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>, s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> s.&lt;span style="color:#a6e22e">length&lt;/span>() &lt;span style="color:#f92672">&amp;lt;&lt;/span> 10, s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> s &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">dropWhile&lt;/span>(s &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#f92672">!&lt;/span>s.&lt;span style="color:#a6e22e">contains&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;AAAAA&amp;#34;&lt;/span>))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ofnullable-9">ofNullable (9)&lt;/h3>
-&lt;p>Java 1.8のStreamでは、Null要素を追加するためにはまずその要素がNullかどうかをチェックして、Nullの場合に&lt;code>Stream.empty()&lt;/code>を呼ぶような形にする必要がありました。いつものJavaのNullチェックですね。例えば以下のようなものです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ofnullable-9">ofNullable (9)
+&lt;/h3>&lt;p>Java 1.8のStreamでは、Null要素を追加するためにはまずその要素がNullかどうかをチェックして、Nullの場合に&lt;code>Stream.empty()&lt;/code>を呼ぶような形にする必要がありました。いつものJavaのNullチェックですね。例えば以下のようなものです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 要素のNullチェックを含むStreamのCollect&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>keyList.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">flatMap&lt;/span>(k &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {
@@ -320,10 +320,10 @@ data-flex-basis="556px"
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>keyList.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">flatMap&lt;/span>(k &lt;span style="color:#f92672">-&amp;gt;&lt;/span> Stream.&lt;span style="color:#a6e22e">ofNullable&lt;/span>(map.&lt;span style="color:#a6e22e">get&lt;/span>(k)))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="collectors">Collectors&lt;/h2>
-&lt;p>Streamの要素を集約するためのCollectorを提供する&lt;code>Collectors&lt;/code> APIですが、こちらの変化は主にシンタックスシュガーなものが多い印象です。主にStreamでしかできなかったことや、既存のCollectorsのみだとかなり長くなるコードを簡潔に書くことができるようになっています。&lt;/p>
-&lt;h3 id="filtering-9">filtering (9)&lt;/h3>
-&lt;p>&lt;code>Stream&lt;/code>の&lt;code>filter()&lt;/code>と同じ処理を、&lt;code>Collector&lt;/code>でもできるようになりました。どちらを使うかは好みの問題な気がしますが、&lt;code>Collector&lt;/code>そのものを共通化するなどの処理ができそうな気はしますね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="collectors">Collectors
+&lt;/h2>&lt;p>Streamの要素を集約するためのCollectorを提供する&lt;code>Collectors&lt;/code> APIですが、こちらの変化は主にシンタックスシュガーなものが多い印象です。主にStreamでしかできなかったことや、既存のCollectorsのみだとかなり長くなるコードを簡潔に書くことができるようになっています。&lt;/p>
+&lt;h3 id="filtering-9">filtering (9)
+&lt;/h3>&lt;p>&lt;code>Stream&lt;/code>の&lt;code>filter()&lt;/code>と同じ処理を、&lt;code>Collector&lt;/code>でもできるようになりました。どちらを使うかは好みの問題な気がしますが、&lt;code>Collector&lt;/code>そのものを共通化するなどの処理ができそうな気はしますね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 0~9までのリスト&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> numbers &lt;span style="color:#f92672">=&lt;/span> Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(0, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">&amp;lt;&lt;/span> 10, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">+&lt;/span> 1).&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -335,8 +335,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Collectors.filtering()&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>numbers.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">filtering&lt;/span>(e &lt;span style="color:#f92672">-&amp;gt;&lt;/span> e &lt;span style="color:#f92672">&amp;gt;&lt;/span> 5, Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>())); &lt;span style="color:#75715e">// 6, 7, 8, 9&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="flatmapping-9">flatMapping (9)&lt;/h3>
-&lt;p>これもまた名前から推測できると思いますが、&lt;code>Collectors&lt;/code>でCollectionに変えるとき、要素のflatMappingをできるようにしてくれるようなものです。具体的には、以下のサンプルコードを参照してください。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="flatmapping-9">flatMapping (9)
+&lt;/h3>&lt;p>これもまた名前から推測できると思いますが、&lt;code>Collectors&lt;/code>でCollectionに変えるとき、要素のflatMappingをできるようにしてくれるようなものです。具体的には、以下のサンプルコードを参照してください。&lt;/p>
 &lt;p>例えば、以下のようなクラスがあるとします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Selling&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> String clientName;
@@ -360,8 +360,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、毎回このような自作Collectorを作るというのはあまり効率的ではない方法ではないかと思います。それに、自作のCollectorを普段から使ってない場合はコードだけみても少しわかりづらくもありますね。なので、ここは新しく追加された&lt;code>flatMapping()&lt;/code>で変えてみると以下のようになります。より簡潔ですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>Map&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Product&lt;span style="color:#f92672">&amp;gt;&amp;gt;&lt;/span> result &lt;span style="color:#f92672">=&lt;/span> operations.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">groupingBy&lt;/span>(Selling::getClientName, Collectors.&lt;span style="color:#a6e22e">flatMapping&lt;/span>(selling &lt;span style="color:#f92672">-&amp;gt;&lt;/span> selling.&lt;span style="color:#a6e22e">getProducts&lt;/span>().&lt;span style="color:#a6e22e">stream&lt;/span>(), Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>())));
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="tounmodifiable-10">toUnmodifiable (10)&lt;/h3>
-&lt;p>Java 10では&lt;code>Collectors&lt;/code>に以下の三つのメソッドが追加されています。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="tounmodifiable-10">toUnmodifiable (10)
+&lt;/h3>&lt;p>Java 10では&lt;code>Collectors&lt;/code>に以下の三つのメソッドが追加されています。&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>toUnmodifiableList()&lt;/code>&lt;/li>
 &lt;li>&lt;code>toUnmodifiableSet()&lt;/code>&lt;/li>
@@ -374,10 +374,10 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Collectors.toUnmodifiableList&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> collectionsUnmodifiable &lt;span style="color:#f92672">=&lt;/span> Stream.&lt;span style="color:#a6e22e">iterate&lt;/span>(0, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">&amp;lt;&lt;/span> 10, i &lt;span style="color:#f92672">-&amp;gt;&lt;/span> i &lt;span style="color:#f92672">+&lt;/span> 1).&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toUnmodifiableList&lt;/span>());
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>引数は、既存の&lt;code>toList()&lt;/code>・&lt;code>toSet()&lt;/code>・&lt;code>toMap()&lt;/code>と同じなので(&lt;code>toMap()&lt;/code>だけ、KeyとValueのマッピングを指定する必要がありますね)、既存のメソッドと同じ感覚で使うことができます。&lt;/p>
-&lt;h2 id="collections">Collections&lt;/h2>
-&lt;p>Collections APIの新しいメソッドは、かなり現代的な書き方を可能にします。Kotlinのような言語がJavaの冗長さを回避するための工夫をしているのであれば、Java側に新しく追加されたメソッドはそれをさらにJavaに似合うような形で受け入れたような印象です。(というか、それしか方法はなかったかもしれませんが…)&lt;/p>
-&lt;h3 id="factory-method-9">Factory Method (9)&lt;/h3>
-&lt;p>Java 9では、&lt;a class="link" href="https://ja.wikipedia.org/wiki/Factory_Method_%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3" target="_blank" rel="noopener"
+&lt;h2 id="collections">Collections
+&lt;/h2>&lt;p>Collections APIの新しいメソッドは、かなり現代的な書き方を可能にします。Kotlinのような言語がJavaの冗長さを回避するための工夫をしているのであれば、Java側に新しく追加されたメソッドはそれをさらにJavaに似合うような形で受け入れたような印象です。(というか、それしか方法はなかったかもしれませんが…)&lt;/p>
+&lt;h3 id="factory-method-9">Factory Method (9)
+&lt;/h3>&lt;p>Java 9では、&lt;a class="link" href="https://ja.wikipedia.org/wiki/Factory_Method_%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3" target="_blank" rel="noopener"
 >ファクトリーメソッド&lt;/a>でCollectionの作成ができるようになりました。使い方としては、既存の&lt;code>Arrays.asList()&lt;/code>と似ているような感覚です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Listの作成&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> list &lt;span style="color:#f92672">=&lt;/span> List.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;B&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;C&amp;#34;&lt;/span>);
@@ -415,43 +415,43 @@ data-flex-basis="556px"
 &lt;li>Null要素を指定できない&lt;/li>
 &lt;li>要素がSerializableだとCollectionもSerializableになる&lt;/li>
 &lt;/ul>
-&lt;h4 id="copyof-10">copyOf (10)&lt;/h4>
-&lt;p>List, Set, Mapに&lt;code>copyOf()&lt;/code>というメソッドが追加されています。引数にそれぞれのCollectionを渡すと、Unmodifiableなコピーすることができます。&lt;/p>
+&lt;h4 id="copyof-10">copyOf (10)
+&lt;/h4>&lt;p>List, Set, Mapに&lt;code>copyOf()&lt;/code>というメソッドが追加されています。引数にそれぞれのCollectionを渡すと、Unmodifiableなコピーすることができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// コピー元のリスト&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> original &lt;span style="color:#f92672">=&lt;/span> ...
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// コピーする&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> copy &lt;span style="color:#f92672">=&lt;/span> List.&lt;span style="color:#a6e22e">copyOf&lt;/span>(original);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="optional">Optional&lt;/h2>
-&lt;p>Optionalは積極的に使われていますか？私の場合は、Streamが返すもの以外で、自分でOptionalを使う場合はあまりないです。色々制約が多いので、複雑なNullチェックが必要な場合ではないと使いづらい気もしますね。ただ、9と10で追加されたメソッドでかなり便利に使えるものとなったので、たまには良いのかもしれません。&lt;/p>
-&lt;h3 id="or-9">or (9)&lt;/h3>
-&lt;p>Optionalの中身がNullの場合に実行されるメソッドです。既存の&lt;code>orElse()&lt;/code>や&lt;code>orElseGet()&lt;/code>と何が違うかというと、こちらはOptionalの中身ではなく、またのOptionalを返すということです。引数としてはSupplierをとります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="optional">Optional
+&lt;/h2>&lt;p>Optionalは積極的に使われていますか？私の場合は、Streamが返すもの以外で、自分でOptionalを使う場合はあまりないです。色々制約が多いので、複雑なNullチェックが必要な場合ではないと使いづらい気もしますね。ただ、9と10で追加されたメソッドでかなり便利に使えるものとなったので、たまには良いのかもしれません。&lt;/p>
+&lt;h3 id="or-9">or (9)
+&lt;/h3>&lt;p>Optionalの中身がNullの場合に実行されるメソッドです。既存の&lt;code>orElse()&lt;/code>や&lt;code>orElseGet()&lt;/code>と何が違うかというと、こちらはOptionalの中身ではなく、またのOptionalを返すということです。引数としてはSupplierをとります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>String string &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> optional &lt;span style="color:#f92672">=&lt;/span> Optional.&lt;span style="color:#a6e22e">ofNullable&lt;/span>(string);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(optional.&lt;span style="color:#a6e22e">or&lt;/span>(() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> Optional.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;default&amp;#34;&lt;/span>)).&lt;span style="color:#a6e22e">get&lt;/span>()); &lt;span style="color:#75715e">// &amp;#34;default&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="orelsethrow-10">orElseThrow (10)&lt;/h3>
-&lt;p>Optionalの中身がNullの場合は例外を投げる分岐です。NullのOptionalはもともと&lt;code>NoSuchElementException&lt;/code>を投げますが、ビジネスロジックなどによりカスタマイズした例外を投げたい場合などはこちらを使えますね。引数としてはSupplierをとります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="orelsethrow-10">orElseThrow (10)
+&lt;/h3>&lt;p>Optionalの中身がNullの場合は例外を投げる分岐です。NullのOptionalはもともと&lt;code>NoSuchElementException&lt;/code>を投げますが、ビジネスロジックなどによりカスタマイズした例外を投げたい場合などはこちらを使えますね。引数としてはSupplierをとります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>String string &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> optional &lt;span style="color:#f92672">=&lt;/span> Optional.&lt;span style="color:#a6e22e">ofNullable&lt;/span>(string);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String throwing &lt;span style="color:#f92672">=&lt;/span> optional.&lt;span style="color:#a6e22e">orElseThrow&lt;/span>(RuntimeException::&lt;span style="color:#66d9ef">new&lt;/span>); &lt;span style="color:#75715e">// RuntimeException&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ifpresentorelse-9">ifPresentOrElse (9)&lt;/h3>
-&lt;p>Optionalの中身がNullかどうかによって二つのアクションを指定して、分岐処理ができるようなメソッドです。第一引数としてはConsumerを指定することで中身がNullではない場合の処理を、第二引数としてはRunnableとして中身がNullだった場合の処理を書きます。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ifpresentorelse-9">ifPresentOrElse (9)
+&lt;/h3>&lt;p>Optionalの中身がNullかどうかによって二つのアクションを指定して、分岐処理ができるようなメソッドです。第一引数としてはConsumerを指定することで中身がNullではない場合の処理を、第二引数としてはRunnableとして中身がNullだった場合の処理を書きます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> hasValue &lt;span style="color:#f92672">=&lt;/span> Optional.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;proper value&amp;#34;&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>hasValue.&lt;span style="color:#a6e22e">ifPresentOrElse&lt;/span>(v &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;the value is &amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> v), () &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;there is no value&amp;#34;&lt;/span>)); &lt;span style="color:#75715e">// the value is proper value&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> hasNoValue &lt;span style="color:#f92672">=&lt;/span> Optional.&lt;span style="color:#a6e22e">empty&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>hasNoValue.&lt;span style="color:#a6e22e">ifPresentOrElse&lt;/span>(v &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;the value is &amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> v), () &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;there is no value&amp;#34;&lt;/span>)); &lt;span style="color:#75715e">// there is no value&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="stream-9">stream (9)&lt;/h3>
-&lt;p>Optionalを要素が一つか、Null(&lt;code>Stream.empty()&lt;/code>)のSteamに変えるメソッドです。もともとStreamから要素を取得するときもOptionalになっていたので、このようなメソッドが追加されたのも当たり前といえば当たり前ですね。要素が多くて一つなのにStreamに変える意味があるかというと、他のStreamと結合ができたりもするので色々と活用できる余地はありそうです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="stream-9">stream (9)
+&lt;/h3>&lt;p>Optionalを要素が一つか、Null(&lt;code>Stream.empty()&lt;/code>)のSteamに変えるメソッドです。もともとStreamから要素を取得するときもOptionalになっていたので、このようなメソッドが追加されたのも当たり前といえば当たり前ですね。要素が多くて一つなのにStreamに変える意味があるかというと、他のStreamと結合ができたりもするので色々と活用できる余地はありそうです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> optional &lt;span style="color:#f92672">=&lt;/span> Optional.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;value&amp;#34;&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> stream &lt;span style="color:#f92672">=&lt;/span> optional.&lt;span style="color:#a6e22e">stream&lt;/span>();
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="string">String&lt;/h2>
-&lt;p>String APIの場合は、主にJava 11でかなりの変化がありました。Webアプリケーションのみならず、最近のアプリケーションは文字列を扱う場合が多いので、このような変化はありがたいですね。&lt;/p>
-&lt;h3 id="repeat-11">repeat (11)&lt;/h3>
-&lt;p>指定した数値分、文字列を繰り返します。同じ文字列の単純な繰り返しだとすると、StringBuilderやStrinbBufferなしでも簡単に使えるこちらのメソッドの方が良いですね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="string">String
+&lt;/h2>&lt;p>String APIの場合は、主にJava 11でかなりの変化がありました。Webアプリケーションのみならず、最近のアプリケーションは文字列を扱う場合が多いので、このような変化はありがたいですね。&lt;/p>
+&lt;h3 id="repeat-11">repeat (11)
+&lt;/h3>&lt;p>指定した数値分、文字列を繰り返します。同じ文字列の単純な繰り返しだとすると、StringBuilderやStrinbBufferなしでも簡単に使えるこちらのメソッドの方が良いですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>String a10 &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;A&amp;#34;&lt;/span>.&lt;span style="color:#a6e22e">repeat&lt;/span>(10); &lt;span style="color:#75715e">// &amp;#34;AAAAAAAAAA&amp;#34;&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="strip-11">strip (11)&lt;/h3>
-&lt;p>文字列の前後の空白を除外するために、今までは&lt;code>trim()&lt;/code>を使うケースが多かったのではと思いますが、Java 11からは&lt;code>strip()&lt;/code>が追加され、&lt;code>trim()&lt;/code>を代替できます。この二つが何が違うかというと、まずそれぞれのメソッドで定義している「空白」が違います。&lt;code>trim()&lt;/code>はUnicodeを考慮してなかったため、半角スペースのみの対応となっていましたが、&lt;code>strip()&lt;/code>はUnicodeで指定されたWhitespace全部を対象とするので、全角スペースや改行にも対応できます。どの文字がWhitespaceとして扱われるかは、&lt;code>Character.isWhitespace()&lt;/code>のメソッドが基準となるので、&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Character.html#isWhitespace%28char%29" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="strip-11">strip (11)
+&lt;/h3>&lt;p>文字列の前後の空白を除外するために、今までは&lt;code>trim()&lt;/code>を使うケースが多かったのではと思いますが、Java 11からは&lt;code>strip()&lt;/code>が追加され、&lt;code>trim()&lt;/code>を代替できます。この二つが何が違うかというと、まずそれぞれのメソッドで定義している「空白」が違います。&lt;code>trim()&lt;/code>はUnicodeを考慮してなかったため、半角スペースのみの対応となっていましたが、&lt;code>strip()&lt;/code>はUnicodeで指定されたWhitespace全部を対象とするので、全角スペースや改行にも対応できます。どの文字がWhitespaceとして扱われるかは、&lt;code>Character.isWhitespace()&lt;/code>のメソッドが基準となるので、&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Character.html#isWhitespace%28char%29" target="_blank" rel="noopener"
 >そちらのJavaDoc&lt;/a>を参照してください。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>String stripped &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;\n hello world \u2005&amp;#34;&lt;/span>.&lt;span style="color:#a6e22e">strip&lt;/span>(); &lt;span style="color:#75715e">// &amp;#34;hello world&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、&lt;code>strip()&lt;/code>では前後の空白が全部削除されるのですが、文字列の前後を基準にして片方だけ削除したい場合は、前からだけを削除する&lt;code>stripLeading()&lt;/code>や後ろからだけを削除する&lt;code>stripTrailing()&lt;/code>も使えます。&lt;/p>
@@ -459,16 +459,16 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String stripTrailing &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;\n hello world \u2005&amp;#34;&lt;/span>.&lt;span style="color:#a6e22e">stripTrailing&lt;/span>(); &lt;span style="color:#75715e">// &amp;#34;\n hello world&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>今までの説明だけでも十分&lt;code>strip()&lt;/code>を使う理由はあると思いますが、実はもう一つがあります。性能です。性能という面では&lt;code>strip()&lt;/code>の方が&lt;code>trim()&lt;/code>より&lt;a class="link" href="https://stackoverflow.com/questions/53640184/why-is-string-strip-5-times-faster-than-string-trim-for-blank-string-in-java" target="_blank" rel="noopener"
 >5倍も早い&lt;/a>と言われているので、なるべく&lt;code>trim()&lt;/code>よりは&lt;code>strip()&lt;/code>を使うべきですね。&lt;/p>
-&lt;h3 id="isblank-11">isBlank (11)&lt;/h3>
-&lt;p>すでに&lt;code>isEmpty()&lt;/code>というメソッドがありますが、このメソッドと&lt;code>isBlank()&lt;/code>の違いは、&lt;code>trim()&lt;/code>と&lt;code>strip()&lt;/code>の関係と似ています。同じく、&lt;code>isEmpty()&lt;/code>と比べると&lt;code>isBlank()&lt;/code>の方がUnicodeに対応しているのでより多くのケースのWhitespaceに対応できて、性能でも優れています。&lt;/p>
+&lt;h3 id="isblank-11">isBlank (11)
+&lt;/h3>&lt;p>すでに&lt;code>isEmpty()&lt;/code>というメソッドがありますが、このメソッドと&lt;code>isBlank()&lt;/code>の違いは、&lt;code>trim()&lt;/code>と&lt;code>strip()&lt;/code>の関係と似ています。同じく、&lt;code>isEmpty()&lt;/code>と比べると&lt;code>isBlank()&lt;/code>の方がUnicodeに対応しているのでより多くのケースのWhitespaceに対応できて、性能でも優れています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">boolean&lt;/span> isEmpty &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;\n \u2005&amp;#34;&lt;/span>.&lt;span style="color:#a6e22e">isEmpty&lt;/span>(); &lt;span style="color:#75715e">// false&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">boolean&lt;/span> isBlank &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;\n \u2005&amp;#34;&lt;/span>.&lt;span style="color:#a6e22e">isBlank&lt;/span>(); &lt;span style="color:#75715e">// true&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="lines-11">lines (11)&lt;/h3>
-&lt;p>文字列に改行コード(&lt;code>\n&lt;/code>・&lt;code>\r&lt;/code>・&lt;code>\r\n&lt;/code>)を基準に分けた&lt;code>Stream&amp;lt;String&amp;gt;&lt;/code>を返却します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="lines-11">lines (11)
+&lt;/h3>&lt;p>文字列に改行コード(&lt;code>\n&lt;/code>・&lt;code>\r&lt;/code>・&lt;code>\r\n&lt;/code>)を基準に分けた&lt;code>Stream&amp;lt;String&amp;gt;&lt;/code>を返却します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>String multipleLine &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;first\nsecond\nthird&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">long&lt;/span> lines &lt;span style="color:#f92672">=&lt;/span> multipleLine.&lt;span style="color:#a6e22e">lines&lt;/span>().&lt;span style="color:#a6e22e">filter&lt;/span>(String::isBlank).&lt;span style="color:#a6e22e">count&lt;/span>(); &lt;span style="color:#75715e">// 3&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="prediacte-not-11">Prediacte not (11)&lt;/h2>
-&lt;p>LambdaやMethod Referenceで定義したPredicateの結果がFalseかどうかを判断するためのメソッドです。単純にtrueの否定になるだけなのですが、このメソッドの引数はPredicateなので、LambdaやMethod Referenceを使ってより単純に表現できるのがメリットといえますね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="prediacte-not-11">Prediacte not (11)
+&lt;/h2>&lt;p>LambdaやMethod Referenceで定義したPredicateの結果がFalseかどうかを判断するためのメソッドです。単純にtrueの否定になるだけなのですが、このメソッドの引数はPredicateなので、LambdaやMethod Referenceを使ってより単純に表現できるのがメリットといえますね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 否定の条件式を使う場合&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>list.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">filter&lt;/span>(m &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#f92672">!&lt;/span>m.&lt;span style="color:#a6e22e">isPrepared&lt;/span>())
@@ -478,16 +478,16 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>list.&lt;span style="color:#a6e22e">stream&lt;/span>()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">filter&lt;/span>(Predicate.&lt;span style="color:#a6e22e">not&lt;/span>(Man::isPrepared))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>2021年に次のLTSであるJava 17がリリースされると、今のJava 11を使う現場の場合は多くがJava 17に移行するのではないかと思います。12から16まで、さまざまなAPIや機能、JVMの改善などが含まれていて、すでに多くのブログなどで紹介されていますが、また既存のAPIにはどのような変化があるかまでは完全に把握していない状態です。なので、Java 17のリリースに合わせて、もう一度12〜17までの新しいメソッドの整理と紹介を行おうと思います。これだけでもかなり勉強になりますし、業務で使えそうなテクニックも増えていく感覚ですね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>2021年に次のLTSであるJava 17がリリースされると、今のJava 11を使う現場の場合は多くがJava 17に移行するのではないかと思います。12から16まで、さまざまなAPIや機能、JVMの改善などが含まれていて、すでに多くのブログなどで紹介されていますが、また既存のAPIにはどのような変化があるかまでは完全に把握していない状態です。なので、Java 17のリリースに合わせて、もう一度12〜17までの新しいメソッドの整理と紹介を行おうと思います。これだけでもかなり勉強になりますし、業務で使えそうなテクニックも増えていく感覚ですね。&lt;/p>
 &lt;p>また、今年のポスティングはこれで終了となります。色々と大変な一年だったのですが、なんとか年末を迎えることができましたね。その間、このブログにも多くの方々がいらしてくださいました。まだジュニアレベルでしかない駆け出しエンジニアのブログなのであまり情報取集には役立たないかもしれませんが、少しでも私の書いたポストを読んでくださりありがとうございます。来年からは、より面白く、より良い情報を収取してブログに載せたいですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>今更なループの話</title><link>https://retheviper.github.io/posts/java-collection-loop/</link><pubDate>Mon, 30 Nov 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-collection-loop/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 今更なループの話" />&lt;p>Javaはもともと手続き型な言語ですが、賢い方法で関数型な言語の特徴を受け止めていて、言語の中に共存させていますね。個人的には関数型プログラミングというものに憧れているので、Javaの中でも好んでStreamやLambdaを使っていて、個人的にもKotlinとSpring WebFluxで色々試しているところです。&lt;/p>
 &lt;p>ただ、Java 1.8から続いている話ですが、&lt;code>Streamは果たして全てのForループを代替できるのか？&lt;/code>というものがありますね。そしてここでForループを代替ない理由としてよく挙げられているものが、性能・可読性・デバッグの難しさです。つまり内部的により複雑な処理を行っているため性能もよくないし、例外が発生した時も理由を特定するのが難しい上に、多くの人は&lt;a class="link" href="https://en.wikipedia.org/wiki/Method_chaining" target="_blank" rel="noopener"
 >Method Chaining&lt;/a>とLambdaに慣れてない、ということですね。&lt;/p>
 &lt;p>以上の理由から、私も普段はやはりList = ArrayListで、ループは拡張For文(たまに、Listの要素をいじって新しいインスタンスを新しく生成する場合はStream)というルールを当たり前のように守ってきていますが、ふとこれで本当に良いのか、いう疑問が湧いてきました。Javaも16までバージョンアップしていて、そろそろ関数型プログラミングに転換しても良い時期なのでは？だったり、自分の知っているものは正しいのかという検証をしてみたいという風にですね。&lt;/p>
 &lt;p>なので今更な感じではあるのですが、ちょっとしたベンチマークを兼ねて色々検証してみたり、考えてみました(本当は、ベンチマークがしてみたかっただけ)。&lt;/p>
-&lt;h2 id="ループの方法">ループの方法&lt;/h2>
-&lt;p>今更な紹介となりますが、そもそも今回のポストが今更な話をしているので、Collectionに関する4つのループ文の細かい話もして行こうかと思います。&lt;/p>
+&lt;h2 id="ループの方法">ループの方法
+&lt;/h2>&lt;p>今更な紹介となりますが、そもそも今回のポストが今更な話をしているので、Collectionに関する4つのループ文の細かい話もして行こうかと思います。&lt;/p>
 &lt;p>多くの場合、Collectionや配列のループ処理の方法は、以下の表通りに使われているのではないかと思います。&lt;/p>
 &lt;table>
 &lt;thead>
@@ -522,8 +522,8 @@ data-flex-basis="556px"
 &lt;p>ただ一つ、&lt;code>Stream&lt;/code>と&lt;code>forEach()&lt;/code>はどうでしょう。Javaでこれらが導入されてからもさらに時間が立っています。しかし、上述したとおり、依然として&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>は&lt;code>性能が劣る&lt;/code>から多く使われてないような気がしています(他にも、&lt;code>あえて使う理由がわからない&lt;/code>・&lt;code>わかりにくい&lt;/code>などの理由があると思いますが)。最初Java 1.8リリース当時にも、多くの人が性能のテストを行い、少なくとも性能面では既存の方式が有利という結論を出していて、今もそれはあまり変わってないようです。Javaのバージョンも16にまで上がったのですが、それまで行われたチューニングを踏まえても&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>が持つ根本的なアーキテクチャ(?)的な理由から、既存の方式よりも性能が劣るのはしょうがない、という風に認識されています。&lt;/p>
 &lt;p>しかし、誰かにそう言われたから、そう思うというのはあまり良い考え方ではないでしょう。また、前述のとおり、Javaはすでに16までバージョンアップを重ねていて、大抵の変化というのは新しい機能の追加となっていますが、裏では何かJVMやコンパイラのチューニングなどでなんらかの目に見えない改善があったのかもしれません。関数型としてのコードの書き方に慣れているかどうかは、その人の問題として、性能面で改善されているとしたら、よりモダンな方法を使わない理由がないですね。そして、本当に拡張For文が全ての場合で良いかどうかの検証もあらかじめしておく必要があると思います。&lt;/p>
 &lt;p>以上の理由から、まず検証で使う4つのループの紹介と、そのベンチマークについて紹介したいと思います。&lt;/p>
-&lt;h3 id="for文">For文&lt;/h3>
-&lt;p>まずは伝統的な形のFor文です。一部では&lt;code>c-style&lt;/code>とも呼ぶらしいですね。一番基本となるもので馴染みもありますが、やはり古い、という印象もあります。端的に、最近のいわゆる&lt;code>モダン&lt;/code>な言語では、このような形のループは使えない場合もありますね。基本的に以下のような形です。&lt;/p>
+&lt;h3 id="for文">For文
+&lt;/h3>&lt;p>まずは伝統的な形のFor文です。一部では&lt;code>c-style&lt;/code>とも呼ぶらしいですね。一番基本となるもので馴染みもありますが、やはり古い、という印象もあります。端的に、最近のいわゆる&lt;code>モダン&lt;/code>な言語では、このような形のループは使えない場合もありますね。基本的に以下のような形です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (&lt;span style="color:#66d9ef">int&lt;/span> i &lt;span style="color:#f92672">=&lt;/span> 0; i &lt;span style="color:#f92672">&amp;lt;&lt;/span> list.&lt;span style="color:#a6e22e">size&lt;/span>(); i&lt;span style="color:#f92672">++&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(list.&lt;span style="color:#a6e22e">get&lt;/span>(i));
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -551,8 +551,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただし、For文で指定されてあるインデックスが必ずループ対象の範囲内にあるかどうか、わからなくなる場合もあります。0から始まるインデックスで&lt;code>i - 1&lt;/code>を指定してしまったり、iの範囲が対象のCollectionや配列よりも大きくなり例外を投げることになることもあるでしょう。また、インデックスを利用した場合、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%B8%E3%83%83%E3%82%AF%E3%83%8A%E3%83%B3%E3%83%90%E3%83%BC_%28%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0%29" target="_blank" rel="noopener"
 >マジックナンバー&lt;/a>になってしまう可能性もあるので、バグが発生する可能性が上がったり、可読性が悪くなるなどの問題があります。なので、インデックスを基準に処理をしたい場合は慎重にコードを作成する必要がありますね。&lt;/p>
-&lt;h2 id="拡張for文">拡張For文&lt;/h2>
-&lt;p>いわゆる&lt;code>for-each&lt;/code>文ですね。Colleciton/配列内の全要素を巡回しながら処理するには、これほど理解しやすく、安全なものはないかと思います。&lt;/p>
+&lt;h3 id="拡張for文">拡張For文
+&lt;/h3>&lt;p>いわゆる&lt;code>for-each&lt;/code>文ですね。Colleciton/配列内の全要素を巡回しながら処理するには、これほど理解しやすく、安全なものはないかと思います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (String element : list) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(element);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
@@ -644,8 +644,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#f92672">-&lt;/span>(low &lt;span style="color:#f92672">+&lt;/span> 1); &lt;span style="color:#75715e">// key not found&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="iterator">Iterator&lt;/h2>
-&lt;p>Iteratorは、個人的にあまり馴染まない(使いたくない)ものです。どのCollectionでもIteratorとして抽出ができてしまうので、CollectionよりもIteratorが主体になってしまうような感覚であり、定型文な書き方を矯正しているからです。少なくとも拡張ForではどんなCollectionのどんな要素を抽出して使っているのか明確ですが、Iteratorだとそれがわからないですね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="iterator">Iterator
+&lt;/h3>&lt;p>Iteratorは、個人的にあまり馴染まない(使いたくない)ものです。どのCollectionでもIteratorとして抽出ができてしまうので、CollectionよりもIteratorが主体になってしまうような感覚であり、定型文な書き方を矯正しているからです。少なくとも拡張ForではどんなCollectionのどんな要素を抽出して使っているのか明確ですが、Iteratorだとそれがわからないですね。&lt;/p>
 &lt;p>とにかく、そんなIteratorですが、ForでもWhileでもループをかけるという特徴があります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Forを使う&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (Iterator iterator &lt;span style="color:#f92672">=&lt;/span> values.&lt;span style="color:#a6e22e">iterator&lt;/span>(); iterator.&lt;span style="color:#a6e22e">hasNext&lt;/span>(); ) {
@@ -663,8 +663,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(iterator.&lt;span style="color:#a6e22e">next&lt;/span>().&lt;span style="color:#a6e22e">getBar&lt;/span>()); &lt;span style="color:#75715e">// 注意！&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>面白いことに、拡張For文のバイトコードは、Iteratorを使うコードになるということです。なので少なくとも拡張For文は、Iteratorよりは発展した形と言えるのかもしれません。&lt;/p>
-&lt;h2 id="foreach">forEach()&lt;/h2>
-&lt;p>モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかもしれません。何よりコードが短くなるのが好きですね。&lt;/p>
+&lt;h3 id="foreach">forEach()
+&lt;/h3>&lt;p>モダンな書き方としてのforEach()ですね。拡張For文とあまり違わないのですが、Lambdaやメソッド参照が使えるというメリットがありますね。また、Kotlinのスコープ関数のように、処理の範囲がはっきりするという意味で良いのかもしれません。何よりコードが短くなるのが好きですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>list.&lt;span style="color:#a6e22e">forEach&lt;/span>(System.&lt;span style="color:#a6e22e">out&lt;/span>::println)
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>実装としても、拡張For文の中でLambdaを実行するという単純な構造になっています。なので単純に考えて、拡張For文よりは性能が劣る可能性がありますね。以下はIterableの実装です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// IterableのforEach()&lt;/span>
@@ -690,8 +690,8 @@ data-flex-basis="556px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#f92672">&amp;lt;&lt;/span>E&lt;span style="color:#f92672">&amp;gt;&lt;/span> E &lt;span style="color:#a6e22e">elementAt&lt;/span>(Object&lt;span style="color:#f92672">[]&lt;/span> es, &lt;span style="color:#66d9ef">int&lt;/span> index) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> (E) es&lt;span style="color:#f92672">[&lt;/span>index&lt;span style="color:#f92672">]&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ベンチマークで検証してみると">ベンチマークで検証してみると&lt;/h2>
-&lt;p>この度も、JMHを使って簡単なベンチマークを作ってみました。実はstatic finalなフィールドとして宣言しておくとそのオブジェクトを全てのベンチマークで使い回してくれるのかな、と思っていましたが、どうやらそうではなかったみたいです。なので今回は、ちゃんと@Setupアノテーションを使ってフィールドの初期化をしてみました。実際のコードは以下のとおりです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ベンチマークで検証してみると">ベンチマークで検証してみると
+&lt;/h2>&lt;p>この度も、JMHを使って簡単なベンチマークを作ってみました。実はstatic finalなフィールドとして宣言しておくとそのオブジェクトを全てのベンチマークで使い回してくれるのかな、と思っていましたが、どうやらそうではなかったみたいです。なので今回は、ちゃんと@Setupアノテーションを使ってフィールドの初期化をしてみました。実際のコードは以下のとおりです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@State&lt;/span>(Scope.&lt;span style="color:#a6e22e">Thread&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">LoopTest&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -747,12 +747,12 @@ LoopTest.extendedLoop thrpt 25 13.186 ± 0.152 ops/s
 LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/code>&lt;/pre>&lt;p>やはり、4つのループがそれぞれ違う結果を見せているのがわかります。少なくとも、ここでは伝統的なFor文を使った方がもっとも性能の面では有利のように見えますね。なるべく拡張For文を使った方が良い、という根拠として&lt;code>性能はあまり変わらないから&lt;/code>というのはなんだったんだろう、と思うくらいの差があります。&lt;/p>
 &lt;p>しかし、本当にこれで、&lt;code>性能が良い方を選べば良い&lt;/code>という結論を出して良いのでしょうか？&lt;/p>
-&lt;h2 id="考えたいこと">考えたいこと&lt;/h2>
-&lt;p>処理としての結果が同じだとしたら、やはり性能の良い方を選びたくなるのは当然です。企業レベルの話だと、性能は費用と直結する問題でもありますしね。しかし、複雑化している現代のアプリケーションで考えるべきは、性能のみではありません。極端的な話だと、性能のためにをC、C++でWebアプリケーションを作るとしたら、他の言語に比べて生産性が下がってしまうでしょう。そして可読性や維持保守を考えず、性能を優先したコードだけを書いていくと、いわゆる&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%82%B2%E3%83%86%E3%82%A3%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0" target="_blank" rel="noopener"
+&lt;h2 id="考えたいこと">考えたいこと
+&lt;/h2>&lt;p>処理としての結果が同じだとしたら、やはり性能の良い方を選びたくなるのは当然です。企業レベルの話だと、性能は費用と直結する問題でもありますしね。しかし、複雑化している現代のアプリケーションで考えるべきは、性能のみではありません。極端的な話だと、性能のためにをC、C++でWebアプリケーションを作るとしたら、他の言語に比べて生産性が下がってしまうでしょう。そして可読性や維持保守を考えず、性能を優先したコードだけを書いていくと、いわゆる&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%91%E3%82%B2%E3%83%86%E3%82%A3%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0" target="_blank" rel="noopener"
 >スパゲティコード&lt;/a>になってしまう可能性もあります。&lt;/p>
 &lt;p>なので、性能のみではなく、アプリケーションを開発するときには色々と考慮すべき要素があるのは確かです。例えば、Readability(可読性)、Error-proneness(エラー発生可能性)、Capability(処理能力)などがあるでしょう。今までは性能ばかりの話をしてきましたが、これらの観点から4つのループを比較してみたらどうでしょう。&lt;/p>
-&lt;h3 id="可読性とエラー発生可能性の側面から考える">可読性とエラー発生可能性の側面から考える&lt;/h3>
-&lt;p>拡張For文(forEach())では、Collectionそのものの要素をことができます。逆に、For文やIteratorでは可能ですね。ならば、Collectionや配列の中でとある条件と一致する要素だけのことしたい場合は、拡張For文よりもFor文やIteratorを使うべきであるようにも見えます。&lt;/p>
+&lt;h3 id="可読性とエラー発生可能性の側面から考える">可読性とエラー発生可能性の側面から考える
+&lt;/h3>&lt;p>拡張For文(forEach())では、Collectionそのものの要素をことができます。逆に、For文やIteratorでは可能ですね。ならば、Collectionや配列の中でとある条件と一致する要素だけのことしたい場合は、拡張For文よりもFor文やIteratorを使うべきであるようにも見えます。&lt;/p>
 &lt;p>しかし、観点を変えてみると、元のオブジェクトそのものが変わることで起こり得るサイドエフェクトが発生する場合も考えられます。こういう場合、元のオブジェクトを直接操作できるということはメリットではなくデメリットになってしまいますね。なので、どちらかというと、与えられたCollection/配列から条件に一致する要素だけを抽出して新しいCollection/配列のインスタンスを生成するのが正解の可能性もあります。そしてそれをよりわかりやすいコードとして実現できるのは拡張For文(forEach())ですね。例えば、以下のようにです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 元のリストが変わってしまう&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">filterFor&lt;/span>(List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> list) {
@@ -791,8 +791,8 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> list.&lt;span style="color:#a6e22e">stream&lt;/span>().&lt;span style="color:#a6e22e">filter&lt;/span>(element &lt;span style="color:#f92672">-&amp;gt;&lt;/span> element.&lt;span style="color:#a6e22e">length&lt;/span>() &lt;span style="color:#f92672">&amp;lt;=&lt;/span> 10).&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>良いコードは、短く、わかりやすいコードなのではないかと思っています。そしてわかり安いコードは、誰がメンテしてもバグを起こす可能性は低くなるはずでしょう。そういう観点からすると、伝統的なFor文とIteratorは、今は使うべきではないのかもしれません。&lt;/p>
-&lt;h3 id="処理能力の側面から考える">処理能力の側面から考える&lt;/h3>
-&lt;p>処理能力、というのはある程度性能ともつながるものですね。なので、性能という側面でもう一度考えてみます。互換性、汎用性などとも言える物かもしれません。ここで言いたいのは、Collection/配列がどんなものであれ、一定の性能を保証する実装を考える必要があるということです。&lt;/p>
+&lt;h3 id="処理能力の側面から考える">処理能力の側面から考える
+&lt;/h3>&lt;p>処理能力、というのはある程度性能ともつながるものですね。なので、性能という側面でもう一度考えてみます。互換性、汎用性などとも言える物かもしれません。ここで言いたいのは、Collection/配列がどんなものであれ、一定の性能を保証する実装を考える必要があるということです。&lt;/p>
 &lt;p>引数として&lt;code>List&lt;/code>をとり、なんらかの処理をループで行うメソッドを実装するとしましょう。今まであげてきた、4つのループのパターンのうちどれを選ぶべきかは、その引数の実装クラスが何になるかわからない、という面も考慮する必要があります。なぜなら、Listは色々な実装クラスを持つインタフェースだからです。&lt;/p>
 &lt;p>引数としてListをまず宣言しておくと、言語の仕様としてはListの実装クラスはどれでも許容することになりますね。なので引数として入ってくるのは&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ArrayList.html" target="_blank" rel="noopener"
 >ArrayList&lt;/a>になる可能性もあり、&lt;a class="link" href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedList.html" target="_blank" rel="noopener"
@@ -824,12 +824,12 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LoopTest.extendedLoop thrpt &lt;span style="color:#ae81ff">25&lt;/span> 659.999 ± 47.702 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LoopTest.forEachLoop thrpt &lt;span style="color:#ae81ff">25&lt;/span> 780.463 ± 78.591 ops/s
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ArrayListとは真逆の結果になったのがわかります。特に、インデックスによるループは使えるものにならないほど性能が低く、拡張For文よりも&lt;code>forEach()&lt;/code>の性能が高いという、意外の結果となっています。このベンチマークでの数値が絶対的なものとは言えませんが、結果から推論できるのは、やはりArrayListのインデックスを利用する伝統的なFor文でのループが一番早かったからという理由だけで、全てのListをFor文で処理するというのは危ないということです。なので「どの実装クラスでも、平均的に良い性能を出してくれる」方式を選ぶ必要があるという結論を出せるでしょう。(それがおそらく拡張For文な気がします)&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>全ての場面で最適なコードを書くのは難しいことで、過去に書いたコードはいずれ改善しなければならないものとなりますね。あまりエンジニアとしての歴の長くない自分でも、たまに入社前のコードをみるとびっくりするくらいです。なんとか動くようなものは作ったものの、重複するコードや無駄なインスタンス作りなど、至る所に自分のミスが散らかっています。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>全ての場面で最適なコードを書くのは難しいことで、過去に書いたコードはいずれ改善しなければならないものとなりますね。あまりエンジニアとしての歴の長くない自分でも、たまに入社前のコードをみるとびっくりするくらいです。なんとか動くようなものは作ったものの、重複するコードや無駄なインスタンス作りなど、至る所に自分のミスが散らかっています。&lt;/p>
 &lt;p>なのでたまには、そのような過去の自分が書いたコードと向かい合って、それを直してみるのも良い経験になるのではないかと思ったりもします。特に今回みたいに、ループ処理は基本の中の基本ですが、その処理すらどれを選ぶかよくわかってないまま(そして副作用などは考えず)、ただひたすら書いてしまったものも多かったので、それに対する反省を兼ねて、そして自分の思うことの根拠を探すための勉強にもなりますので。そしてベンチマーク、意外と楽しいですので。これで自分の理論を証明していくのも良い経験ですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>二つのListを結合する</title><link>https://retheviper.github.io/posts/java-compare-and-merge-lists/</link><pubDate>Sun, 26 Jul 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-compare-and-merge-lists/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 二つのListを結合する" />&lt;p>よく訪問しているサイトに、とある質問がありました。質問の内容とは、&lt;code>List二つを、重複する要素なしで一つにまとめる方法&lt;/code>ということでした。SQLなら簡単に解決できそうな問題でもありますが、クエリーを修正できない状態だったり、複数のAPIを呼び出してその戻り値を扱う場合は直接コードを書いて併合するしかないですね。今まであまり経験したことのない状況でしたが、個人的にも興味が沸いたのでいろいろ試しながらコードを書いてみました。&lt;/p>
-&lt;h2 id="問題のコード">問題のコード&lt;/h2>
-&lt;p>質問の作成者がやりたいことは、&lt;code>List&amp;lt;Map&amp;lt;String, Object&amp;gt;&amp;gt;&lt;/code>が二つあり、Listの中のMapの要素を確認し、重複する物があれば一つのListとしてまとめたいということです。ここで重複の条件は、MapのKeyとValueでした。&lt;/p>
+&lt;h2 id="問題のコード">問題のコード
+&lt;/h2>&lt;p>質問の作成者がやりたいことは、&lt;code>List&amp;lt;Map&amp;lt;String, Object&amp;gt;&amp;gt;&lt;/code>が二つあり、Listの中のMapの要素を確認し、重複する物があれば一つのListとしてまとめたいということです。ここで重複の条件は、MapのKeyとValueでした。&lt;/p>
 &lt;p>今はコードは存在するものの、重複チェックのためのロジックが複雑になりすぎて、負荷も高く性能面でも問題があるらしいです。まず彼の後悔しているコードは、以下のようなものでした。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Object&lt;span style="color:#f92672">&amp;gt;&lt;/span> list1 &lt;span style="color:#f92672">=&lt;/span> ...
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>Object&lt;span style="color:#f92672">&amp;gt;&lt;/span> list2 &lt;span style="color:#f92672">=&lt;/span> ...
@@ -851,10 +851,10 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>コードをみると、3重ループになっていて、KeyとValueが一致する項目がないかを一つ一つチェックしています。そして実際のコードなのかよくわかりませんが、このコードだとキーがリテラルになっているので全体のキーを循環できるようなループがまた追加されるべきではないかと思います。そうするとまたループが追加されたりして、より複雑なコードになりそうですね。これをListの個数分回すとしたら、それは負荷が多いだろうなと思います。なのでこれをなるべく短く、より単純なコードにしてみたいと思います。&lt;/p>
 &lt;p>Best Practiceではないのかもしれませんが、ひとまず自分の考えてコードを紹介します。&lt;/p>
-&lt;h2 id="streamを使ってみる">Streamを使ってみる&lt;/h2>
-&lt;p>Listの要素を一つづつ処理したい場合は、まずStreamを使う方法がないかをまず考えてみました。ネットで調べてみるとやはりStreamを使って複数のListをマージする方法がいくつかあります。それらを使って検証してみました。&lt;/p>
-&lt;h3 id="結合と重複の除外">結合と重複の除外&lt;/h3>
-&lt;p>&lt;code>Stream.concat()&lt;/code>を使うと、二つのStreamをつなげることができます。また、Streamでは&lt;code>distinct()&lt;/code>で重複を除外することができます。これらの組み合わせを使うと、二つのListを重複する要素なしで結合することができます。まず簡単な例題を使うと以下のようなコードになります。&lt;/p>
+&lt;h2 id="streamを使ってみる">Streamを使ってみる
+&lt;/h2>&lt;p>Listの要素を一つづつ処理したい場合は、まずStreamを使う方法がないかをまず考えてみました。ネットで調べてみるとやはりStreamを使って複数のListをマージする方法がいくつかあります。それらを使って検証してみました。&lt;/p>
+&lt;h3 id="結合と重複の除外">結合と重複の除外
+&lt;/h3>&lt;p>&lt;code>Stream.concat()&lt;/code>を使うと、二つのStreamをつなげることができます。また、Streamでは&lt;code>distinct()&lt;/code>で重複を除外することができます。これらの組み合わせを使うと、二つのListを重複する要素なしで結合することができます。まず簡単な例題を使うと以下のようなコードになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 結合したいList&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> list1 &lt;span style="color:#f92672">=&lt;/span> List.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;a&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;b&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;d&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;e&amp;#34;&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> list2 &lt;span style="color:#f92672">=&lt;/span> List.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;b&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;c&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;d&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;f&amp;#34;&lt;/span>);
@@ -862,10 +862,10 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 結合と重複の除外(&amp;#34;a&amp;#34;, &amp;#34;b&amp;#34;, &amp;#34;c&amp;#34;, &amp;#34;d&amp;#34;, &amp;#34;e&amp;#34;, &amp;#34;f&amp;#34;)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> concat &lt;span style="color:#f92672">=&lt;/span> Stream.&lt;span style="color:#a6e22e">concat&lt;/span>(list1.&lt;span style="color:#a6e22e">stream&lt;/span>(), list2.&lt;span style="color:#a6e22e">stream&lt;/span>()).&lt;span style="color:#a6e22e">distinct&lt;/span>().&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toList&lt;/span>());
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>&lt;code>Stream.concat()&lt;/code>の引数は二つしか指定できないので、3つ以上のListを繋ぐ場合はループを使うのを考慮すると良いです。また、&lt;code>distinct()&lt;/code>の場合、&lt;code>equals()&lt;/code>がちゃんと定義されてあるという前提ならどんなオブジェクトでも重複検査ができます。なのでLombokの&lt;code>@Data&lt;/code>のようなアノテーションのついたクラスでも重複を除外して一つのListに納めることができます。&lt;/p>
-&lt;h3 id="限界">限界&lt;/h3>
-&lt;p>質問の作成者は、Listの中のMapの要素に対して重複チェックを行いたいと行っていますが、この方法ではそのようにはなりません。なぜなら、Mapそのものを&lt;code>equals()&lt;/code>で比較してしまい、中の要素一つ一つに対してはチェックしない構造となっているからです。なのでこのようなコードだと、二つのListを繋いだような物ができてしまうだけです。&lt;/p>
-&lt;h2 id="forループを使ってみる">Forループを使ってみる&lt;/h2>
-&lt;p>今回は質問者のコードを直して、より効率的に変えてみます。あえてForループを使っているのは、条件に一致した場合に一回だけ&lt;code>put()&lt;/code>を実行するためです。&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>は全ての要素に対して処理を行うためのものなので、除きました。&lt;/p>
+&lt;h3 id="限界">限界
+&lt;/h3>&lt;p>質問の作成者は、Listの中のMapの要素に対して重複チェックを行いたいと行っていますが、この方法ではそのようにはなりません。なぜなら、Mapそのものを&lt;code>equals()&lt;/code>で比較してしまい、中の要素一つ一つに対してはチェックしない構造となっているからです。なのでこのようなコードだと、二つのListを繋いだような物ができてしまうだけです。&lt;/p>
+&lt;h2 id="forループを使ってみる">Forループを使ってみる
+&lt;/h2>&lt;p>今回は質問者のコードを直して、より効率的に変えてみます。あえてForループを使っているのは、条件に一致した場合に一回だけ&lt;code>put()&lt;/code>を実行するためです。&lt;code>Stream&lt;/code>や&lt;code>forEach()&lt;/code>は全ての要素に対して処理を行うためのものなので、除きました。&lt;/p>
 &lt;p>Mapには&lt;code>put()&lt;/code>以外でも&lt;code>putAll()&lt;/code>があるので、要素を巡回しながら一つづつ一つでもループは消すことができます。そして&lt;code>putAll()&lt;/code>を実行したら、次の要素までチェックする必要はなくなるので&lt;code>continue&lt;/code>を実行して次のループは飛ばすようにして、無駄な処理を無くします。そうするとまず以下のようにコードを帰ることができますね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (Object object : list1) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Map&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, String&lt;span style="color:#f92672">&amp;gt;&lt;/span> map &lt;span style="color:#f92672">=&lt;/span> (HashMap&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, String&lt;span style="color:#f92672">&amp;gt;&lt;/span>) object;
@@ -910,8 +910,8 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>あとは場合によってMapのKeyをソートするなどの処理が必要になるかもですが、一旦これで要件は満たしたような気がします。&lt;/p>
-&lt;h2 id="条件が違う場合">条件が違う場合&lt;/h2>
-&lt;p>質問者のコードからは、推論するしかないことですが、もしListのインデックスを基準に比較するという条件があるとしたら、コードはより減らすことができます。list1とlist2の同じインデックスに、同じ要素を持つMapがあるかを確認するということです。もしこの条件があるとしたら、ループは2重に納めることができます。以下はその場合のコードです。&lt;/p>
+&lt;h2 id="条件が違う場合">条件が違う場合
+&lt;/h2>&lt;p>質問者のコードからは、推論するしかないことですが、もしListのインデックスを基準に比較するという条件があるとしたら、コードはより減らすことができます。list1とlist2の同じインデックスに、同じ要素を持つMapがあるかを確認するということです。もしこの条件があるとしたら、ループは2重に納めることができます。以下はその場合のコードです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> (Map&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, String&lt;span style="color:#f92672">&amp;gt;&lt;/span> map : list1) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">for&lt;/span> (Map.&lt;span style="color:#a6e22e">Entry&lt;/span>&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, String&lt;span style="color:#f92672">&amp;gt;&lt;/span> entry : map.&lt;span style="color:#a6e22e">entrySet&lt;/span>()) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// List2と同じインデックスを比較する&lt;/span>
@@ -923,20 +923,20 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、この方法を使うためには二つのListが同じサイズを持っているという前提が必要となるのでそこには気をつけなくではならなくなります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>たまにこうやって、自分ではまだ遭遇していない場合に対して考えられるチャンスとなるので、コミュニティに注目するのは良い経験となると思います。調べている間に普段は使ってみたことのないメソッドやAPIを調べてみたり、自分が書いていたコードを振り返ってみる良い機会にもなりますね。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>たまにこうやって、自分ではまだ遭遇していない場合に対して考えられるチャンスとなるので、コミュニティに注目するのは良い経験となると思います。調べている間に普段は使ってみたことのないメソッドやAPIを調べてみたり、自分が書いていたコードを振り返ってみる良い機会にもなりますね。&lt;/p>
 &lt;p>他にもKeyは構わなく、重複するValueがある場合のみチェックするとか、要素のフィールドが重複している場合をチェックするかなどさまざまなバリエーションを考えられると思います。どれも面白い主題なのですが、今回の主題とは少し乖離があるため、機会があればいつかそのようなケースに対してのコードもブログに載せたいと思います。では、また！&lt;/p></description></item><item><title>Streamを正しく使う</title><link>https://retheviper.github.io/posts/java-stream/</link><pubDate>Mon, 06 Apr 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-stream/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post Streamを正しく使う" />&lt;p>個人的には、関数型プログラミングにあまり詳しくはないですが、Java 1.8のStream APIは好んで使っています。他にもLambdaやOptionalといったAPIも好きですが、自分がJavaの資格を取った理由も、このStream APIについてもっと勉強したかったからと言っても過言ではないです。&lt;/p>
 &lt;p>そんな私ですが、Streamについて勉強している中、疑問が出来ました。Streamは確かにいいAPIですが、伝統的なJavaのAPIとはかなり違うものです。これをJavaに導入したことで得られるメリットがあるから導入されたはず、というのは難しくない推論ですが、逆の場合はどうでしょうか？Streamを使った場合のデメリットは？そして自分が使っているStreamの書き方は正しいのか？などなど。&lt;/p>
 &lt;p>今回のポストでは、そのような疑問について独自に調査したことを述べていきたいと思います。正解というより、こういう見解があるということとしてご理解ください。&lt;/p>
-&lt;h2 id="streamは万能か">Streamは万能か？&lt;/h2>
-&lt;p>まず最初の質問です。Streamは万能か？つまり、既存のコードをすべてStreamに書き換えても問題はないか？そしてなるべくこれから書くコードはStreamに変えるべきなのか？という質問ですね。確かに新しいAPIが出て、既存のコードと同じ役割ができるとしたら、それにはなんらかの理由があります。Javaの場合は、NIOがそうでした。一般的なI/OではOSのカーネルの機能を利用できなかったため、それを改善するために登場しましたね。しかし、NIOもまた、全ての場面で既存のI/Oより優れているとは言えない面がありました。そしたらStreamの場合も、その可能性はあると思いました。&lt;/p>
+&lt;h2 id="streamは万能か">Streamは万能か？
+&lt;/h2>&lt;p>まず最初の質問です。Streamは万能か？つまり、既存のコードをすべてStreamに書き換えても問題はないか？そしてなるべくこれから書くコードはStreamに変えるべきなのか？という質問ですね。確かに新しいAPIが出て、既存のコードと同じ役割ができるとしたら、それにはなんらかの理由があります。Javaの場合は、NIOがそうでした。一般的なI/OではOSのカーネルの機能を利用できなかったため、それを改善するために登場しましたね。しかし、NIOもまた、全ての場面で既存のI/Oより優れているとは言えない面がありました。そしたらStreamの場合も、その可能性はあると思いました。&lt;/p>
 &lt;p>結論からいうと、「全てのコードをStreamに書き換える必要はない」です。その理由を、一つ一つ項目別に説明します。&lt;/p>
-&lt;h3 id="性能は劣る場合も">性能は劣る場合も&lt;/h3>
-&lt;p>Java 1.5では、伝統的なFor文意外にも、いわゆる拡張For文というものが登場しました。そして1.8では、Streamと共にforEach()というメソッドもできましたね。しかし、forEach()もStreamも性能は拡張For文より劣ります。また、とあるベンチマークでは、Streamを使った場合の処理はParallelを使っても拡張For文より性能は劣るという結果が出たらしいです。理由は簡単です。Streamを使うと、より複雑な処理が中に入るからです。特に配列をStreamに変換する時はラッピングが入るので、そこでもう処理が加えられるということを考えられますね。&lt;/p>
+&lt;h3 id="性能は劣る場合も">性能は劣る場合も
+&lt;/h3>&lt;p>Java 1.5では、伝統的なFor文意外にも、いわゆる拡張For文というものが登場しました。そして1.8では、Streamと共にforEach()というメソッドもできましたね。しかし、forEach()もStreamも性能は拡張For文より劣ります。また、とあるベンチマークでは、Streamを使った場合の処理はParallelを使っても拡張For文より性能は劣るという結果が出たらしいです。理由は簡単です。Streamを使うと、より複雑な処理が中に入るからです。特に配列をStreamに変換する時はラッピングが入るので、そこでもう処理が加えられるということを考えられますね。&lt;/p>
 &lt;p>特に、オブジェクトを扱う場合の性能の差はそんなに大きくないものの、プリミティブ型を扱う場合は性能の差がより大きいらしいです。なので無理やり配列をStreamに変えて処理をする必要はありません。StreamやforEach()は、それを持って安定したコードを書けられる場合に限定して使う必要があります。そしてStreamを使う場合もプリミティブ型を扱う場合はIntStreamやToIntStreamといった、それぞれの型に合わせたクラスを使った方がより良い性能を出すので、そこもちゃんと考慮すべきですね。&lt;/p>
 &lt;p>JVMが長い間伝統的なFor文に最適化されてきて、1.8になってやっと登場したStreamはそれほど最適化されてないので性能が劣るという話もありましたが、これは1.8がリリースされた当時の記事に書いてあったものなので14までバージョンアップがなされた今はどうかという疑問はあります。それでも伝統的なFor文の方がまだ性能では優秀ではないだろうかと思いますが。&lt;/p>
-&lt;h3 id="途中でやめられない">途中でやめられない&lt;/h3>
-&lt;p>Streamの処理は一般的なforループとは違って、continueやbreak、returnなどで一部の処理をスキップしたり途中で処理を止めることができません。基本的にStreamは全要素に対して処理をすることを前提にして設計されたからです。なのでそれぞれの目的に合わせて、Streamのメソッドを適切に使い分ける必要があります。例えばFor文での処理は以下のような変えられます。&lt;/p>
+&lt;h3 id="途中でやめられない">途中でやめられない
+&lt;/h3>&lt;p>Streamの処理は一般的なforループとは違って、continueやbreak、returnなどで一部の処理をスキップしたり途中で処理を止めることができません。基本的にStreamは全要素に対して処理をすることを前提にして設計されたからです。なのでそれぞれの目的に合わせて、Streamのメソッドを適切に使い分ける必要があります。例えばFor文での処理は以下のような変えられます。&lt;/p>
 &lt;ul>
 &lt;li>条件に合致する要素だけを処理したい場合(if)
 &lt;ul>
@@ -954,20 +954,20 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
-&lt;h3 id="ループ変数を使用できない">ループ変数を使用できない&lt;/h3>
-&lt;p>拡張For文ではなく、伝統的なFor文ではループ変数を使って、現在のループが何回目かを数えることができます。しかし、Streamではループ変数を使うことができません。例えば、以下のようにStreamの外部に変数を置いてもコンパイルエラーとなります。&lt;/p>
+&lt;h3 id="ループ変数を使用できない">ループ変数を使用できない
+&lt;/h3>&lt;p>拡張For文ではなく、伝統的なFor文ではループ変数を使って、現在のループが何回目かを数えることができます。しかし、Streamではループ変数を使うことができません。例えば、以下のようにStreamの外部に変数を置いてもコンパイルエラーとなります。&lt;/p>
 &lt;p>int型のループ変数を使いたい場合はIntStreamを、ループ変数で処理をスキップしたい場合はskip()を使いましょう。もちろん、こういう場合は普通に既存のFor文を使った方が正解に違いです。&lt;/p>
-&lt;h3 id="そもそもの関数型">そもそもの関数型&lt;/h3>
-&lt;p>実は、Streamの中でも外部変数をループ変数として使う方法がなくはないです。AtomicIntegerでループ変数を使う方法がありますが、そこまでしてStreamを使う理由もなければ、関数型プログラミングの目的に合いません。&lt;/p>
+&lt;h3 id="そもそもの関数型">そもそもの関数型
+&lt;/h3>&lt;p>実は、Streamの中でも外部変数をループ変数として使う方法がなくはないです。AtomicIntegerでループ変数を使う方法がありますが、そこまでしてStreamを使う理由もなければ、関数型プログラミングの目的に合いません。&lt;/p>
 &lt;p>関数型プログラミングのコンセプトの中では不変性(Immutability)というものがあります。以前&lt;a class="link" href="../java-thoughts-of-immutable" >Immutabilityについて述べたこと&lt;/a>がありますが、ここで重要なのはデータが変わることはない、ということです。データが変わらないならどうやって処理が行われるかというと、元のデータはそのままで、処理ではそのデータのコピーを作って作業することになります。&lt;/p>
 &lt;p>Streaｍを持って処理をする場合に、その結果が新しいインスタンスになるのもそれが理由です。Listをループさせる場合は、元の要素を編集できます。しかし、Streamで処理する場合は変更された要素で構成された新しいListを返すようになりますね。中間操作で元の要素を編集するとしても、Streamは終端操作が終わるとクローズされ再利用できなくなります。これで元のデータは変えずに済みますね。&lt;/p>
 &lt;p>なのでStreamを使う場面というのは、まず元のデータをどうするかによります。もちろん、Streamを使わない場合でも、関数型的なコードの作成がより場合も多いです。(ということで、まずは関数型プログラミングを勉強ですね…)&lt;/p>
-&lt;h2 id="streamをより活用する">Streamをより活用する&lt;/h2>
-&lt;p>次に、Streamを使う場合に、どうしたら正しく、より効率的に活用できるかに関する質問です。Streamは最初から再使用できないようになっていますが、場合によっては同じデータに対してそれぞれ違う処理を行う必要があるのでそれがどうやって実現できるか、という疑問がありました。例えば、普通のFor文だとループの中で分岐を置くことで二つのCollectionに要素を分配するような処理ができるのですが、Streamだと同じオブジェクトに対しての処理はできませんね。こういう場合は同じデータに対してどうやったらStream処理を2回以上できるか気になります。&lt;/p>
+&lt;h2 id="streamをより活用する">Streamをより活用する
+&lt;/h2>&lt;p>次に、Streamを使う場合に、どうしたら正しく、より効率的に活用できるかに関する質問です。Streamは最初から再使用できないようになっていますが、場合によっては同じデータに対してそれぞれ違う処理を行う必要があるのでそれがどうやって実現できるか、という疑問がありました。例えば、普通のFor文だとループの中で分岐を置くことで二つのCollectionに要素を分配するような処理ができるのですが、Streamだと同じオブジェクトに対しての処理はできませんね。こういう場合は同じデータに対してどうやったらStream処理を2回以上できるか気になります。&lt;/p>
 &lt;p>もう一つは、自分だけなのかもしれませんが、Stream以外でも、メソッドチェーニングを使えるAPIは非効率的な処理が入ってもすごく場合があって、それをどうしたら効率的な書き方にできるかという疑問がありました。例えばCollectionや配列をStreamに変換してからforEach()を使うこともできますが、CollectionだとstreamなしでもforEach()は使えますね。こういう場合は直感的にCollectionのforEach()の方が良さそうだとは思いますが、それ以外の場合はどうなのかよくわかりません。&lt;/p>
 &lt;p>なので、この二つの疑問についても調査してみました。&lt;/p>
-&lt;h3 id="再使用">再使用&lt;/h3>
-&lt;p>Streaｍは何度も繰り返して中間操作が可能ですが、一度でも終端操作が行われるとクローズされ、再利用ができなくなります。なぜなら、Streamの目的はデータの処理であって、データの格納ではないからです。&lt;/p>
+&lt;h3 id="再使用">再使用
+&lt;/h3>&lt;p>Streaｍは何度も繰り返して中間操作が可能ですが、一度でも終端操作が行われるとクローズされ、再利用ができなくなります。なぜなら、Streamの目的はデータの処理であって、データの格納ではないからです。&lt;/p>
 &lt;p>しかし、たまには同じデータに対してStreamを利用し、それぞれ違う処理を行たい場合もありますね。そういう時はどうしたらいいでしょう。Javaでデータを格納するためのものは配列やCollectionがありますので、必要なデータを予め定義して、場合によってそれをStreamに転換して使う方法があります。配列の場合は&lt;code>Arrays.stream()&lt;/code>や&lt;code>Stream.of()&lt;/code>があり、Collectionだと&lt;code>stream()&lt;/code>がありますね。例えば以下のような方法です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Listで必要なデータを集めておく&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> names &lt;span style="color:#f92672">=&lt;/span>
@@ -980,8 +980,8 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 2番目のStream&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Optional&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> anyElement &lt;span style="color:#f92672">=&lt;/span> names.&lt;span style="color:#a6e22e">stream&lt;/span>().&lt;span style="color:#a6e22e">findAny&lt;/span>();
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>予め必要なデータはListとしてCollectし、必要な場合はそれをまたStreamに変換して使う例でした。データがそもそもCollectionや配列の場合は、必要に応じてstream()を呼び出すことでそれぞれ違う処理ができます。また、peek()を挟むことで違うCollectionにデータを追加することもできます。厳密にいうと再使用というよりはどうStreamを作るかに関する話となりますが、これで一つのデータから複数の処理結果を出すことは可能、ということになります。&lt;/p>
-&lt;h3 id="短く書く">短く書く&lt;/h3>
-&lt;p>先に述べましたが、StreamはメソッドチェーニングのできるAPIなので、非効率的なコードを書きやすい傾向がありました。なのでケース別により効率的な書き方を集めてみました。自分はEclipseを主に使っているのですが、Intellijだと、こうした方がいいよとオススメしてくれる部分らしいです。&lt;/p>
+&lt;h3 id="短く書く">短く書く
+&lt;/h3>&lt;p>先に述べましたが、StreamはメソッドチェーニングのできるAPIなので、非効率的なコードを書きやすい傾向がありました。なのでケース別により効率的な書き方を集めてみました。自分はEclipseを主に使っているのですが、Intellijだと、こうした方がいいよとオススメしてくれる部分らしいです。&lt;/p>
 &lt;ul>
 &lt;li>Collectionのメソッドを使う&lt;/li>
 &lt;/ul>
@@ -1060,7 +1060,7 @@ LoopTest.forEachLoop thrpt 25 12.479 ± 0.104 ops/s
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 要素の状態だけを変える&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>stream.&lt;span style="color:#a6e22e">map&lt;/span>(x &lt;span style="color:#f92672">-&amp;gt;&lt;/span> {...; &lt;span style="color:#66d9ef">return&lt;/span> x;})
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#960050;background-color:#1e0010">→&lt;/span> stream.&lt;span style="color:#a6e22e">peek&lt;/span>(x &lt;span style="color:#f92672">-&amp;gt;&lt;/span> ...)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>関数型プログラミングに興味がないとしても、Streamそのものはかなり魅力的なAPIですので、皆さんにもぜひ使ってみて欲しいです。Java 1.8がリリースされた当時には性能も劣り読みにくいという批判も多かったのですが、もう時間は経ち、Javaのバージョンはすでに14となっているくらいです。もうそろそろStreamを使ってモダンな書き方を試してみても良いでしょう。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>関数型プログラミングに興味がないとしても、Streamそのものはかなり魅力的なAPIですので、皆さんにもぜひ使ってみて欲しいです。Java 1.8がリリースされた当時には性能も劣り読みにくいという批判も多かったのですが、もう時間は経ち、Javaのバージョンはすでに14となっているくらいです。もうそろそろStreamを使ってモダンな書き方を試してみても良いでしょう。&lt;/p>
 &lt;p>そしてStreamを通じて、関数型プログラミングを味わえるのも一つのメリットではないかと思います。もちろん、Streamが完璧な関数型プログラミングの例だとは言い切れませんが、少なくとも、オブジェクト指向だけでなく新しいプログラミングのトレンドはどういうものかを経験できるということだけでも十分価値があるのではないでしょうか。もう関数型プログラミングの概念が登場してからも数年が経っています。プログラミングの世界は常に変化と発達が伴うものなので、少なくとも最近のトレンドが何であるかくらいは把握しておきたいものです。&lt;/p>
 &lt;p>では、またあいましょう！&lt;/p></description></item></channel></rss>

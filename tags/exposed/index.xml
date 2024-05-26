@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Exposed on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/exposed/</link><description>Recent content in Exposed on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 26 Mar 2023 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/exposed/index.xml" rel="self" type="application/rss+xml"/><item><title>Path ParameterをInline classで受け取る</title><link>https://retheviper.github.io/posts/ktor-path-parameter-as-inline/</link><pubDate>Sun, 26 Mar 2023 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-path-parameter-as-inline/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post Path ParameterをInline classで受け取る" />&lt;p>最近はサイドプロジェクトとしてシンプルなWebアプリケーションを作っていて、サーバサイドのフレームワークではKtorを採用しています。今まではずっとSpringを触ってきたので、たまにはこうやって違うフレームワークで何か作ってみるのも楽しいですね。&lt;/p>
 &lt;p>さて、そこで今回の記事のテーマとなるのが、KtorでPath Parameterを受け取りInline Classとして扱う方法についてです。高度な技術を要するものではないのですが、より型安全で便利に使えるコードが書ける方法ではないかと思い試したことの紹介となります。&lt;/p>
-&lt;h2 id="inline-classとは">Inline Classとは&lt;/h2>
-&lt;p>Kotlin 1.6から&lt;a class="link" href="https://kotlinlang.org/docs/inline-classes.html" target="_blank" rel="noopener"
+&lt;h2 id="inline-classとは">Inline Classとは
+&lt;/h2>&lt;p>Kotlin 1.6から&lt;a class="link" href="https://kotlinlang.org/docs/inline-classes.html" target="_blank" rel="noopener"
 >Inline Class&lt;/a>という機能が追加されました。Inline Classは、型のラッパーとして使うことができる機能です。例えば、以下のようなコードがあるとします。プレイヤーがいて、そのプレイヤーごとの成績を表現したものです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// プレイヤー
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Player&lt;/span>(&lt;span style="color:#66d9ef">val&lt;/span> id: Int, &lt;span style="color:#66d9ef">val&lt;/span> playerRecordId: Int)
@@ -26,8 +26,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// ...
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここだけみると、Inline ClassがJavaのラッパークラスや普通のdata classと何が違うんだ？という疑問が湧いてくるかもしれません。また、typealiasのような既存の機能もありますね。ただ、Inline Classはコンパイル時にprimitive型の扱いでありながら、実行時にはラッパークラスのように振る舞うという特徴があります。そのため、Inline Classだと型安全を担保できつつパフォーマンスへの影響も少ないというメリットがあります。&lt;/p>
-&lt;h2 id="ktorでpath-parameterを扱う">KtorでPath Parameterを扱う&lt;/h2>
-&lt;p>Ktorでは、Path Parameterを受け取るためには、以下のように書く必要があります。&lt;/p>
+&lt;h2 id="ktorでpath-parameterを扱う">KtorでPath Parameterを扱う
+&lt;/h2>&lt;p>Ktorでは、Path Parameterを受け取るためには、以下のように書く必要があります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>routing {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/{id}&amp;#34;&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> id = call.parameters[&lt;span style="color:#e6db74">&amp;#34;id&amp;#34;&lt;/span>]&lt;span style="color:#f92672">?.&lt;/span>toInt()
@@ -36,8 +36,8 @@
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Path Parameterを取得するために、&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/io.ktor.server.application/-application-call/index.html" target="_blank" rel="noopener"
 >ApplicationCall&lt;/a>から&lt;a class="link" href="https://api.ktor.io/ktor-http/io.ktor.http/-parameters/index.html" target="_blank" rel="noopener"
 >Parameters&lt;/a>で&lt;code>{id}&lt;/code>に指定された値をまずStringで読み込むようになります。そして、さらに&lt;code>toInt()&lt;/code>でIntに変換しています。これでPath ParameterをIntで受け取り、処理の中で使うことができるようになります。&lt;/p>
-&lt;h2 id="path-parameterを受け取る処理を改善する">Path Parameterを受け取る処理を改善する&lt;/h2>
-&lt;p>&lt;code>call.parameters&lt;/code>を利用したサンプルは一瞬見てシンプルなコードなのであまり改善の余地はないかなと思うかもしれませんが、実はこのコードにはいくつか問題があります。例えば、Int変換時のエラーを考慮する必要がありますね。&lt;code>toInt()&lt;/code>でIntに変換するときに、&lt;code>null&lt;/code>や&lt;code>&amp;quot;abc&amp;quot;&lt;/code>といった文字列が渡された場合には、&lt;code>NumberFormatException&lt;/code>が発生してしまいます。また、&lt;code>toInt()&lt;/code>でIntに変換するときに、&lt;code>Int.MAX_VALUE&lt;/code>を超える値が渡された場合には、&lt;code>NumberFormatException&lt;/code>が発生してしまいます。このように、Path Parameterを受け取るときには、必ず&lt;code>null&lt;/code>チェックや&lt;code>NumberFormatException&lt;/code>のチェックを行う必要があります。&lt;/p>
+&lt;h2 id="path-parameterを受け取る処理を改善する">Path Parameterを受け取る処理を改善する
+&lt;/h2>&lt;p>&lt;code>call.parameters&lt;/code>を利用したサンプルは一瞬見てシンプルなコードなのであまり改善の余地はないかなと思うかもしれませんが、実はこのコードにはいくつか問題があります。例えば、Int変換時のエラーを考慮する必要がありますね。&lt;code>toInt()&lt;/code>でIntに変換するときに、&lt;code>null&lt;/code>や&lt;code>&amp;quot;abc&amp;quot;&lt;/code>といった文字列が渡された場合には、&lt;code>NumberFormatException&lt;/code>が発生してしまいます。また、&lt;code>toInt()&lt;/code>でIntに変換するときに、&lt;code>Int.MAX_VALUE&lt;/code>を超える値が渡された場合には、&lt;code>NumberFormatException&lt;/code>が発生してしまいます。このように、Path Parameterを受け取るときには、必ず&lt;code>null&lt;/code>チェックや&lt;code>NumberFormatException&lt;/code>のチェックを行う必要があります。&lt;/p>
 &lt;p>また、&lt;code>ApplicationCall&lt;/code>は&lt;code>get()&lt;/code>や&lt;code>post()&lt;/code>のような関数の中でしか呼び出せないです。ということは、エンドポイントごとに同じような処理（エラーハンドリングなど）を書く必要があるということです。ルータ内で何回も同じような処理があるのは望ましくないので、このコードを共通化したいですね。なので、以下のように&lt;code>ApplicationCall&lt;/code>に拡張関数を定義して、Path Parameterを取得する処理を共通化すると良いはずです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">ApplicationCall&lt;/span>.getIdFromPathParameter(name: String): Int {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> parameter = parameters[name] &lt;span style="color:#f92672">?:&lt;/span> &lt;span style="color:#66d9ef">throw&lt;/span> IllegalArgumentException(&lt;span style="color:#e6db74">&amp;#34;id is required&amp;#34;&lt;/span>)
@@ -55,8 +55,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="path-parameterをinline-classでラップする">Path ParameterをInline Classでラップする&lt;/h2>
-&lt;p>さて、Path ParameterからInt型で取得する処理を共通化できたので、次はPath ParameterをInline Classでラップすることで、より安全にコードを書くことを考えてみましょう。まず、もっとも簡単な方法は以下のように拡張関数が返す値をInline Classにすることです。先ほどの関数だと、以下のようになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="path-parameterをinline-classでラップする">Path ParameterをInline Classでラップする
+&lt;/h2>&lt;p>さて、Path ParameterからInt型で取得する処理を共通化できたので、次はPath ParameterをInline Classでラップすることで、より安全にコードを書くことを考えてみましょう。まず、もっとも簡単な方法は以下のように拡張関数が返す値をInline Classにすることです。先ほどの関数だと、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>routing {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">get&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/{playerId}&amp;#34;&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> id = PlayerId(call.getIdFromPathParameter(&lt;span style="color:#e6db74">&amp;#34;playerId&amp;#34;&lt;/span>))
@@ -88,8 +88,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>修正は簡単で、指定された&lt;code>Id&lt;/code>タイプのインスタンスを作成して、Path Parameterから取得したInt値をラップして返すだけですね。これで&lt;code>Id&lt;/code>を実装するInline Classのみ対応するという制限もかけながら、型の安全性も確保できるようになります。&lt;/p>
 &lt;p>ただ一つ、Path Parameterとしての変数名をInline Classの方にcompanion objectとして持たせて共通化できるといいのですが、残念ながらそれは難しいようです。interfaceのcompanion objectはoverrideできなく、Inline Classはabstract classを実装することができないからです。なので、他の方法でPath Parameter名の指定ができるようにすれば拡張関数の引数を減らしよりシンプルなものになるという改善の余地がまだありそうです。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>久々にKtorを触り、ブログの記事にしてみましたが、どうだったでしょうか。ずっとRest APIの実装ばかりしていたので、プライベートで何か新しいチャレンジをしてみないと、なかなか発見がない状態となっているのではないかという気がしています。ブログを始めてかれこれ5年目になり、まだ勉強不足だと感じるところが多いと感じつつもなかなかそれを言語化することは簡単ではないとも感じています。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>久々にKtorを触り、ブログの記事にしてみましたが、どうだったでしょうか。ずっとRest APIの実装ばかりしていたので、プライベートで何か新しいチャレンジをしてみないと、なかなか発見がない状態となっているのではないかという気がしています。ブログを始めてかれこれ5年目になり、まだ勉強不足だと感じるところが多いと感じつつもなかなかそれを言語化することは簡単ではないとも感じています。&lt;/p>
 &lt;p>ブログの更新の頻度が減ることになっても、次からはより良い記事になるように頑張りたいと思います。では、また！&lt;/p></description></item><item><title>ExposedでOneToManyをどうマッピングするか</title><link>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</link><pubDate>Mon, 26 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/exposed-mapping-record-to-object/</guid><description>&lt;img src="https://retheviper.github.io/images/exposed.jpg" alt="Featured image of post ExposedでOneToManyをどうマッピングするか" />&lt;p>DBのテーブルとして、1:Nのリレーションは珍しいものではありません。例えば、ECサイトで会員登録をし、複数の配送先を設定できるようにするとしたら、この会員情報のテーブルに配送先のカラムを追加するよりは、配送先のテーブルを分離して別に管理した方がデータの持ち方としては合理的で安全なはずです。そして分離した配送先のテーブルは、会員情報のテーブルとN:1の関係になるのが一般的でしょう。&lt;/p>
 &lt;p>ただ、データの持ち方が優先的なDBと、そのデータを処理して形にするアプリケーションでは事情が違いますね。例えば上記の通り、一つの会員情報のレコードに対して複数の配送先のレコードが存在し得る場合、SQLでデータを表現すると、以下のような形になるはずです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>|-----------|-------------|-----------------|
@@ -139,8 +139,8 @@
 >Exposed&lt;/a>, &lt;a class="link" href="https://www.ktorm.org" target="_blank" rel="noopener"
 >Ktorm&lt;/a>のようなORMで、DSLを使ってSQLを書く場合はデータのマッピングを手動で行う必要があります。そして取得したデータは行の配列という形になるので、どうマッピングしたら（効率が）いいかは少し悩ましいところです。&lt;/p>
 &lt;p>なので、今回はExposedのDSLを使って取得したOne to Manyのレコードを、コード上でどうやってオブジェクトにマッピングするかについて考えたことを述べたいとお思います。&lt;/p>
-&lt;h2 id="テーブルごとにselectする">テーブルごとにSelectする&lt;/h2>
-&lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
+&lt;h2 id="テーブルごとにselectする">テーブルごとにSelectする
+&lt;/h2>&lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> member = &lt;span style="color:#a6e22e">Member&lt;/span>.select { &lt;span style="color:#a6e22e">Member&lt;/span>.id eq id }
@@ -163,13 +163,13 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>もっとも簡単で、コードとしてもわかりやすい方法ではありますが、トランザクションの観点からするとあまりよくない方法ですね。Exposedでは、&lt;code>transaction&lt;/code>ブロックに包むことでトランザクションの単位を制御できるものの、一回で済ませるクエリの発行が複数になるという問題があります。ここではMemberテーブルを照会するたびにMailingテーブルも照会することになるので1回のクエリが追加されているだけですが、もしMemberテーブルに1:Nの関係となっているテーブルが増えれば増えるほどクエリの発行数も増えることになるでしょう。そして今回は一つのレコードに対してのコードとなっていますが、照会対象のMemberテーブルのレコードが増えれば増えるほど発行されるクエリの数も多くなります。&lt;/p>
 &lt;p>また、オブジェクトのインスタンスを作っておいて、わざわあコピーするというのもあまり効率が良いとは言えません。これもまたクエリの数が増える問題と同じく、照会対象のレコードが増えれば増えるほど生成されるオブジェクトのインスタンスも増えることになるという訳ですね。なので、全く性能や効率を考えてないコードと言えます。&lt;/p>
-&lt;h2 id="joinしてマッピングする">joinしてマッピングする&lt;/h2>
-&lt;p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり&lt;code>join&lt;/code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の&lt;a class="link" href="https://vmm.dev/ja/cci/cci-0.md" target="_blank" rel="noopener"
+&lt;h2 id="joinしてマッピングする">joinしてマッピングする
+&lt;/h2>&lt;p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり&lt;code>join&lt;/code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の&lt;a class="link" href="https://vmm.dev/ja/cci/cci-0.md" target="_blank" rel="noopener"
 >Big O記法&lt;/a>で表現すると、前者は&lt;code>O(N^2)&lt;/code>であり、これは&lt;code>O(1)&lt;/code>と表現できるはずです。&lt;/p>
 &lt;p>ならばデータを取得する際に、クエリとしては&lt;code>join&lt;/code>を使うのが理想的なのはわかりますが、問題はそうやって取得したデータをどう加工するかです。先に述べましたが、取得したデータのうち重複するものがあるからですね。そしてこれが重複しているかどうかはクエリを実行した結果を取得して、確認するまではわかりません。&lt;/p>
 &lt;p>ここで考えられる方法は三つほどありますので、一つづつ紹介していきます。&lt;/p>
-&lt;h3 id="reduce">reduce&lt;/h3>
-&lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
+&lt;h3 id="reduce">reduce
+&lt;/h3>&lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Member&lt;/span>.leftJoin(Mailing)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#a6e22e">Member&lt;/span>.id eq id) and (&lt;span style="color:#a6e22e">Mailing&lt;/span>.memberId eq &lt;span style="color:#a6e22e">Member&lt;/span>.id) }
@@ -189,8 +189,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このやり方で考えられる問題は、まず行数分のオブジェクトのインスタンスが作られるということです。このクエリとして取得しようとしているMemberのレコードは一つのみですが、そのレコードに紐づくMailingのレコードが多ければ多いほど件数は増え、当然生成されるオブジェクトの数も多くなります。また、マッピングだけでなく、&lt;code>reduce&lt;/code>でもオブジェクトをコピーしているので、やはり行数分のオブジェクトが生成されていると考えられます。オブジェクトのインスタンス数は行数x2になる訳ですね。&lt;/p>
 &lt;p>そしてもう一つの問題は、Memberのレコードを複数取得する場合、全部一つのオブジェクトにまとまってしまうという問題がありますね。なので、このやり方だと一つのレコードを取得する場合のみしか適応できなくなります。&lt;/p>
-&lt;h3 id="groupby">groupBy&lt;/h3>
-&lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
+&lt;h3 id="groupby">groupBy
+&lt;/h3>&lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Member&lt;/span>.leftJoin(Mailing)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#a6e22e">Member&lt;/span>.id eq id) and (&lt;span style="color:#a6e22e">Mailing&lt;/span>.memberId eq &lt;span style="color:#a6e22e">Member&lt;/span>.id) }
@@ -220,8 +220,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> destination
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで確かになっていることは、やはり最初のCollectionの要素数分、&lt;code>keySelector&lt;/code>と&lt;code>valueTransform&lt;/code>を実行しているということです。Mapに変えることになるので、&lt;code>reduce&lt;/code>の時とは違ってMemberレコードがいくつあっても一つに集約されるような事態は起こらないと考えられますが、依然としてオブジェクトのインスタンスが複数できてしまうという問題はあります。なので、また他の方法を探してみましょう。&lt;/p>
-&lt;h3 id="map">Map&lt;/h3>
-&lt;p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、&lt;code>compute&lt;/code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。&lt;/p>
+&lt;h3 id="map">Map
+&lt;/h3>&lt;p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、&lt;code>compute&lt;/code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。&lt;/p>
 &lt;p>トランザクションとは関係のないMapをまず宣言し、Selectしたデータに対して&lt;code>compute&lt;/code>を実行することにします。&lt;code>compute&lt;/code>では指定したkey（Memberのidなど）がMapの中にない場合にMemberのインスタンスを作成するようにして、すでにある場合はそのオブジェクトにMailingのデータを追加するようにすれば良いでしょう。そしてループが終わったらMapのvalueのみを取得すると良いですね。&lt;/p>
 &lt;p>以上のことを、コードで表すと以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// オブジェクトをまとめるためのMap（keyはMember.id）
@@ -251,26 +251,26 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>いかがでしょうか。これで重複するデータなく、インスタンスの作成も最低限に抑えることができたかと思います。もちろん、mailingAddressを追加するたびにコピーが発生するという問題はありますが、ここは専用のsetterなどを作っておくことで回避できると思います。&lt;/p>
 &lt;p>一つ注意しなくてはならないのは、ここで使っているMapをフィールドとして宣言したりするとデータの整合性やアプリケーションのメモリ使用量に響くということです。なので必ずメソッドの中でのみMapのインスタンスが作成されるようにする必要があります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。&lt;/p>
 &lt;p>ただ、ORMでどうやってデータを取得するかの問題だけでなく、ここで扱った「重複するデータをどう違う形のデータに加工するか」の問題は、必ずしもDBからレコードを取得する場合のみのことに限らないので（例えば他のAPIを読んだ結果としてもそんなデータはあり得ますね）、色々方法を考えておく必要はありそうです。今の時点ではMapを利用した方法がもっとも良さそうな気がしますが、他にもっと効率的な方法があるかもしれませんしね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>Ktorを触ってみた</title><link>https://retheviper.github.io/posts/ktor-first-impression/</link><pubDate>Sun, 18 Jul 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-first-impression/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.jpg" alt="Featured image of post Ktorを触ってみた" />&lt;p>サーバサイド言語としてのKotlinは普及しつつありますが、Kotlinを使う場合でもウェブフレームワークとして使われるのはやはりSpringが多いかと思います。理由としては会社ごとの事情というものもあるはずですが、一般的な理由としてはJavaエンジニアにとってKotlinは馴染みやすい物であっても、フレームワークの場合はそうでなく、Springほど検証されたフレームワークはないからということからでしょう。いまだにStrutsを使っていて、Springに移行しようとするところもありますしね。&lt;/p>
 &lt;p>KotlinはJavaと完璧（に近い）互換性があるので、Javaで書かれてあるアプリをそのままKotlinに移行しても大した問題はありません。Javaより生産性が高い上にSpringだけでなくJackson、Apache POI、JUnit、Jacocoなどの数多くのライブラリをそのまま使えるのは確かにメリットであって、企業側としてKotlinの導入を検討する理由は確かにそこにあると思います。Javaエンジニアはその数が多いので、エンジニアを募集し安くなるというところもメリットの一つと言えるでしょう。&lt;/p>
 &lt;p>ただ、Kotlinを使う場合に長期的にはKotlinで書かれたライブラリやフレームワークを導入することを検討した方が良いかもしれません。コンパイルした結果として生成されるByte codeがJavaと全く一緒だとしても、そもそものソースコードが違う言語なので、使う側のコード（クライアントコード）としては不便なところがあったり、Kotlinに最適化されてない場合もある可能性があるからです。また、KotlinはJVMだけでなく、ネイティブにコンパイルすることもできるので、ネイティブなアプリを作りたい場合はJavaに依存しないAPIを選ぶ必要があるでしょう。&lt;/p>
 &lt;p>ということで、今回はJetBrains制のウェブフレームワーク、Ktorと、Ktorと一緒に使えるORMのExposedを少し触ってみて、Springと比べながら紹介したいと思います。&lt;/p>
-&lt;h2 id="ktor">Ktor&lt;/h2>
-&lt;p>Ktorは、JetBrainsで開発しているマイクロサービス向けの軽量ウェブフレームワークです。&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
+&lt;h2 id="ktor">Ktor
+&lt;/h2>&lt;p>Ktorは、JetBrainsで開発しているマイクロサービス向けの軽量ウェブフレームワークです。&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
 >公式ホームページ&lt;/a>の紹介にも色々書いてありますが、特にSpringと比べて以下の特徴があるかと思います。&lt;/p>
-&lt;h3 id="軽量">軽量&lt;/h3>
-&lt;p>Springも軽量とは言われているものの、起動が遅いので、実装する側としてはあまり軽量だという感覚はないです。Springで書かれたアプリケーションの起動が遅いのは、起動時にさまざまなアノテーションを読み込み、DIや設定などを完璧に終わらせているというフレームワークそのもののアーキテクチャに起因しているのではないかと思います。なのでDIされるオブジェクトをLate initにするなどで起動速度を短縮させるテクニックなどが知られていますね。&lt;/p>
+&lt;h3 id="軽量">軽量
+&lt;/h3>&lt;p>Springも軽量とは言われているものの、起動が遅いので、実装する側としてはあまり軽量だという感覚はないです。Springで書かれたアプリケーションの起動が遅いのは、起動時にさまざまなアノテーションを読み込み、DIや設定などを完璧に終わらせているというフレームワークそのもののアーキテクチャに起因しているのではないかと思います。なのでDIされるオブジェクトをLate initにするなどで起動速度を短縮させるテクニックなどが知られていますね。&lt;/p>
 &lt;p>しかし、Ktorは起動がかなり早いです。同一規模のアプリをSpringとKtorの両方で作成してベンチマークした訳ではないので正確な数値に関しては割愛しますが、体験だと数倍は早いですね。例えば、In memoryタイプのH2と基本的なCRUDを実装したSpring WebFluxアプリケーションの場合、自分のPCで起動に2.7秒ほどかかりました。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>2021-07-18 15:08:25.150 INFO &lt;span style="color:#ae81ff">29047&lt;/span> --- &lt;span style="color:#f92672">[&lt;/span>main&lt;span style="color:#f92672">]&lt;/span> c.r.s.SpringWebfluxSampleApplicationKt : Started SpringWebfluxSampleApplicationKt in 2.754 seconds &lt;span style="color:#f92672">(&lt;/span>JVM running &lt;span style="color:#66d9ef">for&lt;/span> 3.088&lt;span style="color:#f92672">)&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>同じ構成でKtorのアプリを実装した場合、起動には1秒もかからなかったです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>2021-07-18 15:09:29.683 &lt;span style="color:#f92672">[&lt;/span>main&lt;span style="color:#f92672">]&lt;/span> INFO ktor.application - Application started in 0.747 seconds.
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これはおそらく基本的にDIをしなく、アノテーションをあまり使わない（Reflectionを使わない）構造やKtorそのものはREST APIを作成するための必要最低限の機能だけを揃っているのが理由かと思われます。&lt;/p>
 &lt;p>アプリの起動が早いというのは、テストにかかる時間を短縮させられるという面でもメリットといえますが、サーバレスなアプリにも適しているということにもなるでしょう。私もAWSのLambdaやAzureのFunctionsなどを触った経験がありますが、この場合にJavaやKotlinの使用を考慮したことはありません。サーバレスの場合、アプリが常に稼働中ではないので、リクエストが発生したたびにアプリを起動しなければならないです。なので起動の遅いSpringはそもそもの考慮対象にならなかったですね。Ktorを使う場合は起動速度が大幅に短縮できるので、JVMの起動速度が許されるというならば、サーバレスアーキテクチャで導入を検討できるレベルになっていると思います。&lt;/p>
-&lt;h3 id="拡張可能">拡張可能&lt;/h3>
-&lt;p>Ktorが軽量であることとも繋がる話ですが、必要な機能があればプラグイン（モジュール）を追加したり、自分で実装する必要はあります。コードとしては、以下のようになります。&lt;/p>
+&lt;h3 id="拡張可能">拡張可能
+&lt;/h3>&lt;p>Ktorが軽量であることとも繋がる話ですが、必要な機能があればプラグイン（モジュール）を追加したり、自分で実装する必要はあります。コードとしては、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">main&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> embeddedServer(Netty, port = &lt;span style="color:#ae81ff">8080&lt;/span>, host = &lt;span style="color:#e6db74">&amp;#34;127.0.0.1&amp;#34;&lt;/span>) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(CORS)
@@ -289,8 +289,8 @@
 >Injekt&lt;/a>, &lt;a class="link" href="https://kodein.org/Kodein-DI/?6.3/ktor" target="_blank" rel="noopener"
 >Kodein&lt;/a>, &lt;a class="link" href="https://insert-koin.io" target="_blank" rel="noopener"
 >Koin&lt;/a>などをディペンデンシーとして追加する必要があります。ただ、アーキテクチャによってはDIが必要なく、&lt;code>object&lt;/code>で代替することもできると思いますので、どんなアーキテクチャにするかはよく考えて決める必要があるかなと思います。&lt;/p>
-&lt;h3 id="coroutine対応">Coroutine対応&lt;/h3>
-&lt;p>Spring WebFluxもそうでしたが、最近は多くのウェブフレームワークに非同期・ノンブロッキング対応が行われていますね。PaaSが普及され簡単にインフラの構築ができ、ハードウェアが安くなった今でもソフトウェアで性能を改善できる箇所があるならそれは十分価値があると思っています。だとすると、非同期・ノンブロッキング対応のフレームワークを導入するということも良い選択ではないかと思います。&lt;/p>
+&lt;h3 id="coroutine対応">Coroutine対応
+&lt;/h3>&lt;p>Spring WebFluxもそうでしたが、最近は多くのウェブフレームワークに非同期・ノンブロッキング対応が行われていますね。PaaSが普及され簡単にインフラの構築ができ、ハードウェアが安くなった今でもソフトウェアで性能を改善できる箇所があるならそれは十分価値があると思っています。だとすると、非同期・ノンブロッキング対応のフレームワークを導入するということも良い選択ではないかと思います。&lt;/p>
 &lt;p>Ktorではルーティングの実装として、&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/-route/index.html" target="_blank" rel="noopener"
 >Route&lt;/a>の&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/route.html" target="_blank" rel="noopener"
 >route&lt;/a>、もしくは&lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/get.html" target="_blank" rel="noopener"
@@ -304,8 +304,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そしてこのHttpメソッドごとの関数のbodyを実装することになりますが、これが基本的に&lt;code>suspend&lt;/code>となっています。これはつまり、実装する側で特に意識しなくてもコードは非同期になるということですね。Spring WebFluxの場合も、Coroutineを使うと簡単に実装ができましたが、&lt;code>suspend&lt;/code>すら意識しなくて良いというところはKtorならではのメリットなのではという気がします。&lt;/p>
-&lt;h3 id="テスト">テスト&lt;/h3>
-&lt;p>&lt;code>ktor-server-test-host&lt;/code>や&lt;code>kotlin-test&lt;/code>、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、&lt;code>Get&lt;/code>をのレスポンスをテストするためには以下のようなコードを書くことができます。&lt;/p>
+&lt;h3 id="テスト">テスト
+&lt;/h3>&lt;p>&lt;code>ktor-server-test-host&lt;/code>や&lt;code>kotlin-test&lt;/code>、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、&lt;code>Get&lt;/code>をのレスポンスをテストするためには以下のようなコードを書くことができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Test&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">getMember&lt;/span>() {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> withTestApplication(Application&lt;span style="color:#f92672">::&lt;/span>module) {
@@ -327,8 +327,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="exposed">Exposed&lt;/h2>
-&lt;p>Ktorで使える、Kotlinで書かれたORMは代表的に&lt;a class="link" href="https://github.com/JetBrains/Exposed" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="exposed">Exposed
+&lt;/h2>&lt;p>Ktorで使える、Kotlinで書かれたORMは代表的に&lt;a class="link" href="https://github.com/JetBrains/Exposed" target="_blank" rel="noopener"
 >Exposed&lt;/a>があります。Javaの&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
 >jOOQ&lt;/a>がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> userInUsa: List&amp;lt;User&amp;gt; = transaction {
@@ -379,8 +379,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> password: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74">&amp;#34;password&amp;#34;&lt;/span>, length = &lt;span style="color:#ae81ff">255&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>MyBatisなどに慣れている場合は少し適応に時間が必要かもしれませんが、基本的にはテーブルの定義を除くとほぼSQLの発行をKotlinのコードで書くことになるという感覚なので、便利になるかと思います。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>以上で、簡単なCRUDアプリをKtor + Exposedで実装してみた後の感想と紹介を少し書いてみました。まとめると、かなりサクサクコードを書けて性能も良いので、マイクロサービスに特化している構成ではないかと思いました。また、冒頭に述べた通り、ピュアなKotlin制のフレームワークであることも良いですね。Ktorの紹介でもKotlin Multiplatformに基づいていてどのプラットフォームにもアプリをデプロイできると強調していますので、色々なところで活用ができるかと思います。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>以上で、簡単なCRUDアプリをKtor + Exposedで実装してみた後の感想と紹介を少し書いてみました。まとめると、かなりサクサクコードを書けて性能も良いので、マイクロサービスに特化している構成ではないかと思いました。また、冒頭に述べた通り、ピュアなKotlin制のフレームワークであることも良いですね。Ktorの紹介でもKotlin Multiplatformに基づいていてどのプラットフォームにもアプリをデプロイできると強調していますので、色々なところで活用ができるかと思います。&lt;/p>
 &lt;p>まだSpringと他のJavaライブラリに比べ足りないモジュールや機能もありますが、Exposed以外でも&lt;a class="link" href="https://www.ktorm.org" target="_blank" rel="noopener"
 >Ktorm&lt;/a>のようなORMがあるなどKotlin制のライブラリの開発も進めていて、IntellijでもKtorのサポートは強力なので今後も発展を期待できそうであります。個人的にまだ仕事で使うことには無理があっても、自作アプリなどを作りたい時は導入をぜひ検討したいと思いました。Kotlinでできることがだんだん増えてきていて、嬉しいですね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Lombok on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/lombok/</link><description>Recent content in Lombok on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 12 Aug 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/lombok/index.xml" rel="self" type="application/rss+xml"/><item><title>Lombokのバグにあった話</title><link>https://retheviper.github.io/posts/java-lombok-annotation-bug/</link><pubDate>Mon, 12 Aug 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-lombok-annotation-bug/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post Lombokのバグにあった話" />&lt;p>&lt;a class="link" href="../java-design-pattern-builder" >前回のポスト&lt;/a>で、Builderパターンとともに&lt;code>Lombok&lt;/code>を紹介しました。Beanだけでなく、Immutableなクラス&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>やBuilderを作れるなど便利な機能が集まっていて、さらにアノテーションで様々なオプションが指定できたり(フィールドのアクセスレベルを指定できるなど)、必要なメソッドは追記しても良いなど使い道が多いですね。ただ、今回はそのLombokを使いながらバグらしき現象を発見したのでポストします。&lt;/p>
-&lt;h2 id="バグの発生したところ">バグの発生したところ&lt;/h2>
-&lt;p>どこでバグが発生したかを述べる前に、まずどんなLombokのアノテーションを使っていて、それらがそれぞれどんな機能をしているかを紹介したいと思います。なぜなら今回の場合は二つ以上のLombokアノテーションを組み合わせて使っていて、ほかにも自分と同じような組み合わせでLombokを使って同じバグを経験される方がいるかも知れないからです。&lt;/p>
+&lt;h2 id="バグの発生したところ">バグの発生したところ
+&lt;/h2>&lt;p>どこでバグが発生したかを述べる前に、まずどんなLombokのアノテーションを使っていて、それらがそれぞれどんな機能をしているかを紹介したいと思います。なぜなら今回の場合は二つ以上のLombokアノテーションを組み合わせて使っていて、ほかにも自分と同じような組み合わせでLombokを使って同じバグを経験される方がいるかも知れないからです。&lt;/p>
 &lt;p>Lombokの&lt;code>@Builder&lt;/code>には、&lt;code>(toBuilder=true)&lt;/code>のオプションをつけられます。これを使うと、基本的に新しいインスタンスの生成はstaticメソッドを呼ぶ事でできるようになって、すでに存在しているインスタンスから一部の値を変えて違うインスタンスに再生成する事ができます。コードで表現すると以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// @Builderだけを使って新しいインスタンスを生成&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>House house2 &lt;span style="color:#f92672">=&lt;/span> House.&lt;span style="color:#a6e22e">builder&lt;/span>().&lt;span style="color:#a6e22e">type&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;wooden&amp;#34;&lt;/span>).&lt;span style="color:#a6e22e">build&lt;/span>();
@@ -33,12 +33,12 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 既存のインスタンスにAddする&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Wallet newWallet &lt;span style="color:#f92672">=&lt;/span> myWallet.&lt;span style="color:#a6e22e">toBuilder&lt;/span>().&lt;span style="color:#a6e22e">addCard&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;American Express Card&amp;#34;&lt;/span>).&lt;span style="color:#a6e22e">build&lt;/span>();
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし、実際テストをしてみるとこの二つのアノテーションによりバグが発生したのです。&lt;/p>
-&lt;h2 id="それでどんなバグが">それでどんなバグが？&lt;/h2>
-&lt;p>既存のインスタンス(Listの操作を一切していない)では&lt;code>add&lt;/code>が思い通りになったのですが、インスタンスを生成すると同時に&lt;code>add&lt;/code>した場合はNPE&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>が発生していました。場所を調べてみると&lt;code>this.cards.add(card);&lt;/code>のところで例外が発生していたので、生成されてないオブジェクトに要素を追加しようとしていたとのことですね。つまり、Listがちゃんと初期化されてないという事です。&lt;/p>
+&lt;h2 id="それでどんなバグが">それでどんなバグが？
+&lt;/h2>&lt;p>既存のインスタンス(Listの操作を一切していない)では&lt;code>add&lt;/code>が思い通りになったのですが、インスタンスを生成すると同時に&lt;code>add&lt;/code>した場合はNPE&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>が発生していました。場所を調べてみると&lt;code>this.cards.add(card);&lt;/code>のところで例外が発生していたので、生成されてないオブジェクトに要素を追加しようとしていたとのことですね。つまり、Listがちゃんと初期化されてないという事です。&lt;/p>
 &lt;p>少し調べてみると、&lt;a class="link" href="https://github.com/rzwitserloot/lombok/issues/1347" target="_blank" rel="noopener"
 >Githubでのイシュー&lt;/a>がありました。2017年に書かれたもので今となってはずいぶん古い感じもしましたが、読んでみると今の自分が経験している現象と似ていましたね。しかも、Lombokの&lt;code>1.18.2&lt;/code>バージョンで解消されたという話もありましたが、今の自分が使っているバージョンは&lt;code>1.18.8&lt;/code>でした。解消されているはずがちゃんと想定通りならなかったのか、バージョンアップにより再発したのかわかりませんが、ともかく同じ現象が起きていましたね。&lt;/p>
-&lt;h2 id="解決策">解決策&lt;/h2>
-&lt;p>それではどう解決したらいいか？他にも方法があるのかもしれませんが、自分の場合は&lt;code>toBuilder=true&lt;/code>と&lt;code>@Builder.Default&lt;/code>の両方を使わない事で解決できました。Builderにちゃんとフィールドが渡らない時点で後者は意味がなくなりました。そして&lt;code>toBuilder&lt;/code>の場合も、二つのメソッドが追加されるだけなのでそれを手書きで確実に値を渡せるようにしました。上で提示した&lt;code>Wallet&lt;/code>クラスをこのやり方で直すと、以下のようなコードになります。&lt;/p>
+&lt;h2 id="解決策">解決策
+&lt;/h2>&lt;p>それではどう解決したらいいか？他にも方法があるのかもしれませんが、自分の場合は&lt;code>toBuilder=true&lt;/code>と&lt;code>@Builder.Default&lt;/code>の両方を使わない事で解決できました。Builderにちゃんとフィールドが渡らない時点で後者は意味がなくなりました。そして&lt;code>toBuilder&lt;/code>の場合も、二つのメソッドが追加されるだけなのでそれを手書きで確実に値を渡せるようにしました。上で提示した&lt;code>Wallet&lt;/code>クラスをこのやり方で直すと、以下のようなコードになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// toBuilderオプションを使わない&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Builder&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Wallet&lt;/span> {
@@ -52,8 +52,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これで元の想定通り、インスタンスを生成する時もちゃんと初期化されたListが渡るようになりました。めでたしめでたし。&lt;/p>
-&lt;h2 id="教訓">教訓？&lt;/h2>
-&lt;p>ライブラリーを使ってコードの量を減らし、自動化することは生産性の向上という面では大事な事ではありますが、人間の書いたコードはどこでバグが発生するかわからないので(想定していない使い方をする場合もありますし)、たまには手間がかかっても確実なコードを書くのが安全な場合もありますね。特にこの場合、アノテーションを諦めずコードを直そうとしていたらいつまでたってもバグは回避できなかったのかもしれません。そういう意味で、よい勉強になったと思える事件ではなかったのだろうかと思います。&lt;/p>
+&lt;h2 id="教訓">教訓？
+&lt;/h2>&lt;p>ライブラリーを使ってコードの量を減らし、自動化することは生産性の向上という面では大事な事ではありますが、人間の書いたコードはどこでバグが発生するかわからないので(想定していない使い方をする場合もありますし)、たまには手間がかかっても確実なコードを書くのが安全な場合もありますね。特にこの場合、アノテーションを諦めずコードを直そうとしていたらいつまでたってもバグは回避できなかったのかもしれません。そういう意味で、よい勉強になったと思える事件ではなかったのだろうかと思います。&lt;/p>
 &lt;p>もしこのポストを読まれる方の中、私と同じような実装を考えている方がいたら、こんなこともあるんだなと参考できるようなことになっていると嬉しいです。それではまた会いましょう！&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>

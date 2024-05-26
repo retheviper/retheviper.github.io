@@ -47,8 +47,8 @@
 >Exposed&lt;/a>, &lt;a class="link" href="https://www.ktorm.org" target="_blank" rel="noopener"
 >Ktorm&lt;/a>のようなORMで、DSLを使ってSQLを書く場合はデータのマッピングを手動で行う必要があります。そして取得したデータは行の配列という形になるので、どうマッピングしたら（効率が）いいかは少し悩ましいところです。&lt;/p>
 &lt;p>なので、今回はExposedのDSLを使って取得したOne to Manyのレコードを、コード上でどうやってオブジェクトにマッピングするかについて考えたことを述べたいとお思います。&lt;/p>
-&lt;h2 id="テーブルごとにselectする">テーブルごとにSelectする&lt;/h2>
-&lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
+&lt;h2 id="テーブルごとにselectする">テーブルごとにSelectする
+&lt;/h2>&lt;p>もっとも簡単な方法は、そもそもレコードの取得時に個別のテーブルに対してSelectしてからマッピングすることですね。個別のテーブルに対してクエリを発行するので、書き方としては明瞭になるというメリットもあります。例えば、以下のようなことができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// まずはMemberテーブルをSelectし、オブジェクトにマッピングする
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> member = &lt;span style="color:#a6e22e">Member&lt;/span>.select { &lt;span style="color:#a6e22e">Member&lt;/span>.id eq id }
@@ -71,13 +71,13 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>もっとも簡単で、コードとしてもわかりやすい方法ではありますが、トランザクションの観点からするとあまりよくない方法ですね。Exposedでは、&lt;code>transaction&lt;/code>ブロックに包むことでトランザクションの単位を制御できるものの、一回で済ませるクエリの発行が複数になるという問題があります。ここではMemberテーブルを照会するたびにMailingテーブルも照会することになるので1回のクエリが追加されているだけですが、もしMemberテーブルに1:Nの関係となっているテーブルが増えれば増えるほどクエリの発行数も増えることになるでしょう。そして今回は一つのレコードに対してのコードとなっていますが、照会対象のMemberテーブルのレコードが増えれば増えるほど発行されるクエリの数も多くなります。&lt;/p>
 &lt;p>また、オブジェクトのインスタンスを作っておいて、わざわあコピーするというのもあまり効率が良いとは言えません。これもまたクエリの数が増える問題と同じく、照会対象のレコードが増えれば増えるほど生成されるオブジェクトのインスタンスも増えることになるという訳ですね。なので、全く性能や効率を考えてないコードと言えます。&lt;/p>
-&lt;h2 id="joinしてマッピングする">joinしてマッピングする&lt;/h2>
-&lt;p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり&lt;code>join&lt;/code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の&lt;a class="link" href="https://vmm.dev/ja/cci/cci-0.md" target="_blank" rel="noopener"
+&lt;h2 id="joinしてマッピングする">joinしてマッピングする
+&lt;/h2>&lt;p>関係のあるデータを複数のテーブルを跨いで取得するには、やはり&lt;code>join&lt;/code>が効率的でしょう。これならまず発行されるクエリの数は個別のテーブルに対してSelectする時に比べ、劇的に減ります。アルゴリズムでよく使われる表現の&lt;a class="link" href="https://vmm.dev/ja/cci/cci-0.md" target="_blank" rel="noopener"
 >Big O記法&lt;/a>で表現すると、前者は&lt;code>O(N^2)&lt;/code>であり、これは&lt;code>O(1)&lt;/code>と表現できるはずです。&lt;/p>
 &lt;p>ならばデータを取得する際に、クエリとしては&lt;code>join&lt;/code>を使うのが理想的なのはわかりますが、問題はそうやって取得したデータをどう加工するかです。先に述べましたが、取得したデータのうち重複するものがあるからですね。そしてこれが重複しているかどうかはクエリを実行した結果を取得して、確認するまではわかりません。&lt;/p>
 &lt;p>ここで考えられる方法は三つほどありますので、一つづつ紹介していきます。&lt;/p>
-&lt;h3 id="reduce">reduce&lt;/h3>
-&lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
+&lt;h3 id="reduce">reduce
+&lt;/h3>&lt;p>まずはクエリの結果として取得した行を、それぞれオブジェクトにマッピングした後、&lt;code>reduce&lt;/code>でまとめる方法です。例えば以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Member&lt;/span>.leftJoin(Mailing)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#a6e22e">Member&lt;/span>.id eq id) and (&lt;span style="color:#a6e22e">Mailing&lt;/span>.memberId eq &lt;span style="color:#a6e22e">Member&lt;/span>.id) }
@@ -97,8 +97,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このやり方で考えられる問題は、まず行数分のオブジェクトのインスタンスが作られるということです。このクエリとして取得しようとしているMemberのレコードは一つのみですが、そのレコードに紐づくMailingのレコードが多ければ多いほど件数は増え、当然生成されるオブジェクトの数も多くなります。また、マッピングだけでなく、&lt;code>reduce&lt;/code>でもオブジェクトをコピーしているので、やはり行数分のオブジェクトが生成されていると考えられます。オブジェクトのインスタンス数は行数x2になる訳ですね。&lt;/p>
 &lt;p>そしてもう一つの問題は、Memberのレコードを複数取得する場合、全部一つのオブジェクトにまとまってしまうという問題がありますね。なので、このやり方だと一つのレコードを取得する場合のみしか適応できなくなります。&lt;/p>
-&lt;h3 id="groupby">groupBy&lt;/h3>
-&lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
+&lt;h3 id="groupby">groupBy
+&lt;/h3>&lt;p>取得したレコードを、一度Mapに変換するとどうでしょうか。KotlinのCollectionには&lt;code>groupBy&lt;/code>というメソッドがあり、keyとvalueのマッピング方法を指定すると、一つのkeyに&lt;code>List&lt;/code>形式のvalueになります。Mapなので、keyでMemberのオブジェクトをマッピングしておいて、valueとしてはMailingのレコードをまとめておくと良いでしょう。keyは同じものだと上書きされるので、取得したいMemberのレコードが複数の場合でも問題ないはずです。コードでは、以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>transaction {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">Member&lt;/span>.leftJoin(Mailing)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .select { (&lt;span style="color:#a6e22e">Member&lt;/span>.id eq id) and (&lt;span style="color:#a6e22e">Mailing&lt;/span>.memberId eq &lt;span style="color:#a6e22e">Member&lt;/span>.id) }
@@ -128,8 +128,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> destination
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで確かになっていることは、やはり最初のCollectionの要素数分、&lt;code>keySelector&lt;/code>と&lt;code>valueTransform&lt;/code>を実行しているということです。Mapに変えることになるので、&lt;code>reduce&lt;/code>の時とは違ってMemberレコードがいくつあっても一つに集約されるような事態は起こらないと考えられますが、依然としてオブジェクトのインスタンスが複数できてしまうという問題はあります。なので、また他の方法を探してみましょう。&lt;/p>
-&lt;h3 id="map">Map&lt;/h3>
-&lt;p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、&lt;code>compute&lt;/code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。&lt;/p>
+&lt;h3 id="map">Map
+&lt;/h3>&lt;p>最後に考えられるのは、Selectした行をMapにまとめるのではなく、外部にMapを宣言し、それを利用することです。Mapには、&lt;code>compute&lt;/code>という関数があり、引数として渡したkeyに対してどんな処理をするか（どんなvalueを作って入れるか）を指定できます。例えば、指定したkeyに対してvalueが存在しない場合は要素として追加し、存在する場合はそのvalueを変えるなどの処理ができるようになります。なので、これをうまく使うとインスタンスの生成問題を解決できる気がしますね。&lt;/p>
 &lt;p>トランザクションとは関係のないMapをまず宣言し、Selectしたデータに対して&lt;code>compute&lt;/code>を実行することにします。&lt;code>compute&lt;/code>では指定したkey（Memberのidなど）がMapの中にない場合にMemberのインスタンスを作成するようにして、すでにある場合はそのオブジェクトにMailingのデータを追加するようにすれば良いでしょう。そしてループが終わったらMapのvalueのみを取得すると良いですね。&lt;/p>
 &lt;p>以上のことを、コードで表すと以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// オブジェクトをまとめるためのMap（keyはMember.id）
@@ -159,7 +159,7 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>いかがでしょうか。これで重複するデータなく、インスタンスの作成も最低限に抑えることができたかと思います。もちろん、mailingAddressを追加するたびにコピーが発生するという問題はありますが、ここは専用のsetterなどを作っておくことで回避できると思います。&lt;/p>
 &lt;p>一つ注意しなくてはならないのは、ここで使っているMapをフィールドとして宣言したりするとデータの整合性やアプリケーションのメモリ使用量に響くということです。なので必ずメソッドの中でのみMapのインスタンスが作成されるようにする必要があります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>DSLを使ってクエリを直接作成する場合、JPAのようなORMの問題とされているN+1(必ず連関しているテーブルもjoinしてくる)のような問題を回避できますが、直接オブジェクトへのマッピングも書かなくてはならないという短所がありますね。個人的にクエリを書くのは楽しくないですが、クエリをコードとして管理でき、必要なクエリだけを書けるというところでDSLの方が良い点もあると思います。テーブルの構造や処理によってはORMが勝手にクエリもマッピングもしてくれるのが楽ではありますが。&lt;/p>
 &lt;p>ただ、ORMでどうやってデータを取得するかの問題だけでなく、ここで扱った「重複するデータをどう違う形のデータに加工するか」の問題は、必ずしもDBからレコードを取得する場合のみのことに限らないので（例えば他のAPIを読んだ結果としてもそんなデータはあり得ますね）、色々方法を考えておく必要はありそうです。今の時点ではMapを利用した方法がもっとも良さそうな気がしますが、他にもっと効率的な方法があるかもしれませんしね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item></channel></rss>

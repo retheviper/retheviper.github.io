@@ -3,8 +3,8 @@
 &lt;p>まずクラスやインスタンスを引数として受け取る方法を知る必要がありますね。最初はObjectそのものを使おうと思いましたが、調べてみると&lt;code>Generic&lt;/code>というものがあったので、そちらを使うことにしました。&lt;/p>
 &lt;p>次にそのGenericを使って、引数として受け取ったBeanです。自分が設計したBeanだけを使うなら、Beanが持つフィールドのデータ型も知っていいて、Getter/Setterからデータのやりとりができますね。しかし自分が作ったものではないと、フィールドのデータ型もGetter/Setterメソッドもどう呼ぶかもわからなくなります。ここでどう対応したらいいだろうか…と悩み、探し出した答えが&lt;code>Reflection&lt;/code>でした。&lt;/p>
 &lt;p>今回のポストはその二つを使い、どう「自分が作っていないBeanを処理」したかについて述べ地と思います。&lt;/p>
-&lt;h2 id="generic">Generic&lt;/h2>
-&lt;p>Genericとは、「データのタイプを一般化」するということです。総称型とも呼ぶらしいです。クラスの中で使うタイプを、クラスの外部から設定するとき用いられると言いますね。今までは主に複数のデータ型やオブジェクトを処理したい場合は&lt;code>Object&lt;/code>を使ってきました。Javaでは一部のPrimitive(参照型)を覗くと、ほとんどのデータががオブジェクトとして扱われているので、もっとも上位のタイプであるObjectに変えられらからです。&lt;/p>
+&lt;h2 id="generic">Generic
+&lt;/h2>&lt;p>Genericとは、「データのタイプを一般化」するということです。総称型とも呼ぶらしいです。クラスの中で使うタイプを、クラスの外部から設定するとき用いられると言いますね。今までは主に複数のデータ型やオブジェクトを処理したい場合は&lt;code>Object&lt;/code>を使ってきました。Javaでは一部のPrimitive(参照型)を覗くと、ほとんどのデータががオブジェクトとして扱われているので、もっとも上位のタイプであるObjectに変えられらからです。&lt;/p>
 &lt;p>しかし、Objectを引数として使うと、メソッドの中のフィールドが何があるかわからなくなります。また、Getter/Setterによる値の指定・取得などの操作もできませんね。なのでオブジェクトそのものを受け取るだけでなく、インスタンスの中を直接覗く必要があります。&lt;/p>
 &lt;p>ここでGenericを使うと、Objectと同じ機能(どんなインスタンスやクラスでも受け取れる)をしながらも、最初に具体的なタイプが決まるのでキャストがいらなくなります。これなら性能的にもよく、より安全な挙動を期待できますね。あとは実際どんな構造をしているかわからないObjectに対し、Reflectionを活用して、クラスやインスタンスの中を覗いたらメソッドもフィールドも取得できるというメリットもあります。&lt;/p>
 &lt;p>まずインスタンスを引数として受け取る方法から見てみましょう。引数として&lt;code>T&lt;/code>&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>を指定します。これでGenericタイプの引数を受け入れられます。つまり、インスタンス自体が引数となるということです。ただ、引数が&lt;code>T&lt;/code>の場合はメソッドの戻り値の前でも&lt;code>&amp;lt;T&amp;gt;&lt;/code>を宣言する必要があります。コードで表現すると以下のようになります。&lt;/p>
@@ -37,8 +37,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// ... 何かの処理&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうやってGenericの引数を渡してもらう準備は完了です。次は、そうやって受け取った引数を扱うReflectionについて調べてみましょう。&lt;/p>
-&lt;h2 id="reflection">Reflection&lt;/h2>
-&lt;p>クラスの具体的なタイプをわからなくても、メソッド・コンストラクター・フィールドなどににアクセスできるようにしてくれるAPIをReflectionと言います。取得したメソッド・コンストラクター・フィールドはいずれもそのまま使ったり、値(戻り値)を取得したり、つけられているアノテーションを取得するなど、普通のクラスでできることは全部できます。&lt;/p>
+&lt;h2 id="reflection">Reflection
+&lt;/h2>&lt;p>クラスの具体的なタイプをわからなくても、メソッド・コンストラクター・フィールドなどににアクセスできるようにしてくれるAPIをReflectionと言います。取得したメソッド・コンストラクター・フィールドはいずれもそのまま使ったり、値(戻り値)を取得したり、つけられているアノテーションを取得するなど、普通のクラスでできることは全部できます。&lt;/p>
 &lt;p>では、このReflectionを実際どう使うかを以下のコードで紹介します。まずはインスタンスからクラスを取得する方法と、さらに取得したクラスからコンストラクターを取得するコードです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#f92672">&amp;lt;&lt;/span>T&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#66d9ef">boolean&lt;/span> &lt;span style="color:#a6e22e">isBean&lt;/span> (T object) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -63,8 +63,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>クラス自体を扱うことができるので、その中身がわかれば新しいインスタンスを生成して使うこともできますね。それでは次に、フィールドを取得する方法を紹介します。&lt;/p>
-&lt;h2 id="fieldの取得">Fieldの取得&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">boolean&lt;/span> &lt;span style="color:#a6e22e">isBean&lt;/span> (T object) {
+&lt;h2 id="fieldの取得">Fieldの取得
+&lt;/h2>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">boolean&lt;/span> &lt;span style="color:#a6e22e">isBean&lt;/span> (T object) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Class&lt;span style="color:#f92672">&amp;lt;?&amp;gt;&lt;/span> objectClass &lt;span style="color:#f92672">=&lt;/span> object.&lt;span style="color:#a6e22e">getClass&lt;/span>();
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -87,8 +87,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで注意すべき部分は、フィールドを取得するときはクラスからであって、実際値を代入したり取得するときはその対象としてインスタンスを使うということです。クラスが設計図であり、インスタンスがその設計図で生成されたものだということが明確になる瞬間ですね。Reflectionを使うことのメリットはここにもあるのかもしれません。&lt;/p>
 &lt;p>次には、メソッドをみていきます。&lt;/p>
-&lt;h2 id="methodの取得">Methodの取得&lt;/h2>
-&lt;p>メソッドもフィールドの場合とそう変わりません。クラスからメソッドを取得し、そのメソッドからさらに色々できるようになります。またコードを以下に用意しました。&lt;/p>
+&lt;h2 id="methodの取得">Methodの取得
+&lt;/h2>&lt;p>メソッドもフィールドの場合とそう変わりません。クラスからメソッドを取得し、そのメソッドからさらに色々できるようになります。またコードを以下に用意しました。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">boolean&lt;/span> &lt;span style="color:#a6e22e">isBean&lt;/span> (T objectClass) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Class&lt;span style="color:#f92672">&amp;lt;?&amp;gt;&lt;/span> objectClass &lt;span style="color:#f92672">=&lt;/span> object.&lt;span style="color:#a6e22e">getClass&lt;/span>();
@@ -113,8 +113,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Parameter&lt;span style="color:#f92672">[]&lt;/span> parameters &lt;span style="color:#f92672">=&lt;/span> method.&lt;span style="color:#a6e22e">getParameters&lt;/span>();
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>アノテーションの場合はクラスでもフィールドでも取得できますが、メソッドの場合はそれに加えて引数のアノテーションも取得できるということが特徴です。また、引数そのものを取得することもできますね。もちろん&lt;code>Parameter&lt;/code>クラスでも引数名を取得するなど色々な操作ができます。&lt;/p>
-&lt;h2 id="結論">結論&lt;/h2>
-&lt;p>結局、道が見えてくると、解決の方法も見えてくるものです。メソッドをやコンストラクターに触れる必要もなく、引数で受け取ったインスタンスからフィールドを取得して、その値をObjectに代入する。そしてinstanceofを活用して分岐させ、キャストすることでデータを扱う、というシンプルな構造で自分のタスクは完成されました。簡単なコードで表現すると以下のような形ですね。&lt;/p>
+&lt;h2 id="結論">結論
+&lt;/h2>&lt;p>結局、道が見えてくると、解決の方法も見えてくるものです。メソッドをやコンストラクターに触れる必要もなく、引数で受け取ったインスタンスからフィールドを取得して、その値をObjectに代入する。そしてinstanceofを活用して分岐させ、キャストすることでデータを扱う、というシンプルな構造で自分のタスクは完成されました。簡単なコードで表現すると以下のような形ですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// クラスをわからないBeanを引数とするメソッド&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#f92672">&amp;lt;&lt;/span>T&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">processSomething&lt;/span>(T bean) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// 複数のタイプのオブジェクトがある&lt;/span>
@@ -142,8 +142,8 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>どうですか。方法がわかれば簡単にできるものなのでは。さらに応用して、インスタンスの一部の値だけを修正して返すなどの挙動もできそうです。色々活用できそうな面が多いですね。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>このようにだいたいフィールドとメソッドがわかれば、これでどんなインスタンスやクラスが入ってきても、対応できそうな気がします。実際どうかはコンパイルして実行してみない限りわからないものですが…でも一つ、賢くなったような気はします。皆さんもぜひ、Reflectionを通じてクラスとインスタンスに対する理解を深めてみてください。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>このようにだいたいフィールドとメソッドがわかれば、これでどんなインスタンスやクラスが入ってきても、対応できそうな気がします。実際どうかはコンパイルして実行してみない限りわからないものですが…でも一つ、賢くなったような気はします。皆さんもぜひ、Reflectionを通じてクラスとインスタンスに対する理解を深めてみてください。&lt;/p>
 &lt;p>それでは、また！&lt;/p>
 &lt;div class="footnotes" role="doc-endnotes">
 &lt;hr>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Lambda on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/lambda/</link><description>Recent content in Lambda on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 06 Aug 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/lambda/index.xml" rel="self" type="application/rss+xml"/><item><title>関数型インタフェースを使う</title><link>https://retheviper.github.io/posts/java-functional-interface/</link><pubDate>Tue, 06 Aug 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-functional-interface/</guid><description>&lt;img src="https://retheviper.github.io/images/java.jpg" alt="Featured image of post 関数型インタフェースを使う" />&lt;p>今回も、いつもと同じく仕事で得られた知識です。とあるIterableなクラスを作り、Forループをさせる必要がありました。これはそんなに難しいことではなかったです。まずフィールドにリストを持たせる。またIterableをインプリメントし、戻り値がIteratorであるメソッドを作るだけでしたね。しかし問題は、そのクラスのループの途中で、「使用者が指定したルールによりループを終了させる機能のあるクラスを作ること」でした。つまり、ループを終了させるには引数でループ中の要素を受け入れる引数を持つメソッドが内臓されていて、そのメソッドはインスタンスごとの基準となるデータを持っているということですね。&lt;/p>
-&lt;h2 id="メソッドをフィールドとして使う">メソッドをフィールドとして使う？&lt;/h2>
-&lt;p>メソッドとして機能しながらフィールドみたいにデータを持つ？それをさらに使用者が指定できるようにする？難しい注文だったので一瞬迷いましたが、「functionを使うといい」というアドバイスを受け、調べてみました。なるほど、これを使ったらフィールドとして宣言しながらもメソッドの機能を期待でき流みたいです。早速適用してみて、それがどう機能するかをまず紹介したいと思います。&lt;/p>
+&lt;h2 id="メソッドをフィールドとして使う">メソッドをフィールドとして使う？
+&lt;/h2>&lt;p>メソッドとして機能しながらフィールドみたいにデータを持つ？それをさらに使用者が指定できるようにする？難しい注文だったので一瞬迷いましたが、「functionを使うといい」というアドバイスを受け、調べてみました。なるほど、これを使ったらフィールドとして宣言しながらもメソッドの機能を期待でき流みたいです。早速適用してみて、それがどう機能するかをまず紹介したいと思います。&lt;/p>
 &lt;p>まずはIterableなクラスを用意します。ループの対象となるのはこちらです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Lineというクラスをリストとして持ち、Iterate可能なクラス&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">Factory&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> Iterable&lt;span style="color:#f92672">&amp;lt;&lt;/span>Line&lt;span style="color:#f92672">&amp;gt;&lt;/span> {
@@ -48,70 +48,70 @@
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>まずPredicateが何であり、Lambdaだけであれができる？と思われそうなコードです。しかしちゃんと動いてくれています。それはなぜか？今までよくしらなかったですが、Java8から追加された&lt;code>java.util.function&lt;/code>によるマジックでした。フィールドはデータを持つためのものである、とは思っていましたが、そのデータというのがメソッドそのものにも慣れるとは知らなかったですね。&lt;/p>
 &lt;p>それでは、その&lt;code>java.util.function&lt;/code>が一体どんなものかを、それに含まれている様々なインタフェースたちを持って紹介したいと思います。&lt;/p>
-&lt;h2 id="functional-interface">Functional Interface&lt;/h2>
-&lt;p>&lt;code>java.util.function&lt;/code>に含まれている様々なインタフェースたちを、関数型インタフェースと呼ぶらしいです。Java8で追加されたLambdaを「実装すべき抽象メソッドが一つしかないインタフェースを具現化したもの」と言いますが、ここでいう「実装すべき抽象メソッドが一つしかないインタフェース」のことが関数型インタフェースです。&lt;/p>
+&lt;h2 id="functional-interface">Functional Interface
+&lt;/h2>&lt;p>&lt;code>java.util.function&lt;/code>に含まれている様々なインタフェースたちを、関数型インタフェースと呼ぶらしいです。Java8で追加されたLambdaを「実装すべき抽象メソッドが一つしかないインタフェースを具現化したもの」と言いますが、ここでいう「実装すべき抽象メソッドが一つしかないインタフェース」のことが関数型インタフェースです。&lt;/p>
 &lt;p>言葉として表現すると難しいですが、要は一つです。中身をLambdaで満たせて完成するインタフェース。様々なタイプのものがあって、ぞれぞれの特徴は少しづつ違いますが、どんなことがして欲しいかによって選択するものが違うだけで、実際はそんな難しくもないです。むしろ難しいと言えばLambdaの方かな…&lt;/p>
 &lt;p>とにかくこれらの関数型インタフェースを、一つづつ紹介しましょう。&lt;/p>
-&lt;h3 id="function">Function&lt;/h3>
-&lt;p>Functionは、そのなの通り典型的な関数です。引数と戻り値を指定して宣言します。実行は&lt;code>apply(適用)&lt;/code>となります。コードで見ると以下のようになります。&lt;/p>
+&lt;h3 id="function">Function
+&lt;/h3>&lt;p>Functionは、そのなの通り典型的な関数です。引数と戻り値を指定して宣言します。実行は&lt;code>apply(適用)&lt;/code>となります。コードで見ると以下のようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Integerが引数で、Stringが戻り値となる例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Function&lt;span style="color:#f92672">&amp;lt;&lt;/span>Integer, String&lt;span style="color:#f92672">&amp;gt;&lt;/span> function &lt;span style="color:#f92672">=&lt;/span> number &lt;span style="color:#f92672">-&amp;gt;&lt;/span> String.&lt;span style="color:#a6e22e">valueof&lt;/span>(number);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Functionの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String result &lt;span style="color:#f92672">=&lt;/span> function.&lt;span style="color:#a6e22e">apply&lt;/span>(12);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="bifunction">BiFunction&lt;/h4>
-&lt;p>Function以外にも「Bi」が付くいくつかの関数型インタフェースがあります。何が違うかというと、そのなのとおり引数が二つ。他は元のものとほぼ一緒です。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="bifunction">BiFunction
+&lt;/h4>&lt;p>Function以外にも「Bi」が付くいくつかの関数型インタフェースがあります。何が違うかというと、そのなのとおり引数が二つ。他は元のものとほぼ一緒です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 二つのStringが引数で、Integerが戻り値となる例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>BiFunction&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, String, Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> biFunction &lt;span style="color:#f92672">=&lt;/span> (string1, string2) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> Integer.&lt;span style="color:#a6e22e">parseInt&lt;/span>(string1) &lt;span style="color:#f92672">+&lt;/span> Integer.&lt;span style="color:#a6e22e">parseInt&lt;/span>(string2);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BiFunctionの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">int&lt;/span> result &lt;span style="color:#f92672">=&lt;/span> biFunction.&lt;span style="color:#a6e22e">apply&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;1&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;2&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="predicate">Predicate&lt;/h3>
-&lt;p>先に紹介したものですね。&lt;code>Predicate&lt;/code>は「述語」の意味を持っています。その名の通り、「引数がTrueかFalseかを述べる」ようなものです。引数は一つです、戻り値がBooleanです。実行は&lt;code>test&lt;/code>です。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="predicate">Predicate
+&lt;/h3>&lt;p>先に紹介したものですね。&lt;code>Predicate&lt;/code>は「述語」の意味を持っています。その名の通り、「引数がTrueかFalseかを述べる」ようなものです。引数は一つです、戻り値がBooleanです。実行は&lt;code>test&lt;/code>です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 引数がStringの例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Predicate&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> predicate &lt;span style="color:#f92672">=&lt;/span> string &lt;span style="color:#f92672">-&amp;gt;&lt;/span> string.&lt;span style="color:#a6e22e">isEmpty&lt;/span>();
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Predicateの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">boolean&lt;/span> result &lt;span style="color:#f92672">=&lt;/span> predicate.&lt;span style="color:#a6e22e">test&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;空じゃない！&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="bipredicate">BiPredicate&lt;/h4>
-&lt;p>引数が二つのPredicateです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="bipredicate">BiPredicate
+&lt;/h4>&lt;p>引数が二つのPredicateです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 引数がStringの例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>BiPredicate&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> biPredicate &lt;span style="color:#f92672">=&lt;/span> (string, number) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> string.&lt;span style="color:#a6e22e">equals&lt;/span>(Integer.&lt;span style="color:#a6e22e">toString&lt;/span>(number));
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BiPredicateの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">boolean&lt;/span> result &lt;span style="color:#f92672">=&lt;/span> biPredicate.&lt;span style="color:#a6e22e">test&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;1&amp;#34;&lt;/span>, 1);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="consumer">Consumer&lt;/h3>
-&lt;p>&lt;code>Consume&lt;/code>は消費するという意味がありますね。引数を受けて戻り値はない(&lt;code>void&lt;/code>となる)ものです。実行するときは&lt;code>accept(受納)&lt;/code>となります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="consumer">Consumer
+&lt;/h3>&lt;p>&lt;code>Consume&lt;/code>は消費するという意味がありますね。引数を受けて戻り値はない(&lt;code>void&lt;/code>となる)ものです。実行するときは&lt;code>accept(受納)&lt;/code>となります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 引数がStringの例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Consumer&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> consumer &lt;span style="color:#f92672">=&lt;/span> string &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(string);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Consumerの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>consumer.&lt;span style="color:#a6e22e">accept&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;吸収！&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="biconsumer">BiConsumer&lt;/h4>
-&lt;p>引数が二つのConsumerです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="biconsumer">BiConsumer
+&lt;/h4>&lt;p>引数が二つのConsumerです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 引数がStringとIntegerの例&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>BiConsumer&lt;span style="color:#f92672">&amp;lt;&lt;/span>String, Integer&lt;span style="color:#f92672">&amp;gt;&lt;/span> biConsumer &lt;span style="color:#f92672">=&lt;/span> (string, number) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> System.&lt;span style="color:#a6e22e">out&lt;/span>.&lt;span style="color:#a6e22e">println&lt;/span>(string &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;：&amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> number);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BiConsumerの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>biConsumer.&lt;span style="color:#a6e22e">accept&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;今年儲かる確率は&amp;#34;&lt;/span>, 0);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="unaryoperator">UnaryOperator&lt;/h3>
-&lt;p>&lt;code>Unary&lt;/code>は「単項」の意味。&lt;code>Operate&lt;/code>は作用するという意味を持っていますね。引数と戻り値が同じもので、引数に何かの操作をしてから返すという印象です。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="unaryoperator">UnaryOperator
+&lt;/h3>&lt;p>&lt;code>Unary&lt;/code>は「単項」の意味。&lt;code>Operate&lt;/code>は作用するという意味を持っていますね。引数と戻り値が同じもので、引数に何かの操作をしてから返すという印象です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>UnaryOperator&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> uOperator &lt;span style="color:#f92672">=&lt;/span> string &lt;span style="color:#f92672">-&amp;gt;&lt;/span> string &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;完成されます&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// UnaryOperatorの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String result &lt;span style="color:#f92672">=&lt;/span> uOperator.&lt;span style="color:#a6e22e">apply&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;この文字を入れると&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="binaryoperator">BinaryOperator&lt;/h4>
-&lt;p>引数が二つのOperatorです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="binaryoperator">BinaryOperator
+&lt;/h4>&lt;p>引数が二つのOperatorです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>BinaryOperator&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> biOperator &lt;span style="color:#f92672">=&lt;/span> (string1, string2) &lt;span style="color:#f92672">-&amp;gt;&lt;/span> string1 &lt;span style="color:#f92672">+&lt;/span> string2 &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;ではないです&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BinaryOperatorの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String result &lt;span style="color:#f92672">=&lt;/span> biOperator.&lt;span style="color:#a6e22e">apply&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;私は&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;大丈夫&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="supplier">Supplier&lt;/h3>
-&lt;p>&lt;code>Supply&lt;/code>は「補給」の意味。Consumerとは真逆のもので、引数がなく戻り値だけがあるものです。実行は&lt;code>get&lt;/code>となります。引数がないためこちらはBiSupplierのようなインタフェースがないです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="supplier">Supplier
+&lt;/h3>&lt;p>&lt;code>Supply&lt;/code>は「補給」の意味。Consumerとは真逆のもので、引数がなく戻り値だけがあるものです。実行は&lt;code>get&lt;/code>となります。引数がないためこちらはBiSupplierのようなインタフェースがないです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>Supplier&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> supplier &lt;span style="color:#f92672">=&lt;/span> () &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#e6db74">&amp;#34;例えば引数なしで文字列が帰ってくる！&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Supplierの実行&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String result &lt;span style="color:#f92672">=&lt;/span> supplier.&lt;span style="color:#a6e22e">get&lt;/span>();
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>Java8が出てから数年、もうJavaも12までバージョンアップしています。でもまだJava8が使われている場面は多く、なるべくJava8の機能を最大限に活かしたコードを書きたいものですね。LambdaもStreamも難しいですが、Functionみたいにどこかで使うことになってまた今まではできなかったことをできるようになりたいです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>Java8が出てから数年、もうJavaも12までバージョンアップしています。でもまだJava8が使われている場面は多く、なるべくJava8の機能を最大限に活かしたコードを書きたいものですね。LambdaもStreamも難しいですが、Functionみたいにどこかで使うことになってまた今まではできなかったことをできるようになりたいです。&lt;/p>
 &lt;p>今回も色々と勉強になりました。Javaの世界はまだまだ広くて奥深いものですね！&lt;/p></description></item></channel></rss>

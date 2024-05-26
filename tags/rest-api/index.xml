@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rest Api on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/rest-api/</link><description>Recent content in Rest Api on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/rest-api/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
 &lt;p>実際の業務でWebFluxを使っているわけではないので、さまざまなパターンがあるかなとは思いますが、この&lt;code>Functional Endpoint&lt;/code>を使う場合に考慮すべきものが、&lt;code>Router Function&lt;/code>(以下&lt;code>Router&lt;/code>)と&lt;code>Handler Function&lt;/code>(以下&lt;code>Handler&lt;/code>)をどう分けるかについての問題かと思います。&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は概念的には別のものではありますが、実装としては一つのクラスにまとめでもアプリは問題なく動くので、フレームワークの仕様や思想というよりかは、アプリのアーキテクチャに関する内容に近いますね。&lt;/p>
 &lt;p>なので、今回は&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分けた場合と分けない場合について、いくつかの観点から考えてみたいと思います。&lt;/p>
-&lt;h2 id="routerとhandlerは分離するべきか">RouterとHandlerは分離するべきか&lt;/h2>
-&lt;p>Spring MVCの場合、&lt;code>Controller&lt;/code>と&lt;code>Service&lt;/code>を明確に分けるのが常識のようになっています。アーキテクチャとしてもそうですが、フレームワークの思想（デザインの観点）としてもそうですね。&lt;/p>
+&lt;h2 id="routerとhandlerは分離するべきか">RouterとHandlerは分離するべきか
+&lt;/h2>&lt;p>Spring MVCの場合、&lt;code>Controller&lt;/code>と&lt;code>Service&lt;/code>を明確に分けるのが常識のようになっています。アーキテクチャとしてもそうですが、フレームワークの思想（デザインの観点）としてもそうですね。&lt;/p>
 &lt;p>こういう前例があるので、同じくSpring Frameworkに属するWebFluxの場合でも、&lt;code>Functional Endpoint&lt;/code>という新しい概念を導入するとしても、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分ける必要があると思いがちかなと思います。一見、&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係が成立するようにも見えて、ネットで検索できるサンプルコードも多くがそのような構造で書かれています。&lt;/p>
 &lt;p>しかし、実際のアプリを&lt;code>Functional Endpoint&lt;/code>を持って書くとしたら、いくつか考えなければならないことがあると思います。例えば、そもそも&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>はそれぞれ&lt;code>Controller&lt;/code>と&lt;code>Service&lt;/code>に一対一の対応関係であるという前提は確かであるか？もしそうでなければ、あえてMVCのパターンに合わせる必要があるのか？実装においてはどう影響するのか？などがあるかと思います。なので、今回はこれらの観点から&lt;code>Functional Endpoint&lt;/code>について述べていきます。&lt;/p>
-&lt;h2 id="対応関係について">対応関係について&lt;/h2>
-&lt;p>Springの&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-fn-overview" target="_blank" rel="noopener"
+&lt;h2 id="対応関係について">対応関係について
+&lt;/h2>&lt;p>Springの&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-fn-overview" target="_blank" rel="noopener"
 >公式ドキュメント&lt;/a>では、WebFluxの&lt;code>Functional Endpoint&lt;/code>の紹介において以下のようなサンプルコードを提示しています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> repository: PersonRepository = &lt;span style="color:#f92672">..&lt;/span>.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> handler = PersonHandler(repository)
@@ -79,8 +79,8 @@
 &lt;p>The big difference with annotated controllers is that the application is in charge of request handling from start to finish versus declaring intent through annotations and being called back.&lt;/p>
 &lt;/blockquote>
 &lt;p>つまり、「アノテーションをつけたContoller」と「Functional Endpoint」の違いは、前者が「アノテーションでコールバックと意図を表す」に対して、後者は「リクエストのハンドリングを開始から終了まで担当する」ということです。プログラミングモデルとしてこのような観点の差があるので、アノテーションがないのは当たり前なのかもしれません。そして結果的に、&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係は、少なくともプログラミングモデルという観点では当てはならないと考えられます。&lt;/p>
-&lt;h2 id="責任の分散という側面で">責任の分散という側面で&lt;/h2>
-&lt;p>アノテーションの実装を見ると、&lt;code>@Controller&lt;/code>と&lt;code>@Service&lt;/code>を分けているのがフレームワークのアーキテクチャや思想によるものであることがより明確になります。それぞれのアノテーションの実装は、以下の通りです。&lt;/p>
+&lt;h2 id="責任の分散という側面で">責任の分散という側面で
+&lt;/h2>&lt;p>アノテーションの実装を見ると、&lt;code>@Controller&lt;/code>と&lt;code>@Service&lt;/code>を分けているのがフレームワークのアーキテクチャや思想によるものであることがより明確になります。それぞれのアノテーションの実装は、以下の通りです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Target&lt;/span>(value&lt;span style="color:#f92672">=&lt;/span>TYPE)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Retention&lt;/span>(value&lt;span style="color:#f92672">=&lt;/span>RUNTIME)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Documented&lt;/span>
@@ -128,13 +128,13 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">interface&lt;/span> &lt;span style="color:#a6e22e">ServerResponse&lt;/span> {
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>以上のことでわかるように、WebFluxでは&lt;code>ServerRequest&lt;/code>と&lt;code>ServerResponse&lt;/code>は&lt;code>HandlerFunction&lt;/code>で扱うようにデザインされています。なので、既存の&lt;code>Service&lt;/code>のように、&lt;code>Handler&lt;/code>がビジネスロジック「のみ」を扱うというのはそれが実装として可能かどうか以前の問題になるのです。&lt;/p>
 &lt;p>ただ、「責任の分散」という観点からして、責任によってクラスを分けるという発想は間違っているわけではないですね。なのでビジネスロジックを担当するクラスを&lt;code>Handler&lt;/code>と分離して運用するケースは考えられますが、必ずしもクラスを分ける基準が&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>である必要はないのではないかと思われます。&lt;/p>
-&lt;h2 id="テストの観点で">テストの観点で&lt;/h2>
-&lt;p>JavaでJUnitなどを用いてユニットテストを作る場合、テスト自体はユースケース単位で作成しますが、それらのテストはクラス単位でまとめるというケースが多いかなと思います。なので同じ観点でユニットテストを書く場合、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>が分けられているとしたら当然ユニットテストもその単位で分けられるでしょう。&lt;/p>
+&lt;h2 id="テストの観点で">テストの観点で
+&lt;/h2>&lt;p>JavaでJUnitなどを用いてユニットテストを作る場合、テスト自体はユースケース単位で作成しますが、それらのテストはクラス単位でまとめるというケースが多いかなと思います。なので同じ観点でユニットテストを書く場合、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>が分けられているとしたら当然ユニットテストもその単位で分けられるでしょう。&lt;/p>
 &lt;p>ただ、こうする場合の問題は、テスト自体があまり意味を持たなくなる可能性があるということです。まず&lt;code>Router&lt;/code>は単純にエンドポイントと&lt;code>Handler&lt;/code>をつなぐ役割しか持たなくなるので、そのテストも「想定通りの&lt;code>HadlerFunction&lt;/code>を呼び出しているのか」に限るものになります。そして&lt;code>Handler&lt;/code>の場合、&lt;code>ServerRequest&lt;/code>を受信して&lt;code>ServerResponse&lt;/code>を発するので、テストが非常に難しくなるという問題があります。&lt;/p>
 &lt;p>なぜ&lt;code>ServerRequest&lt;/code>を受信して&lt;code>ServerResponse&lt;/code>を発するのが問題になるかというと、&lt;code>ServerRequest&lt;/code>のインスタンスを生成するのが難しく、&lt;code>ServerResponse&lt;/code>の場合でもレスポンスボディーを抽出するのが難しいからです。なので、&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/reactive/server/WebTestClient.html" target="_blank" rel="noopener"
 >WebTestClient&lt;/a>で行うことになるかと思いますが、&lt;code>WebTestClient&lt;/code>を使う場合はエンドポイントとHTTPメソッドなどを利用して実際のAPIを呼び出すことになるので、結果的に&lt;code>Handler&lt;/code>のテストをするつもりが&lt;code>Router&lt;/code>のテストまでふくむしかないということになります。こうするとクラス単位でテストケースをまとめることが難しいだけでなく、&lt;code>Router&lt;/code>のみのテストも実質的には意味をなくすということになります。&lt;/p>
-&lt;h2 id="ではどうすればいいか">ではどうすればいいか&lt;/h2>
-&lt;p>今まで論じた3つの観点からすると、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は別のクラスにする理由もあまりなく、むしろ別クラスに色々と問題が生じるように見えます。しかし、これが必ずしもエンドポイントに対するルーティングとビジネスロジックを分離する必要はない、ということではないかと思います。先に述べた通り、クラスを分ける基準を&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>にしないだけで良いかなと思います。例えば、以下のようなコードがあるとします。&lt;/p>
+&lt;h2 id="ではどうすればいいか">ではどうすればいいか
+&lt;/h2>&lt;p>今まで論じた3つの観点からすると、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は別のクラスにする理由もあまりなく、むしろ別クラスに色々と問題が生じるように見えます。しかし、これが必ずしもエンドポイントに対するルーティングとビジネスロジックを分離する必要はない、ということではないかと思います。先に述べた通り、クラスを分ける基準を&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>にしないだけで良いかなと思います。例えば、以下のようなコードがあるとします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">PersonRouter&lt;/span>(&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> repository: PersonRepository) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -177,21 +177,21 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .map { PersonDto(&lt;span style="color:#66d9ef">it&lt;/span>.id, &lt;span style="color:#66d9ef">it&lt;/span>.name) }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうすると、&lt;code>Router&lt;/code>から直接&lt;code>Repository&lt;/code>にアクセスこともなくなり、今まで挙げていたさまざまな問題も解消できるようになりますね。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>ここで提示した方法でビジネスロジックを分けるのは可能だとして、その方法をとった場合に残る疑問はあります。これは果たして&lt;code>Functional&lt;/code>なのか？&lt;code>Functional Endpoint&lt;/code>は&lt;code>Lambda-based&lt;/code>と説明されてあるが、&lt;code>Lambda&lt;/code>が使われないので設計意図とは違う形になってないか？そもそもSpring MVCとは違うコンセプトのフレームワークなので既存とは違うアプローチが必要なのでは？などなど。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>ここで提示した方法でビジネスロジックを分けるのは可能だとして、その方法をとった場合に残る疑問はあります。これは果たして&lt;code>Functional&lt;/code>なのか？&lt;code>Functional Endpoint&lt;/code>は&lt;code>Lambda-based&lt;/code>と説明されてあるが、&lt;code>Lambda&lt;/code>が使われないので設計意図とは違う形になってないか？そもそもSpring MVCとは違うコンセプトのフレームワークなので既存とは違うアプローチが必要なのでは？などなど。&lt;/p>
 &lt;p>これらの問題を判断するのはなかなか難しいですが、個人的には新しい技術だからといって常に新しい方法論を適用するということは難しく、既存の良い体系があるのならそれに従うのもそう間違っていることとは思いません。Springの公式ドキュメントでは「すでに問題なく動いているSpring MVCアプリケーションにあえてWebFluxを導入する必要はない(If you have a Spring MVC application that works fine, there is no need to change)」と述べていますが、これと同じく、既存の検証されてあるアーキテクチャがあるのならばそれをそのまま適用するもの悪くないのではと思います。まぁ、そもそもWebFluxを導入するところでMVCパターンを使うとしたらこういうことを気にする理由すら無くなるのですが…むしろこのようなプログラミングモデルが増えていくと今後は新しいアーキテクチャが生まれそうな気もしますね。今回のポストを書きながらはそういういうものを感じました。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>WebFluxではFunctional Enpointを使うべきか</title><link>https://retheviper.github.io/posts/spring-webflux-router/</link><pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-router/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxではFunctional Enpointを使うべきか" />&lt;p>以前、&lt;a class="link" href="../spring-webflux/" >Spring WebFluxに関するポストを書いたこと&lt;/a>があって、そこで少しだけMVCパターン(&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>)と&lt;code>Functional Endpoint&lt;/code>(&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>)に関して触れました。結論だけ先に述べますと、Functional Endpointの導入はMVCパターンは長く使われている良いパターンでありますが、性能や関数型プログラミングには適してないのという問題があるので、それを改善するためのものだといえます。&lt;/p>
 &lt;p>さて、その説明だけだと、Spring WebFluxを使う際にはなるべくFunctional Endpointを使うべきな気もします。しかし、実際はどうでしょうか？例えば、従来のSpring MVCと同じくController/Serviceを使う場合は本当にRouter/Handlerを使う時と比べ性能が劣るのか？また、Functional Endpointを使う際に考慮すべき、「MVCパターンにはなかった問題」はないか？といったことを考えられます。&lt;/p>
 &lt;p>なので、今回はその二つのパターンを用いて、Spring WebFluxによるサーバサイドアプリケーションを実装するときに考えたいことを少しまとめてみました。&lt;/p>
-&lt;h2 id="プログラミングのパラダイムとして">プログラミングのパラダイムとして&lt;/h2>
-&lt;p>SpringのMVCパターンは、アノテーションによるメタプログラミングとオブジェクト指向といった昔ながらの考え方に基づいたパラダイムに近いといえます。もちろん、AOPやDIといったSpring Framework特有の特徴はありますが、&lt;a class="link" href="https://www.reactive-streams.org" target="_blank" rel="noopener"
+&lt;h2 id="プログラミングのパラダイムとして">プログラミングのパラダイムとして
+&lt;/h2>&lt;p>SpringのMVCパターンは、アノテーションによるメタプログラミングとオブジェクト指向といった昔ながらの考え方に基づいたパラダイムに近いといえます。もちろん、AOPやDIといったSpring Framework特有の特徴はありますが、&lt;a class="link" href="https://www.reactive-streams.org" target="_blank" rel="noopener"
 >Reactive Streams&lt;/a>の実現体である&lt;code>Mono&lt;/code>/&lt;code>Flux&lt;/code>で書かれたWebFluxのコードと比べたら、まだ伝統的な書き方に近いという感覚はありますね。&lt;/p>
 &lt;p>ここでオブジェクト指向と関数型のうち、どれが良いかという議論はしません。また、Javaは元々オブジェクト指向の言語としてデザインされましたが、1.8以降はFunctional Interfaceの導入である程度関数型プログラミングができるようになりましたし、Kotlinでもそれは大きく変わらないことです。なので、Spring MVCとSpring WebFluxのうちどれかを選ぶということがコードをオブジェクト指向として書くか、関数型として書くかという結論にもなりません。&lt;/p>
 &lt;p>しかし、Spring WebFluxでは、MVCパターンとFunctional Endpointのどれかを選べるという点からして、どちらかのパラダイムに寄せた書き方はできるというのも事実です。ここでどれを取るかを判断するには、コードを書く人同士の合意がもっとも重要なのではないかと思います。なぜかというと、結局プログラミングのパラダイムというものは何よりもプログラミングの「効率」のために発展してきたからです。&lt;/p>
 &lt;p>なので、ここでの判断基準は「如何に読みやすいか」「如何に早く成果を出せるか」など、実利的なものとなるべきでしょう。例えば、すでにサービスとして機能しているアプリケーションの同時実行性能を向上させたい場合は、MVCパターンとして書いた方がすぐにサービスを立ち上げられるので良いと思ったら、それで理由は十分かと思います。もしくは、すでにFunctional Endpointに慣れているプログラマが多い場合は積極的にそれを導入するとかですね。つまり、私の観点からすると、プログラミングのパラダイムは実務者の立場からすると効率により選択するべきものではないかと思います。&lt;/p>
 &lt;p>では、Contorller/ServiceのパターンとRouter/Handlerのパターンの実際はどう違うのかを、コードを通じて見ていきたいと思います。&lt;/p>
-&lt;h3 id="mvcパターンで書く場合">MVCパターンで書く場合&lt;/h3>
-&lt;p>Spring WebFluxのMVCパターン、つまりContoller/Serviceのパターンは、その名の通り既存のSpring MVCと比べあまり変わらない感覚で書くことができます。なので、例えば以下のようなコードを書くとしたら、これだけではSpring MVCとの違いがあまりわからないくらいですね。&lt;/p>
+&lt;h3 id="mvcパターンで書く場合">MVCパターンで書く場合
+&lt;/h3>&lt;p>Spring WebFluxのMVCパターン、つまりContoller/Serviceのパターンは、その名の通り既存のSpring MVCと比べあまり変わらない感覚で書くことができます。なので、例えば以下のようなコードを書くとしたら、これだけではSpring MVCとの違いがあまりわからないくらいですね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RestController&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">HelloController&lt;/span>(&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> service: HelloService) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -244,8 +244,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Coroutinesを使う場合はスコープの指定が必要となるのが一般的ですが、実際はControllerのメソッドまでを&lt;code>suspend&lt;/code>として定義しておくと良いみたいです。ただ、既存のプロジェクトをSpring MVCからWebFluxに移行する場合にこうやって多くの処理をsuspendメソッドにすると、ユニットテストの方を直すのが大変になる可能性もあるのでそこは要注意です。&lt;/p>
-&lt;h3 id="functional-endpointで書く場合">Functional Endpointで書く場合&lt;/h3>
-&lt;p>続いて、Functional Endpontを使う場合のコードです。MVCパターンの問題としてアノテーションがあげられていますが、Router/Handlerでもアノテーションを使うことはできますし、アプリケーションのアーキテクチャによっては必然的にクラスを分けてアノテーションで管理することになるのが一般的かなと思います。なので、そのようなケースではRouterを&lt;code>@Bean&lt;/code>として登録したり、Handlerも&lt;code>@Component&lt;/code>として定義する場合もあります。そういう場合は、以下のようなコードになります。&lt;/p>
+&lt;h3 id="functional-endpointで書く場合">Functional Endpointで書く場合
+&lt;/h3>&lt;p>続いて、Functional Endpontを使う場合のコードです。MVCパターンの問題としてアノテーションがあげられていますが、Router/Handlerでもアノテーションを使うことはできますし、アプリケーションのアーキテクチャによっては必然的にクラスを分けてアノテーションで管理することになるのが一般的かなと思います。なので、そのようなケースではRouterを&lt;code>@Bean&lt;/code>として登録したり、Handlerも&lt;code>@Component&lt;/code>として定義する場合もあります。そういう場合は、以下のようなコードになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">HelloRouter&lt;/span>(&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> handler: HelloHanlder) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -297,16 +297,16 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="性能">性能&lt;/h2>
-&lt;p>MVCパターンの問題としてあげられるものの一つとして、アノテーションがあります。アノテーションを使うということは、必然的にリフレクションを使うことになるので、自然に性能の低下にもつながるという話ですね。これだけみると、WebFluxではMVCパターンよりもFunctional Endpointを使ったほうが性能でも有利であるように見えます。しかし実際はどうでしょうか？&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="性能">性能
+&lt;/h2>&lt;p>MVCパターンの問題としてあげられるものの一つとして、アノテーションがあります。アノテーションを使うということは、必然的にリフレクションを使うことになるので、自然に性能の低下にもつながるという話ですね。これだけみると、WebFluxではMVCパターンよりもFunctional Endpointを使ったほうが性能でも有利であるように見えます。しかし実際はどうでしょうか？&lt;/p>
 &lt;p>&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-programming-models" target="_blank" rel="noopener"
 >Springの公式ドキュメント&lt;/a>では、Functional Enddpointのことを&lt;code>lightweight(軽量)&lt;/code>とは表現しているものの、それ以外に性能がどうという話は一切述べてないです。多くの場合、性能の比較はSpring MVCとSpring WebFluxを対象としていて、WebFluxでのMVCパターンとFunctional Endpointのケースはあまり探せませんでした。なので、ここでは簡単にベンチマークを行うことで二つのパターンでの性能の違いを検証してみました。&lt;/p>
 &lt;p>ベンチマークツールとしては、Jmeterを使うこともできましたが、短いコマンドで測定ができるのもあり、今回は&lt;a class="link" href="https://httpd.apache.org/docs/2.4/en/programs/ab.html" target="_blank" rel="noopener"
 >Apache HTTP server benchmarking tool&lt;/a>を使ってテストを実施しています。&lt;/p>
-&lt;h3 id="使ったコード">使ったコード&lt;/h3>
-&lt;p>性能測定として知りたいのは「実装パターンで性能が変わるか」ということなので、あえてDB接続は排除しました。比較のために作ったサンプルアプリケーションでは、単純にデータを生成する共通のロジックと、それを返すだけのContoller/Service, Router/Hanlderのセットで構成されています。&lt;/p>
-&lt;h4 id="共通">共通&lt;/h4>
-&lt;p>データを生成するロジックそのものは共通で、単純にループでListを生成するようにしています。&lt;/p>
+&lt;h3 id="使ったコード">使ったコード
+&lt;/h3>&lt;p>性能測定として知りたいのは「実装パターンで性能が変わるか」ということなので、あえてDB接続は排除しました。比較のために作ったサンプルアプリケーションでは、単純にデータを生成する共通のロジックと、それを返すだけのContoller/Service, Router/Hanlderのセットで構成されています。&lt;/p>
+&lt;h4 id="共通">共通
+&lt;/h4>&lt;p>データを生成するロジックそのものは共通で、単純にループでListを生成するようにしています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 固定値のデータを生成し返すクラス
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">object&lt;/span> &lt;span style="color:#a6e22e">DataCreationUtil&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -329,8 +329,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> birth: LocalDate,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> joined: LocalDate
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="controllerserviceの実装">Controller/Serviceの実装&lt;/h4>
-&lt;p>MVCパターンについてはコードだけでも十分わかると思いますので、説明は割愛します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="controllerserviceの実装">Controller/Serviceの実装
+&lt;/h4>&lt;p>MVCパターンについてはコードだけでも十分わかると思いますので、説明は割愛します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RestController&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">PerformanceTestController&lt;/span>(
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> service: PerformanceTestService
@@ -349,8 +349,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">getData&lt;/span>(): List&amp;lt;Person&amp;gt; = service.getData()
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの実装">Router/Handlerの実装&lt;/h4>
-&lt;p>Functional Endpointでは、MVCパターンと比べ処理と言えるものは全部Handlerの方に書かれてある、という違いがあります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの実装">Router/Handlerの実装
+&lt;/h4>&lt;p>Functional Endpointでは、MVCパターンと比べ処理と言えるものは全部Handlerの方に書かれてある、という違いがあります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">PerformanceTestRouter&lt;/span>(&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> handler: PerformanceTestHandler) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -369,8 +369,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .contentType(&lt;span style="color:#a6e22e">MediaType&lt;/span>.APPLICATION_JSON)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .body(&lt;span style="color:#a6e22e">Flux&lt;/span>.fromIterable(&lt;span style="color:#a6e22e">DataCreationUtil&lt;/span>.&lt;span style="color:#66d9ef">data&lt;/span>))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト結果">テスト結果&lt;/h3>
-&lt;p>テストは以下のような条件で実施しました。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト結果">テスト結果
+&lt;/h3>&lt;p>テストは以下のような条件で実施しました。&lt;/p>
 &lt;ul>
 &lt;li>ユーザ数は5000, ユーザごとのリクエストは50に設定&lt;/li>
 &lt;li>ワームアップ時間を考慮して、パターンごとにテストを分ける
@@ -388,8 +388,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ab -n &lt;span style="color:#ae81ff">5000&lt;/span> -c &lt;span style="color:#ae81ff">50&lt;/span> http://localhost:8080/performance-controller
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">done&lt;/span>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、こうやってもやはりテスト結果では周回ごとに偏差があったので、ここでは中間値に当てはまる結果を紹介します。その結果は、以下の通りになりますが、あらかじめ結論だけ先に言いますとMVCパターンでもFunctional Endpointでもその性能の違いというものは「誤差範囲以内」と表現しても良いかなと思います。&lt;/p>
-&lt;h4 id="controllerserviceの結果">Controller/Serviceの結果&lt;/h4>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
+&lt;h4 id="controllerserviceの結果">Controller/Serviceの結果
+&lt;/h4>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Hostname: localhost
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Port: &lt;span style="color:#ae81ff">8080&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -424,8 +424,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 98% &lt;span style="color:#ae81ff">430&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 99% &lt;span style="color:#ae81ff">449&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 100% &lt;span style="color:#ae81ff">516&lt;/span> &lt;span style="color:#f92672">(&lt;/span>longest request&lt;span style="color:#f92672">)&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの結果">Router/Handlerの結果&lt;/h4>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="routerhandlerの結果">Router/Handlerの結果
+&lt;/h4>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>Server Software:
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Hostname: localhost
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Server Port: &lt;span style="color:#ae81ff">8080&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -460,8 +460,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 98% &lt;span style="color:#ae81ff">441&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 99% &lt;span style="color:#ae81ff">459&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 100% &lt;span style="color:#ae81ff">613&lt;/span> &lt;span style="color:#f92672">(&lt;/span>longest request&lt;span style="color:#f92672">)&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ドキュメンテーション">ドキュメンテーション&lt;/h2>
-&lt;p>次にドキュメンテーションの観点からすると、Functional Endpointはまだ導入するには早い気がします。ここでいうドキュメンテーションは、JavaDocやKdocのようなコメントのことではなく、最近よく使われる&lt;a class="link" href="https://swagger.io" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="ドキュメンテーション">ドキュメンテーション
+&lt;/h2>&lt;p>次にドキュメンテーションの観点からすると、Functional Endpointはまだ導入するには早い気がします。ここでいうドキュメンテーションは、JavaDocやKdocのようなコメントのことではなく、最近よく使われる&lt;a class="link" href="https://swagger.io" target="_blank" rel="noopener"
 >Swagger&lt;/a>のことを指します。&lt;/p>
 &lt;p>最近は&lt;a class="link" href="http://springfox.github.io/springfox" target="_blank" rel="noopener"
 >SpringFox&lt;/a>などを使うと簡単にAPIのドキュメンテーションが可能ですが、Functional Endpointだとそう簡単にはできません。すでに理由がわかる方もいらっしゃるかと思いますが、Routerには引数としてエンドポイントとHandlerの処理を渡しているだけで、Handlerは引数がServerRequest、戻り値はServerResponseに固定されてあるのが理由です。&lt;/p>
@@ -531,8 +531,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> DELETE(&lt;span style="color:#e6db74">&amp;#34;/api/v1/members/{id}&amp;#34;&lt;/span>, handler&lt;span style="color:#f92672">::&lt;/span>deleteMember)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ご覧の通り、ドキュメンテーションのためのアノテーションが実際のコードよりも長くなっています。Functional EndpointでもSwaggerを利用できる手段ができたのは良いことですが、MVCパターンと比べやはり不便ではありますね。なので、ドキュメンテーションが大事であるなら、まだFunctional Pointを使うべきではないかもしれません。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>今回は、Spring WebFluxのMVCパターン及びFunctional Endpointをコードの書き方、性能、ドキュメンテーションという観点から比較してみました。Spring WebFluxも発表されたのが2017年なので、もう今年で5年目になりますが、まだまだMVCパターンに比べては色々と補完すべき点が多い印象です。自分の場合はWebFluxのメインコンセプトであるノンブロッキングや関数型プログラミングを活かすためにはやはりFunctional Endpointを選んだ方が良さそうな気はしていますが、まだあえてそうする必要はないのではないか、という感覚です。特にエンタプライズのアプリケーションを書くことになるとますますそうでしょう。もちろん、そもそもWebFluxそのものを導入すべきかということから考える必要がありますが。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回は、Spring WebFluxのMVCパターン及びFunctional Endpointをコードの書き方、性能、ドキュメンテーションという観点から比較してみました。Spring WebFluxも発表されたのが2017年なので、もう今年で5年目になりますが、まだまだMVCパターンに比べては色々と補完すべき点が多い印象です。自分の場合はWebFluxのメインコンセプトであるノンブロッキングや関数型プログラミングを活かすためにはやはりFunctional Endpointを選んだ方が良さそうな気はしていますが、まだあえてそうする必要はないのではないか、という感覚です。特にエンタプライズのアプリケーションを書くことになるとますますそうでしょう。もちろん、そもそもWebFluxそのものを導入すべきかということから考える必要がありますが。&lt;/p>
 &lt;p>それでも、やはりFunctional Endpointという実装方式には色々と可能性があると思います。Spring WebFluxでなくても、最近のウェブフレームワークでは多く採用されているものですからね。例えばTechEmpowerの&lt;a class="link" href="https://www.techempower.com/benchmarks" target="_blank" rel="noopener"
 >ベンチマーク&lt;/a>でJavaのフレームワークのうちではもっとも性能がよかった&lt;a class="link" href="https://jooby.io" target="_blank" rel="noopener"
 >jooby&lt;/a>でもMVCパターンとFunctional Endpointとよく似たScript Routeパターンに対応していますし、JetBrainsで開発しているKotlin用のウェブフレームワークである&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
@@ -541,23 +541,23 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 >Gin&lt;/a>のようなフレームワークでも似たようなAPIの実装方法を提供しているので、余裕があったら個人的に試してみて慣れるのも良い勉強になるかもしれません。また、関数型プログラミングはこれからも幅広く使われそうなので、これを持って練習してみるのも良いかもしれませんね。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
 &lt;p>そもそもJWTを使った認証認可は、JWTがISO標準ではあるものの、正解と言った実装方式がないらしいです。なので以下で紹介するAccess Tokenのみの発行に伴う問題と、それを補完するための戦略は概念だけを紹介して行きます。&lt;/p>
-&lt;h2 id="access-token">Access Token&lt;/h2>
-&lt;p>Access Tokenのみを使う場合は、最初の認証以降、サーバでは秘密キーを利用してリクエストに載せられたTokenを確認するため、データベースやストレージなどのI/Oが必要なくなるため高速で処理ができます。ただ、Tokenはリクエストを送るクライアント側が持っているため、強制的にセッションを終了させることができません。なので、ログアウトの処理をするためにはクライアント側からToken情報を削除するしかないですね。&lt;/p>
+&lt;h2 id="access-token">Access Token
+&lt;/h2>&lt;p>Access Tokenのみを使う場合は、最初の認証以降、サーバでは秘密キーを利用してリクエストに載せられたTokenを確認するため、データベースやストレージなどのI/Oが必要なくなるため高速で処理ができます。ただ、Tokenはリクエストを送るクライアント側が持っているため、強制的にセッションを終了させることができません。なので、ログアウトの処理をするためにはクライアント側からToken情報を削除するしかないですね。&lt;/p>
 &lt;p>Access Tokenを使った認証方式はこういう特徴を持っているため、クライアント側がTokenを持っているため、これをもし第三者に乗っ取られた時はサーバサイドからそれを判断できる術がありません。こういう問題を防ぐため、Tokenを発行する際はあらかじめ期限を設定することで、一定の時間がすぎるとTokenの有効期間が満了するようにして、再利用できなくしています。&lt;/p>
-&lt;h3 id="tokenの期限設定のジレンマ">Tokenの期限設定のジレンマ&lt;/h3>
-&lt;p>Tokenの期限をあらかじめ設定する場合、有効期限をどう設定するかの問題があります。短くした場合は、Tokenを乗っ取られた場合でもすぐにTokenを使えなくなるため安全性を担保できますが、逆にユーザは頻繁にログインし直さないと行けなくなります。逆に長くした場合は、ユーザはログインし直さなくてもサービスを長期間利用できるものの、乗っ取られたTokenも長く使えるようになりますね。&lt;/p>
-&lt;h2 id="refresh-token">Refresh Token&lt;/h2>
-&lt;p>Refresh Tokenは、満了したAccess Tokenの有効期限を更新するための別のTokenです。サーバは認証時にクライアント側にAccess TokenとRefresh Tokenをともに発行します。ここでAccess Tokenの期限は30分くらいの短い期間に設定して、Refresh Tokenは1ヶ月ほどの長い期間に設定します。&lt;/p>
+&lt;h3 id="tokenの期限設定のジレンマ">Tokenの期限設定のジレンマ
+&lt;/h3>&lt;p>Tokenの期限をあらかじめ設定する場合、有効期限をどう設定するかの問題があります。短くした場合は、Tokenを乗っ取られた場合でもすぐにTokenを使えなくなるため安全性を担保できますが、逆にユーザは頻繁にログインし直さないと行けなくなります。逆に長くした場合は、ユーザはログインし直さなくてもサービスを長期間利用できるものの、乗っ取られたTokenも長く使えるようになりますね。&lt;/p>
+&lt;h2 id="refresh-token">Refresh Token
+&lt;/h2>&lt;p>Refresh Tokenは、満了したAccess Tokenの有効期限を更新するための別のTokenです。サーバは認証時にクライアント側にAccess TokenとRefresh Tokenをともに発行します。ここでAccess Tokenの期限は30分くらいの短い期間に設定して、Refresh Tokenは1ヶ月ほどの長い期間に設定します。&lt;/p>
 &lt;p>クライアント側でログイン後に30分がすぎて、Access Tokenの期限が満了した場合にRefresh Tokenでサーバに新しいAccess Tokenの発行を依頼します。サーバはクライアントのリクエストに乗ってあるRefresh Tokenを検証し、問題なければAccess Tokenを再発行します。これでAccess Tokenを乗っ取られたも、すぐに満了し、ユーザはRefresh Tokenを持って有効期限の自動更新ができるので毎回ログインする必要がなくなります。また、サーバサイドでRefresh Tokenを検証するデータを持っているので、もし問題がある場合はRefresh Tokenを満了させることもできます。&lt;/p>
 &lt;p>ただ、Refresh Tokenを使った場合でも完璧では言えません。サーバが検証するためにRefresh Tokenに対応するデータを別のデータベースやストレージに保存する必要があるので、追加的なI/Oが発生し得るという問題はあります。また、Refresh Tokenを用いたAccess Tokenの更新のためにはサーバとクライアント側の両方に機能を追加する必要がありますね。あと、Access Tokenと同様にクライアント側がRefresh Tokenを保存する必要があるのでこれをどう保存するかを考える必要があります。&lt;/p>
-&lt;h2 id="sliding-session">Sliding Session&lt;/h2>
-&lt;p>Sliding Sessionは、セッションを継続して利用しているユーザがいる場合、自動でAccess Tokenを更新してくれる仕組みのことです。リクエストごとに新しいAccess Tokenを発行する方法がありますが、特定のリクエストに限って処理する方法もあります。例えば、ユーザが長い時間を送ると予想されるページ(問い合わせの作成)や、次に何かのアクションが予想されるページ(ショッピングカートにアイテムを追加する)の場合があるでしょう。他には、Access TokenのIAT(トークン発行時間)を確認して新しいAccess Tokenの発行を要請する場合もあるらしいですね。&lt;/p>
+&lt;h2 id="sliding-session">Sliding Session
+&lt;/h2>&lt;p>Sliding Sessionは、セッションを継続して利用しているユーザがいる場合、自動でAccess Tokenを更新してくれる仕組みのことです。リクエストごとに新しいAccess Tokenを発行する方法がありますが、特定のリクエストに限って処理する方法もあります。例えば、ユーザが長い時間を送ると予想されるページ(問い合わせの作成)や、次に何かのアクションが予想されるページ(ショッピングカートにアイテムを追加する)の場合があるでしょう。他には、Access TokenのIAT(トークン発行時間)を確認して新しいAccess Tokenの発行を要請する場合もあるらしいですね。&lt;/p>
 &lt;p>ただ、Sliding SessionでAccess Tokenを更新する場合、そもそもの有効期限が長く設定されていると無限に近くセッションが延長され、ユーザが全くログインしなおさなくてもサービスを利用できることになるので注意が必要です。逆に、ユーザがあまり長い時間の作業を行わない場合はSliding Sessionそのものの必要性がなくなる可能性もあります。&lt;/p>
-&lt;h2 id="refresh-token--sliding-session">Refresh Token + Sliding Session&lt;/h2>
-&lt;p>最後は、Refresh TokenとSliding Sessionを同時に使った方法です。普通のSliding Sessionを適用した方法との違いは、Access TokenではなくRefresh Tokenを更新するということです。Refresh Tokenを更新することにより、Access Tokenを頻繁に更新する必要がなくなります。またRefresh Tokenが更新されるためアクセス回数の少ないユーザでも比較的ログインを頻繁にする必要がなくなりますね。Refresh TokenとSliding Sessionのメリットを適切に融合させた戦略と言えます。&lt;/p>
+&lt;h2 id="refresh-token--sliding-session">Refresh Token + Sliding Session
+&lt;/h2>&lt;p>最後は、Refresh TokenとSliding Sessionを同時に使った方法です。普通のSliding Sessionを適用した方法との違いは、Access TokenではなくRefresh Tokenを更新するということです。Refresh Tokenを更新することにより、Access Tokenを頻繁に更新する必要がなくなります。またRefresh Tokenが更新されるためアクセス回数の少ないユーザでも比較的ログインを頻繁にする必要がなくなりますね。Refresh TokenとSliding Sessionのメリットを適切に融合させた戦略と言えます。&lt;/p>
 &lt;p>ただ、この方式でも問題が全くないとは言えません。サーバからRefresh Tokenの有効期限を満了させない限り、ユーザはリソースにアクセスできるので、もしPCやスマホなどの機器が乗っ取られた場合は対応できません。なのでアカウントのパスワードを周期的にリセットさせるか、特定のリソースにアクセスする場合は再び認証させるなどの方法が必要となります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>認証はWebアプリケーションにとってもっとも重要で、当たり前な機能となっていますが、セキュリティのため強化して行くとユーザの使用性に悪影響が出てしまうという問題を持っているものです。なので色々な方法論があり、さまざまなWebアプリケーションではそれぞれ違う方法を使って脆弱性に対応していますが、どれもメリット・デメリットがあるので正解と言える物はないのかもしれません。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>認証はWebアプリケーションにとってもっとも重要で、当たり前な機能となっていますが、セキュリティのため強化して行くとユーザの使用性に悪影響が出てしまうという問題を持っているものです。なので色々な方法論があり、さまざまなWebアプリケーションではそれぞれ違う方法を使って脆弱性に対応していますが、どれもメリット・デメリットがあるので正解と言える物はないのかもしれません。&lt;/p>
 &lt;p>また、JWTのPayloadは暗号化されないため(ただのbase64文字列)、JWTを乗っ取られた時にその中身を見れるという問題もあるらしいです。これを補完するために&lt;a class="link" href="https://developer.okta.com/blog/2020/07/23/introducing-jpaseto" target="_blank" rel="noopener"
 >PASETO&lt;/a>という物も提案されているらしいですが、これがまたJWTほど亜補給される稼働かはわからない状態ですね。&lt;/p>
 &lt;p>あと、そもそもの認証方式の問題ですが、量子コンピュータが一般に補給されたら、&lt;a class="link" href="https://www.nttdata.com/jp/ja/data-insight/2018/0611" target="_blank" rel="noopener"
@@ -572,8 +572,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;li>ログアウトした場合のハンドリング&lt;/li>
 &lt;/ol>
 &lt;p>では、一つづつどうやってカスタムクラスを作るのかをみていきましょう。&lt;/p>
-&lt;h2 id="authenticationentrypoint">AuthenticationEntryPoint&lt;/h2>
-&lt;p>&lt;code>ログインしていない使用者が、特定のURLにアクセスする場合のハンドリング&lt;/code>のためには、AuthenticationEntryPointの実装が必要となります。ここではレスポンスとして&lt;code>UNAUTHORIZED&lt;/code>を表示する例を紹介します。&lt;/p>
+&lt;h2 id="authenticationentrypoint">AuthenticationEntryPoint
+&lt;/h2>&lt;p>&lt;code>ログインしていない使用者が、特定のURLにアクセスする場合のハンドリング&lt;/code>のためには、AuthenticationEntryPointの実装が必要となります。ここではレスポンスとして&lt;code>UNAUTHORIZED&lt;/code>を表示する例を紹介します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTAuthenticationEntryPoint&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> AuthenticationEntryPoint {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
@@ -582,8 +582,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">sendError&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">UNAUTHORIZED&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>(), HttpStatus.&lt;span style="color:#a6e22e">UNAUTHORIZED&lt;/span>.&lt;span style="color:#a6e22e">getReasonPhrase&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="accessdeniedhandler">AccessDeniedHandler&lt;/h2>
-&lt;p>&lt;code>ログインしているが、特定のURLにアクセスする場合のハンドリング&lt;/code>のためには、AccessDeniedHandlerの実装が必要となります。ここではレスポンスとして&lt;code>FORBIDDEN&lt;/code>を表示する例を紹介します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="accessdeniedhandler">AccessDeniedHandler
+&lt;/h2>&lt;p>&lt;code>ログインしているが、特定のURLにアクセスする場合のハンドリング&lt;/code>のためには、AccessDeniedHandlerの実装が必要となります。ここではレスポンスとして&lt;code>FORBIDDEN&lt;/code>を表示する例を紹介します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTAccessDeniedHandler&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> AccessDeniedHandler {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
@@ -592,8 +592,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">sendError&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">FORBIDDEN&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>(), HttpStatus.&lt;span style="color:#a6e22e">FORBIDDEN&lt;/span>.&lt;span style="color:#a6e22e">getReasonPhrase&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="authenticationfailurehandler">AuthenticationFailureHandler&lt;/h2>
-&lt;p>&lt;code>ログインに失敗した場合のハンドリング&lt;/code>のためには、AuthenticationFailureHandlerの実装が必要となります。ここではレスポンスとして&lt;code>FORBIDDEN&lt;/code>を表示する例を紹介します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="authenticationfailurehandler">AuthenticationFailureHandler
+&lt;/h2>&lt;p>&lt;code>ログインに失敗した場合のハンドリング&lt;/code>のためには、AuthenticationFailureHandlerの実装が必要となります。ここではレスポンスとして&lt;code>FORBIDDEN&lt;/code>を表示する例を紹介します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTAuthenticationFailureHandler&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> AuthenticationFailureHandler {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
@@ -602,8 +602,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">sendError&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">FORBIDDEN&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>(), HttpStatus.&lt;span style="color:#a6e22e">FORBIDDEN&lt;/span>.&lt;span style="color:#a6e22e">getReasonPhrase&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="logoutsuccesshandler">LogoutSuccessHandler&lt;/h2>
-&lt;p>&lt;code>ログアウトした場合のハンドリング&lt;/code>のためには、LogoutSuccessHandlerの実装が必要となります。JWTを使ったログインだけでなく、REST APIのログインはSessionではなくトークンのような情報をクライアントが持つので、サーバサイドで処理することはありません。ログアウトの場合はクライアント側で認証に必要な情報を削除するようにして、サーバサイドとしては単純にレスポンスとして&lt;code>OK&lt;/code>を表示します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="logoutsuccesshandler">LogoutSuccessHandler
+&lt;/h2>&lt;p>&lt;code>ログアウトした場合のハンドリング&lt;/code>のためには、LogoutSuccessHandlerの実装が必要となります。JWTを使ったログインだけでなく、REST APIのログインはSessionではなくトークンのような情報をクライアントが持つので、サーバサイドで処理することはありません。ログアウトの場合はクライアント側で認証に必要な情報を削除するようにして、サーバサイドとしては単純にレスポンスとして&lt;code>OK&lt;/code>を表示します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTLogoutSuccessHandler&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> LogoutSuccessHandler {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Override&lt;/span>
@@ -613,8 +613,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">setStatus&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">OK&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="configurationクラスの設定">Configurationクラスの設定&lt;/h2>
-&lt;p>最後に、Configurationクラスに今まで作成したカスタムHandlerクラスをそれぞれの目的に合わせて登録します。メソッドを覚えるだけで、登録の内容自体は難しくないです。ここでは以前のポストで作成したクラスを基盤に修正しています。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="configurationクラスの設定">Configurationクラスの設定
+&lt;/h2>&lt;p>最後に、Configurationクラスに今まで作成したカスタムHandlerクラスをそれぞれの目的に合わせて登録します。メソッドを覚えるだけで、登録の内容自体は難しくないです。ここでは以前のポストで作成したクラスを基盤に修正しています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RequiredArgsConstructor&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SecurityConfig&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> WebSecurityConfigurerAdapter {
@@ -671,25 +671,25 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここではFilterやHandlerなどのクラスのインスタンスを新しく作成していますが、&lt;code>@Component&lt;/code>でBeanとして登録しておいても構いません。どっちかとするとBean登録した方が良いかなという気はしますが、ここではコードが長くなるので省略しておきました。&lt;/p>
 &lt;p>また、一般的にDIはフィールドよりもコンストラクタにつけた方が良いといいますが、フィールドをfinalとして宣言している場合ならLombokの&lt;code>@RequiredArgsConstructor&lt;/code>を使っても自動でDIされますので今回はそのような書き方にしてみました。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>ハンドリングの場合は、メソッドが一つしかないインタフェースを実装して、Configurationクラスに登録するだけなので難しくないですね。それぞれのHandlerインタフェースは、引数としてリクエストはレスポンス、認証情報をとっているので、場合によってはカスタム例外ビューモデルを作成して返したり、エラー処理用のControllerを作ってリダイレクトさせるなど様々な処理ができます。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>ハンドリングの場合は、メソッドが一つしかないインタフェースを実装して、Configurationクラスに登録するだけなので難しくないですね。それぞれのHandlerインタフェースは、引数としてリクエストはレスポンス、認証情報をとっているので、場合によってはカスタム例外ビューモデルを作成して返したり、エラー処理用のControllerを作ってリダイレクトさせるなど様々な処理ができます。&lt;/p>
 &lt;p>セキュリティという面から考えると、定型化されたSpring Securityのエラーが出されるということはサーバサイドがSpringで作成されていることを知らせるようなものなので、アプリの脆弱性の問題に繋がる場合もあると思われますね。なのでWebアプリケーションを作る場合は、外部に漏出される情報に関しては徹底的に管理しておいた方が良いのではないかと思います。&lt;/p>
 &lt;p>では、また！&lt;/p></description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTによるREST APIのログインを実現する" />&lt;p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。&lt;/p>
 &lt;p>他にもいろいろな方法があるのかもしれませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。&lt;/p>
-&lt;h2 id="jwtとは">JWTとは&lt;/h2>
-&lt;p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準&lt;a class="link" href="https://tools.ietf.org/html/rfc7519" target="_blank" rel="noopener"
+&lt;h2 id="jwtとは">JWTとは
+&lt;/h2>&lt;p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準&lt;a class="link" href="https://tools.ietf.org/html/rfc7519" target="_blank" rel="noopener"
 >RFC 7519&lt;/a>です。JWTのデータは署名されているためこの伝達されるデータの送信元の特定や途中でデータが入れ替えされなかったか(改ざんされてないか)の検証などができるので、多くの場合にユーザの認証で使われます。&lt;/p>
 &lt;p>このようにJWTの中には署名や暗号化などに必要なデータは全て含まれているので、サーバサイドではJWTを受け取ることでデータのバリデーションチェックができるなど自己完結性があって、既存のSessionを使った方法とは別にStatelessな方法としてユーザの認証と認可を可能にします。なので今回紹介する、REST APIでのログインのために適している認証方式といえますね。&lt;/p>
-&lt;h2 id="jwtでのログインシナリオ">JWTでのログインシナリオ&lt;/h2>
-&lt;p>まずJWTを使ったログインの場合、クライアントからログインに必要なクレデンシャル(IDやパスワードなど)をサーバに送ると、サーバからはユーザの情報に基づいてJWTを発行して返します。クライアントはこの情報をリクエスト毎に載せてサーバに伝達し、サーバではJWTのバリデーションを行なってからレスポンスを返すようになります。&lt;/p>
+&lt;h2 id="jwtでのログインシナリオ">JWTでのログインシナリオ
+&lt;/h2>&lt;p>まずJWTを使ったログインの場合、クライアントからログインに必要なクレデンシャル(IDやパスワードなど)をサーバに送ると、サーバからはユーザの情報に基づいてJWTを発行して返します。クライアントはこの情報をリクエスト毎に載せてサーバに伝達し、サーバではJWTのバリデーションを行なってからレスポンスを返すようになります。&lt;/p>
 &lt;p>ここでJWTとして作られたJWTをクライアント側に送る時やクライアントがリクエストを送る時、レスポンスやリクエストのHTTP Headerに載せることになります。なぜSessionではなくHeaderに載せるかについては&lt;a class="link" href="../spring-rest-api-how-to-login" >このポスト&lt;/a>を参考にしてください。&lt;/p>
 &lt;p>ログインに成功したあとは、Sessionを使う場合と同じく認証させているかをチェックして各URLへのアクセスを認可するようになりますね。ここはSpring Securityが担当するようになります。&lt;/p>
-&lt;h2 id="jwtとspring-securityによるログイン">JWTとSpring Securityによるログイン&lt;/h2>
-&lt;p>では、以上のシナリオをどう実現できるかを考えてみます。まず、ログイン要請を受けるコントローラとメソッドを用意する必要がありますね。そして、そのコントローラからはサービスクラスから入力されたクレデンシャルを検証してもらいます。検証できたら、その情報を元にJWTのJWTを作る必要がありますね。&lt;/p>
-&lt;h3 id="spring-securityの設定jwtを使う前">Spring Securityの設定(JWTを使う前)&lt;/h3>
-&lt;p>まずはREST APIでの認証認可を簡単にSpring Securityで実装します。Spring Securityそのものだけでもかなり膨大な量を勉強しなければならないのですが、ここではまず、DBに登録されているユーザの情報を取得し、そのユーザのロールによってアクセスできるURLを制限するという機能だけを実現します。(他にも、ログインとはあまり関係のないクラスのコードは省略しています)&lt;/p>
-&lt;h4 id="entityクラス">Entityクラス&lt;/h4>
-&lt;p>まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。&lt;/p>
+&lt;h2 id="jwtとspring-securityによるログイン">JWTとSpring Securityによるログイン
+&lt;/h2>&lt;p>では、以上のシナリオをどう実現できるかを考えてみます。まず、ログイン要請を受けるコントローラとメソッドを用意する必要がありますね。そして、そのコントローラからはサービスクラスから入力されたクレデンシャルを検証してもらいます。検証できたら、その情報を元にJWTのJWTを作る必要がありますね。&lt;/p>
+&lt;h3 id="spring-securityの設定jwtを使う前">Spring Securityの設定(JWTを使う前)
+&lt;/h3>&lt;p>まずはREST APIでの認証認可を簡単にSpring Securityで実装します。Spring Securityそのものだけでもかなり膨大な量を勉強しなければならないのですが、ここではまず、DBに登録されているユーザの情報を取得し、そのユーザのロールによってアクセスできるURLを制限するという機能だけを実現します。(他にも、ログインとはあまり関係のないクラスのコードは省略しています)&lt;/p>
+&lt;h4 id="entityクラス">Entityクラス
+&lt;/h4>&lt;p>まずはDBからユーザの情報を取得するためのクラスを作る必要がありますね。UserDetailsをimplementしたクラスを簡単に作っておきます。これは既存にユーザのエンティティとして作っても良いですが、認証のための専用のクラスとなるので、別クラスとして作成しても構わないです。ただ、その場合はちゃんとテーブルで既存のユーザ情報と紐づくように管理する必要がありますね。&lt;/p>
 &lt;p>以下のコードは、UserDetailsクラスをSpring Data JPA基準のエンティティとして作成した例です。ここからユーザ名(username)とロール(roles)をJWTに載せて認証と認可に使うことにします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Data&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Entity&lt;/span>
@@ -726,8 +726,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">collect&lt;/span>(Collectors.&lt;span style="color:#a6e22e">toUnmodifiableList&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="serviceクラス">Serviceクラス&lt;/h4>
-&lt;p>UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための&lt;code>loadUserByUsername&lt;/code>しかないので、これを適切にRepositoryから取得できるように実装します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="serviceクラス">Serviceクラス
+&lt;/h4>&lt;p>UserDetailsを取得するためのServiceクラスを作っておきます。このクラスでログイン後のユーザ情報を取得するようになります。UserDetailsServiceのメソッドはユーザ名からUserDetailsを取得するための&lt;code>loadUserByUsername&lt;/code>しかないので、これを適切にRepositoryから取得できるように実装します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Service&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">UserServiceImpl&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> UserDetailsService {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -745,8 +745,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">repository&lt;/span>.&lt;span style="color:#a6e22e">findByUsername&lt;/span>(username);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="configurationクラス">Configurationクラス&lt;/h4>
-&lt;p>認可のためのConfigurationクラスです。ここでは&lt;code>USER&lt;/code>というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを&lt;code>ROLE_USER&lt;/code>として保存するようにしておくと良いです。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="configurationクラス">Configurationクラス
+&lt;/h4>&lt;p>認可のためのConfigurationクラスです。ここでは&lt;code>USER&lt;/code>というロールが設定されてない場合、どのURLにもアクセスできないようにしておきました。ログイン後、ユーザがURLにアクセスためのリクエストを送ると、この設定によりユーザのロールを確認してアクセスを認可するようになります。このロールはユーザを作成するとき、createUserなどのメソッドでrolesを&lt;code>ROLE_USER&lt;/code>として保存するようにしておくと良いです。&lt;/p>
 &lt;p>また、今回作るのはREST APIであり、JWTによる認証と認可を行うことになるので、いくつかのデフォルト設定を変えておきます。例えば&lt;a class="link" href="https://ja.wikipedia.org/wiki/Basic%E8%AA%8D%E8%A8%BC" target="_blank" rel="noopener"
 >Basic Auth&lt;/a>と&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%82%AF%E3%83%AD%E3%82%B9%E3%82%B5%E3%82%A4%E3%83%88%E3%83%AA%E3%82%AF%E3%82%A8%E3%82%B9%E3%83%88%E3%83%95%E3%82%A9%E3%83%BC%E3%82%B8%E3%82%A7%E3%83%AA" target="_blank" rel="noopener"
 >CSRF&lt;/a>の設定や、セッション設定などがあります。&lt;/p>
@@ -775,8 +775,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでSpring Securityを使うための必要最低限の準備は終わりました。他にユーザのCRUDのためのServiceやRepositoryは適宜作成してあるという前提として、次に進めましょう。&lt;/p>
-&lt;h3 id="jwtの依存関係の追加">JWTの依存関係の追加&lt;/h3>
-&lt;p>次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。&lt;/p>
+&lt;h3 id="jwtの依存関係の追加">JWTの依存関係の追加
+&lt;/h3>&lt;p>次に、本格的にJWTを使うための設定を行います。Spring BootでJWTを使うためには依存関係の追加が必要です。JWT自体は仕様が決まっていて、規格に合わせて適切なJSONとして作成した後にBase64としてエンコードしても実現はできますが、こういうものを扱う場合はなるべくライブラリを使った方が安全ですね。&lt;/p>
 &lt;p>Spring(Java)で使えるJWTのライブラリはいくつかありますが、JWT自体が標準なのでどちらを選んでも基本は同じです。ただ、ライブラリ毎にJWTの仕様にどこまで対応しているのかは違う場合があるので、公式サイトから&lt;a class="link" href="https://jwt.io/#libraries-io" target="_blank" rel="noopener"
 >対応しているライブラリのリスト&lt;/a>を確認してどれを使うかを選びましょう。このポストでは&lt;code>JSON Web Token Support For The JVM&lt;/code>を使った場合での実装方法を紹介します。&lt;/p>
 &lt;p>Mavenの場合は以下のように依存関係を追加します。&lt;/p>
@@ -789,12 +789,12 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-groovy" data-lang="groovy">&lt;span style="display:flex;">&lt;span>dependencies &lt;span style="color:#f92672">{&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> implementation &lt;span style="color:#e6db74">&amp;#39;io.jsonwebtoken:jjwt:0.9.1&amp;#39;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">}&lt;/span>
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="jwtを提供するクラスを作る">JWTを提供するクラスを作る&lt;/h3>
-&lt;p>依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。&lt;/p>
-&lt;h4 id="jwtの仕様">JWTの仕様&lt;/h4>
-&lt;p>JWTを作る前に、まず簡単にJWTがどんな構造を持っているかを見ていきましょう。JWTは&lt;code>Header&lt;/code>、&lt;code>Payload&lt;/code>、&lt;code>Signature&lt;/code>という三つの要素で構成されています。それぞれの要素はBase64の文字列としてエンコードして、つなげることで一つのJWTが構成されます。&lt;/p>
-&lt;h5 id="headerの構成">Headerの構成&lt;/h5>
-&lt;p>Headerではこのトークンがどのようなもので、どのアルゴリズムでエンコードされているかを表す情報を載せるようになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="jwtを提供するクラスを作る">JWTを提供するクラスを作る
+&lt;/h3>&lt;p>依存関係を追加したら、ログイン成功時のResponseとクライアントからのリクエスト時のHeaderに載せるためのJWTを実際に作ってくれるクラスの作成が必要となります。色々な方法があると思いますが、ここではJWTを作成して検証もしてくれるようなクラスを作ります。その後はリクエスト毎に、HeaderのJWTを検証するためのクラスを作って行きます。&lt;/p>
+&lt;h4 id="jwtの仕様">JWTの仕様
+&lt;/h4>&lt;p>JWTを作る前に、まず簡単にJWTがどんな構造を持っているかを見ていきましょう。JWTは&lt;code>Header&lt;/code>、&lt;code>Payload&lt;/code>、&lt;code>Signature&lt;/code>という三つの要素で構成されています。それぞれの要素はBase64の文字列としてエンコードして、つなげることで一つのJWTが構成されます。&lt;/p>
+&lt;h5 id="headerの構成">Headerの構成
+&lt;/h5>&lt;p>Headerではこのトークンがどのようなもので、どのアルゴリズムでエンコードされているかを表す情報を載せるようになります。&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -816,8 +816,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;h5 id="payloadの構成">Payloadの構成&lt;/h5>
-&lt;p>Payloadはnameとvalueのペアで構成された複数の情報単位で構成されている、いわばBodyのようなもので、ここに載せる個々の情報単位たちをClaimと呼びます。今回のログインではこのClaimにユーザのIDとロール、そしてトークンが発行された期間を載せることにします。&lt;/p>
+&lt;h5 id="payloadの構成">Payloadの構成
+&lt;/h5>&lt;p>Payloadはnameとvalueのペアで構成された複数の情報単位で構成されている、いわばBodyのようなもので、ここに載せる個々の情報単位たちをClaimと呼びます。今回のログインではこのClaimにユーザのIDとロール、そしてトークンが発行された期間を載せることにします。&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -864,8 +864,8 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;h5 id="sigunature">Sigunature&lt;/h5>
-&lt;p>SignatureではHeaderとPayloadをエンコードしたあと、更に任意のシークレットキーを持ってエンコードします。これによって、サーバ側ではクライアントが送ってきたJWTをSignatureをデコードしてHeaderとPayloadを取得できるようになります。&lt;/p>
+&lt;h5 id="sigunature">Sigunature
+&lt;/h5>&lt;p>SignatureではHeaderとPayloadをエンコードしたあと、更に任意のシークレットキーを持ってエンコードします。これによって、サーバ側ではクライアントが送ってきたJWTをSignatureをデコードしてHeaderとPayloadを取得できるようになります。&lt;/p>
 &lt;p>Header、Payload、Signature順で正しく作成したJWTは、&lt;a class="link" href="https://jwt.io" target="_blank" rel="noopener"
 >JWTの公式サイト&lt;/a>から検証できます。以下のようにJWTの構造と格納しているデータを確認してデバッグができるので、興味のある方はぜひ試してみてください。&lt;/p>
 &lt;p>&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure.webp"
@@ -878,8 +878,8 @@ class="gallery-image"
 data-flex-grow="187"
 data-flex-basis="449px"
 >&lt;/p>
-&lt;h3 id="token-providerクラスの実装">Token Providerクラスの実装&lt;/h3>
-&lt;p>では、JWTがどんな情報により構成されているかがわかったので、必要な情報を載せて実際のJWTを作成するクラスを作りましょう。ここでHeader、Payload、Signatureの全部を埋める必要はなく、最低限の情報だけ使うことにします。&lt;/p>
+&lt;h3 id="token-providerクラスの実装">Token Providerクラスの実装
+&lt;/h3>&lt;p>では、JWTがどんな情報により構成されているかがわかったので、必要な情報を載せて実際のJWTを作成するクラスを作りましょう。ここでHeader、Payload、Signatureの全部を埋める必要はなく、最低限の情報だけ使うことにします。&lt;/p>
 &lt;p>まずトークンを作成するメソッドを作ります。ここで作成されるJWTのPayloadに載せるClaimは、ユーザ名とロールに限定します。また、JWTが発行された時間と満了時間を設定して、期間外では使えないようにします。そして最後にカスタムシークレットキーを設定してSignatureを作成することにします。&lt;/p>
 &lt;p>他には、トークンを読み込んでDBのユーザ情報を取得するメソッド、リクエストのHeaderからトークンを取得するメソッド、トークンの有効期間を検証するメソッド、トークンにのせたユーザ名(ID)を取得するメソッドなども作っておきます。(こちらは別途クラスで切っても良さそうな気はします)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Component&lt;/span>
@@ -942,8 +942,8 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> Jwts.&lt;span style="color:#a6e22e">parser&lt;/span>().&lt;span style="color:#a6e22e">setSigningKey&lt;/span>(&lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">secretKey&lt;/span>).&lt;span style="color:#a6e22e">parseClaimsJws&lt;/span>(token).&lt;span style="color:#a6e22e">getBody&lt;/span>().&lt;span style="color:#a6e22e">getSubject&lt;/span>();
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="カスタムfilterクラスの実装">カスタムFilterクラスの実装&lt;/h3>
-&lt;p>次に、ログインするときにリクエストを検証するためのFilterクラスを作成します。最初ユーザがログインすると、このクラスでは先に作成したJWTProviderを使って、Headerからトークンを取得、有効期間の検証を行った後、問題なければDBからユーザ情報を取得してSpring Securityの認証情報(Authentication)としてセットするようになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="カスタムfilterクラスの実装">カスタムFilterクラスの実装
+&lt;/h3>&lt;p>次に、ログインするときにリクエストを検証するためのFilterクラスを作成します。最初ユーザがログインすると、このクラスでは先に作成したJWTProviderを使って、Headerからトークンを取得、有効期間の検証を行った後、問題なければDBからユーザ情報を取得してSpring Securityの認証情報(Authentication)としてセットするようになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Component&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTAuthenticationFilter&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> GenericFilterBean {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -967,13 +967,13 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> filterChain.&lt;span style="color:#a6e22e">doFilter&lt;/span>(request, response);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="spring-securityにjwtでのログイン設定を追加する">Spring SecurityにJWTでのログイン設定を追加する&lt;/h3>
-&lt;p>では、JWTを作成して検証するための準備が終わったので、これからはSpring Securityでこのクラスたちを使って認証と認可を行うための設定をする版ですね。どれが定番だとかという訳ではないですが、どちらも好みに合わせて(もしくは要件に合わせて)使えるのではないかと思い、三つの方法を用意しました。&lt;/p>
-&lt;h4 id="formloginを使う場合">FormLoginを使う場合&lt;/h4>
-&lt;p>Spring SecurityのFormLoginを利用してログインのためのURLと、ログイン後のJWT作成を全て設定しておきたい場合の実装です。クライアント側ではログインのためのクレデンシャルをPOSTのFormデータとして送るようになります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="spring-securityにjwtでのログイン設定を追加する">Spring SecurityにJWTでのログイン設定を追加する
+&lt;/h3>&lt;p>では、JWTを作成して検証するための準備が終わったので、これからはSpring Securityでこのクラスたちを使って認証と認可を行うための設定をする版ですね。どれが定番だとかという訳ではないですが、どちらも好みに合わせて(もしくは要件に合わせて)使えるのではないかと思い、三つの方法を用意しました。&lt;/p>
+&lt;h4 id="formloginを使う場合">FormLoginを使う場合
+&lt;/h4>&lt;p>Spring SecurityのFormLoginを利用してログインのためのURLと、ログイン後のJWT作成を全て設定しておきたい場合の実装です。クライアント側ではログインのためのクレデンシャルをPOSTのFormデータとして送るようになります。&lt;/p>
 &lt;p>ここではログインを処理するためのURLとクレデンシャルのためのパラメータなどを設定して、ログインに成功したらトークンを作成して返すための&lt;code>AuthenticationSuccessHandler&lt;/code>を設定することになります。&lt;/p>
-&lt;h5 id="authenticationsuccesshandlerの作成">AuthenticationSuccessHandlerの作成&lt;/h5>
-&lt;p>まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。&lt;/p>
+&lt;h5 id="authenticationsuccesshandlerの作成">AuthenticationSuccessHandlerの作成
+&lt;/h5>&lt;p>まずログインに成功した場合にトークンを返すためのSuccessHandlerを作成します。ログインに成功した場合、Authenticationクラスにユーザ情報が保存されるので、それをProviderに渡してトークンを作成してもらった後にレスポンスのHeaderに載せて返すことをやっています。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Component&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JWTAuthenticationSuccessHandler&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> AuthenticationSuccessHandler {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1001,8 +1001,8 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">setStatus&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">OK&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定">Spring Securityの設定&lt;/h5>
-&lt;p>では、ログインに成功したときのHandlerクラスを作成したので、Spring Securityの設定を変えていきます。必要なのは&lt;code>loginProcessingUrl()&lt;/code>(ログインの処理をするためのPOST通信が行われるURLとHanlderの設定で、ユーザ名のパラメータ名やパスワードのパラメタ名はデフォルトと違う場合にだけ必要となります。そしてFilterはデフォルト設定だと&lt;code>UsernamePasswordAuthenticationFilter&lt;/code>が先に実行されるので、先ほど作成した&lt;code>JWTAuthenticationFilter&lt;/code>を使うための設定をします。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定">Spring Securityの設定
+&lt;/h5>&lt;p>では、ログインに成功したときのHandlerクラスを作成したので、Spring Securityの設定を変えていきます。必要なのは&lt;code>loginProcessingUrl()&lt;/code>(ログインの処理をするためのPOST通信が行われるURLとHanlderの設定で、ユーザ名のパラメータ名やパスワードのパラメタ名はデフォルトと違う場合にだけ必要となります。そしてFilterはデフォルト設定だと&lt;code>UsernamePasswordAuthenticationFilter&lt;/code>が先に実行されるので、先ほど作成した&lt;code>JWTAuthenticationFilter&lt;/code>を使うための設定をします。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SecurityConfig&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> WebSecurityConfigurerAdapter {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1051,11 +1051,11 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">addFilterBefore&lt;/span>(&lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">filter&lt;/span>, UsernamePasswordAuthenticationFilter.&lt;span style="color:#a6e22e">class&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="jsonを使えるfilterを使う場合">JSONを使えるFilterを使う場合&lt;/h4>
-&lt;p>Spring SecurityのFormLoginを使う場合、ログインのためのクレデンシャルはFormデータである必要があります。しかし、REST APIならばデータのやりとりはJSONが基本ですね。なのでクレデンシャルもJSONで送るようにしたいのですが、Spring Securityではそのようなメソッドを提供していません。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="jsonを使えるfilterを使う場合">JSONを使えるFilterを使う場合
+&lt;/h4>&lt;p>Spring SecurityのFormLoginを使う場合、ログインのためのクレデンシャルはFormデータである必要があります。しかし、REST APIならばデータのやりとりはJSONが基本ですね。なのでクレデンシャルもJSONで送るようにしたいのですが、Spring Securityではそのようなメソッドを提供していません。&lt;/p>
 &lt;p>こういう場合は、カスタムUsernamePasswordAuthenticationFilterクラスを作ってJSONをパースする必要があります。FormLoginを使う場合に比べて少し複雑になりますが、REST APIらしくやってみましょう。FromLoginでの実装ができると、こちらはFilterをもう一つ追加するだけの感覚で実装ができます。&lt;/p>
-&lt;h5 id="jsonusernamepasswordauthenticationfilterの作成">JsonUsernamePasswordAuthenticationFilterの作成&lt;/h5>
-&lt;p>クレデンシャルを確認するSpringのデフォルトのFilterクラスはUsernamePasswordAuthenticationFilterというもので、これを継承したカスタムクラスを作り、そこからJSONをパースして使うようにします。以下の実装は、FormデータとJSONの両方に対応している例です。&lt;/p>
+&lt;h5 id="jsonusernamepasswordauthenticationfilterの作成">JsonUsernamePasswordAuthenticationFilterの作成
+&lt;/h5>&lt;p>クレデンシャルを確認するSpringのデフォルトのFilterクラスはUsernamePasswordAuthenticationFilterというもので、これを継承したカスタムクラスを作り、そこからJSONをパースして使うようにします。以下の実装は、FormデータとJSONの両方に対応している例です。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">JsonUsernamePasswordAuthenticationFilter&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> UsernamePasswordAuthenticationFilter {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Headerからコンテントタイプを取得するための定数&lt;/span>
@@ -1110,10 +1110,10 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> request.&lt;span style="color:#a6e22e">getHeader&lt;/span>(CONTENT_TYPE).&lt;span style="color:#a6e22e">equals&lt;/span>(MediaType.&lt;span style="color:#a6e22e">APPLICATION_JSON_VALUE&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="authenticationsuccesshandlerの作成-1">AuthenticationSuccessHandlerの作成&lt;/h5>
-&lt;p>ここはFormLoginの場合と同じです。詳細については&lt;a class="link" href="#AuthenticationSuccessHandler%e3%81%ae%e4%bd%9c%e6%88%90" >こちらを&lt;/a>参考にしてください。&lt;/p>
-&lt;h5 id="spring-securityの設定-1">Spring Securityの設定&lt;/h5>
-&lt;p>ここでは、作成したカスタムUsernamePasswordAuthenticationFilterにFilterProcessUrlと、AuthenticationManager、AuthenticationSuccessHandlerを設定して、デフォルトのフィルタ設定を変えるようになります。この設定ではFormLoginが要らなくなリます。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="authenticationsuccesshandlerの作成-1">AuthenticationSuccessHandlerの作成
+&lt;/h5>&lt;p>ここはFormLoginの場合と同じです。詳細については&lt;a class="link" href="#AuthenticationSuccessHandler%e3%81%ae%e4%bd%9c%e6%88%90" >こちらを&lt;/a>参考にしてください。&lt;/p>
+&lt;h5 id="spring-securityの設定-1">Spring Securityの設定
+&lt;/h5>&lt;p>ここでは、作成したカスタムUsernamePasswordAuthenticationFilterにFilterProcessUrlと、AuthenticationManager、AuthenticationSuccessHandlerを設定して、デフォルトのフィルタ設定を変えるようになります。この設定ではFormLoginが要らなくなリます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SecurityConfig&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> WebSecurityConfigurerAdapter {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1171,11 +1171,11 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> jsonFilter;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="ログイン用のcontrollerを使う場合">ログイン用のControllerを使う場合&lt;/h4>
-&lt;p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h4 id="ログイン用のcontrollerを使う場合">ログイン用のControllerを使う場合
+&lt;/h4>&lt;p>他のURLをControllerで制御しているのと同じく、ログイン専用のContollerを作る場合の例です。一般的なControllerとあまり使い方は変わらないので、こちらの方がやりやすい感もしますね。&lt;/p>
 &lt;p>また、レスポンスとしてResponseEntityやカスタムクラスも使えるのでHeaderにトークンを載せるだけでなく、Bodyに何かデータを埋めて共に送る必要のある場合はこちらの方が良い選択なのかもしれません。&lt;/p>
-&lt;h5 id="controllerの作成">Controllerの作成&lt;/h5>
-&lt;p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。&lt;/p>
+&lt;h5 id="controllerの作成">Controllerの作成
+&lt;/h5>&lt;p>前述した通り、一般的なREST API用のControllerとあまり変わりないものを作ります。ログインようのURLと、それに紐づくメソッドを作り、ログイン時の認証を担当することになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RestController&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RequestMapping&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;api/v1/web&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SignApiController&lt;/span> {
@@ -1205,8 +1205,8 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> response.&lt;span style="color:#a6e22e">setStatus&lt;/span>(HttpStatus.&lt;span style="color:#a6e22e">OK&lt;/span>.&lt;span style="color:#a6e22e">value&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定-2">Spring Securityの設定&lt;/h5>
-&lt;p>Controllerを使った場合は、認可認可なしでもログイン用のURLにアクセスできる設定と、Filterを使うための設定を追加します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h5 id="spring-securityの設定-2">Spring Securityの設定
+&lt;/h5>&lt;p>Controllerを使った場合は、認可認可なしでもログイン用のURLにアクセスできる設定と、Filterを使うための設定を追加します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Configuration&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">SecurityConfig&lt;/span> &lt;span style="color:#66d9ef">extends&lt;/span> WebSecurityConfigurerAdapter {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1240,8 +1240,8 @@ data-flex-basis="449px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> .&lt;span style="color:#a6e22e">addFilterBefore&lt;/span>(&lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">filter&lt;/span>, UsernamePasswordAuthenticationFilter.&lt;span style="color:#a6e22e">class&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト">テスト&lt;/h3>
-&lt;p>今まで実装したログインのテストは、CURLもしくは&lt;a class="link" href="https://www.postman.com" target="_blank" rel="noopener"
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="テスト">テスト
+&lt;/h3>&lt;p>今まで実装したログインのテストは、CURLもしくは&lt;a class="link" href="https://www.postman.com" target="_blank" rel="noopener"
 >Postman&lt;/a>などのツールで簡単にできます。&lt;/p>
 &lt;p>例えば、FormLoginを使った場合のログインはこちらになります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -i -X POST &lt;span style="color:#e6db74">&amp;#34;http://localhost:8080/api/v1/web/login&amp;#34;&lt;/span> -d &lt;span style="color:#e6db74">&amp;#34;id=user&amp;#34;&lt;/span> -d &lt;span style="color:#e6db74">&amp;#34;pass=1234&amp;#34;&lt;/span>
@@ -1256,16 +1256,16 @@ class="gallery-image"
 data-flex-grow="253"
 data-flex-basis="608px"
 >&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…&lt;/p>
 &lt;p>でも、まだこれで完全な設定ができた訳ではありません。ここではSuccessHandlerのみを作成しましたが、場合によってはログインに失敗した場合の&lt;code>AuthenticationFailureHandler&lt;/code>が必要になる可能性もあります。また、これはあくまでログインに関するポストなので扱ってはなかったのですが、認証認可できてないURLへのアクセスに対するException Handlingも必要です。また、JWTを使った認証の場合、クライアントがトークンを持ってしまうのでサーバ側からログアウトを制御できないという点があり、クライアント側の実装ではそこに対しての対策も考えなければなりません。&lt;/p>
 &lt;p>が、今回はとりあえず最小限の目標は達成できたということで、いったんここまでとなります。では、また！&lt;/p></description></item><item><title>REST APIでのログインのためには</title><link>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</link><pubDate>Sat, 30 May 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post REST APIでのログインのためには" />&lt;p>新しい案件が始まって、AngularとSpring bootによるSPA(Single Page Application)を作ることとなりましたが、まだ要件定義の段階で実装まではしばらく時間が残っています。いわゆる上流工程にはあまり経験がないので日々奮闘中ではありますが、仕事が終わった後の時間には少しづつ、練習をかねて自作アプリケーションを作っています。&lt;/p>
 &lt;p>Spring BootでREST APIを作ることにはある程度慣れてはいるものの、まだ認証/認可に対してあまり知識がないので、自作アプリではわざとSpring Securityを入れることにしました。しかし、Spring Securityの記事をいくつか読んでロールによってアクセスできるURLに制限をかけたりしているのだなと理解した後に、いざ自作アプリケーションに導入してみようとしたら、問題ができました。いつも通りREST APIで実装していたのですが、自分が参考にしていたSpring Securityのコードはほぼ昔ながらのSpring MVCパターンのためのものだったのです。&lt;/p>
 &lt;p>なので、今回のポストはSpring MVCパターンとREST APIのログインするため必要となるのが何かについて簡単に書いてみようと思います。(実際のログインの方法は今後のポストを予定しています)``&lt;/p>
-&lt;h2 id="コントローラの実装">コントローラの実装&lt;/h2>
-&lt;p>まずMVCパターンとREST APIのコントローラをどのように実装するかからみていきましょう。&lt;/p>
-&lt;h3 id="mvcパターンの場合">MVCパターンの場合&lt;/h3>
-&lt;p>今も多くの研修で行われているSpringの研修は、普通のMVCパターンとJSPによるものが多いのではないか、と思います。例えば&lt;code>@Controller&lt;/code>アノテーションをつけたコントローラクラスに、&lt;code>@RequestMapping&lt;/code>アノテーションをつけたメソッドを書いて、そのメソッドでは&lt;code>Model&lt;/code>もしくは&lt;code>ModelAndView&lt;/code>などのクラスを使ってデータやビュー(主にJSPファイルのパス)を書いていくような形ですね。実際は&lt;code>JSPを使う=MVCパターン&lt;/code>というわけでもないですが、多くのSpring MVCパターンのプロジェクトがJSPを使っているのでまずはこのようなレガシーなものをMVCパターンと呼ばせていただきます。&lt;/p>
+&lt;h2 id="コントローラの実装">コントローラの実装
+&lt;/h2>&lt;p>まずMVCパターンとREST APIのコントローラをどのように実装するかからみていきましょう。&lt;/p>
+&lt;h3 id="mvcパターンの場合">MVCパターンの場合
+&lt;/h3>&lt;p>今も多くの研修で行われているSpringの研修は、普通のMVCパターンとJSPによるものが多いのではないか、と思います。例えば&lt;code>@Controller&lt;/code>アノテーションをつけたコントローラクラスに、&lt;code>@RequestMapping&lt;/code>アノテーションをつけたメソッドを書いて、そのメソッドでは&lt;code>Model&lt;/code>もしくは&lt;code>ModelAndView&lt;/code>などのクラスを使ってデータやビュー(主にJSPファイルのパス)を書いていくような形ですね。実際は&lt;code>JSPを使う=MVCパターン&lt;/code>というわけでもないですが、多くのSpring MVCパターンのプロジェクトがJSPを使っているのでまずはこのようなレガシーなものをMVCパターンと呼ばせていただきます。&lt;/p>
 &lt;p>ただ文章で表現するよりは、コードを持って書いた方がわかりやすいと思います。例えば以下のようなものです。&lt;code>/home&lt;/code>というURLに接続すると、サーバの時間を返す簡単な例題ですね。ModelAndViewを使うとしても、Modelにデータとビューを共につめてるだけでやっていることとしてはあまり変わらないと思います。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Controller&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">HomeController&lt;/span> {
@@ -1278,8 +1278,8 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#e6db74">&amp;#34;home&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="rest-apiの場合">REST APIの場合&lt;/h3>
-&lt;p>自分の場合も、やはり最初はSpring MVCパターンとJSPから学んだのでこのような書き方に慣れていましたが、入社後にはSpring BootとREST APIというものに出会い、コードの書き方が少し変わりました。最近のトレンドだとやはりJSPよりもAngular/React/VueなどのJavaScriptフレームワークを使って作成する場合が多いので、JSONの形としてデータだけを返したらよくなります。JSONとしてデータをレスポンスボディに載せるには、普通にDTOクラスをビューモデルとして作ります。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="rest-apiの場合">REST APIの場合
+&lt;/h3>&lt;p>自分の場合も、やはり最初はSpring MVCパターンとJSPから学んだのでこのような書き方に慣れていましたが、入社後にはSpring BootとREST APIというものに出会い、コードの書き方が少し変わりました。最近のトレンドだとやはりJSPよりもAngular/React/VueなどのJavaScriptフレームワークを使って作成する場合が多いので、JSONの形としてデータだけを返したらよくなります。JSONとしてデータをレスポンスボディに載せるには、普通にDTOクラスをビューモデルとして作ります。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Data&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">HomeViewModel&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> Serializble {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1300,10 +1300,10 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そしてフロントエンドのJavaScriptフレームワークでは、レスポンスのボディから取得して画面に表示するようになりますね。このようにREST APIだと、サーバサイドではあくまでデータモデルとビジネスロジックだけを考えれば良いようになっていて、よりそれぞれの役割の分担がよくなっていますね。&lt;/p>
-&lt;h2 id="ログインをするには">ログインをするには&lt;/h2>
-&lt;p>では、とりあえず簡単にSpring MVCパターンとREST APIの比較をしてみたので本題に戻りましょう。先にSpring Securityの話をしましたが、実際はSpring Securityを導入しなくても同じ話になると思います。REST APIはアーキテクチャの一つにすぎないので、フレームワークを導入できるかどうかの問題はすでに別の話になってしまいます。また、ログインというのはSpring Security以前の問題です。なので今回はSpring Securityの話はさておき、二つのアーキテクチャでどのようにログインをするかについて話したいと思います。&lt;/p>
-&lt;h3 id="mvcパターン">MVCパターン&lt;/h3>
-&lt;p>MVCパターンでは、Sessionでログインを実現する場合が多い(と思い)ます。例えばログインを担当するメソッドを作成して、引数として&lt;code>HttpServletRequest&lt;/code>を指定すると、そこからセッションを取得することができますね。あとは、またの引数としてFormのデータ(IDとパスワード)を受けて、これは自分が最初に学んだ方式でもあります。&lt;/p>
+&lt;h2 id="ログインをするには">ログインをするには
+&lt;/h2>&lt;p>では、とりあえず簡単にSpring MVCパターンとREST APIの比較をしてみたので本題に戻りましょう。先にSpring Securityの話をしましたが、実際はSpring Securityを導入しなくても同じ話になると思います。REST APIはアーキテクチャの一つにすぎないので、フレームワークを導入できるかどうかの問題はすでに別の話になってしまいます。また、ログインというのはSpring Security以前の問題です。なので今回はSpring Securityの話はさておき、二つのアーキテクチャでどのようにログインをするかについて話したいと思います。&lt;/p>
+&lt;h3 id="mvcパターン">MVCパターン
+&lt;/h3>&lt;p>MVCパターンでは、Sessionでログインを実現する場合が多い(と思い)ます。例えばログインを担当するメソッドを作成して、引数として&lt;code>HttpServletRequest&lt;/code>を指定すると、そこからセッションを取得することができますね。あとは、またの引数としてFormのデータ(IDとパスワード)を受けて、これは自分が最初に学んだ方式でもあります。&lt;/p>
 &lt;p>まずユーザの観点から話してみましょう。普通のWebアプリケーションでは、画面のほうでログインのためにIDとパスワードを入力するようになります。JSPではそのデータを&lt;code>form&lt;/code>として受け取り、POSTとしてコントローラに送りますね。そうしたらコントローラではIDとパスワードをServiceクラスに送って検証してもらい、問題なかったらログインした情報をSessionに載せます。こういうったシナリオで、コントローラにログインのためのメソッドを作るとおそらく以下のコードのような形のなるはずです。(実際はユーザのIDだけ載せる場合はないので参考までに)&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// URLは/login、メソッドはPOST&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@RequestMapping&lt;/span>(value &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>, method &lt;span style="color:#f92672">=&lt;/span> RequestMethod.&lt;span style="color:#a6e22e">POST&lt;/span>)
@@ -1327,15 +1327,15 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span>;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Spring Securityを使った場合はかなりコードが変わってきますが、Sessionを使う場合にこう言った基本的なフローは変わりませんね。これでMVCパターンでの認証/認可は実現できます。&lt;/p>
-&lt;h2 id="ここで問題が">ここで問題が&lt;/h2>
-&lt;p>しかし、Sessionを使った方法はREST APIだと使えなくなります。なぜかというと、REST APIの最大の特徴の一つは&lt;code>Stateless&lt;/code>、つまり&lt;code>状態を持たない&lt;/code>というのであるからです。ここでいう状態というのはサーバに取ってのクライアントのステータスのことです。今まで通りだとクライアントはサーバに接続した瞬間からサーバに自分の状態を管理させる必要がありました。こういう状態を管理するためのものがSessionであり、先に説明した通りだとREST APIには適用すべきではないですね。(無理やり適用させるとしたら不可能でもないですが…)&lt;/p>
+&lt;h2 id="ここで問題が">ここで問題が
+&lt;/h2>&lt;p>しかし、Sessionを使った方法はREST APIだと使えなくなります。なぜかというと、REST APIの最大の特徴の一つは&lt;code>Stateless&lt;/code>、つまり&lt;code>状態を持たない&lt;/code>というのであるからです。ここでいう状態というのはサーバに取ってのクライアントのステータスのことです。今まで通りだとクライアントはサーバに接続した瞬間からサーバに自分の状態を管理させる必要がありました。こういう状態を管理するためのものがSessionであり、先に説明した通りだとREST APIには適用すべきではないですね。(無理やり適用させるとしたら不可能でもないですが…)&lt;/p>
 &lt;p>そしてStatelessである故に、REST APIではクライアントのリクエスト毎にクライアントから必要な全ての情報をサーバに送るようにしています。ここから推論できるのはSessionでログインの情報を載せておくのではなく、クライアントからリクエスト毎に自分はログインしているということを証明するデータを何かの形で送る必要があるということになります。&lt;/p>
-&lt;h3 id="ではどうしたら">ではどうしたら？&lt;/h3>
-&lt;p>クライアントがリクエスト毎に、本質的なデータのみでなく、認証のためのデータを送るための手段は、すでにHTTPの中にありました。つまり、Headerです。クライアントのリクエストには操作のためのデータがBodyとして入っていて、そこに認証のための情報をHeaderとして載せればいいですね。&lt;/p>
+&lt;h3 id="ではどうしたら">ではどうしたら？
+&lt;/h3>&lt;p>クライアントがリクエスト毎に、本質的なデータのみでなく、認証のためのデータを送るための手段は、すでにHTTPの中にありました。つまり、Headerです。クライアントのリクエストには操作のためのデータがBodyとして入っていて、そこに認証のための情報をHeaderとして載せればいいですね。&lt;/p>
 &lt;p>クライアントがHeaderに認証のための情報を載せるには、まずサーバサイドから認証をしてもらわねばなりません。この認証の詳細については今後のポストで話すことにして、まずはHeaderに載せるデータが完成されたと仮定し、これをサーバのレスポンスでどう返すかについて述べます。&lt;/p>
 &lt;p>Spring BootでレスポンスのHeaderにデータを載せるためには二つの方法があります。先に述べたSpring MVCのリクエスト同様、レスポンスを扱うためのクラスである&lt;code>HttpServletResponse&lt;/code>を使う方法と、&lt;code>ResponseEntity&lt;/code>でレスポンスデータをラッピングすることです。どれも使える方法ですが、&lt;/p>
-&lt;h2 id="httpservletresponseでheaderを追加する">HttpServletResponseでHeaderを追加する&lt;/h2>
-&lt;p>まずはHttpServletResponseです。シンプルに、「レスポンスにデータを載せたい」という時に使える方法ですね。MVCパターンでのログインと同じく、ログインするメソッドの引数に指定すると、レスポンスのHeaderにデータを載せることができます。&lt;/p>
+&lt;h2 id="httpservletresponseでheaderを追加する">HttpServletResponseでHeaderを追加する
+&lt;/h2>&lt;p>まずはHttpServletResponseです。シンプルに、「レスポンスにデータを載せたい」という時に使える方法ですね。MVCパターンでのログインと同じく、ログインするメソッドの引数に指定すると、レスポンスのHeaderにデータを載せることができます。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@PostMapping&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> User &lt;span style="color:#a6e22e">login&lt;/span>(User user, HttpServletResponse response) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Serviceからユーザを取得する&lt;/span>
@@ -1345,23 +1345,23 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// Bodyを返す(Headerは自動で含まれる)&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> loginedMember;
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="responseentityでheaderを追加する">ResponseEntityでHeaderを追加する&lt;/h2>
-&lt;p>もう一つの方法であるResponseEntityの場合は、引数はユーザ情報(IDとパスワード)のみで良くなります。名前からもわかると思いますが、ResponseEntityはBodyとHeaderを含め、HTTP Status(200 OKなど)を含めレスポンスに必要な情報は全て扱えるクラスです。使い方は簡単で、ログインメソッドの戻り値となるBodyをResponseEntityで包み、Headerなどの情報も一緒に詰めて返します。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="responseentityでheaderを追加する">ResponseEntityでHeaderを追加する
+&lt;/h2>&lt;p>もう一つの方法であるResponseEntityの場合は、引数はユーザ情報(IDとパスワード)のみで良くなります。名前からもわかると思いますが、ResponseEntityはBodyとHeaderを含め、HTTP Status(200 OKなど)を含めレスポンスに必要な情報は全て扱えるクラスです。使い方は簡単で、ログインメソッドの戻り値となるBodyをResponseEntityで包み、Headerなどの情報も一緒に詰めて返します。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@PostMapping&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/login&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> ResponseEntity&lt;span style="color:#f92672">&amp;lt;&lt;/span>Member&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">login&lt;/span>(User user) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> User loginedUser &lt;span style="color:#f92672">=&lt;/span> service.&lt;span style="color:#a6e22e">getUser&lt;/span>(user.&lt;span style="color:#a6e22e">getId&lt;/span>(), user.&lt;span style="color:#a6e22e">getPassword&lt;/span>());
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// レスポンスとしてHeaderとBodyを一緒にセットして返す&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> ResponseEntity.&lt;span style="color:#a6e22e">ok&lt;/span>().&lt;span style="color:#a6e22e">header&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;userId&amp;#34;&lt;/span>, loginedUser.&lt;span style="color:#a6e22e">getId&lt;/span>()).&lt;span style="color:#a6e22e">body&lt;/span>(loginedUser);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="そのあとは">そのあとは？&lt;/h2>
-&lt;p>レスポンスのHeaderに載せた情報は、フロントエンド側でリクエスト毎にHeaderに載せて送ることになります。しかし、リクエスト毎に送るためにはどこかにこの情報を保存する必要がありますね。Cookieを使う方法もありますが、セキュリティ情のリスクがあるため多くの場合ではブラウザのローカルストレージに保存するようになっているようです。これはフロントエンドの領域なので、ここでは深掘りしません。&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="そのあとは">そのあとは？
+&lt;/h2>&lt;p>レスポンスのHeaderに載せた情報は、フロントエンド側でリクエスト毎にHeaderに載せて送ることになります。しかし、リクエスト毎に送るためにはどこかにこの情報を保存する必要がありますね。Cookieを使う方法もありますが、セキュリティ情のリスクがあるため多くの場合ではブラウザのローカルストレージに保存するようになっているようです。これはフロントエンドの領域なので、ここでは深掘りしません。&lt;/p>
 &lt;p>また、ログアウトの場合はどうなるか、という問題もありますが、これは様々な方法で実現しているようです。例えばフロントエンドからできる方法としては、Headerに載せる認証情報を削除したり、間違った情報を送るようにするような方法があります。そしてサーバサイドでは、一定時間がすぎると認証情報を使えなくするなどの対策があります。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>本当は、REST APIでのログインに関してはまだ考えなければならないことは他にもあります。例えば、HTTP Headerに認証のため必要となる情報を載せるということは理解できても、実際はどのようなデータを載せればいいか、そのデータはどう作るか、リクエスト毎にHeaderで認証情報を扱うということはセキュリティやリソースの面で大丈夫かなど。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>本当は、REST APIでのログインに関してはまだ考えなければならないことは他にもあります。例えば、HTTP Headerに認証のため必要となる情報を載せるということは理解できても、実際はどのようなデータを載せればいいか、そのデータはどう作るか、リクエスト毎にHeaderで認証情報を扱うということはセキュリティやリソースの面で大丈夫かなど。&lt;/p>
 &lt;p>でも、とにかくこれでREST APIでログインするための仕組みの一つはわかりました。次回は、このHeaderとSpring Securityを使ってのログインを実装する方法を述べながら、以上の問題についても扱いたいなと思っています。では、また！&lt;/p></description></item><item><title>Rest APIからRest APIにファイルを送る</title><link>https://retheviper.github.io/posts/spring-rest-template/</link><pubDate>Mon, 10 Feb 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-template/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post Rest APIからRest APIにファイルを送る" />&lt;p>ウェブアプリケーションを開発していると、一つの&lt;code>Rest API&lt;/code>だけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能がすでに実装されているサーバー(API)が存在している場合もありますね。そういう場合は、素直にそのAPIをコールするだけで簡単に目的を達成できます。実際、仕事で他のRest APIサーバーとの通信が必要となって調べてみましたが、Springではすでにそのような場合に対応できるようなクラスを用意していました。今回のポストの主人公であるRestTemplateです。&lt;/p>
 &lt;p>RestTemplateを使うと、簡単にget・post・deleteと言ったHttpメソッドのAPIをコールできます。また、リクエストやレスポンスをカスタムして状況に合わせて使うこともできます。例えばカスタムヘッダーを作ったり、サイズの大きいファイルを転送するリクエストを作ることも可能ですね。なので今回はRestTemplateを利用し、ファイルをアップロードするとそのファイルになんらかの処理をして返してくれるAPIがすでに存在している場合で、そのAPIをコールする部品を作る方法を紹介します。&lt;/p>
-&lt;h2 id="サーバー側の例">サーバー側の例&lt;/h2>
-&lt;p>すでにファイルを処理するサーバーが存在している場合のことですので、まずはコールしたいAPIで利用するリクエストとレスポンスの形を把握する必要がありますね。ファイルをアップロードされたら、ヘッダーからファイル情報を読み込むようになっていて、ファイルデータが書かれているボディを読み込むようなメソッドがあるとしましょう。ヘッダーの情報に問題がなかったらローカルストレージにファイルを書き込み、処理を行います。そして処理の終わったファイルはレスポンスとして返すサーバーです。&lt;/p>
+&lt;h2 id="サーバー側の例">サーバー側の例
+&lt;/h2>&lt;p>すでにファイルを処理するサーバーが存在している場合のことですので、まずはコールしたいAPIで利用するリクエストとレスポンスの形を把握する必要がありますね。ファイルをアップロードされたら、ヘッダーからファイル情報を読み込むようになっていて、ファイルデータが書かれているボディを読み込むようなメソッドがあるとしましょう。ヘッダーの情報に問題がなかったらローカルストレージにファイルを書き込み、処理を行います。そして処理の終わったファイルはレスポンスとして返すサーバーです。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@PostMapping&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/upload&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> ResponseEntity&lt;span style="color:#f92672">&amp;lt;&lt;/span>StreamingResponseBody&lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">fileupload&lt;/span>(HttpServletRequest request) {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// リクエストヘッダーからファイルサイズを取得&lt;/span>
@@ -1396,8 +1396,8 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> ResponseEntity&lt;span style="color:#f92672">&amp;lt;&lt;/span>StreamingResponseBody&lt;span style="color:#f92672">&amp;gt;&lt;/span>(body, headers, HttpStatus.&lt;span style="color:#a6e22e">OK&lt;/span>);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>サーバーがこういう形になっている場合、APIをコールする側としてはRequestのヘッダーにはファイル情報を書き、ボディにはファイルのデータを書いて転送する必要がありますね。そして処理結果のResponseにもまたファイルデータが入ってあるので、それを受け止める処理が必要となります。そのためにリクエストもレスポンスもカスタムのものを作って、RestTemplateに載せることにしましょう。&lt;/p>
-&lt;h2 id="resttemplateを使う">RestTemplateを使う&lt;/h2>
-&lt;p>今回はRestTemplateのexecute()というメソッドを使いますが、このメソッドの引数は以下のようになります。&lt;/p>
+&lt;h2 id="resttemplateを使う">RestTemplateを使う
+&lt;/h2>&lt;p>今回はRestTemplateのexecute()というメソッドを使いますが、このメソッドの引数は以下のようになります。&lt;/p>
 &lt;ol>
 &lt;li>APIのURL(StringもしくはURI)&lt;/li>
 &lt;li>Httpメソッド(ENUM)&lt;/li>
@@ -1405,8 +1405,8 @@ data-flex-basis="608px"
 &lt;li>レスポンス(ResponseExtractorの実装クラス)&lt;/li>
 &lt;/ol>
 &lt;p>get()・post()・delete()などのメソッドの時と違ってリクエストとレスポンスの方を両方指定する理由は、上に述べた通りリクエストとレスポンスの両方でファイルの転送が必要からです。また、execute()でも引数にURI変数を指定することもできますが、現在はURIが固定なので使いません。では、リクエストとレスポンスのインタフェースをどう実装するかをみていきましょう。&lt;/p>
-&lt;h2 id="リクエスト">リクエスト&lt;/h2>
-&lt;p>リクエストで使うRequestCallbackの実装クラスを作成します。このインタフェースにはコンストラクターの引数としてファイルを渡すとヘッダーとボディを作るようにしてみましょう。RequestCallbackをimplementsすると、doWithRequest()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpRequestにヘッダーとボディを設定することでリクエスト時のファイルアップロードができます。以下のコードを参照してください。&lt;/p>
+&lt;h2 id="リクエスト">リクエスト
+&lt;/h2>&lt;p>リクエストで使うRequestCallbackの実装クラスを作成します。このインタフェースにはコンストラクターの引数としてファイルを渡すとヘッダーとボディを作るようにしてみましょう。RequestCallbackをimplementsすると、doWithRequest()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpRequestにヘッダーとボディを設定することでリクエスト時のファイルアップロードができます。以下のコードを参照してください。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">FileTransferRequestCallback&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> RequestCallback {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// アップロードしたいファイル&lt;/span>
@@ -1429,8 +1429,8 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ヘッダーにはサーバーで要求するファイルサイズとファイル名を載せました。そしてアップロードするファイルをInputStreamとして取得して、OutputStreamであるボディに書き込みます。これでリクエストでのファイルアップロード設定は終わりです。次はレスポンスですね。&lt;/p>
-&lt;h2 id="レスポンス">レスポンス&lt;/h2>
-&lt;p>レスポンスでは、ResponseExctractorをimplementsします。この場合はextractData()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpResponseからはリクエストの時と同じくHttpステータスコード、ヘッダー、ボディを取得できます。このレスポンスの結果からResponseEntityのインスタンスを作成し、レスポンスの結果を載せて返すとRestTemplateからは通信の結果としてResponseEntityを返すようになります。&lt;/p>
+&lt;h2 id="レスポンス">レスポンス
+&lt;/h2>&lt;p>レスポンスでは、ResponseExctractorをimplementsします。この場合はextractData()というメソッドをオーバーライドするようになります。このメソッドの引数であるClientHttpResponseからはリクエストの時と同じくHttpステータスコード、ヘッダー、ボディを取得できます。このレスポンスの結果からResponseEntityのインスタンスを作成し、レスポンスの結果を載せて返すとRestTemplateからは通信の結果としてResponseEntityを返すようになります。&lt;/p>
 &lt;p>ResponseEntityを返すためにはそのボディの型を指定する必要があります。InputStreamの型を指定して、レスポンスのボディがファイルであることを指定しましょう。また、ClientHttpResponseのボディをResponseEntityにそのまま載せると、InputSteamがCloseされるのでボディはコピーしておきます。私は一回byte[]に変えて、さらにByteArrayInputStreamを生成することにしました。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">FileTransferResponseExtractor&lt;/span> &lt;span style="color:#66d9ef">implements&lt;/span> ResponseExtractor&lt;span style="color:#f92672">&amp;lt;&lt;/span>ResponseEntity&lt;span style="color:#f92672">&amp;lt;&lt;/span>InputStream&lt;span style="color:#f92672">&amp;gt;&amp;gt;&lt;/span> {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
@@ -1443,8 +1443,8 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>これでレスポンスのファイルを取得できるようになりました。次は、RestTemplateでAPIをコールするだけです。&lt;/p>
-&lt;h2 id="rest-apiのコール">Rest APIのコール&lt;/h2>
-&lt;p>先に述べましたが、RestTemplateのメソッドを実行するのは簡単です。まずはURLと、アップロードしたいファイルのインスタンスを作っておきましょう。そして、先ほど作成したRequestCallbackとResponseExtractorのインスタンスも作成します(ResponseExtractorは、状態を持たないのでBeanとして登録しても良いです)。&lt;/p>
+&lt;h2 id="rest-apiのコール">Rest APIのコール
+&lt;/h2>&lt;p>先に述べましたが、RestTemplateのメソッドを実行するのは簡単です。まずはURLと、アップロードしたいファイルのインスタンスを作っておきましょう。そして、先ほど作成したRequestCallbackとResponseExtractorのインスタンスも作成します(ResponseExtractorは、状態を持たないのでBeanとして登録しても良いです)。&lt;/p>
 &lt;p>execute()の引数に、URL・Httpメソッドのタイプ・RequestCallback・ResponseExtractorを指定して実行すると、その結果をResponseEntityとして取得できて、そこからさらにステータスコード、ヘッダー、ボディを取得できます。これでアップロードしたファイルを処理してもらい、処理結果のファイルも即取得可能になりますね。&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// RestTemplateに渡す引数を準備&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String url &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;http://api/v1/file/upload&amp;#34;&lt;/span>;
@@ -1468,6 +1468,6 @@ data-flex-basis="608px"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Files.&lt;span style="color:#a6e22e">copy&lt;/span>(is, downloadedFile);
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>意外と簡単！これで他のRest APIとのファイルのやりとりができるようになりました。&lt;/p>
-&lt;h2 id="最後に">最後に&lt;/h2>
-&lt;p>クラスやメソッドを機能別に分けるだけでなく、Rest APIもまた機能によっては分離されることもありますね。今回の場合がまさにそのような例でした。もちろんネットを経由するのでこのようなやり方は一つのRest API内に機能をまとめて置くよりは安定性が劣るかもしれませんが、再使用性が確保できるという面では良い方法ではないかと思います。同じサーバー内だと通信失敗の確率も下がるだろうし、色々と活用できる余地はありそうですね。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>クラスやメソッドを機能別に分けるだけでなく、Rest APIもまた機能によっては分離されることもありますね。今回の場合がまさにそのような例でした。もちろんネットを経由するのでこのようなやり方は一つのRest API内に機能をまとめて置くよりは安定性が劣るかもしれませんが、再使用性が確保できるという面では良い方法ではないかと思います。同じサーバー内だと通信失敗の確率も下がるだろうし、色々と活用できる余地はありそうですね。&lt;/p>
 &lt;p>最近はなかなかブログに載せられるようなコンテンツがなかったので(勉強は続けているつもりですが…)、次は何を書けばいいかなと悩んでいましたが、ちょうど面白い部品を作ることができてよかったです。Springの世界も本当に広くて奥深いものですね。では、また！&lt;/p></description></item></channel></rss>
