@@ -153,7 +153,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ### Routing未対応
 
-Wasmで作成したアプリケーションの特徴なのかもしれませんが、基本的にSPAのような静的コンテンツを生成するのもあり、まだAlphaのため色々と未対応の部分があります。特にRoutingが未対応なので、ページ遷移が課題ですね。直近で[Compose Wasmに対応するRoutingのライブラリ](https://mvnrepository.com/artifact/app.softwork/routing-compose-wasm-js)がリリースされたので、今回はそれを使ってみようと思います。
+Wasmで作成したアプリケーションの特徴なのかもしれませんが、基本的にSPAのような静的コンテンツを生成するのもあり、まだAlphaのため色々と未対応の部分があります。特にRoutingが未対応なので、ページ遷移が課題ですね。まだ公式はないのですが、直近で[Compose Wasmに対応するRoutingのライブラリ](https://mvnrepository.com/artifact/app.softwork/routing-compose-wasm-js)がリリースされたり、他にもいくつかあるので今回はそれを使ってみようと思います。
 
 ### Safari 未対応
 
