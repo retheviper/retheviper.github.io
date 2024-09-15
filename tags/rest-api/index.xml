@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rest Api on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/rest-api/</link><description>Recent content in Rest Api on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/rest-api/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Rest Api on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/rest-api/</link><description>Recent content in Rest Api on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 30 Aug 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/rest-api/index.xml" rel="self" type="application/rss+xml"/><item><title>WebFluxのFunctional Enpointに対する小考察</title><link>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</link><pubDate>Mon, 30 Aug 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-dividing-router-and-handler/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post WebFluxのFunctional Enpointに対する小考察" />&lt;p>前回、&lt;a class="link" href="../spring-webflux-router/" >WebFluxではFunctional Endpointを使うべきか&lt;/a>というポストを書いたことがありますが、今回は&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>と&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>のパターン間の比較ではなく、&lt;code>Functional Endpoint&lt;/code>を使う場合に、どんな形で実装をしていくべきかについて少し考えたことを述べようと思います。&lt;/p>
 &lt;p>実際の業務でWebFluxを使っているわけではないので、さまざまなパターンがあるかなとは思いますが、この&lt;code>Functional Endpoint&lt;/code>を使う場合に考慮すべきものが、&lt;code>Router Function&lt;/code>(以下&lt;code>Router&lt;/code>)と&lt;code>Handler Function&lt;/code>(以下&lt;code>Handler&lt;/code>)をどう分けるかについての問題かと思います。&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>は概念的には別のものではありますが、実装としては一つのクラスにまとめでもアプリは問題なく動くので、フレームワークの仕様や思想というよりかは、アプリのアーキテクチャに関する内容に近いますね。&lt;/p>
 &lt;p>なので、今回は&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分けた場合と分けない場合について、いくつかの観点から考えてみたいと思います。&lt;/p>
 &lt;h2 id="routerとhandlerは分離するべきか">RouterとHandlerは分離するべきか
@@ -180,7 +180,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;h2 id="最後に">最後に
 &lt;/h2>&lt;p>ここで提示した方法でビジネスロジックを分けるのは可能だとして、その方法をとった場合に残る疑問はあります。これは果たして&lt;code>Functional&lt;/code>なのか？&lt;code>Functional Endpoint&lt;/code>は&lt;code>Lambda-based&lt;/code>と説明されてあるが、&lt;code>Lambda&lt;/code>が使われないので設計意図とは違う形になってないか？そもそもSpring MVCとは違うコンセプトのフレームワークなので既存とは違うアプローチが必要なのでは？などなど。&lt;/p>
 &lt;p>これらの問題を判断するのはなかなか難しいですが、個人的には新しい技術だからといって常に新しい方法論を適用するということは難しく、既存の良い体系があるのならそれに従うのもそう間違っていることとは思いません。Springの公式ドキュメントでは「すでに問題なく動いているSpring MVCアプリケーションにあえてWebFluxを導入する必要はない(If you have a Spring MVC application that works fine, there is no need to change)」と述べていますが、これと同じく、既存の検証されてあるアーキテクチャがあるのならばそれをそのまま適用するもの悪くないのではと思います。まぁ、そもそもWebFluxを導入するところでMVCパターンを使うとしたらこういうことを気にする理由すら無くなるのですが…むしろこのようなプログラミングモデルが増えていくと今後は新しいアーキテクチャが生まれそうな気もしますね。今回のポストを書きながらはそういういうものを感じました。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item><item><title>WebFluxではFunctional Enpointを使うべきか</title><link>https://retheviper.github.io/posts/spring-webflux-router/</link><pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-router/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post WebFluxではFunctional Enpointを使うべきか" />&lt;p>以前、&lt;a class="link" href="../spring-webflux/" >Spring WebFluxに関するポストを書いたこと&lt;/a>があって、そこで少しだけMVCパターン(&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>)と&lt;code>Functional Endpoint&lt;/code>(&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>)に関して触れました。結論だけ先に述べますと、Functional Endpointの導入はMVCパターンは長く使われている良いパターンでありますが、性能や関数型プログラミングには適してないのという問題があるので、それを改善するためのものだといえます。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>WebFluxではFunctional Enpointを使うべきか</title><link>https://retheviper.github.io/posts/spring-webflux-router/</link><pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-webflux-router/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post WebFluxではFunctional Enpointを使うべきか" />&lt;p>以前、&lt;a class="link" href="../spring-webflux/" >Spring WebFluxに関するポストを書いたこと&lt;/a>があって、そこで少しだけMVCパターン(&lt;code>Controller&lt;/code>/&lt;code>Service&lt;/code>)と&lt;code>Functional Endpoint&lt;/code>(&lt;code>Router&lt;/code>/&lt;code>Handler&lt;/code>)に関して触れました。結論だけ先に述べますと、Functional Endpointの導入はMVCパターンは長く使われている良いパターンでありますが、性能や関数型プログラミングには適してないのという問題があるので、それを改善するためのものだといえます。&lt;/p>
 &lt;p>さて、その説明だけだと、Spring WebFluxを使う際にはなるべくFunctional Endpointを使うべきな気もします。しかし、実際はどうでしょうか？例えば、従来のSpring MVCと同じくController/Serviceを使う場合は本当にRouter/Handlerを使う時と比べ性能が劣るのか？また、Functional Endpointを使う際に考慮すべき、「MVCパターンにはなかった問題」はないか？といったことを考えられます。&lt;/p>
 &lt;p>なので、今回はその二つのパターンを用いて、Spring WebFluxによるサーバサイドアプリケーションを実装するときに考えたいことを少しまとめてみました。&lt;/p>
 &lt;h2 id="プログラミングのパラダイムとして">プログラミングのパラダイムとして
@@ -539,7 +539,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 >Ktor&lt;/a>ではMVCパターンなしで、同じくFunctional Endpointとよく似たRoutingにのみ対応しています。なので、他にも&lt;a class="link" href="https://expressjs.com/ja" target="_blank" rel="noopener"
 >Express&lt;/a>や&lt;a class="link" href="https://github.com/gin-gonic/gin" target="_blank" rel="noopener"
 >Gin&lt;/a>のようなフレームワークでも似たようなAPIの実装方法を提供しているので、余裕があったら個人的に試してみて慣れるのも良い勉強になるかもしれません。また、関数型プログラミングはこれからも幅広く使われそうなので、これを持って練習してみるのも良いかもしれませんね。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>JWTの補完：Refresh TokenとSliding Session</title><link>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</link><pubDate>Sun, 02 Aug 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/refresh-token-and-sliding-session/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post JWTの補完：Refresh TokenとSliding Session" />&lt;p>前回、JWTとともにSpring Securityでの実現方法について&lt;a class="link" href="../spring-rest-api-login-with-jwt" >ポスト&lt;/a>を書きましたが、JWTを使ってAccess Tokenのみを発行した場合は、考えられる脆弱性があるらしいです。なので今回は、Access Tokenのみを使う認証の特徴と問題点及びそれを補完するための技術を紹介したいと思います。&lt;/p>
 &lt;p>そもそもJWTを使った認証認可は、JWTがISO標準ではあるものの、正解と言った実装方式がないらしいです。なので以下で紹介するAccess Tokenのみの発行に伴う問題と、それを補完するための戦略は概念だけを紹介して行きます。&lt;/p>
 &lt;h2 id="access-token">Access Token
 &lt;/h2>&lt;p>Access Tokenのみを使う場合は、最初の認証以降、サーバでは秘密キーを利用してリクエストに載せられたTokenを確認するため、データベースやストレージなどのI/Oが必要なくなるため高速で処理ができます。ただ、Tokenはリクエストを送るクライアント側が持っているため、強制的にセッションを終了させることができません。なので、ログアウトの処理をするためにはクライアント側からToken情報を削除するしかないですね。&lt;/p>
@@ -562,7 +562,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 >PASETO&lt;/a>という物も提案されているらしいですが、これがまたJWTほど亜補給される稼働かはわからない状態ですね。&lt;/p>
 &lt;p>あと、そもそもの認証方式の問題ですが、量子コンピュータが一般に補給されたら、&lt;a class="link" href="https://www.nttdata.com/jp/ja/data-insight/2018/0611" target="_blank" rel="noopener"
 >従来の方式による暗号の解析はすぐにできる&lt;/a>ようになるとも言われているので、暗号化という考え方そのものが変わる可能性もあるかもしれません。そうなると既存のアプリも全体を作り直さなくてはならないことになるでしょう。&lt;/p>
-&lt;p>セキュリティは難しいものです。暗号化とともに、ユーザが便利に使える設計、戦略を適切に選定するためには色々と工夫が必要と感じます。&lt;/p></description></item><item><title>REST APIでのSpring Securityの例外ハンドリングを実装する</title><link>https://retheviper.github.io/posts/spring-rest-api-security-handling/</link><pubDate>Wed, 17 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-security-handling/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post REST APIでのSpring Securityの例外ハンドリングを実装する" />&lt;p>前回はREST APIでのログインの方式と、JWTを使った認証認可について説明しました。でも、アプリケーション全体のセキュリティという観点からするとログインができたということだけで全てが終わったわけではないです。例えばエラーハンドリングがありますね。&lt;/p>
+&lt;p>セキュリティは難しいものです。暗号化とともに、ユーザが便利に使える設計、戦略を適切に選定するためには色々と工夫が必要と感じます。&lt;/p></description></item><item><title>REST APIでのSpring Securityの例外ハンドリングを実装する</title><link>https://retheviper.github.io/posts/spring-rest-api-security-handling/</link><pubDate>Wed, 17 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-security-handling/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post REST APIでのSpring Securityの例外ハンドリングを実装する" />&lt;p>前回はREST APIでのログインの方式と、JWTを使った認証認可について説明しました。でも、アプリケーション全体のセキュリティという観点からするとログインができたということだけで全てが終わったわけではないです。例えばエラーハンドリングがありますね。&lt;/p>
 &lt;p>Spring SerucityのConfigurationクラス(&lt;code>WebSecurityConfigurerAdapter&lt;/code>の継承クラス)を作成しておいて、ロールによってアクセスできるURLをの制限をかけておくことだけで認可されてないリクエストに対してエラーを出してくれますが、カスタムクラスで独自のエラーハンドリングをしたい場合もあリますね。&lt;/p>
 &lt;p>なので、今回はログインの以外に、REST APIでの認証認可周りで必要となるSpring Securityの設定を紹介したいと思います。ここで紹介するのは以下のようになります。&lt;/p>
 &lt;ol>
@@ -674,7 +674,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;h2 id="最後に">最後に
 &lt;/h2>&lt;p>ハンドリングの場合は、メソッドが一つしかないインタフェースを実装して、Configurationクラスに登録するだけなので難しくないですね。それぞれのHandlerインタフェースは、引数としてリクエストはレスポンス、認証情報をとっているので、場合によってはカスタム例外ビューモデルを作成して返したり、エラー処理用のControllerを作ってリダイレクトさせるなど様々な処理ができます。&lt;/p>
 &lt;p>セキュリティという面から考えると、定型化されたSpring Securityのエラーが出されるということはサーバサイドがSpringで作成されていることを知らせるようなものなので、アプリの脆弱性の問題に繋がる場合もあると思われますね。なのでWebアプリケーションを作る場合は、外部に漏出される情報に関しては徹底的に管理しておいた方が良いのではないかと思います。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post JWTによるREST APIのログインを実現する" />&lt;p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>JWTによるREST APIのログインを実現する</title><link>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</link><pubDate>Wed, 10 Jun 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post JWTによるREST APIのログインを実現する" />&lt;p>最近は、本格的にSpring SecurityによるREST APIでのログインの実装を勉強しています。実際の業務で使うことになるかどうかは分かりませんが、とりあえずREST APIで一般的な認証認可はどのように実装すべきで、Spring Securityはどう動くものかをまず理解しておかないとという気がして(そして最近はあまり実装していないので、感覚を失いたくないという願望もあり)、とりあえず自分で調べたことと、実装したコードの記録を兼ねて書きたいと思います。&lt;/p>
 &lt;p>他にもいろいろな方法があるのかもしれませんが、今回自分が選んだのはJWTとSpring Securityを使ったREST APIでの認証認可のところです。初めはSpring SecurityもJWTもREST APIでの認証認可も全く知識がなかったのでかなり苦労しましたが、とりあえず成功したので、わかったことをまとめてみました。&lt;/p>
 &lt;h2 id="jwtとは">JWTとは
 &lt;/h2>&lt;p>JWT(JSON Web Token)は、署名や暗号化などを含む情報をJSONオブジェクトとして伝達することができる、オープン標準&lt;a class="link" href="https://tools.ietf.org/html/rfc7519" target="_blank" rel="noopener"
@@ -798,21 +798,21 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th>id&lt;/th>
-&lt;th>意味&lt;/th>
-&lt;th>詳細&lt;/th>
+&lt;th style="text-align: left">id&lt;/th>
+&lt;th style="text-align: left">意味&lt;/th>
+&lt;th style="text-align: left">詳細&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>typ&lt;/td>
-&lt;td>Token Type&lt;/td>
-&lt;td>JWTのタイプ(=JWT)&lt;/td>
+&lt;td style="text-align: left">typ&lt;/td>
+&lt;td style="text-align: left">Token Type&lt;/td>
+&lt;td style="text-align: left">JWTのタイプ(=JWT)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>alg&lt;/td>
-&lt;td>Hashing Algoritym&lt;/td>
-&lt;td>エンコードする時のアルゴリズム&lt;/td>
+&lt;td style="text-align: left">alg&lt;/td>
+&lt;td style="text-align: left">Hashing Algoritym&lt;/td>
+&lt;td style="text-align: left">エンコードする時のアルゴリズム&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -821,46 +821,46 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th>id&lt;/th>
-&lt;th>意味&lt;/th>
-&lt;th>詳細&lt;/th>
+&lt;th style="text-align: left">id&lt;/th>
+&lt;th style="text-align: left">意味&lt;/th>
+&lt;th style="text-align: left">詳細&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>jti&lt;/td>
-&lt;td>JWT ID&lt;/td>
-&lt;td>JWTの識別子&lt;/td>
+&lt;td style="text-align: left">jti&lt;/td>
+&lt;td style="text-align: left">JWT ID&lt;/td>
+&lt;td style="text-align: left">JWTの識別子&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>sub&lt;/td>
-&lt;td>subject&lt;/td>
-&lt;td>JWTのユニークなキー&lt;/td>
+&lt;td style="text-align: left">sub&lt;/td>
+&lt;td style="text-align: left">subject&lt;/td>
+&lt;td style="text-align: left">JWTのユニークなキー&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>iss&lt;/td>
-&lt;td>issuer&lt;/td>
-&lt;td>JWTを発行者&lt;/td>
+&lt;td style="text-align: left">iss&lt;/td>
+&lt;td style="text-align: left">issuer&lt;/td>
+&lt;td style="text-align: left">JWTを発行者&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>aud&lt;/td>
-&lt;td>audience&lt;/td>
-&lt;td>JWTの利用者&lt;/td>
+&lt;td style="text-align: left">aud&lt;/td>
+&lt;td style="text-align: left">audience&lt;/td>
+&lt;td style="text-align: left">JWTの利用者&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>iat&lt;/td>
-&lt;td>issued at&lt;/td>
-&lt;td>JWTが発行された時間&lt;/td>
+&lt;td style="text-align: left">iat&lt;/td>
+&lt;td style="text-align: left">issued at&lt;/td>
+&lt;td style="text-align: left">JWTが発行された時間&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>nbf&lt;/td>
-&lt;td>not before&lt;/td>
-&lt;td>JWTの開始時間&lt;/td>
+&lt;td style="text-align: left">nbf&lt;/td>
+&lt;td style="text-align: left">not before&lt;/td>
+&lt;td style="text-align: left">JWTの開始時間&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>exp&lt;/td>
-&lt;td>expiration time&lt;/td>
-&lt;td>JWTの満了時間&lt;/td>
+&lt;td style="text-align: left">exp&lt;/td>
+&lt;td style="text-align: left">expiration time&lt;/td>
+&lt;td style="text-align: left">JWTの満了時間&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -871,7 +871,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;p>&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure.webp"
 width="2372"
 height="1266"
-srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_huf3021877776d9e10bd4a15cebafbb3d4_65786_480x0_resize_q75_h2_box_2.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_huf3021877776d9e10bd4a15cebafbb3d4_65786_1024x0_resize_q75_h2_box_2.webp 1024w"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu16659403758595899118.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu3429020602655094239.webp 1024w"
 loading="lazy"
 alt="Structure of JWT"
 class="gallery-image"
@@ -1249,7 +1249,7 @@ data-flex-basis="449px"
 &lt;p>&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login.webp"
 width="1926"
 height="760"
-srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu294d9fb12f7f42fae1a973d16ec83e43_34402_480x0_resize_q75_h2_box_2.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu294d9fb12f7f42fae1a973d16ec83e43_34402_1024x0_resize_q75_h2_box_2.webp 1024w"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu4171376652576591028.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu4609018044116541614.webp 1024w"
 loading="lazy"
 alt="JWT Postman Login"
 class="gallery-image"
@@ -1259,7 +1259,7 @@ data-flex-basis="608px"
 &lt;h2 id="最後に">最後に
 &lt;/h2>&lt;p>思ったよりSpring Security周りの設定がいろいろと必要となり、自分の欲しがっていたレクチャはあまりなかったのでかなり苦労しましたが、これでなんとかREST APIでのJWTを使ったログインは実装できました。これだけを別途ライブラリとして作っても良いかと思いますね…&lt;/p>
 &lt;p>でも、まだこれで完全な設定ができた訳ではありません。ここではSuccessHandlerのみを作成しましたが、場合によってはログインに失敗した場合の&lt;code>AuthenticationFailureHandler&lt;/code>が必要になる可能性もあります。また、これはあくまでログインに関するポストなので扱ってはなかったのですが、認証認可できてないURLへのアクセスに対するException Handlingも必要です。また、JWTを使った認証の場合、クライアントがトークンを持ってしまうのでサーバ側からログアウトを制御できないという点があり、クライアント側の実装ではそこに対しての対策も考えなければなりません。&lt;/p>
-&lt;p>が、今回はとりあえず最小限の目標は達成できたということで、いったんここまでとなります。では、また！&lt;/p></description></item><item><title>REST APIでのログインのためには</title><link>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</link><pubDate>Sat, 30 May 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post REST APIでのログインのためには" />&lt;p>新しい案件が始まって、AngularとSpring bootによるSPA(Single Page Application)を作ることとなりましたが、まだ要件定義の段階で実装まではしばらく時間が残っています。いわゆる上流工程にはあまり経験がないので日々奮闘中ではありますが、仕事が終わった後の時間には少しづつ、練習をかねて自作アプリケーションを作っています。&lt;/p>
+&lt;p>が、今回はとりあえず最小限の目標は達成できたということで、いったんここまでとなります。では、また！&lt;/p></description></item><item><title>REST APIでのログインのためには</title><link>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</link><pubDate>Sat, 30 May 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-api-how-to-login/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post REST APIでのログインのためには" />&lt;p>新しい案件が始まって、AngularとSpring bootによるSPA(Single Page Application)を作ることとなりましたが、まだ要件定義の段階で実装まではしばらく時間が残っています。いわゆる上流工程にはあまり経験がないので日々奮闘中ではありますが、仕事が終わった後の時間には少しづつ、練習をかねて自作アプリケーションを作っています。&lt;/p>
 &lt;p>Spring BootでREST APIを作ることにはある程度慣れてはいるものの、まだ認証/認可に対してあまり知識がないので、自作アプリではわざとSpring Securityを入れることにしました。しかし、Spring Securityの記事をいくつか読んでロールによってアクセスできるURLに制限をかけたりしているのだなと理解した後に、いざ自作アプリケーションに導入してみようとしたら、問題ができました。いつも通りREST APIで実装していたのですが、自分が参考にしていたSpring Securityのコードはほぼ昔ながらのSpring MVCパターンのためのものだったのです。&lt;/p>
 &lt;p>なので、今回のポストはSpring MVCパターンとREST APIのログインするため必要となるのが何かについて簡単に書いてみようと思います。(実際のログインの方法は今後のポストを予定しています)``&lt;/p>
 &lt;h2 id="コントローラの実装">コントローラの実装
@@ -1358,7 +1358,7 @@ data-flex-basis="608px"
 &lt;p>また、ログアウトの場合はどうなるか、という問題もありますが、これは様々な方法で実現しているようです。例えばフロントエンドからできる方法としては、Headerに載せる認証情報を削除したり、間違った情報を送るようにするような方法があります。そしてサーバサイドでは、一定時間がすぎると認証情報を使えなくするなどの対策があります。&lt;/p>
 &lt;h2 id="最後に">最後に
 &lt;/h2>&lt;p>本当は、REST APIでのログインに関してはまだ考えなければならないことは他にもあります。例えば、HTTP Headerに認証のため必要となる情報を載せるということは理解できても、実際はどのようなデータを載せればいいか、そのデータはどう作るか、リクエスト毎にHeaderで認証情報を扱うということはセキュリティやリソースの面で大丈夫かなど。&lt;/p>
-&lt;p>でも、とにかくこれでREST APIでログインするための仕組みの一つはわかりました。次回は、このHeaderとSpring Securityを使ってのログインを実装する方法を述べながら、以上の問題についても扱いたいなと思っています。では、また！&lt;/p></description></item><item><title>Rest APIからRest APIにファイルを送る</title><link>https://retheviper.github.io/posts/spring-rest-template/</link><pubDate>Mon, 10 Feb 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-template/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.jpg" alt="Featured image of post Rest APIからRest APIにファイルを送る" />&lt;p>ウェブアプリケーションを開発していると、一つの&lt;code>Rest API&lt;/code>だけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能がすでに実装されているサーバー(API)が存在している場合もありますね。そういう場合は、素直にそのAPIをコールするだけで簡単に目的を達成できます。実際、仕事で他のRest APIサーバーとの通信が必要となって調べてみましたが、Springではすでにそのような場合に対応できるようなクラスを用意していました。今回のポストの主人公であるRestTemplateです。&lt;/p>
+&lt;p>でも、とにかくこれでREST APIでログインするための仕組みの一つはわかりました。次回は、このHeaderとSpring Securityを使ってのログインを実装する方法を述べながら、以上の問題についても扱いたいなと思っています。では、また！&lt;/p></description></item><item><title>Rest APIからRest APIにファイルを送る</title><link>https://retheviper.github.io/posts/spring-rest-template/</link><pubDate>Mon, 10 Feb 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-rest-template/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post Rest APIからRest APIにファイルを送る" />&lt;p>ウェブアプリケーションを開発していると、一つの&lt;code>Rest API&lt;/code>だけで全ての機能を自己完結させる必要はない時もあります。例えば組み込みたい機能がすでに実装されているサーバー(API)が存在している場合もありますね。そういう場合は、素直にそのAPIをコールするだけで簡単に目的を達成できます。実際、仕事で他のRest APIサーバーとの通信が必要となって調べてみましたが、Springではすでにそのような場合に対応できるようなクラスを用意していました。今回のポストの主人公であるRestTemplateです。&lt;/p>
 &lt;p>RestTemplateを使うと、簡単にget・post・deleteと言ったHttpメソッドのAPIをコールできます。また、リクエストやレスポンスをカスタムして状況に合わせて使うこともできます。例えばカスタムヘッダーを作ったり、サイズの大きいファイルを転送するリクエストを作ることも可能ですね。なので今回はRestTemplateを利用し、ファイルをアップロードするとそのファイルになんらかの処理をして返してくれるAPIがすでに存在している場合で、そのAPIをコールする部品を作る方法を紹介します。&lt;/p>
 &lt;h2 id="サーバー側の例">サーバー側の例
 &lt;/h2>&lt;p>すでにファイルを処理するサーバーが存在している場合のことですので、まずはコールしたいAPIで利用するリクエストとレスポンスの形を把握する必要がありますね。ファイルをアップロードされたら、ヘッダーからファイル情報を読み込むようになっていて、ファイルデータが書かれているボディを読み込むようなメソッドがあるとしましょう。ヘッダーの情報に問題がなかったらローカルストレージにファイルを書き込み、処理を行います。そして処理の終わったファイルはレスポンスとして返すサーバーです。&lt;/p>

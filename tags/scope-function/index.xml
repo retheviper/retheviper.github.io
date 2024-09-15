@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Scope Function on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/scope-function/</link><description>Recent content in Scope Function on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 04 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/scope-function/index.xml" rel="self" type="application/rss+xml"/><item><title>Scope Functionはどう使うか</title><link>https://retheviper.github.io/posts/kotlin-scope-function/</link><pubDate>Wed, 04 Nov 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-scope-function/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.jpg" alt="Featured image of post Scope Functionはどう使うか" />&lt;p>KotlinがJavaと区別される特徴といえば色々あるとは思いますが、そのうちの一つとしてあげられるものが&lt;code>Scope Function&lt;/code>ではないかと思います。以前のポストでも簡単に触れたことがありますが、これらのビルトイン関数たちは確かに上手く使うと、Javaより簡潔なコードを書くばかりでなく、より作成者の意図が伝わりやすい、強力な武器になり得るのではないかと思います。しかしながら、やはり他の言語と比べて新しい概念のものであるので、どの場面で使った方が良いか、どう使ったらいいかという、いわゆるBest Practiceがどんなものであるか悩ましくもなりますね。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Scope Function on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/scope-function/</link><description>Recent content in Scope Function on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 04 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/scope-function/index.xml" rel="self" type="application/rss+xml"/><item><title>Scope Functionはどう使うか</title><link>https://retheviper.github.io/posts/kotlin-scope-function/</link><pubDate>Wed, 04 Nov 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-scope-function/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.webp" alt="Featured image of post Scope Functionはどう使うか" />&lt;p>KotlinがJavaと区別される特徴といえば色々あるとは思いますが、そのうちの一つとしてあげられるものが&lt;code>Scope Function&lt;/code>ではないかと思います。以前のポストでも簡単に触れたことがありますが、これらのビルトイン関数たちは確かに上手く使うと、Javaより簡潔なコードを書くばかりでなく、より作成者の意図が伝わりやすい、強力な武器になり得るのではないかと思います。しかしながら、やはり他の言語と比べて新しい概念のものであるので、どの場面で使った方が良いか、どう使ったらいいかという、いわゆるBest Practiceがどんなものであるか悩ましくもなりますね。&lt;/p>
 &lt;p>おそらくこう思っているのは自分だけでなく、ネットから検索してみるとScope Functionに関しての多くの記事を見つけることができますが、大抵が個別の関数の使い方の紹介に過ぎないような気がしています。なので、具体的にこれらの関数はなんのためのものであり、それぞれどう使い分けるか、またどの場面で使うべきかというのが気になっていたところです。調べてみたところ、公式のドキュメントやいくつかのブログの記事などに情報があったので、これらをまとめて整理してみました。&lt;/p>
 &lt;h2 id="そもそもscope-functionって">そもそもScope Functionって？
 &lt;/h2>&lt;p>最初にScope Functionを言及しましたが、これは一体なんでしょう。まずはなぜこれらの関数にこんな名前がつけられたのかを知る必要がありそうです。&lt;a class="link" href="https://kotlinlang.org/docs/reference/scope-functions.html" target="_blank" rel="noopener"
@@ -29,36 +29,36 @@
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th>関数名&lt;/th>
-&lt;th>レシーバーのアクセス&lt;/th>
-&lt;th>戻り値&lt;/th>
+&lt;th style="text-align: left">関数名&lt;/th>
+&lt;th style="text-align: left">レシーバーのアクセス&lt;/th>
+&lt;th style="text-align: left">戻り値&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>with&lt;/td>
-&lt;td>this&lt;/td>
-&lt;td>最後の結果&lt;/td>
+&lt;td style="text-align: left">with&lt;/td>
+&lt;td style="text-align: left">this&lt;/td>
+&lt;td style="text-align: left">最後の結果&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>let&lt;/td>
-&lt;td>it&lt;/td>
-&lt;td>最後の結果&lt;/td>
+&lt;td style="text-align: left">let&lt;/td>
+&lt;td style="text-align: left">it&lt;/td>
+&lt;td style="text-align: left">最後の結果&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>apply&lt;/td>
-&lt;td>this&lt;/td>
-&lt;td>T&lt;/td>
+&lt;td style="text-align: left">apply&lt;/td>
+&lt;td style="text-align: left">this&lt;/td>
+&lt;td style="text-align: left">T&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>run&lt;/td>
-&lt;td>this&lt;/td>
-&lt;td>最後の結果&lt;/td>
+&lt;td style="text-align: left">run&lt;/td>
+&lt;td style="text-align: left">this&lt;/td>
+&lt;td style="text-align: left">最後の結果&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>also&lt;/td>
-&lt;td>it&lt;/td>
-&lt;td>T&lt;/td>
+&lt;td style="text-align: left">also&lt;/td>
+&lt;td style="text-align: left">it&lt;/td>
+&lt;td style="text-align: left">T&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -123,7 +123,7 @@
 &lt;p>&lt;img src="https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function.webp"
 width="3483"
 height="1203"
-srcset="https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hub9435f29393cab452e8e19d463370875_69328_480x0_resize_q75_h2_box_2.webp 480w, https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hub9435f29393cab452e8e19d463370875_69328_1024x0_resize_q75_h2_box_2.webp 1024w"
+srcset="https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hu14638738737467261328.webp 480w, https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hu17842974329069459065.webp 1024w"
 loading="lazy"
 alt="Kotlin Select Scope Function"
 class="gallery-image"
