@@ -3,7 +3,7 @@ title: "Kotlinで書いてみた〜その四〜"
 date: 2023-09-03
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
 ---

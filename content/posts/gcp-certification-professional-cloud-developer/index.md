@@ -3,7 +3,7 @@ title: "Google Cloud認定Professional Cloud Developerについて"
 date: 2022-07-11
 categories: 
   - gcp
-image: "../../images/gcp.jpg"
+image: "../../images/gcp.webp"
 tags:
   - gcp
   - certification

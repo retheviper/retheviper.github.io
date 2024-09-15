@@ -3,7 +3,7 @@ title: "今更なI/Oの話"
 date: 2021-01-12
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - io

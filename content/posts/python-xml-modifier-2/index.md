@@ -3,7 +3,7 @@ title: "Pythonでxmlファイルを操作する(2)"
 date: 2019-06-20
 categories: 
   - python
-image: "../../images/python.jpg"
+image: "../../images/python.webp"
 tags:
   - xml
   - python

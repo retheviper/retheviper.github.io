@@ -3,7 +3,7 @@ title: "デザインパターン、Singleton"
 date: 2019-08-19
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - design pattern
   - java

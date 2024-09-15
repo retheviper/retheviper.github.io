@@ -3,7 +3,7 @@ title: "JavaプログラマーがみたTypeScript"
 date: 2020-05-16
 categories: 
   - typescript
-image: "../../images/typescript.jpg"
+image: "../../images/typescript.webp"
 tags:
   - node
   - javascript

@@ -3,7 +3,7 @@ title: "Gradleからコマンドライン引数を渡す"
 date: 2019-09-17
 categories: 
   - gradle
-image: "../../images/gradle.jpg"
+image: "../../images/gradle.webp"
 tags:
   - groovy
   - java

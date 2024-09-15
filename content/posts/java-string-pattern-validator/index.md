@@ -3,7 +3,7 @@ title: "パターンと一致する文字列かを判定する"
 date: 2020-11-22
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - pattern

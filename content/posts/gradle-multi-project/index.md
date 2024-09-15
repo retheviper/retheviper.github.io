@@ -3,7 +3,7 @@ title: "Gradleでマルチプロジェクトを作る"
 date: 2019-10-20
 categories: 
   - gradle
-image: "../../images/gradle.jpg"
+image: "../../images/gradle.webp"
 tags:
   - groovy
   - java

@@ -3,7 +3,7 @@ title: "Path ParameterをInline classで受け取る"
 date: 2023-03-26
 categories: 
   - ktor
-image: "../../images/ktor.jpg"
+image: "../../images/ktor.webp"
 tags:
   - kotlin
   - ktor

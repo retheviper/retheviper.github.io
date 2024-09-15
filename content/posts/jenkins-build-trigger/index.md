@@ -3,7 +3,7 @@ title: "JenkinsのJobを実行する"
 date: 2019-07-20
 categories: 
   - jenkins
-image: "../../images/jenkins.jpg"
+image: "../../images/jenkins.webp"
 tags:
   - git
   - jenkins

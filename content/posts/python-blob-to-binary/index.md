@@ -3,7 +3,7 @@ title: "PythonでDBの処理がしたい"
 date: 2019-06-30
 categories: 
   - python
-image: "../../images/python.jpg"
+image: "../../images/python.webp"
 tags:
   - oracle
   - postgresql

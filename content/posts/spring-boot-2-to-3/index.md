@@ -1,9 +1,9 @@
 ---
 title: "Spring Boot 3を導入してみた"
 date: 2023-01-29
-categories: 
+categories:
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - kotlin
   - java

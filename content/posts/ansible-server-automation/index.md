@@ -3,7 +3,7 @@ title: "Ansibleでサーバーを構築する"
 date: 2019-07-05
 categories: 
   - ansible
-image: "../../images/ansible.jpg"
+image: "../../images/ansible.webp"
 tags:
   - ansible
   - yaml

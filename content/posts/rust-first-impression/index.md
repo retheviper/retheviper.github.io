@@ -3,7 +3,7 @@ title: "Kotlinプログラマが見たRust"
 date: 2022-03-27
 categories: 
   - rust
-image: "../../images/rust.jpg"
+image: "../../images/rust.webp"
 tags:
   - rust
   - python

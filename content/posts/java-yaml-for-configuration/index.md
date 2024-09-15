@@ -3,7 +3,7 @@ title: "外部設定ファイルを扱うクラスを作る"
 date: 2019-11-24
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - yaml
   - java

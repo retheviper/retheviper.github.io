@@ -3,7 +3,7 @@ title: "WebFluxのFunctional Enpointに対する小考察"
 date: 2021-08-30
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - webflux

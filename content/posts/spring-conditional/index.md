@@ -3,7 +3,7 @@ title: "条件で動作するアノテーションを使う"
 date: 2020-04-26
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - annotation
   - yaml

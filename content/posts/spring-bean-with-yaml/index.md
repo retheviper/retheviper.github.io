@@ -3,7 +3,7 @@ title: "newしたインスタンスの中でBeanを使いたい"
 date: 2019-12-22
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - dependency injection
   - java

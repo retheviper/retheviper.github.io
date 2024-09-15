@@ -3,7 +3,7 @@ title: "Kotlinのこれからを語る"
 date: 2022-05-22
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

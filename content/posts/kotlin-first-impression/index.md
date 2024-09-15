@@ -3,7 +3,7 @@ title: "JavaプログラマーがみたKotlin"
 date: 2020-10-25
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

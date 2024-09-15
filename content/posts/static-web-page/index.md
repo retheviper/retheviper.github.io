@@ -3,7 +3,7 @@ title: "静的ウェブページに興味を持つ"
 date: 2020-08-23
 categories: 
   - recent
-image: "../../images/tools.jpg"
+image: "../../images/tools.webp"
 tags:
   - blog
   - javascript

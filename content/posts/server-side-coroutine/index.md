@@ -3,7 +3,7 @@ title: "BackendでCoroutineを使う"
 date: 2022-06-05
 categories: 
   - languages
-image: "../../images/magic.jpg"
+image: "../../images/magic.webp"
 tags:
   - kotlin
   - go

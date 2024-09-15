@@ -3,7 +3,7 @@ title: "PyQtで字幕翻訳ツールを作ってみた"
 date: 2022-05-01
 categories: 
   - python
-image: "../../images/python.jpg"
+image: "../../images/python.webp"
 tags:
   - python
   - qt

@@ -3,7 +3,7 @@ title: "data classのListをCSVにする"
 date: 2022-08-27
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

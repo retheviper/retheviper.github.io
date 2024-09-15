@@ -3,7 +3,7 @@ title: "年月を扱ってみる"
 date: 2021-04-27
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

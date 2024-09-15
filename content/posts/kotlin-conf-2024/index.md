@@ -3,7 +3,7 @@ title: "KotlinConf'24を要約してみた"
 date: 2024-05-25
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - kotlinconf

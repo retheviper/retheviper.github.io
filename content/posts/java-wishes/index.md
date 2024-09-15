@@ -3,7 +3,7 @@ title: "Javaはこう進化して欲しい"
 date: 2020-02-03
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
 ---

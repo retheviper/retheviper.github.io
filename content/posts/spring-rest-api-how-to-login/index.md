@@ -3,7 +3,7 @@ title: "REST APIでのログインのためには"
 date: 2020-05-30
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - rest api

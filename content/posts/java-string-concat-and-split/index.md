@@ -3,7 +3,7 @@ title: "今更な文字列操作の話"
 date: 2021-02-08
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - string

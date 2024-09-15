@@ -3,7 +3,7 @@ title: "Sequenceは常にいいか"
 date: 2021-06-13
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

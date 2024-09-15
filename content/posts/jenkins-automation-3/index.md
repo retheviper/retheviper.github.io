@@ -3,7 +3,7 @@ title: "Jenkinsで何もかも楽にしたい(3)"
 date: 2019-05-16
 categories: 
   - jenkins
-image: "../../images/jenkins.jpg"
+image: "../../images/jenkins.webp"
 tags:
   - ci/cd
   - jenkins

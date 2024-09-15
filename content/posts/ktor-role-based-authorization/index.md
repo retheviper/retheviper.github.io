@@ -3,7 +3,7 @@ title: "KtorでRole-based Authorizationを実装する"
 date: 2021-08-09
 categories: 
   - ktor
-image: "../../images/ktor.jpg"
+image: "../../images/ktor.webp"
 tags:
   - kotlin
   - ktor

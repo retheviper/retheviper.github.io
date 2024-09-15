@@ -3,7 +3,7 @@ title: "Kotlinで和暦を使う"
 date: 2021-12-05
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

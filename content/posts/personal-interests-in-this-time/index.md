@@ -3,7 +3,7 @@ title: "最近注目しているものたち"
 date: 2020-06-29
 categories: 
   - recent
-image: "../../images/magic.jpg"
+image: "../../images/magic.webp"
 tags:
   - apple
   - mac

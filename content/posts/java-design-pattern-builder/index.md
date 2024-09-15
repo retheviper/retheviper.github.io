@@ -3,7 +3,7 @@ title: "デザインパターン、Builder"
 date: 2019-07-14
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - design pattern
   - java

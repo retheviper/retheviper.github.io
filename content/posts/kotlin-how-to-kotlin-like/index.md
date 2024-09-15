@@ -3,7 +3,7 @@ title: "Kotlinはどう書いたらいいか"
 date: 2022-12-30
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

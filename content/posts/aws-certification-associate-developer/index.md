@@ -3,7 +3,7 @@ title: "AWS認定デベロッパー - アソシエイトについて"
 date: 2020-10-04
 categories: 
   - aws
-image: "../../images/aws.jpg"
+image: "../../images/aws.webp"
 tags:
   - aws
   - certification

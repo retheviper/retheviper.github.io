@@ -3,7 +3,7 @@ title: "Scope Functionはどう使うか"
 date: 2020-11-04
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - scope function

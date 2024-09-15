@@ -3,7 +3,7 @@ title: "今年のブログの話"
 date: 2022-02-06
 categories: 
   - recent
-image: "../../images/magic.jpg"
+image: "../../images/magic.webp"
 tags:
   - jekyll
   - hugo

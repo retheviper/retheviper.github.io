@@ -3,7 +3,7 @@ title: "二つのListを結合する"
 date: 2020-07-26
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - stream
   - java

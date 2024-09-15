@@ -3,7 +3,7 @@ title: "関数型インタフェースを使う"
 date: 2019-08-06
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - functional interface
   - lambda

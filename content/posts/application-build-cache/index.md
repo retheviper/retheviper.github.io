@@ -3,7 +3,7 @@ title: "Cloud BuildのCI/CDを高速化してみた"
 date: 2024-01-21
 categories: 
   - gcp
-image: "../../images/gcp.jpg"
+image: "../../images/gcp.webp"
 tags:
   - gcp
   - gradle

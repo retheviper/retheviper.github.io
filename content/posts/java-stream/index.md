@@ -3,7 +3,7 @@ title: "Streamを正しく使う"
 date: 2020-04-06
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - stream
   - java

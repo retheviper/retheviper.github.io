@@ -3,7 +3,7 @@ title: "Moduleの問題に会った話"
 date: 2019-09-08
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - jigsaw
   - module

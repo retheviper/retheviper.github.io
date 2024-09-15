@@ -3,7 +3,7 @@ title: "Kotlinでデータの逆転グルーピング"
 date: 2022-01-29
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
 ---

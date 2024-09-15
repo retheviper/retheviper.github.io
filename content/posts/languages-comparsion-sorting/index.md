@@ -3,7 +3,7 @@ title: "色々な言語でやってみた（ソート編）"
 date: 2021-11-10
 categories: 
   - languages
-image: "../../images/magic.jpg"
+image: "../../images/magic.webp"
 tags:
   - kotlin
   - java

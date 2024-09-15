@@ -3,7 +3,7 @@ title: "Kotlinの隠されたコストーその３"
 date: 2021-11-28
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

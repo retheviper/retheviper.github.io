@@ -3,7 +3,7 @@ title: "Javaの色々なコーディングスキル"
 date: 2019-11-17
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
 ---

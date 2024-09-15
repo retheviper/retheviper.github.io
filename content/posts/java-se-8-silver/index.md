@@ -3,7 +3,7 @@ title: "Oracle JavaSE 8 Silverについて"
 date: 2019-10-06
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - ocjp
   - certification

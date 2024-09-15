@@ -3,7 +3,7 @@ title: "Rest APIからRest APIにファイルを送る"
 date: 2020-02-10
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - rest api
   - java

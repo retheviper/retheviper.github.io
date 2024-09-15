@@ -3,7 +3,7 @@ title: "ReflectionとGenericを活用する"
 date: 2019-07-30
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - reflection
   - generic

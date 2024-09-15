@@ -3,7 +3,7 @@ title: "ServiceのImplクラスをYAMLで選択する"
 date: 2020-02-25
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - yaml
   - java

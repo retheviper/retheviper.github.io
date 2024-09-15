@@ -3,7 +3,7 @@ title: "9からの新メソッドめぐり"
 date: 2020-12-30
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - stream

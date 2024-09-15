@@ -3,7 +3,7 @@ title: "SwiftUIを触ってみた〜その1〜"
 date: 2022-07-31
 categories: 
   - swift
-image: "../../images/swift.jpg"
+image: "../../images/swift.webp"
 tags:
   - swift
   - swiftui

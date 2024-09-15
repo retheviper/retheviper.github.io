@@ -3,7 +3,7 @@ title: "知っていれば便利なLinuxのコツ"
 date: 2019-05-19
 categories: 
   - linux
-image: "../../images/linux_terminal.jpg"
+image: "../../images/linux_terminal.webp"
 tags:
   - linux
 ---

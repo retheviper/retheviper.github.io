@@ -3,7 +3,7 @@ title: "Pythonでログを出したい"
 date: 2019-06-15
 categories: 
   - python
-image: "../../images/python.jpg"
+image: "../../images/python.webp"
 tags:
   - log
   - python

@@ -3,7 +3,7 @@ title: "KotlinConf'23を要約してみた"
 date: 2023-04-14
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - kotlinconf

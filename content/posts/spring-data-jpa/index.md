@@ -3,7 +3,7 @@ title: "MyBatisよりJPAが使いたい"
 date: 2020-07-10
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - database
   - jdbc

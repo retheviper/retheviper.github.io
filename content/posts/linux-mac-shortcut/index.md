@@ -3,7 +3,7 @@ title: "macOSでもショートカットが使いたい"
 date: 2019-06-11
 categories: 
   - linux
-image: "../../images/linux_terminal.jpg"
+image: "../../images/linux_terminal.webp"
 tags:
   - terminal
   - macos

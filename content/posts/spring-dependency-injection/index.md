@@ -3,7 +3,7 @@ title: "SpringのDIはコンストラクターでしましょう"
 date: 2019-12-09
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - dependency injection
   - java

@@ -3,7 +3,7 @@ title: "Kotlinで書いてみた〜その二〜"
 date: 2021-06-28
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
 ---

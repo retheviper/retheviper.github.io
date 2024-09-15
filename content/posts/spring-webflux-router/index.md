@@ -3,7 +3,7 @@ title: "WebFluxではFunctional Enpointを使うべきか"
 date: 2021-05-30
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - webflux

@@ -3,7 +3,7 @@ title: "Lombokのバグにあった話"
 date: 2019-08-12
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - lombok
   - java

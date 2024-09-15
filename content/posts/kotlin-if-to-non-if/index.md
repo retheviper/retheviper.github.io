@@ -3,7 +3,7 @@ title: "ifでの分岐を考える"
 date: 2022-11-20
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
 ---

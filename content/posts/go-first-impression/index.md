@@ -3,7 +3,7 @@ title: "JavaプログラマーがみたGo"
 date: 2021-03-21
 categories: 
   - go
-image: "../../images/go.jpg"
+image: "../../images/go.webp"
 tags:
   - go
   - java

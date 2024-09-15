@@ -3,7 +3,7 @@ title: "Jenkins Pipelineを使う"
 date: 2020-01-26
 categories: 
   - jenkins
-image: "../../images/jenkins.jpg"
+image: "../../images/jenkins.webp"
 tags:
   - groovy
   - ci/cd

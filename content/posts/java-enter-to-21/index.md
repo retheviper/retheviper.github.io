@@ -3,7 +3,7 @@ title: "Java 21は何が変わったか"
 date: 2023-09-18
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - kotlin

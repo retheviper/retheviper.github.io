@@ -3,7 +3,7 @@ title: "Kotlinでデスクトップアプリを作ってみた"
 date: 2022-09-09
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - compose

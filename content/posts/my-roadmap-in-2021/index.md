@@ -3,7 +3,7 @@ title: "個人的な2021年のロードマップ"
 date: 2021-01-24
 categories: 
   - recent
-image: "../../images/map.jpg"
+image: "../../images/map.webp"
 tags:
   - blog
   - javascript

@@ -3,7 +3,7 @@ title: "Gradleのdependenciesはどう書くべきか"
 date: 2019-11-04
 categories: 
   - gradle
-image: "../../images/gradle.jpg"
+image: "../../images/gradle.webp"
 tags:
   - groovy
   - java

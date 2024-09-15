@@ -3,7 +3,7 @@ title: "Java 17は何が変わったか"
 date: 2021-09-25
 categories:
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - java
   - kotlin

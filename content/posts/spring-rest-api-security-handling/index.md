@@ -3,7 +3,7 @@ title: "REST APIでのSpring Securityの例外ハンドリングを実装する"
 date: 2020-06-17
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - spring security

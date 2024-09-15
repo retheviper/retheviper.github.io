@@ -3,7 +3,7 @@ title: "Nullチェックの地獄から脱出したい"
 date: 2020-01-05
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - optional
   - java

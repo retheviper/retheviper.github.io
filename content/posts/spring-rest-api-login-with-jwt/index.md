@@ -3,7 +3,7 @@ title: "JWTによるREST APIのログインを実現する"
 date: 2020-06-10
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - spring security

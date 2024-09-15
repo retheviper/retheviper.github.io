@@ -3,7 +3,7 @@ title: "Tera Termを使う"
 date: 2019-06-24
 categories: 
   - linux
-image: "../../images/linux_terminal.jpg"
+image: "../../images/linux_terminal.webp"
 tags:
   - terminal
   - linux

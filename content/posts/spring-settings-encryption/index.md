@@ -3,7 +3,7 @@ title: "Jasyptでプロパティを暗号化する"
 date: 2020-03-16
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - yaml
   - java

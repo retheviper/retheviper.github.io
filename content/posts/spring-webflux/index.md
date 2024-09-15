@@ -3,7 +3,7 @@ title: "Spring WebFluxって何？"
 date: 2020-09-06
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - webflux

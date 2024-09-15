@@ -3,7 +3,7 @@ title: "Effective Kotlinを読む"
 date: 2022-02-20
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

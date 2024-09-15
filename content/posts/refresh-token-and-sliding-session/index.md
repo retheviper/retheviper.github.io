@@ -3,7 +3,7 @@ title: "JWTの補完：Refresh TokenとSliding Session"
 date: 2020-08-02
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring security
   - rest api

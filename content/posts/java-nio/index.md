@@ -3,7 +3,7 @@ title: "IOからNIOへ"
 date: 2020-01-20
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - nio
   - java

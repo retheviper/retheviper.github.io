@@ -3,7 +3,7 @@ title: "Oracle JavaSE 8 Goldについて"
 date: 2020-03-29
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - ocjp
   - certification

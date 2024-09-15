@@ -3,7 +3,7 @@ title: "KotlinのString実装を覗く〜whitespace編〜"
 date: 2021-05-08
 categories: 
   - kotlin
-image: "../../images/kotlin.jpg"
+image: "../../images/kotlin.webp"
 tags:
   - kotlin
   - java

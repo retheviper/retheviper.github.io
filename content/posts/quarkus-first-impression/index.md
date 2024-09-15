@@ -3,7 +3,7 @@ title: "Quarkusを触ってみた"
 date: 2021-10-24
 categories: 
   - quarkus
-image: "../../images/quarkus.jpg"
+image: "../../images/quarkus.webp"
 tags:
   - java
   - kotlin

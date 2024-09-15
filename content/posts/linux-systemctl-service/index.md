@@ -3,7 +3,7 @@ title: "Linuxのシステムサービスを作る"
 date: 2019-07-11
 categories: 
   - linux
-image: "../../images/linux_terminal.jpg"
+image: "../../images/linux_terminal.webp"
 tags:
   - linux
 ---

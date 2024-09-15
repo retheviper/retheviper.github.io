@@ -3,7 +3,7 @@ title: "JenkinsでJavaプロジェクトをビルドする"
 date: 2019-05-26
 categories: 
   - jenkins
-image: "../../images/jenkins.jpg"
+image: "../../images/jenkins.webp"
 tags:
   - ci/cd
   - jenkins

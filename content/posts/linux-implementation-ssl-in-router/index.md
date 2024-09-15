@@ -3,7 +3,7 @@ title: "ルーターにSSL証明書を入れる"
 date: 2019-12-01
 categories: 
   - linux
-image: "../../images/linux_terminal.jpg"
+image: "../../images/linux_terminal.webp"
 tags:
   - ssl
   - linux

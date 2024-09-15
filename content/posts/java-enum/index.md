@@ -3,7 +3,7 @@ title: "Enumを使いましょう"
 date: 2019-10-27
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - enum
   - java

@@ -3,7 +3,7 @@ title: "Spring WebFlux、少し触ってみてからの話"
 date: 2020-12-20
 categories: 
   - spring
-image: "../../images/spring.jpg"
+image: "../../images/spring.webp"
 tags:
   - spring
   - webflux

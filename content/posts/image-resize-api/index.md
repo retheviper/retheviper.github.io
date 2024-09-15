@@ -3,7 +3,7 @@ title: "動的画像リサイズAPIを作る"
 date: 2024-03-30
 categories: 
   - ktor
-image: "../../images/ktor.jpg"
+image: "../../images/ktor.webp"
 tags:
   - ktor
   - kotlin

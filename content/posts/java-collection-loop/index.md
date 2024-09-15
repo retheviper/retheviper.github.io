@@ -3,7 +3,7 @@ title: "今更なループの話"
 date: 2020-11-30
 categories: 
   - java
-image: "../../images/java.jpg"
+image: "../../images/java.webp"
 tags:
   - stream
   - java

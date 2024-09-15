@@ -3,7 +3,7 @@ title: "Ktorを触ってみた"
 date: 2021-07-18
 categories: 
   - ktor
-image: "../../images/ktor.jpg"
+image: "../../images/ktor.webp"
 tags:
   - kotlin
   - ktor
