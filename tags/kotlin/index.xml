@@ -1,4 +1,125 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kotlin on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/kotlin/</link><description>Recent content in Kotlin on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 25 May 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/kotlin/index.xml" rel="self" type="application/rss+xml"/><item><title>KotlinConf'24を要約してみた</title><link>https://retheviper.github.io/posts/kotlin-conf-2024/</link><pubDate>Sat, 25 May 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-conf-2024/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.webp" alt="Featured image of post KotlinConf'24を要約してみた" />&lt;p>今年のKotlinConfが開催されました。数日かけてのイベントなので、全てのセッションを見ることはできませんが、まずはキーノートの方で重要な情報をまとめてみました。全体のスケージュールは&lt;a class="link" href="https://kotlinconf.com/schedule/" target="_blank" rel="noopener"
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Kotlin on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/kotlin/</link><description>Recent content in Kotlin on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 16 Sep 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/kotlin/index.xml" rel="self" type="application/rss+xml"/><item><title>ホームサーバを作ってみた</title><link>https://retheviper.github.io/posts/home-server/</link><pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/home-server/</guid><description>&lt;img src="https://retheviper.github.io/images/nginx.webp" alt="Featured image of post ホームサーバを作ってみた" />&lt;p>この度は、ホームサーバを作りました。まだ作ったばかりなので、色々と改善や課題があるかと思いますが、一通りの構成を整えたので、その構成について簡単に説明します。&lt;/p>
+&lt;h2 id="なぜ自作サーバを作るのか">なぜ自作サーバを作るのか
+&lt;/h2>&lt;p>最近は無料で使えるクラウドのサービスも多く、FirebaseやVercelなどのサービスを使えば、簡単にWebアプリケーションを公開することができます。なので既存のサービスを利用するだけで良いのでは？ということは自分でも考えたことはありますが、そこであえて自作サーバを作ることになった理由について簡単に説明します。&lt;/p>
+&lt;h3 id="性能">性能
+&lt;/h3>&lt;p>多くのクラウドで提供するVMやサーバレスのサービスは、CPUやメモリ、ストレージなどに制限があることが多いです。また、AWSやGCPといったサービスの場合、使われているCPUのアーキテクチャがBroadwellのような、かなり旧時代のものが使われていることが多いですね。それに比べ、今回自作サーバの構築に使ったマシンはM2 ProのMac miniなので、IPCで比べるとより高い性能を期待できます。メモリも同じく、32GBのメモリを搭載しているので、メモリの制約もないですね。&lt;/p>
+&lt;h3 id="費用">費用
+&lt;/h3>&lt;p>無料のサービスだと基本的に費用はかからなくても、セキュリティのためのWAFのような追加の機能を追加したり、データベースを使ったりすると、結局はお金がかかることが多いです。そして使用量が多くなるとあまり費用が安いわけでもないですね。当分は趣味や個人的に使うための機能のためだけに使いたいので、少しでも支出を減らしたいと思いました。自作サーバだと電気代がかかることはありますが、Mac miniの場合は消費電力が少ないので、それほど気にならなく、使っていない時はスリープにしておけば電気代も抑えられると思います。&lt;/p>
+&lt;h3 id="機能">機能
+&lt;/h3>&lt;p>サーバレスやVMの場合、場合によっては対応するランタイムが決まっていたり、DBの選択肢が限られていたりすることがあります。例えば、今もOracle Cloudの無料のインスタンスを利用中ですが、無料の場合PostgreSQLを利用できないのでVMの中にDBを起動する形となっています。このように既存のプラットフォームを使うと自分が使いたい機能よりも、サービスの提供する機能に合わせる必要があることがありますね。今回は特にそういった制約を受けずに、自分が使いたい技術を使って自由にサービスを構築したいと思いました。&lt;/p>
+&lt;h3 id="その他">その他
+&lt;/h3>&lt;p>他にも色々な理由を書きましたが、最も大きな理由は2台のMacを使っているところで、余っているリソースを活用したいと思ったところですね。移動がある時はMacBook Proを使っていて、常に使っているのはMac miniなのでサーバとして運用して、外からもアクセスできるようにしたいと思いました。&lt;/p>
+&lt;h2 id="インフラ構成">インフラ構成
+&lt;/h2>&lt;p>インフラの場合、まず全体を図で表すと以下のようになります。&lt;/p>
+&lt;p>&lt;img src="https://retheviper.github.io/infra.png"
+loading="lazy"
+alt="インフラ構成"
+>&lt;/p>
+&lt;h3 id="onu">ONU
+&lt;/h3>&lt;p>自宅では、NURO光を利用しているので、そもそもネットの接続のためにはONUが必要ですね。ONUはOptical Network Unitの略で、光回線を利用してインターネットに接続するための装置です。基本的なルータとしての機能も揃っているものです。&lt;/p>
+&lt;p>私の場合ONUとは別にWi-Fiルータを使っているので、ONUの設定としてはフォートフォワードだけを設定しておきました。TCPの80番ポートと443番ポートをフォートフォワードしておけば、外部からONUの後ろにアクセスが可能になります。&lt;/p>
+&lt;h3 id="ルータ">ルータ
+&lt;/h3>&lt;p>次はルータです。先に説明した通り、ONUにはルータとしての機能も揃っているのであえて使う必要はないものですが、ルータが提供している無料のDDNSの機能を使うために、ルータを使っています。ONUだけではIPが固定されていないので、ルータのDDNSを使い、さらにそれを購入したドメインに紐付けることで、常に同じドメインでアクセスできるようになります。固定のドメインがあるので、SSL証明書も取得しやすくなりますね。ここでも80番ポートと443番ポートをフォートフォワードしておきます。&lt;/p>
+&lt;h3 id="サーバ">サーバ
+&lt;/h3>&lt;p>サーバは、上述したMac miniを使っています。中ではDockerコンテナとしてビルドしたNginxとKtorのアプリケーションが動いています。Nginxはリバースプロキシとして動いており、Ktorのアプリケーションにリクエストを転送しています。Ktorアプリケーションでは静的ファイルの配信ができるので、Compose Web(WASM)で作成したWebアプリケーションを配信しています。&lt;/p>
+&lt;p>DockerでNginxとKtorは同じネットワークとして構成しているので、NginxからKtorにアクセスする際は、コンテナ名でアクセスできます。Nginxが80番ポートと443番ポートからのリクエストを受けて、Ktorのアプリケーションに転送しています。そしてCertbotを使ってSSL証明書を取得しているので、HTTPSでアクセスできるようになっています。80番のリクエストは301リダイレクトで443番にリダイレクトです。&lt;/p>
+&lt;p>これらの構成は、以下のようにDocker Composeで定義しています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-yaml" data-lang="yaml">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">services&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">nginx&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">build&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">context&lt;/span>: &lt;span style="color:#ae81ff">.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dockerfile&lt;/span>: &lt;span style="color:#ae81ff">Dockerfile_nginx&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">container_name&lt;/span>: &lt;span style="color:#ae81ff">nginx&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ports&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#34;80:80&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#34;443:443&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">volumes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">certs:/etc/letsencrypt&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">certs-data:/var/www/certbot&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">networks&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">home_network&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">certbot&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">image&lt;/span>: &lt;span style="color:#ae81ff">certbot/certbot&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">container_name&lt;/span>: &lt;span style="color:#ae81ff">certbot&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">volumes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">certs:/etc/letsencrypt&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">certs-data:/var/www/certbot&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">networks&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">home_network&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">app&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">build&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">context&lt;/span>: &lt;span style="color:#ae81ff">.&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">dockerfile&lt;/span>: &lt;span style="color:#ae81ff">Dockerfile&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">image&lt;/span>: &lt;span style="color:#ae81ff">app:latest&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">container_name&lt;/span>: &lt;span style="color:#ae81ff">app&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">ports&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#e6db74">&amp;#34;8888:8888&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">networks&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">home_network&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">depends_on&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - &lt;span style="color:#ae81ff">nginx&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">networks&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">home_network&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">driver&lt;/span>: &lt;span style="color:#ae81ff">bridge&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">volumes&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">certs&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">certs-data&lt;/span>:
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、不正アクセスを防ぐためにNginxは以下のようなDockerfileでビルドしています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-Dockerfile" data-lang="Dockerfile">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e"># ベースイメージとして最新の Nginx を使用&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">FROM&lt;/span>&lt;span style="color:#e6db74"> nginx:latest&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># 必要なパッケージをインストール（git, wget, dnsutils）&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> apt-get update &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> apt-get install -y &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> git &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> dnsutils &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> wget &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> rm -rf /var/lib/apt/lists/*&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># Nginx Ultimate Bad Bot Blocker のリポジトリをクローン&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> git clone https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker.git /opt/nginx-ultimate-bad-bot-blocker&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># 必要なディレクトリを作成し、bot 設定ファイルをコピー&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> mkdir -p /etc/nginx/bots.d /usr/local/sbin &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> cp /opt/nginx-ultimate-bad-bot-blocker/bots.d/* /etc/nginx/bots.d/ &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> cp /opt/nginx-ultimate-bad-bot-blocker/conf.d/globalblacklist.conf /etc/nginx/conf.d/&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># install-ngxblocker スクリプトのダウンロードと実行&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/install-ngxblocker -O /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> chmod +x /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> /usr/local/sbin/install-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># setup-ngxblocker スクリプトのダウンロードと実行&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">RUN&lt;/span> wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/setup-ngxblocker -O /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> chmod +x /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> /usr/local/sbin/setup-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># Nginx のカスタム設定ファイルを追加（nginx.conf や default.conf を追加する）&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> ./nginx/nginx.conf /etc/nginx/nginx.conf&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">COPY&lt;/span> ./nginx/default.conf /etc/nginx/conf.d/default.conf&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># 証明書のためのボリューム（Let&amp;#39;s Encrypt を使用する場合）&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">VOLUME&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;/etc/letsencrypt&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;/var/www/certbot&amp;#34;&lt;/span>]&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#75715e"># Nginx 設定をテストして起動&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">&lt;/span>&lt;span style="color:#66d9ef">CMD&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;nginx&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;-g&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;daemon off;&amp;#34;&lt;/span>]&lt;span style="color:#960050;background-color:#1e0010">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="課題">課題
+&lt;/h2>&lt;p>概ねインフラの構成には問題がないですが、アプリケーションの部分にはいくつか課題を感じました。主にFrontendで使っているCompose Web(Wasm)のことです。&lt;/p>
+&lt;h3 id="routing未対応">Routing未対応
+&lt;/h3>&lt;p>Wasmで作成したアプリケーションの特徴なのかもしれませんが、基本的にSPAのような静的コンテンツを生成するのもあり、まだAlphaのため色々と未対応の部分があります。特にRoutingが未対応なので、ページ遷移が課題ですね。まだ公式はないのですが、直近で&lt;a class="link" href="https://mvnrepository.com/artifact/app.softwork/routing-compose-wasm-js" target="_blank" rel="noopener"
+>Compose Wasmに対応するRoutingのライブラリ&lt;/a>がリリースされたり、他にもいくつかあるので今回はそれを使ってみようと思います。&lt;/p>
+&lt;h3 id="safari-未対応">Safari 未対応
+&lt;/h3>&lt;p>Wasmの場合、ブラウザによっては動作しないことがあります。Compose Webの場合、Safariでは動作しないことがわかっているので、Safariでの動作を考える必要があります。理由はGCにまだ未対応だからとのことですね。Macを使う場合でもSafariを使っているユーザは少ないと思いますが、iOSの場合はSafariを使うユーザが多いので、これはなかなか大きな課題ですね。ただ、&lt;a class="link" href="https://www.publickey1.jp/blog/24/safariwasmgcsafari_technology_preview_202wasmgc.html" target="_blank" rel="noopener"
+>SafariでももうすぐWasmGCに対応する&lt;/a>とのことなので、それまで待つしかないですね。&lt;/p>
+&lt;h3 id="cjk未対応">CJK未対応
+&lt;/h3>&lt;p>いわゆる日本語や中国語、韓国語などの文字が未対応です。Compose Webの場合、まだCJKの文字が未対応のようで、日本語を入力すると文字化けしてしまいます。これはおそらくフォントないしはレンダリングの問題のようで、&lt;a class="link" href="https://github.com/JetBrains/compose-multiplatform/issues/3967" target="_blank" rel="noopener"
+>こちらのやりとり&lt;/a>を見ると最新のComposeのバージョンで一部を解消したようですが、Koltinのバージョンによっては使えなかったりするのでまだ色々と調整が必要そうです。&lt;/p>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回は主にインフラの構成の話になりましたが、Composeを使ってKotlinだけで完結するようなアプリケーションを作るのも目的の一つだったので、もしできれば今後はComposeを使ったアプリケーションの開発についても書いていけたらと思います。Compose Webの場合はJSの時代から少し触っていたものの、最近はWasmの方に力を入れてきたのもあって、まだまだ未対応の部分が多いですが、これからの発展が楽しみですね。個人的には、commonパッケージを通じてサーバとクライアントのコードを共有できるのが一番の魅力だと思っているので、色々とアーキテクチャなどを考えながら開発していきたいと思います。&lt;/p>
+&lt;p>それでは、また！&lt;/p></description></item><item><title>KotlinConf'24を要約してみた</title><link>https://retheviper.github.io/posts/kotlin-conf-2024/</link><pubDate>Sat, 25 May 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/kotlin-conf-2024/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.webp" alt="Featured image of post KotlinConf'24を要約してみた" />&lt;p>今年のKotlinConfが開催されました。数日かけてのイベントなので、全てのセッションを見ることはできませんが、まずはキーノートの方で重要な情報をまとめてみました。全体のスケージュールは&lt;a class="link" href="https://kotlinconf.com/schedule/" target="_blank" rel="noopener"
 >こちら&lt;/a>から確認できて、&lt;a class="link" href="https://www.youtube.com/@Kotlin/streams" target="_blank" rel="noopener"
 >YouTubeでのライブ配信&lt;/a>も行われているので、興味がある方はぜひチェックしてみてください。&lt;/p>
 &lt;p>まずはKotlinConf'24の公式アプリの紹介がありました。公式アプリでは今回行われるカンファレンスとセッションを確認できるもので、&lt;a class="link" href="https://github.com/JetBrains/kotlinconf-app" target="_blank" rel="noopener"
