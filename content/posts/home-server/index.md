@@ -38,7 +38,7 @@ tags:
 
 インフラの場合、まず全体を図で表すと以下のようになります。
 
-![インフラ構成](infra.png)
+![インフラ構成](home-network-infrastructure.png)
 
 ### ONU
 
