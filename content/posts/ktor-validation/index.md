@@ -300,12 +300,13 @@ fun Application.configureSerialization() {
 
 @Serializable
 data class ExampleRequest(
-    // LocalDateTimeのフィールドでは、独自のシリアライザを使用する必要がある
-    @Serializable(with = LocalDateTimeSerializer::class)
+    // LocalDateTimeのフィールドでは、独自のシリアライザを使用する
+    @Contextual
     val timestamp: LocalDateTime
 )
 ```
 
+- Enumのようにコンパイル時に値が決まっている型を使用する場合も、独自のシリアライザを実装する必要がある
 - Kotlinx SerializationはまだJacksonほどの機能がないため、特定の機能が必要な場合はKotlinx Serializationでは実装できないことがある
 - Ktor Request Validationはリクエストボディのみのバリデーションをサポートしているため、クエリパラメータやヘッダのバリデーションは別途実装する必要がある
 
