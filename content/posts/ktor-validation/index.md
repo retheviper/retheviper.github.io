@@ -73,7 +73,7 @@ class LogController : KoinComponent {
     fun createLog(request: CreateLogRequest): CreateLogResponse {
         val validationErrors = request.validate()
         if (validationErrors.isNotEmpty()) {
-            ValidationResult.Invalid("Validation failed: ${validationErrors.joinToString(", ")}")
+            throw BadRequestException("Validation failed: ${validationErrors.joinToString(", ")}")
         }
 
         return logUseCase.createLog(request)
@@ -134,7 +134,7 @@ class LogController : KoinComponent, ValidatableController {
     override fun configureValidation(validationConfig: RequestValidationConfig) {
         validationConfig.validate<CreateLogRequest> { request ->
             when {
-                request.userId == null -> ValidatValidationResult.InvalidtionResult.Invalid("User ID must not be null")
+                request.userId == null -> ValidationResult.Invalid("User ID must not be null")
                 request.userId.isBlank() -> ValidationResult.Invalid("User ID must not be blank")
                 request.userId.length > 36 -> ValidationResult.Invalid("User ID must not exceed 36 characters")
                 !request.userId.matches(Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")) ->
@@ -222,7 +222,7 @@ fun Application.configureContentNegotiation() {
 }
 ```
 
-次に、リクエストボディのデータクラスに`@Serializable`アノテーションを追加します。これにより、Kotlinx Serializationがこのクラスを直列化できるようになります。シリアライザの方でスネークケースに変換されるので、アノテーションは要らず、プロパティ名をそのまま使用できます。また、プロパティはそのまま型を指定するだけです。型を指定することでNullチェックも自動になります。
+次に、リクエストボディのデータクラスに`@Serializable`アノテーションを追加します。Kotlinx Serializationでは@Serializableだけでスネークケースへの変換も可能となり、プロパティ名にアノテーションが不要になります。また、プロパティはそのまま型を指定するだけです。型を指定することでNullチェックも自動になります。
 
 ```kotlin
 @Serializable
@@ -258,7 +258,7 @@ class LogController : KoinComponent, ValidatableController {
 結論的に以下のような改善ができたと思います。
 
 - バリデーションと直列化のコードが簡潔になり、可読性が向上した
-- バリデーションと直列かでアノテーションを使用しなくなり、リフレクションによるパフォーマンスの低下を回避できた
+- バリデーションと直列化でアノテーションを使用しなくなり、リフレクションによるパフォーマンスの低下を回避できた
 - バリデーションに対してビジネスロジック以外のチェックを減らすことができた
 
 また、サイドエフェクトとして以下のような点もあります。
@@ -270,10 +270,59 @@ class LogController : KoinComponent, ValidatableController {
 ただ、以下のような懸念もあります。
 
 - LocalDateTimeやLocalDateなどのKotlinx Serializationでサポートされていない型を使用する場合、独自のシリアライザを実装する必要がある
+
+```kotlin
+// LocalDateTimeのシリアライザの例
+object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("java.time.LocalDateTime", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) {
+        encoder.encodeString(value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+    }
+
+    override fun deserialize(decoder: Decoder): LocalDateTime {
+        return LocalDateTime.parse(decoder.decodeString(), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    }
+}
+
+fun Application.configureSerialization() {
+    install(ContentNegotiation) {
+        json(
+            Json {
+                // LocalDateTimeのシリアライザを登録
+                serializersModule = SerializersModule {
+                    contextual(LocalDateTimeSerializer)
+                }
+            }
+        )
+    }
+}
+
+@Serializable
+data class ExampleRequest(
+    // LocalDateTimeのフィールドでは、独自のシリアライザを使用する必要がある
+    @Serializable(with = LocalDateTimeSerializer::class)
+    val timestamp: LocalDateTime
+)
+```
+
 - Kotlinx SerializationはまだJacksonほどの機能がないため、特定の機能が必要な場合はKotlinx Serializationでは実装できないことがある
 - Ktor Request Validationはリクエストボディのみのバリデーションをサポートしているため、クエリパラメータやヘッダのバリデーションは別途実装する必要がある
 
 なので、今回の対応は意図としては成功したと思いますが、まだまだ改善の余地はあるかなと思います。また、環境や要件によっては、このような改善が適さない場合もあるかもしれません。
+
+## 改善内容のまとめ
+
+以下の表に、改善前後の違いを簡潔にまとめました。
+
+| 項目                     | 改善前                                      | 改善後                                                  |
+|------------------------|-------------------------------------------|---------------------------------------------------------|
+| バリデーションの方法     | `jakarta.validation` + 手動呼び出し            | Ktor公式のRequestValidationプラグイン                   |
+| アノテーションの使用     | `@NotNull`, `@Pattern`, `@JsonProperty`など多数 | `@Serializable`のみ、基本的に不要                       |
+| UUIDバリデーション      | 正規表現でチェック                          | `UUID`型指定で型安全に                                 |
+| 直列化ライブラリ         | Jackson（リフレクションを使う）                                    | kotlinx.serialization（KSP利用で高速）                 |
+| バリデーションの共通化   | 各コントローラーで個別に記述                  | `ValidatableController`で共通定義可能                  |
+| Koinとの連携            | 取得や登録が煩雑もしくはしない                           | `bind` + `getAll()` で一括取得                          |
 
 ## 最後に
 
