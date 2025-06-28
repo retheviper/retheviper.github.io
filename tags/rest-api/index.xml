@@ -76,8 +76,7 @@
 &lt;p>こうなった場合、クラスやその実装を見て&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>を分離しているのはわかりますが、アノテーションだけだと違和感を感じられますね。実装は簡単なのでそれぞれに対応するアノテーションを作るのが難しいわけでもないようですが、なぜこのような構造になっているのでしょうか。&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html#webflux-programming-models" target="_blank" rel="noopener"
 >公式のドキュメント&lt;/a>では、以下のような説明があります。&lt;/p>
 &lt;blockquote>
-&lt;p>The big difference with annotated controllers is that the application is in charge of request handling from start to finish versus declaring intent through annotations and being called back.&lt;/p>
-&lt;/blockquote>
+&lt;p>The big difference with annotated controllers is that the application is in charge of request handling from start to finish versus declaring intent through annotations and being called back.&lt;/p>&lt;/blockquote>
 &lt;p>つまり、「アノテーションをつけたContoller」と「Functional Endpoint」の違いは、前者が「アノテーションでコールバックと意図を表す」に対して、後者は「リクエストのハンドリングを開始から終了まで担当する」ということです。プログラミングモデルとしてこのような観点の差があるので、アノテーションがないのは当たり前なのかもしれません。そして結果的に、&lt;code>Controller ≒ Router, Service ≒ Handler&lt;/code>という対応関係は、少なくともプログラミングモデルという観点では当てはならないと考えられます。&lt;/p>
 &lt;h2 id="責任の分散という側面で">責任の分散という側面で
 &lt;/h2>&lt;p>アノテーションの実装を見ると、&lt;code>@Controller&lt;/code>と&lt;code>@Service&lt;/code>を分けているのがフレームワークのアーキテクチャや思想によるものであることがより明確になります。それぞれのアノテーションの実装は、以下の通りです。&lt;/p>
@@ -95,8 +94,7 @@
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>両方とも実装が同じであるので、極端的にいうと&lt;code>Controller&lt;/code>に&lt;code>@Service&lt;/code>をつけても機能的には同一ということになります。そして&lt;code>@Service&lt;/code>では、以下のようなコメントでこのアノテーションが存在する理由をあくまで「デザインパターンに基盤を置いている」ことを明示しています。&lt;/p>
 &lt;blockquote>
 &lt;p>Indicates that an annotated class is a &amp;ldquo;Service&amp;rdquo;, originally defined by Domain-Driven Design (Evans, 2003) as &amp;ldquo;an operation offered as an interface that stands alone in the model, with no encapsulated state.&amp;rdquo;
-May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo; (in the Core J2EE patterns sense), or something similar. This annotation is a general-purpose stereotype and individual teams may narrow their semantics and use as appropriate.&lt;/p>
-&lt;/blockquote>
+May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo; (in the Core J2EE patterns sense), or something similar. This annotation is a general-purpose stereotype and individual teams may narrow their semantics and use as appropriate.&lt;/p>&lt;/blockquote>
 &lt;p>なので、アプリケーションデザインの観点からすると&lt;code>Controller&lt;/code>はリクエストを受信、レスポンスを返す、エンドポイントを&lt;code>Service&lt;/code>につなぐという義務だけを持ち、&lt;code>Service&lt;/code>はビジネスロジックを処理する義務を持つと考えられます。同じ観点から考えると、アノテーションはないものの、&lt;code>Router&lt;/code>と&lt;code>Handler&lt;/code>もまた同じ義務を持つように書くこともできるでしょう。&lt;/p>
 &lt;p>ただ、問題は「リクエストのハンドリングを開始から終了まで担当する」という定義です。先程のサンプルコードをよく見ると、Handlerのメソッドはどれも&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerRequest.html" target="_blank" rel="noopener"
 >ServerRequest&lt;/a>を引数として、戻り値は&lt;a class="link" href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/function/server/ServerResponse.html" target="_blank" rel="noopener"
@@ -798,21 +796,21 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th style="text-align: left">id&lt;/th>
-&lt;th style="text-align: left">意味&lt;/th>
-&lt;th style="text-align: left">詳細&lt;/th>
+&lt;th>id&lt;/th>
+&lt;th>意味&lt;/th>
+&lt;th>詳細&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td style="text-align: left">typ&lt;/td>
-&lt;td style="text-align: left">Token Type&lt;/td>
-&lt;td style="text-align: left">JWTのタイプ(=JWT)&lt;/td>
+&lt;td>typ&lt;/td>
+&lt;td>Token Type&lt;/td>
+&lt;td>JWTのタイプ(=JWT)&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">alg&lt;/td>
-&lt;td style="text-align: left">Hashing Algoritym&lt;/td>
-&lt;td style="text-align: left">エンコードする時のアルゴリズム&lt;/td>
+&lt;td>alg&lt;/td>
+&lt;td>Hashing Algoritym&lt;/td>
+&lt;td>エンコードする時のアルゴリズム&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -821,46 +819,46 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;table>
 &lt;thead>
 &lt;tr>
-&lt;th style="text-align: left">id&lt;/th>
-&lt;th style="text-align: left">意味&lt;/th>
-&lt;th style="text-align: left">詳細&lt;/th>
+&lt;th>id&lt;/th>
+&lt;th>意味&lt;/th>
+&lt;th>詳細&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td style="text-align: left">jti&lt;/td>
-&lt;td style="text-align: left">JWT ID&lt;/td>
-&lt;td style="text-align: left">JWTの識別子&lt;/td>
+&lt;td>jti&lt;/td>
+&lt;td>JWT ID&lt;/td>
+&lt;td>JWTの識別子&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">sub&lt;/td>
-&lt;td style="text-align: left">subject&lt;/td>
-&lt;td style="text-align: left">JWTのユニークなキー&lt;/td>
+&lt;td>sub&lt;/td>
+&lt;td>subject&lt;/td>
+&lt;td>JWTのユニークなキー&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">iss&lt;/td>
-&lt;td style="text-align: left">issuer&lt;/td>
-&lt;td style="text-align: left">JWTを発行者&lt;/td>
+&lt;td>iss&lt;/td>
+&lt;td>issuer&lt;/td>
+&lt;td>JWTを発行者&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">aud&lt;/td>
-&lt;td style="text-align: left">audience&lt;/td>
-&lt;td style="text-align: left">JWTの利用者&lt;/td>
+&lt;td>aud&lt;/td>
+&lt;td>audience&lt;/td>
+&lt;td>JWTの利用者&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">iat&lt;/td>
-&lt;td style="text-align: left">issued at&lt;/td>
-&lt;td style="text-align: left">JWTが発行された時間&lt;/td>
+&lt;td>iat&lt;/td>
+&lt;td>issued at&lt;/td>
+&lt;td>JWTが発行された時間&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">nbf&lt;/td>
-&lt;td style="text-align: left">not before&lt;/td>
-&lt;td style="text-align: left">JWTの開始時間&lt;/td>
+&lt;td>nbf&lt;/td>
+&lt;td>not before&lt;/td>
+&lt;td>JWTの開始時間&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td style="text-align: left">exp&lt;/td>
-&lt;td style="text-align: left">expiration time&lt;/td>
-&lt;td style="text-align: left">JWTの満了時間&lt;/td>
+&lt;td>exp&lt;/td>
+&lt;td>expiration time&lt;/td>
+&lt;td>JWTの満了時間&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -871,7 +869,7 @@ May also indicate that a class is a &amp;ldquo;Business Service Facade&amp;rdquo
 &lt;p>&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure.webp"
 width="2372"
 height="1266"
-srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu16659403758595899118.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu3429020602655094239.webp 1024w"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu_8d70c8f76fb61da5.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_structure_hu_24692e8cd720ad5.webp 1024w"
 loading="lazy"
 alt="Structure of JWT"
 class="gallery-image"
@@ -1249,7 +1247,7 @@ data-flex-basis="449px"
 &lt;p>&lt;img src="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login.webp"
 width="1926"
 height="760"
-srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu4171376652576591028.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu4609018044116541614.webp 1024w"
+srcset="https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu_49703773dba52761.webp 480w, https://retheviper.github.io/posts/spring-rest-api-login-with-jwt/jwt_postman_login_hu_f95e4859ff77c066.webp 1024w"
 loading="lazy"
 alt="JWT Postman Login"
 class="gallery-image"

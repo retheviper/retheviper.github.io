@@ -1,4 +1,296 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ktor on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/ktor/</link><description>Recent content in Ktor on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 16 Sep 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/ktor/index.xml" rel="self" type="application/rss+xml"/><item><title>ホームサーバを作ってみた</title><link>https://retheviper.github.io/posts/home-server/</link><pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/home-server/</guid><description>&lt;img src="https://retheviper.github.io/images/nginx.webp" alt="Featured image of post ホームサーバを作ってみた" />&lt;p>この度は、ホームサーバを作りました。まだ作ったばかりなので、色々と改善や課題があるかと思いますが、一通りの構成を整えたので、その構成について簡単に説明します。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ktor on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/ktor/</link><description>Recent content in Ktor on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 28 Jun 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/ktor/index.xml" rel="self" type="application/rss+xml"/><item><title>KtorのRequest処理を改善する</title><link>https://retheviper.github.io/posts/ktor-validation/</link><pubDate>Sat, 28 Jun 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-validation/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.webp" alt="Featured image of post KtorのRequest処理を改善する" />&lt;p>KotlinはJavaとの互換性があるので、Javaで構築した既存のシステムの一部を書き換えたり、言語だけを変えて新しいシステムを構築したりするケースが多いかなと思います。しかし、同じJVM上で動作するKotlinとJavaでも、フレームワークやライブラリの違いにより改善できる箇所もあります。&lt;/p>
+&lt;p>Javaの歴史が長いこともあり、Javaのフレームワークやライブラリは非常に多くの機能を提供していますが、Kotlinではより簡潔で直感的なコードを書くことができる場合があります。また、その中ではKotlinの特性を活かした設計が可能だったり、性能の向上が期待できたりします。&lt;/p>
+&lt;p>今回はそのような改善の一例として、Ktorでのリクエストバリデーションの実装方法について紹介します。&lt;/p>
+&lt;h2 id="既存">既存
+&lt;/h2>&lt;p>実務では&lt;a class="link" href="https://ktor.io" target="_blank" rel="noopener"
+>Ktor&lt;/a>、&lt;a class="link" href="https://www.jetbrains.com/ja-jp/exposed" target="_blank" rel="noopener"
+>Exposed&lt;/a>といったKotlin用のフレームワークを採用しています。ただ一部ではJavaのライブラリに依存していて、直列化ではJackson、リクエストのバリデーションではjakarta.validationを使用していました。&lt;/p>
+&lt;p>JavaやKotlinでよく使われるSpring Bootの場合、これらのライブラリを使うのがとても簡単ですね。例えば、リクエストのバリデーションは&lt;code>@Valid&lt;/code>や&lt;code>@Validated&lt;/code>アノテーションで自動的に行うことができます。&lt;/p>
+&lt;p>しかし、Ktorではそうでもいきません。なので、Ktorのリクエストバリデーションは、手動で行う必要がありました。例えば、以下のようにしていました。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// リクエストのバリデーションを行う
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">object&lt;/span> &lt;span style="color:#a6e22e">AnnotationValidator&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> validator: Validator = &lt;span style="color:#a6e22e">Validation&lt;/span>.buildDefaultValidatorFactory().validator
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">getViolationMessages&lt;/span>(model: Any?): List&amp;lt;String&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> model &lt;span style="color:#f92672">?:&lt;/span> &lt;span style="color:#66d9ef">return&lt;/span> emptyList()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> violations = validator.validate(model)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> violations.map { &lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">${it.propertyPath}&lt;/span>&lt;span style="color:#e6db74"> &lt;/span>&lt;span style="color:#e6db74">${it.message}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// バリデーションを行うインターフェース
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">interface&lt;/span> &lt;span style="color:#a6e22e">Validatable&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">validate&lt;/span>(): List&amp;lt;String&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// リクエストボディ
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CreateLogRequest&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotNull
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotBlank
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:Size(max = &lt;span style="color:#ae81ff">36&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:Pattern(regexp = &lt;span style="color:#e6db74">&amp;#34;^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;user_id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userId: String?,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotNull
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotBlank
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:Size(max = &lt;span style="color:#ae81ff">2048&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;referral&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> referral: String?,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotNull
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:NotBlank
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@field&lt;/span>:Size(max = &lt;span style="color:#ae81ff">2048&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;user_agent&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userAgent: String?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>) : Validatable {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">validate&lt;/span>(): List&amp;lt;String&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">AnnotationValidator&lt;/span>.getViolationMessages(&lt;span style="color:#66d9ef">this&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// コントローラー
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">LogController&lt;/span> : KoinComponent {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> logUseCase: sLogUseCase &lt;span style="color:#66d9ef">by&lt;/span> inject()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">createLog&lt;/span>(request: CreateLogRequest): CreateLogResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> validationErrors = request.validate()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (validationErrors.isNotEmpty()) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">throw&lt;/span> BadRequestException(&lt;span style="color:#e6db74">&amp;#34;Validation failed: &lt;/span>&lt;span style="color:#e6db74">${validationErrors.joinToString(&amp;#34;, &amp;#34;)}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> logUseCase.createLog(request)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで自分が問題と思ったのは、以下のようなものがあります。&lt;/p>
+&lt;ol>
+&lt;li>リクエストのバリデーションを手動で行う必要があるため、コードが冗長になりやすい。&lt;/li>
+&lt;li>各コントローラーやリクエストに対して同じようなバリデーションコードを書く必要があるため、コードの重複が発生しやすい。&lt;/li>
+&lt;li>バリデーションと直列化でアノテーションに依存しているため、リフレクションによるパフォーマンスの低下や、アノテーションの変更が必要な場合にコードの修正が必要になる。&lt;/li>
+&lt;li>プロパティの型をアノテーションで指定するため、型安全なコードが書きにくい。&lt;/li>
+&lt;/ol>
+&lt;p>なので、これらの問題を解決するために、Ktorのリクエストバリデーションを改善する方法を考えました。&lt;/p>
+&lt;h2 id="改善">改善
+&lt;/h2>&lt;p>自分で考えた改善策は以下のようなものです。&lt;/p>
+&lt;ol>
+&lt;li>Ktor公式の&lt;a class="link" href="https://ktor.io/docs/request-validation.html" target="_blank" rel="noopener"
+>Request Validation&lt;/a>を使用して、アノテーションに依存しないバリデーションを実装する。&lt;/li>
+&lt;li>バリデーションのロジックを共通化できるようにする。&lt;/li>
+&lt;li>Jacksonから&lt;a class="link" href="https://kotlinlang.org/docs/serialization.html" target="_blank" rel="noopener"
+>Kotlinx Serialization&lt;/a>に移行して、アノテーションをさらに減らしつつとパフォーマンスを向上させる。&lt;/li>
+&lt;/ol>
+&lt;p>それぞれ分けると以下のような内容になります。&lt;/p>
+&lt;h3 id="ktorのrequest-validationを使用する">KtorのRequest Validationを使用する
+&lt;/h3>&lt;p>まずはValidatableControllerというインターフェースを作成して、それぞれのコントローラーで実装します。このインターフェースは、KtorのRequest Validationを使用してリクエストのバリデーションを行うためのもので、Ktorのプラグインに登録するためのメソッドを持っています。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">interface&lt;/span> &lt;span style="color:#a6e22e">ValidatableController&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">configureValidation&lt;/span>(validationConfig: RequestValidationConfig)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そして、data classを修正します。jakarta.validationのアノテーションは削除し、Validatableというインターフェースも削除します。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CreateLogRequest&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;user_id&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userId: String?,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;referral&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> referral: String?,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@JsonProperty&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;user_agent&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userAgent: String?
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>次に、コントローラーを修正します。ValidatableControllerを継承させ、バリデーションのロジックを&lt;code>configureValidation&lt;/code>メソッドに移動し、KtorのRequest Validationを使用してリクエストのバリデーションを行います。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">LogController&lt;/span> : KoinComponent, ValidatableController {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> logUseCase: LogUseCase &lt;span style="color:#66d9ef">by&lt;/span> inject()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">configureValidation&lt;/span>(validationConfig: RequestValidationConfig) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> validationConfig.validate&amp;lt;CreateLogRequest&amp;gt; { request &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">when&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userId &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User ID must not be null&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userId.isBlank() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User ID must not be blank&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userId.length &amp;gt; &lt;span style="color:#ae81ff">36&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User ID must not exceed 36 characters&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> !request.userId.matches(Regex(&lt;span style="color:#e6db74">&amp;#34;^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$&amp;#34;&lt;/span>)) &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User ID must be a valid UUID format&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.referral &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;Referral must not be null&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.referral.isBlank() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;Referral must not be blank&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.referral.length &amp;gt; &lt;span style="color:#ae81ff">2048&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;Referral must not exceed 2048 characters&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userAgent &lt;span style="color:#f92672">==&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User Agent must not be null&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userAgent.isBlank() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User Agent must not be blank&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userAgent.length &amp;gt; &lt;span style="color:#ae81ff">2048&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User Agent must not exceed 2048 characters&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Valid
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">createLog&lt;/span>(request: CreateLogRequest): CreateLogResponse {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> logUseCase.createLog(request)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このようにすることで、KtorのRequest Validationを使用してリクエストのバリデーションを行うことができます。これにより、アノテーションに依存せず、コードの冗長性を減らすことができます。&lt;/p>
+&lt;h3 id="モジュールの設定">モジュールの設定
+&lt;/h3>&lt;p>次は、ValidationControllerをKtorのモジュールとして設定します。インターフェースとして&lt;code>ValidatableController&lt;/code>を定義した理由は、DIで使用している&lt;a class="link" href="https://insert-koin.io/" target="_blank" rel="noopener"
+>Koin&lt;/a>を使用して、すべてのコントローラーを取得し、KtorのRequest Validationに登録するためです。&lt;/p>
+&lt;p>まずKoinではinterfaceに対して実装クラスをバインディングするいくつかの方法があります。代表的には、以下のような方法があるでしょう。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> koinModule = module {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> single&amp;lt;ValidatableController&amp;gt; { AccessLogController() }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この方法では、&lt;code>ValidatableController&lt;/code>インターフェースを実装したクラスを単一のインスタンスとして登録します。しかし、これでは複数の&lt;code>ValidatableController&lt;/code>を登録することができません。&lt;/p>
+&lt;p>この場合、&lt;code>get()&lt;/code>を使用して、1つの&lt;code>ValidatableController&lt;/code>のみを取得することはできます。しかしここでやりたいことは、複数の&lt;code>ValidatableController&lt;/code>を取得して、リクエストのバリデーションを共通化することなのでこの方法は適していません。&lt;/p>
+&lt;p>またの方法が、&lt;a class="link" href="https://insert-koin.io/docs/reference/koin-core/definitions/#additional-type-binding" target="_blank" rel="noopener"
+>bind&lt;/a>を使用する方法です。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">val&lt;/span> koinModule = module {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> single { LogController() } bind ValidatableController&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#66d9ef">class&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">single&lt;/span> { AnotherController() } bind ValidatableController&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#66d9ef">class&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#960050;background-color:#1e0010">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>先ほどのコードとは違って、&lt;code>bind&lt;/code>を使用することで、Koinはそのインターフェースを実装したすべてのクラスを取得できるようになります。なので、以下のようなコードで全てのコントローラーを取得することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">Application&lt;/span>.configureRequestValidation() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> validatableControllers: List&amp;lt;ValidatableController&amp;gt; = getKoin().getAll()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(RequestValidation) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> validatableControllers.forEach { controller &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> controller.configureValidation(&lt;span style="color:#66d9ef">this&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>こうすることでリクエストのバリデーションを共通化することができます。これからは新しいコントローラーを追加する際も、&lt;code>ValidatableController&lt;/code>インターフェースを実装するだけで、KtorのRequest Validationに自動的に登録されるようになります。&lt;/p>
+&lt;h3 id="kotlinx-serializationの使用">Kotlinx Serializationの使用
+&lt;/h3>&lt;p>最後に、Kotlinx Serializationを使用して直列化を行います。これにより、アノテーションの使用を減らし、パフォーマンスを向上させることができます。&lt;/p>
+&lt;p>Kotlinx Serializationは、KSP（Kotlin Symbol Processing）を使用して、コンパイル時に直列化のコードを生成します。これにより、リフレクションを使用せずに直列化を行うことができ、パフォーマンスの向上が期待できまし、リクエストのバリデーションでも型安全なコードを書くことができるため、コードの可読性も向上します。&lt;/p>
+&lt;p>まず、Kotlinx Serializationを使用するために、既存のJacksonからKotlinx Serializationに移行します。以下のように、ContentNegotiationプラグインを使用してシリアライザを設定します。プロパティの命名規則をスネークケースに変更するために、&lt;code>JsonNamingStrategy.SnakeCase&lt;/code>を使用することができます。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">Application&lt;/span>.configureContentNegotiation() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(ContentNegotiation) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> json(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Json {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> namingStrategy = &lt;span style="color:#a6e22e">JsonNamingStrategy&lt;/span>.SnakeCase
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>次に、リクエストボディのデータクラスに&lt;code>@Serializable&lt;/code>アノテーションを追加します。Kotlinx Serializationでは@Serializableだけでスネークケースへの変換も可能となり、プロパティ名にアノテーションが不要になります。また、プロパティはそのまま型を指定するだけです。型を指定することでNullチェックも自動になります。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Serializable&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">CreateLogRequest&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userId: UUID,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> referral: String,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> userAgent: String
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>次に、コントローラのバリデーションを修正します。userIdの型が&lt;code>String&lt;/code>から&lt;code>UUID&lt;/code>に変更されたので、正規表現のチェックは不要になりました。かなりスッキリしましたね。&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">LogController&lt;/span> : KoinComponent, ValidatableController {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> logUseCase: LogUseCase &lt;span style="color:#66d9ef">by&lt;/span> inject()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">configureValidation&lt;/span>(validationConfig: RequestValidationConfig) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> validationConfig.validate&amp;lt;CreateLogRequest&amp;gt; { request &lt;span style="color:#f92672">-&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">when&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.referral.isBlank() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;Referral must not be blank&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.referral.length &amp;gt; &lt;span style="color:#ae81ff">2048&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;Referral must not exceed 2048 characters&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userAgent.isBlank() &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User Agent must not be blank&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> request.userAgent.length &amp;gt; &lt;span style="color:#ae81ff">2048&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Invalid(&lt;span style="color:#e6db74">&amp;#34;User Agent must not exceed 2048 characters&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span> &lt;span style="color:#f92672">-&amp;gt;&lt;/span> &lt;span style="color:#a6e22e">ValidationResult&lt;/span>.Valid
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="評価">評価
+&lt;/h3>&lt;p>結論的に以下のような改善ができたと思います。&lt;/p>
+&lt;ul>
+&lt;li>バリデーションと直列化のコードが簡潔になり、可読性が向上した&lt;/li>
+&lt;li>バリデーションと直列化でアノテーションを使用しなくなり、リフレクションによるパフォーマンスの低下を回避できた&lt;/li>
+&lt;li>バリデーションに対してビジネスロジック以外のチェックを減らすことができた&lt;/li>
+&lt;/ul>
+&lt;p>また、サイドエフェクトとして以下のような点もあります。&lt;/p>
+&lt;ul>
+&lt;li>Regexが不要になっているか、共通化してインスタンスの使い回しができる&lt;/li>
+&lt;li>max, minなどのチェックが不要になっている&lt;/li>
+&lt;li>limit, offsetなど頻繁に使うパラメータのチェックを共通化できる&lt;/li>
+&lt;/ul>
+&lt;p>ただ、以下のような懸念もあります。&lt;/p>
+&lt;ul>
+&lt;li>LocalDateTimeやLocalDateなどのKotlinx Serializationでサポートされていない型を使用する場合、独自のシリアライザを実装する必要がある&lt;/li>
+&lt;/ul>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-kotlin" data-lang="kotlin">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// LocalDateTimeのシリアライザの例
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&lt;span style="color:#66d9ef">object&lt;/span> &lt;span style="color:#a6e22e">LocalDateTimeSerializer&lt;/span> : KSerializer&amp;lt;LocalDateTime&amp;gt; {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">val&lt;/span> descriptor: SerialDescriptor = PrimitiveSerialDescriptor(&lt;span style="color:#e6db74">&amp;#34;java.time.LocalDateTime&amp;#34;&lt;/span>, &lt;span style="color:#a6e22e">PrimitiveKind&lt;/span>.STRING)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">serialize&lt;/span>(encoder: Encoder, &lt;span style="color:#66d9ef">value&lt;/span>: LocalDateTime) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> encoder.encodeString(&lt;span style="color:#66d9ef">value&lt;/span>.format(&lt;span style="color:#a6e22e">DateTimeFormatter&lt;/span>.ISO_LOCAL_DATE_TIME))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">override&lt;/span> &lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">deserialize&lt;/span>(decoder: Decoder): LocalDateTime {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> &lt;span style="color:#a6e22e">LocalDateTime&lt;/span>.parse(decoder.decodeString(), &lt;span style="color:#a6e22e">DateTimeFormatter&lt;/span>.ISO_LOCAL_DATE_TIME)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">fun&lt;/span> &lt;span style="color:#a6e22e">Application&lt;/span>.configureSerialization() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> install(ContentNegotiation) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> json(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Json {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// LocalDateTimeのシリアライザを登録
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> serializersModule = SerializersModule {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> contextual(LocalDateTimeSerializer)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@Serializable&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">data&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">ExampleRequest&lt;/span>(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// LocalDateTimeのフィールドでは、独自のシリアライザを使用する必要がある
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span> &lt;span style="color:#a6e22e">@Serializable&lt;/span>(with = LocalDateTimeSerializer&lt;span style="color:#f92672">::&lt;/span>&lt;span style="color:#66d9ef">class&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">val&lt;/span> timestamp: LocalDateTime
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ul>
+&lt;li>Kotlinx SerializationはまだJacksonほどの機能がないため、特定の機能が必要な場合はKotlinx Serializationでは実装できないことがある&lt;/li>
+&lt;li>Ktor Request Validationはリクエストボディのみのバリデーションをサポートしているため、クエリパラメータやヘッダのバリデーションは別途実装する必要がある&lt;/li>
+&lt;/ul>
+&lt;p>なので、今回の対応は意図としては成功したと思いますが、まだまだ改善の余地はあるかなと思います。また、環境や要件によっては、このような改善が適さない場合もあるかもしれません。&lt;/p>
+&lt;h2 id="改善内容のまとめ">改善内容のまとめ
+&lt;/h2>&lt;p>以下の表に、改善前後の違いを簡潔にまとめました。&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>項目&lt;/th>
+&lt;th>改善前&lt;/th>
+&lt;th>改善後&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>バリデーションの方法&lt;/td>
+&lt;td>&lt;code>jakarta.validation&lt;/code> + 手動呼び出し&lt;/td>
+&lt;td>Ktor公式のRequestValidationプラグイン&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>アノテーションの使用&lt;/td>
+&lt;td>&lt;code>@NotNull&lt;/code>, &lt;code>@Pattern&lt;/code>, &lt;code>@JsonProperty&lt;/code>など多数&lt;/td>
+&lt;td>&lt;code>@Serializable&lt;/code>のみ、基本的に不要&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>UUIDバリデーション&lt;/td>
+&lt;td>正規表現でチェック&lt;/td>
+&lt;td>&lt;code>UUID&lt;/code>型指定で型安全に&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>直列化ライブラリ&lt;/td>
+&lt;td>Jackson（リフレクションを使う）&lt;/td>
+&lt;td>kotlinx.serialization（KSP利用で高速）&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>バリデーションの共通化&lt;/td>
+&lt;td>各コントローラーで個別に記述&lt;/td>
+&lt;td>&lt;code>ValidatableController&lt;/code>で共通定義可能&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Koinとの連携&lt;/td>
+&lt;td>取得や登録が煩雑もしくはしない&lt;/td>
+&lt;td>&lt;code>bind&lt;/code> + &lt;code>getAll()&lt;/code> で一括取得&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>今回はKtorのRequest処理を改善する方法について紹介しました。Kotlinの特性を活かし、KtorのRequest Validationを使用することで、リクエストのバリデーションを簡潔に行うことができました。また、Kotlinx Serializationを使用することで、直列化のパフォーマンスも向上させることができました。&lt;/p>
+&lt;p>このように、KotlinとKtorを使用することで、Javaのフレームワークやライブラリでは実現できないような改善が可能になることがあります。特に、Kotlinの特性を活かした設計や、パフォーマンスの向上が期待できる点は大きなメリットです。&lt;/p>
+&lt;p>今後もKotlinやKtorを使った開発において、より良い設計やパフォーマンスの向上を目指していきたいと思います。もし、他にもKtorやKotlinに関する改善点やアイデアがあれば、また共有していきたいと思います。&lt;/p>
+&lt;p>では、また！&lt;/p></description></item><item><title>ホームサーバを作ってみた</title><link>https://retheviper.github.io/posts/home-server/</link><pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/home-server/</guid><description>&lt;img src="https://retheviper.github.io/images/nginx.webp" alt="Featured image of post ホームサーバを作ってみた" />&lt;p>この度は、ホームサーバを作りました。まだ作ったばかりなので、色々と改善や課題があるかと思いますが、一通りの構成を整えたので、その構成について簡単に説明します。&lt;/p>
 &lt;h2 id="なぜ自作サーバを作るのか">なぜ自作サーバを作るのか
 &lt;/h2>&lt;p>最近は無料で使えるクラウドのサービスも多く、FirebaseやVercelなどのサービスを使えば、簡単にWebアプリケーションを公開することができます。なので既存のサービスを利用するだけで良いのでは？ということは自分でも考えたことはありますが、そこであえて自作サーバを作ることになった理由について簡単に説明します。&lt;/p>
 &lt;h3 id="性能">性能
@@ -14,7 +306,7 @@
 &lt;p>&lt;img src="https://retheviper.github.io/posts/home-server/home-network-infrastructure.png"
 width="4360"
 height="1278"
-srcset="https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu17601089568325087147.png 480w, https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu364375430249766087.png 1024w"
+srcset="https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_8fec89c200e984f7.png 480w, https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_3f2035a5e1df40ce.png 1024w"
 loading="lazy"
 alt="インフラ構成"
 class="gallery-image"
@@ -410,8 +702,7 @@ data-flex-basis="818px"
 &lt;/h2>&lt;p>Quarkusは、&lt;a class="link" href="https://www.redhat.com/ja/technologies/linux-platforms/enterprise-linux" target="_blank" rel="noopener"
 >RHEL&lt;/a>で有名なRed Hatが作ったJava用のウェブフレームワークです。公式ホームページの説明が何よりも正確だと思いますので、以下の文を確認してください。&lt;/p>
 &lt;blockquote>
-&lt;p>A Kubernetes Native Java stack tailored for OpenJDK HotSpot and GraalVM, crafted from the best of breed Java libraries and standards.&lt;/p>
-&lt;/blockquote>
+&lt;p>A Kubernetes Native Java stack tailored for OpenJDK HotSpot and GraalVM, crafted from the best of breed Java libraries and standards.&lt;/p>&lt;/blockquote>
 &lt;p>Javaのアプリを&lt;code>Kubernetes Native&lt;/code>として作成できる、というのがこのフレームワークの正体性です。Javaと説明していますが、もちろんKotlinのような他のJVM言語も使えるので、そのような言語を使っている場合でも導入を考えられます。&lt;/p>
 &lt;p>ここで&lt;code>Kubernetes Native&lt;/code>という言葉が気になりますが、これは単純にコンテナを作ることに特化されている、という表現ではないと思います。Spring Boot 2.3から導入された&lt;a class="link" href="https://spring.io/blog/2020/08/14/creating-efficient-docker-images-with-spring-boot-2-3" target="_blank" rel="noopener"
 >Docker Image作成機能&lt;/a>があり、Googleが提供している&lt;a class="link" href="https://github.com/GoogleContainerTools/jib" target="_blank" rel="noopener"
@@ -656,8 +947,7 @@ data-flex-basis="818px"
 &lt;/h2>&lt;p>Ktorの特徴のうち、最も重要と言えるものは、&lt;a class="link" href="https://ktor.io/docs/pipelines.html" target="_blank" rel="noopener"
 >Pipeline&lt;/a>の概念です。この&lt;code>Pipeline&lt;/code>に対して、公式では以下のように説明しています。&lt;/p>
 &lt;blockquote>
-&lt;p>The pipeline is a structure containing a sequence of functions (blocks/lambdas) that are called one after another, distributed in phases topologically ordered, with the ability to mutate the sequence and to call the remaining functions in the pipeline and then return to current block.&lt;/p>
-&lt;/blockquote>
+&lt;p>The pipeline is a structure containing a sequence of functions (blocks/lambdas) that are called one after another, distributed in phases topologically ordered, with the ability to mutate the sequence and to call the remaining functions in the pipeline and then return to current block.&lt;/p>&lt;/blockquote>
 &lt;p>この説明だけでは理解が難しいものですが、要するに、Ktorにおいての処理の単位のことを指していると言ってもよいものです。&lt;code>Pipeline&lt;/code>ではAPIのコールからレスポンスまで一連の流れとしての処理を定義することができます。なので&lt;code>Pipeline&lt;/code>として実現されている代表的な機能は&lt;code>Router&lt;/code>、リクエストに対してのハンドリングを定義する機能（Springの&lt;code>Controller&lt;/code>に対応するもの）となります。&lt;/p>
 &lt;p>また、&lt;code>Pipeline&lt;/code>は拡張できるものなので、その形式に合わせて新しい&lt;code>Pipeline&lt;/code>を実装することでモジュール(公式の表現では&lt;code>Plugin&lt;/code>)を実現するのもできます。これらのモジュールを実装し、アプリケーションにインストールすることで、そのモジュールの機能を利用できるようになるのがKtorの特徴です。例えば、kotlin公式のJSON Mapperである&lt;a class="link" href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener"
 >kotlinx.serialization&lt;/a>をアプリケーションに追加するためには以下のようなコードを書きます。&lt;/p>
