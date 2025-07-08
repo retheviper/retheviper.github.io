@@ -1,4 +1,99 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 28 Jun 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>KtorのRequest処理を改善する</title><link>https://retheviper.github.io/posts/ktor-validation/</link><pubDate>Sat, 28 Jun 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-validation/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.webp" alt="Featured image of post KtorのRequest処理を改善する" />&lt;p>KotlinはJavaとの互換性があるので、Javaで構築した既存のシステムの一部を書き換えたり、言語だけを変えて新しいシステムを構築したりするケースが多いかなと思います。しかし、同じJVM上で動作するKotlinとJavaでも、フレームワークやライブラリの違いにより改善できる箇所もあります。&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Korean-man in Tokyo</title><link>https://retheviper.github.io/posts/</link><description>Recent content in Posts on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 08 Jul 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>JVM はまだ進化する</title><link>https://retheviper.github.io/posts/jvm-evolution/</link><pubDate>Tue, 08 Jul 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/jvm-evolution/</guid><description>&lt;img src="https://retheviper.github.io/images/java.webp" alt="Featured image of post JVM はまだ進化する" />&lt;p>現代のプログラミング環境は、Go や Rust などの軽量ランタイムが受け入れられる中、「JVM の方向性」に疑問を持つ声も聞かれるようになってきました。私自身もそうで、特にクラウド環境では、JVM の起動時間やメモリ使用量が問題となるケースも少なくないです。なのでサーバレス環境の場合、純粋に起動時間のためPythonやNode.jsを選ぶこともあります。&lt;/p>
+&lt;p>しかし JVM は、現在も新技術によって性能改善の余地を持ち続けています。この記事では、Leyden や Loom を始めとした現在進行中の主要プロジェクトを概覧し、JVM の「性能」は未来にわたってどれだけ改善可能かを検討します。&lt;/p>
+&lt;h2 id="jit-から-aot--pgo-へ">JIT から AOT + PGO へ
+&lt;/h2>&lt;p>&lt;a class="link" href="https://en.wikipedia.org/wiki/Just-in-time_compilation" target="_blank" rel="noopener"
+>JIT (Just-In-Time Compiler)&lt;/a>は、バイトコードを実行時にネイティブコードへコンパイルする技術です。
+最適化コードをランタイムで生成できる依存性が高い一方、warm-up期間&lt;sup id="fnref:1">&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref">1&lt;/a>&lt;/sup>や&amp;quot;jitter&lt;sup id="fnref:2">&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref">2&lt;/a>&lt;/sup>による性能不定は無視できません。&lt;/p>
+&lt;p>これらを解決するために考案されたのが&lt;a class="link" href="https://www.graalvm.org" target="_blank" rel="noopener"
+>Graal&lt;/a> で、 C2 の代替として設計された高性能 JIT コンパイラです。inlining, escape analysis, vectorization などで事前に最適化を行い、JIT の不安定性を削減します。&lt;/p>
+&lt;p>例えば&lt;a class="link" href="https://www.oracle.com/a/ocom/docs/graalvm-twitter-casestudy-constellation.pdf" target="_blank" rel="noopener"
+>Twitterの事例&lt;/a> では Graal JIT を通じて CPU 利用率を8〜11%削減し、Kotlinのマイクロベンチマークでは &lt;a class="link" href="https://martijndwars.nl/2020/02/24/graal-vs-c2.html" target="_blank" rel="noopener"
+>+18%の性能向上&lt;/a> を報告しています。&lt;/p>
+&lt;h2 id="leyden-で起動の早さと安定性を両立">Leyden で起動の早さと安定性を両立
+&lt;/h2>&lt;p>&lt;a class="link" href="https://openjdk.org/projects/leyden/" target="_blank" rel="noopener"
+>Project Leyden&lt;/a> は、JVM アプリケーションの起動時間と warm-up 時間を根本的に短縮することを目標にしています。&lt;/p>
+&lt;p>従来の JIT ベースの最適化は、ランタイムの初期段階でプロファイル情報を集めながら段階的に性能を引き上げていく「適応的」最適化方式ですが、Leyden はそれを「事前確定的」（static）な最適化に置き換える方向性をとります。&lt;/p>
+&lt;p>このために Leyden は、以下の要素をアーカイブとして事前に保存する「condensers」という概念を導入しています。この condensers は、以下の情報を含むアーカイブです。&lt;/p>
+&lt;ul>
+&lt;li>使用クラスのリストと linking 情報&lt;/li>
+&lt;li>ヒープの初期状態（AppCDS + heap snapshot）&lt;/li>
+&lt;li>プロファイル情報（PGO）&lt;/li>
+&lt;li>コンパイル済みコード&lt;/li>
+&lt;/ul>
+&lt;p>これにより、アプリケーションの起動直後から JIT 後のような性能を発揮し、jitter を最小限に抑えることが期待されます。&lt;/p>
+&lt;p>たとえば &lt;a class="link" href="https://quarkus.io/" target="_blank" rel="noopener"
+>Quarkus&lt;/a> チームは Leyden の初期実装に基づき、以下のような改善を報告しています。&lt;/p>
+&lt;ul>
+&lt;li>起動時間を 50% 以上短縮&lt;/li>
+&lt;li>Native Image に近い応答速度を実現しつつ JVM の柔軟性は保持&lt;/li>
+&lt;li>メモリ使用量を最大 30% 削減&lt;/li>
+&lt;/ul>
+&lt;p>Leyden の関連 JEP には、&lt;a class="link" href="https://openjdk.org/jeps/483" target="_blank" rel="noopener"
+>JEP 483&lt;/a>（class loading/linking の事前保存）、&lt;a class="link" href="https://openjdk.org/jeps/515" target="_blank" rel="noopener"
+>JEP 515&lt;/a>（PGO support）などがあり、JDK 25 以降で順次取り込まれる予定です。&lt;/p>
+&lt;h2 id="zgc-shenandoah-そして-lxr">ZGC, Shenandoah, そして LXR
+&lt;/h2>&lt;p>GCは JVM の性能に大きく影響する要素です。近年導入した&lt;a class="link" href="https://wiki.openjdk.org/display/zgc/Main" target="_blank" rel="noopener"
+>ZGC&lt;/a> や &lt;a class="link" href="https://wiki.openjdk.org/display/shenandoah/Main" target="_blank" rel="noopener"
+>Shenandoah GC&lt;/a> は「pause-less GC」を目指し、ZGC は広大なヒープを持つ JVM でも少なくとも &amp;lt;1ms の GC ポーズを実現しています。&lt;/p>
+&lt;p>最新の &lt;a class="link" href="https://www.steveblackburn.org/pubs/papers/lxr-pldi-2022.pdf" target="_blank" rel="noopener"
+>LXR GC&lt;/a>（研究段階）は、ZGC より九分すぐれた性能を見せ、tail latency を30倍減少、throughput を6倍向上という報告も出ています。&lt;/p>
+&lt;p>&lt;a class="link" href="https://www.datastax.com/blog/apache-cassandra-benchmarking-40-brings-heat-new-garbage-collectors-zgc-and-shenandoah" target="_blank" rel="noopener"
+>Cassandra ベンチマーク&lt;/a>では Shenandoah が p99 レイテンシを77%減らすなど、リアルなサービスへの影響も証明されています。&lt;/p>
+&lt;p>これらは、小型のサービスから広大な JVM グラフまで、性能の jitter を削減しながら throughput を保てるっという為に大きな意味を持ちます。&lt;/p>
+&lt;h2 id="valhalla-の支援するメモリー効率">Valhalla の支援するメモリー効率
+&lt;/h2>&lt;p>&lt;a class="link" href="https://openjdk.org/projects/valhalla/" target="_blank" rel="noopener"
+>Project Valhalla&lt;/a> は「value class」を JVM に実装することで、ヒープのオブジェクト依存を解消し、キャッシュローカリティを向上させます。&lt;/p>
+&lt;p>通常のオブジェクトはヒープ内の分散やヘッダーを持ち、GC やキャッシュミスに負担をかけますが、value class はプリミティブな構造体のように inlined されるため、メモリーバンドを向上させます。&lt;/p>
+&lt;p>特に Kotlin の data class は Valhalla から大きな影響を受け、変数配列やベクタ計算のような性能パスでは &lt;a class="link" href="https://www.reddit.com/r/java/comments/1dnhgut/i_actually_tested_jdk_20_valhalla_here_are_my/" target="_blank" rel="noopener"
+>数倍の向上&lt;/a> も期待できます。&lt;/p>
+&lt;h2 id="loom-でスケーラブルな-io-並行性の実現">Loom でスケーラブルな I/O 並行性の実現
+&lt;/h2>&lt;p>&lt;a class="link" href="https://openjdk.org/projects/loom/" target="_blank" rel="noopener"
+>Project Loom&lt;/a> は仮想スレッドによって、従来のブロッキングな I/O コードをそのまま保ちながら、大量の同時接続を処理できるようにする試みです。&lt;/p>
+&lt;p>ここで重要なのが、既存の並行処理との関係です。&lt;/p>
+&lt;p>従来の Java（および Spring MVC）は、&lt;strong>リクエストごとに OS スレッドを1本消費する&lt;/strong>アーキテクチャでした。
+しかしこれは、同時接続数が多くなるとすぐにスレッド枯渇やコンテキストスイッチによる性能低下を招きます。&lt;/p>
+&lt;p>この問題を解決するために導入されたのが &lt;a class="link" href="https://docs.spring.io/spring-framework/reference/web/webflux.html" target="_blank" rel="noopener"
+>Spring WebFlux&lt;/a> です。
+WebFlux は &lt;a class="link" href="https://projectreactor.io/" target="_blank" rel="noopener"
+>Reactor&lt;/a> に基づくノンブロッキング非同期モデルで、少数のスレッドで大量のリクエストを捌くことを可能にしました。&lt;/p>
+&lt;p>ただしその代償として、開発者は &lt;code>Mono&lt;/code> や &lt;code>Flux&lt;/code> を理解し、非同期パイプラインの構築を強いられ、デバッグも難しくなるという課題がありました。幸 Kotlin では &lt;code>suspend&lt;/code> 関数を使うことで非同期処理を簡潔に書けますが、Java では依然として複雑なコードが必要でしたね。&lt;/p>
+&lt;p>ここで登場する Loom の仮想スレッドは、&lt;strong>WebFlux 並のスケーラビリティを持ちながらも、従来通りの「同期的なコード」で記述できる&lt;/strong>という点で画期的です。コード自体も、既存のスレッドベースのコードとほぼ同じままです。&lt;/p>
+&lt;p>Java 21 で仮想スレッドが正式に導入され、&lt;a class="link" href="https://docs.spring.io/spring-framework/reference/integration/virtual-threads.html" target="_blank" rel="noopener"
+>Spring MVC の VirtualThreadTaskExecutor&lt;/a> などがその代表例です。従来の Servlet ベースの構成に最小限の変更で仮想スレッドを導入可能であり、&lt;a class="link" href="https://github.com/chrisgleissner/loom-webflux-benchmarks" target="_blank" rel="noopener"
+>WebFlux よりも低レイテンシかつ高スループットを実現&lt;/a>できます。&lt;/p>
+&lt;p>Netty や Tomcat など、一部のアプリケーションサーバも Loom 対応を進めており、今後は仮想スレッドが標準的な選択肢となっていくのではと思います。&lt;/p>
+&lt;h2 id="まとめ">まとめ
+&lt;/h2>&lt;p>以下に、この記事で紹介した JVM の主要な改善点をまとめます。&lt;/p>
+&lt;ul>
+&lt;li>&lt;a class="link" href="https://www.graalvm.org/" target="_blank" rel="noopener"
+>Graal&lt;/a> や &lt;a class="link" href="https://openjdk.org/projects/leyden/" target="_blank" rel="noopener"
+>Leyden&lt;/a> により JIT 不安定性や warm-up 時間を削減&lt;/li>
+&lt;li>&lt;a class="link" href="https://wiki.openjdk.org/display/zgc/Main" target="_blank" rel="noopener"
+>ZGC&lt;/a>, &lt;a class="link" href="https://wiki.openjdk.org/display/shenandoah/Main" target="_blank" rel="noopener"
+>Shenandoah&lt;/a>, &lt;a class="link" href="https://arxiv.org/abs/2210.17175" target="_blank" rel="noopener"
+>LXR GC&lt;/a> により低レイテンシなヒープでの GC を実現&lt;/li>
+&lt;li>&lt;a class="link" href="https://openjdk.org/projects/valhalla/" target="_blank" rel="noopener"
+>Valhalla&lt;/a> によるメモリ実行効率向上&lt;/li>
+&lt;li>&lt;a class="link" href="https://openjdk.org/projects/loom/" target="_blank" rel="noopener"
+>Loom&lt;/a> による I/O スケーラビリティの高効化&lt;/li>
+&lt;/ul>
+&lt;h2 id="最後に">最後に
+&lt;/h2>&lt;p>JVM は長い歴史を持つ一方で、近年はその限界も語られがちでした。&lt;/p>
+&lt;p>でも、ここで紹介した Leyden や Loom のようなプロジェクトは、Java の価値を単なる互換性だけでなく「今のニーズに応える性能基盤」として再構築しようとしています。&lt;/p>
+&lt;p>特に Kotlin や Scala など、Java 以外の言語でもこのような JVM の改善を活用できるので、これからの進化にも期待が持てますね。&lt;/p>
+&lt;p>まだまだアプリケーション開発のパラダイムや性能基盤は変わり続けていくもので、これからの先はまたどうなるかわかりませんが、このような技術革新が続くといいですね。&lt;/p>
+&lt;p>では、また！&lt;/p>
+&lt;div class="footnotes" role="doc-endnotes">
+&lt;hr>
+&lt;ol>
+&lt;li id="fn:1">
+&lt;p>JITが最適化を行うために必要な初期段階のこと&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;li id="fn:2">
+&lt;p>実行時間のばらつきのこと&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink">&amp;#x21a9;&amp;#xfe0e;&lt;/a>&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;/div></description></item><item><title>KtorのRequest処理を改善する</title><link>https://retheviper.github.io/posts/ktor-validation/</link><pubDate>Sat, 28 Jun 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-validation/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.webp" alt="Featured image of post KtorのRequest処理を改善する" />&lt;p>KotlinはJavaとの互換性があるので、Javaで構築した既存のシステムの一部を書き換えたり、言語だけを変えて新しいシステムを構築したりするケースが多いかなと思います。しかし、同じJVM上で動作するKotlinとJavaでも、フレームワークやライブラリの違いにより改善できる箇所もあります。&lt;/p>
 &lt;p>Javaの歴史が長いこともあり、Javaのフレームワークやライブラリは非常に多くの機能を提供していますが、Kotlinではより簡潔で直感的なコードを書くことができる場合があります。また、その中ではKotlinの特性を活かした設計が可能だったり、性能の向上が期待できたりします。&lt;/p>
 &lt;p>今回はそのような改善の一例として、Ktorでのリクエストバリデーションの実装方法について紹介します。&lt;/p>
 &lt;h2 id="既存">既存
