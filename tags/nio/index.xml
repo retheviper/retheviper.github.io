@@ -1,448 +1,448 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Nio on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/nio/</link><description>Recent content in Nio on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 12 Jan 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/nio/index.xml" rel="self" type="application/rss+xml"/><item><title>今更なI/Oの話</title><link>https://retheviper.github.io/posts/java-file-copy/</link><pubDate>Tue, 12 Jan 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-file-copy/</guid><description>&lt;img src="https://retheviper.github.io/images/java.webp" alt="Featured image of post 今更なI/Oの話" />&lt;p>以前、Java 1.7から導入されたNIOに関してのポストを書いたことがありますが、いまだにJavaにおけるファイルのI/Oに関しては悩ましいところが多いです。恥ずかしいことですが、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9%E3%83%AB%E3%83%BC%E3%83%A0" target="_blank" rel="noopener"
->Newsroom&lt;/a>のセリフでもあるように、「問題を解決する第一歩はそこに問題があるということを認識すること(First step in solving any problem is recognizing there is one)」ですね。なので、今までの自分が書いたコードを振り返り、どのように書いた方が良いかを反省することにしました。&lt;/p>
-&lt;p>なので今回は、今までなんとなく使ってきたコードたちを振り返り、なるべくどのような方法をとった方が良いかを考えてみようと思います。ただ、考えられる全てのケースを網羅するのは難しいと思うので、この度はあくまで&lt;code>Javaのコードでファイルをコピーする&lt;/code>場合に限ります。なので、考えてみたいこと(検証対象)は以下の通りになります。&lt;/p>
-&lt;ol>
-&lt;li>InputStreamとOutputStreamはどう作った方がいいか
-&lt;ol>
-&lt;li>FileInputStreamとFileOutputStreamを使うか&lt;/li>
-&lt;li>Filesのメソッドを使うか&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;li>ファイルコピーはどのような方法を使った方がいいか
-&lt;ol>
-&lt;li>InputSteamからOutpuStreamへ書くか
-&lt;ol>
-&lt;li>readAllBytes()&lt;/li>
-&lt;li>transferTo()&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;li>Filesのメソッドを使うか&lt;/li>
-&lt;/ol>
-&lt;/li>
-&lt;/ol>
-&lt;p>今回はこれらの疑問について、よく使われているファイルコピーのコードを一つ一つ見ていきながら、考えてみたいと思います。&lt;/p>
-&lt;h2 id="inputstreamとoutputstreamはどう作るべきか">InputStreamとOutputStreamはどう作るべきか
-&lt;/h2>&lt;p>まずはInputStreamとOutputStreamです。今も多くの場合、メモリー問題を考えて、ファイルはなるべくStreamとして扱っているのではないかと思います。特に今のJavaがよく使われている分野はWebアプリケーションですが、そのWebアプリケーションを作るための代表的なフレームワークであるSpringでもファイルのアップロードやダウンロードはStreamの形式となっていますし、ローカルのものかネットワーク越しのものかを問わずファイルのデータを取り扱えるという意味ではFileやPathというオブジェクトを使う場合に比べ汎用性という面でも良さそうな気がします。&lt;/p>
-&lt;p>ただ、ローカルでファイルをコピーするために、InputStreamやOutputStreamを生成する方法は、Java 1.7以降だと二つの方法があります。一つはFileオブジェクトから&lt;code>FileInputStream&lt;/code>・&lt;code>FileOutputStream&lt;/code>を生成する方式であり、もう一つはPathオブジェクトとFilesクラスを利用して生成する方法ですね。&lt;/p>
-&lt;p>なるべくこれからのコードはNIOを使って書きたいと思っていますが、本当にそれだけで十分か、既存のコード(FileInputStreamとFileOutputStreamを利用する)までもNIOのものに変える必要があるかをまず確認してみたいです。&lt;/p>
-&lt;h3 id="コピーの方式">コピーの方式
-&lt;/h3>&lt;p>まずは、JavaでInputStreamとOutputStreamを利用して、ファイルをコピーするコードから見ていきましょう。&lt;/p>
-&lt;p>私を含め、初めてJavaに触れた多くの方々接することとなるファイルコピーのコードは、おそらく以下のようなものではないかと思います。いわば、最も一般的で、オーソドックスな形とも言えるでしょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// byte[]を利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(File source, File dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> InputStream is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> FileInputStream(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> FileOutputStream(dest);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[]&lt;/span> buffer &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[&lt;/span>8192&lt;span style="color:#f92672">]&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>(buffer)) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(buffer, 0, length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">finally&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BufferedStreamを利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(File source, File dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> buff &lt;span style="color:#f92672">=&lt;/span> 8192;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> InputStream is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedInputStream(&lt;span style="color:#66d9ef">new&lt;/span> FileInputStream(source), buff);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedOutputStream(&lt;span style="color:#66d9ef">new&lt;/span> FileOutputStream(dest), buff);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>()) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">finally&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここでまず、&lt;code>FileInputStream&lt;/code>は&lt;code>Files.newInputStream&lt;/code>、&lt;code>FileOutputStream&lt;/code>は&lt;code>Files.newOutputStream&lt;/code>に代替できます。まず目立つ違いとしては、&lt;code>FileInputStream&lt;/code>・&lt;code>FileOutputStream&lt;/code>は引数として&lt;code>File&lt;/code>を取り、&lt;code>Files.newInputStream&lt;/code>・&lt;code>Files.newOutputStream&lt;/code>は引数として&lt;code>Path&lt;/code>を取るという点がありますね。ただ、この違いは、&lt;code>File&lt;/code>と&lt;code>Path&lt;/code>の変換が自由なので、あまり決定的な違いとは言えません。つまり、どちらの方法にも簡単に切り替えができるということですね。&lt;/p>
-&lt;p>一見、&lt;code>Files&lt;/code>クラスからInputStreamとOutputStreamのインスタンスを生成した方が、より最新のAPIを使っているので性能の面で良さそうな気はします。しかし、JavaのNIOは、必ず性能面で既存のIOと比べ優位にあるわけではないですね。実際、ファイルのI/Oに関しては、NIOを使ってもBlockingモードとしてしか動かないので、あまり性能は変わらないという話もあります。&lt;/p>
-&lt;p>そういう場合は、特に問題を起こしてないのに、あえて既存のコードをNIOに切り替える必要は無くなりそうな気もします。しかし、本当にそれで大丈夫でしょうか。&lt;/p>
-&lt;h3 id="fileinputstreamとfileoutputstreamの問題">FileInputStreamとFileOutputStreamの問題
-&lt;/h3>&lt;p>実際は、そうでもないようです。&lt;code>FileInputStream&lt;/code>・&lt;code>FileOuputStream&lt;/code>には性能とは別の問題があります。GCによりアプリケーション全体が長くポーズの状態になる可能性があるということです。&lt;/p>
-&lt;h4 id="finalizeのオーバライド問題">finalize()のオーバライド問題
-&lt;/h4>&lt;p>GCによりアプリケーション全体がポーズされるということは、つまり、メモリがフルになるということです。ファイルI/Oで、InputStreamとOutputStreamを使ってメモリがフルになるということは、ちゃんと&lt;code>close()&lt;/code>されてないことですね。なので、&lt;code>単純にclose()すれば良いだけなのでは？&lt;/code>と思われます。&lt;/p>
-&lt;p>しかし、本当の問題は&lt;code>FileInputStream&lt;/code>・&lt;code>FileOuputStream&lt;/code>のソースコードにあります。この二つのクラスは、&lt;code>finalize()&lt;/code>メソッドをオーバーロードしていて、ちゃんと&lt;code>close()&lt;/code>してもメモリー上にデータが残ってしまう可能性があるのです。この問題は、&lt;a class="link" href="https://dzone.com/articles/fileinputstream-fileoutputstream-considered-harmful" target="_blank" rel="noopener"
->こちらの記事&lt;/a>に説明されてある通り、Jenkinsでも&lt;a class="link" href="https://issues.jenkins.io/browse/JENKINS-42934" target="_blank" rel="noopener"
->問題視されたことがあり&lt;/a>、OpenJDKでも&lt;a class="link" href="https://bugs.openjdk.java.net/browse/JDK-8212050" target="_blank" rel="noopener"
->finalize()を消す必要がある&lt;/a>と指摘されたことがあります。&lt;/p>
-&lt;p>JDKの対応としては、&lt;code>FileInputStream&lt;/code>・&lt;code>FileOuputStream&lt;/code>の&lt;code>finalize()&lt;/code>はJava 9から&lt;code>Deprecated&lt;/code>となり、Java 10からは別の実装を加えることで問題を解決していますが、Java 1.7や1.8を使う場合は依然として問題が起こり得るということになりますね。&lt;/p>
-&lt;p>なので、これからはなるべく&lt;code>FileInputStream&lt;/code>・&lt;code>FileOutptStream&lt;/code>の利用は避けるようにする必要があると思います。習慣は怖いですので。&lt;/p>
-&lt;h2 id="ファイルコピーはどのような方法を使った方がいいか">ファイルコピーはどのような方法を使った方がいいか
-&lt;/h2>&lt;p>今までの結論で、InputStream及びOuputStreamのインスタンスはNIOを使うことにします。したがって前述のコードは以下のように直すことができますね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// byte[]を利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> InputStream is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source); &lt;span style="color:#75715e">// FileInputStreamを使わない&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(dest); &lt;span style="color:#75715e">// FileOutputStreamを使わない&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[]&lt;/span> buffer &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[&lt;/span>8192&lt;span style="color:#f92672">]&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>(buffer)) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(buffer, 0, length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">finally&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BufferedStreamを利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> buff &lt;span style="color:#f92672">=&lt;/span> 8192;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> InputStream is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedInputStream(Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source), buff); &lt;span style="color:#75715e">// FileInputStreamを使わない&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedOutputStream(Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(dest), buff); &lt;span style="color:#75715e">// FileOutputStreamを使わない&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>()) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">finally&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">close&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="try-with-resource">try-with-resource
-&lt;/h3>&lt;p>InputStreamやOutputStreamは最後に&lt;code>close()&lt;/code>しないと、すでに使ったものでもメモリ上にデータが残ってしまいますね。なのでfinallyブロックでクローズするのが一般的かなと思いますが、こうした場合、finallyブロックでも追加の例外処理が必要になるケースもありますし、毎回&lt;code>close()&lt;/code>するのは忘れられる可能性もあるので危険です。&lt;/p>
-&lt;p>なのでJava 1.7からは&lt;code>AutoCloseable&lt;/code>と&lt;code>try-with-resource&lt;/code>が導入され、以下のようにより簡潔かつ安全なコードを書くことができるようになりました。例えば上記のコードは、&lt;code>try-with-resource&lt;/code>を使うと以下のようなコードに代替できますね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// byte[]を利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream is &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(dest)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[]&lt;/span> buffer &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[&lt;/span>8192&lt;span style="color:#f92672">]&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>(buffer)) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(buffer, 0, length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// BufferedStreamを利用した例&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> buff &lt;span style="color:#f92672">=&lt;/span> 8192;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream is &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedInputStream(Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source), buff);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedOutputStream(Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(dest), buff)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> length;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((length &lt;span style="color:#f92672">=&lt;/span> is.&lt;span style="color:#a6e22e">read&lt;/span>()) &lt;span style="color:#f92672">&amp;gt;&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> os.&lt;span style="color:#a6e22e">write&lt;/span>(length);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>try-with-resourceでは、既存の方式と比べメリットしかないので、これは必ず使うことにします。&lt;/p>
-&lt;h3 id="readallbytes">readAllBytes()
-&lt;/h3>&lt;p>次に考えられるのは、ファイルコピーでのBufferです。以上の例では、&lt;code>byte[]&lt;/code>を使うか、&lt;code>BufferedInputStream&lt;/code>・&lt;code>BufferedOutputStream&lt;/code>を使っていますが、これは性能のためのものであるということは皆さんもご存知のはずなので、Bufferについては割愛します。&lt;/p>
-&lt;p>我々が知る限り、Bufferのサイズが大きければ大きいほど、性能はよくなります。なら、メモリが許容する限り、できるだけ大きいサイズのBufferを指定したら自然に性能はマシンが出せる最大限となるはずです。&lt;/p>
-&lt;p>そして、Java 9からは、InputStreamを一気に全部読み込み、&lt;code>byte[]&lt;/code>として返す&lt;code>readAllBytes()&lt;/code>というメソッドができました。このメソッドを使うと、&lt;code>Integer.MAX_VALUE&lt;/code>サイズの&lt;code>byte[]&lt;/code>を生成してInputStreamを全部読み込むことができます。理論的にはこれを使ったらファイルコピーもあっという間にできそうですね。&lt;/p>
-&lt;p>しかし、考えなくてはならないのが、そうやって読み込んだデータはメモリ上に残ってしまうということです。例えば複数のユーザが使っているWebアプリケーションで、数GBに達するファイルをアップロードする場合が予想されるのに、&lt;code>readAllBytes()&lt;/code>を使ったらメモリはすぐ足りなくなるでしょう。いくらファイルコピーが早くなるとしても、同時に複数のユーザがファイルをアップロードする場合があれば、一周でのもメモリ上に大量のファイルデータが詰まってしまう可能性があるので、あまり良くない選択になります。なので、なるべく&lt;code>readAllBytes()&lt;/code>の仕様は控えるべきでしょう。&lt;/p>
-&lt;h3 id="transferto">transferTo()
-&lt;/h3>&lt;p>Java 9からは追加されたメソッドのうちには、InputStreamにはより簡単にOutputStreamにデータを転送することのできる&lt;code>transferTo()&lt;/code>というメソッドもあります。&lt;code>try-with-resource&lt;/code>に加え、&lt;code>transferTo()&lt;/code>を使うとさらに簡潔なコードでファイルのコピーができるようになります。例えば以下のようなものですね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">private&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path dest) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream is &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream os &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(dest)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> is.&lt;span style="color:#a6e22e">transferTo&lt;/span>(os);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ソースコードを見るとわかることですが、&lt;code>transferTo()&lt;/code>ではデフォルトのBufferサイズで作ったbyte[]を使ってコピーをしているので、デフォルト値のBuffer(&lt;code>8192&lt;/code>バイト)を使う場合は、Bufferの指定もいらなくなるのが魅力的です。以下はソースコードです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">long&lt;/span> &lt;span style="color:#a6e22e">transferTo&lt;/span>(OutputStream out) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Objects.&lt;span style="color:#a6e22e">requireNonNull&lt;/span>(out, &lt;span style="color:#e6db74">&amp;#34;out&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">long&lt;/span> transferred &lt;span style="color:#f92672">=&lt;/span> 0;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[]&lt;/span> buffer &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> &lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[&lt;/span>DEFAULT_BUFFER_SIZE&lt;span style="color:#f92672">]&lt;/span>; &lt;span style="color:#75715e">// 8192&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">int&lt;/span> read;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">while&lt;/span> ((read &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">read&lt;/span>(buffer, 0, DEFAULT_BUFFER_SIZE)) &lt;span style="color:#f92672">&amp;gt;=&lt;/span> 0) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> out.&lt;span style="color:#a6e22e">write&lt;/span>(buffer, 0, read);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> transferred &lt;span style="color:#f92672">+=&lt;/span> read;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> transferred;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ気になるのは、&lt;code>transerTo()&lt;/code>を使う場合は本当にBufferedが要らないかという点です。例えばInputStreamを&lt;code>BufferedInputStream&lt;/code>でラップすると、せめてファイルを読み込む速度は上がるのではないかという疑問が湧いてきます。とにかく、もしものことなので、簡単なベンチマークも実施してみました(実はやってみたかっただけですが)。10GBほどのファイルを生成し、以下のケースでテストしてみました。&lt;/p>
-&lt;ul>
-&lt;li>InputStream → OutputStream&lt;/li>
-&lt;li>BufferedInputStream → OutputStream&lt;/li>
-&lt;li>InputStream → BufferedIOutputStream&lt;/li>
-&lt;li>BufferedInputStream → BufferedIOutputStream&lt;/li>
-&lt;/ul>
-&lt;p>そしてコードは以下の通りです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@State&lt;/span>(Scope.&lt;span style="color:#a6e22e">Benchmark&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@BenchmarkMode&lt;/span>(Mode.&lt;span style="color:#a6e22e">AverageTime&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">StreamBufferTest&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> Path source;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> Path output &lt;span style="color:#f92672">=&lt;/span> Path.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/Users/retheviper/temp/benchmarkOutput&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// テスト用のファイルを作成する&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Setup&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">init&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> String path &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/Users/retheviper/temp/benchmarkSource&amp;#34;&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> RandomAccessFile file &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> RandomAccessFile(path, &lt;span style="color:#e6db74">&amp;#34;rw&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">long&lt;/span> size &lt;span style="color:#f92672">=&lt;/span> (1024 &lt;span style="color:#f92672">*&lt;/span> 1024 &lt;span style="color:#f92672">*&lt;/span> 1024) &lt;span style="color:#f92672">*&lt;/span> 10L; &lt;span style="color:#75715e">// 10GB&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file.&lt;span style="color:#a6e22e">setLength&lt;/span>(size);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">source&lt;/span> &lt;span style="color:#f92672">=&lt;/span> Path.&lt;span style="color:#a6e22e">of&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">noBuffer&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream out &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(output, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>, StandardOpenOption.&lt;span style="color:#a6e22e">TRUNCATE_EXISTING&lt;/span>)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">withInputBuffer&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedInputStream(Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source));
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream out &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(output, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>, StandardOpenOption.&lt;span style="color:#a6e22e">TRUNCATE_EXISTING&lt;/span>)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">withOutputBuffer&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream out &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedOutputStream(Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(output, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>, StandardOpenOption.&lt;span style="color:#a6e22e">TRUNCATE_EXISTING&lt;/span>))) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">withBothBuffer&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedInputStream(Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source));
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream out &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> BufferedOutputStream(Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(output, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>, StandardOpenOption.&lt;span style="color:#a6e22e">TRUNCATE_EXISTING&lt;/span>))) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そしてベンチマーク結果は、以下の通りです。&lt;/p>
-&lt;pre tabindex="0">&lt;code class="language-dos" data-lang="dos">Benchmark Mode Cnt Score Error Units
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Nio on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/nio/</link><description>Recent content in Nio on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 12 Jan 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/nio/index.xml" rel="self" type="application/rss+xml"/><item><title>今更なI/Oの話</title><link>https://retheviper.github.io/posts/java-file-copy/</link><pubDate>Tue, 12 Jan 2021 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-file-copy/</guid><description>&lt;img src="https://retheviper.github.io/images/java.webp" alt="Featured image of post 今更なI/Oの話" /&gt;&lt;p&gt;以前、Java 1.7から導入されたNIOに関してのポストを書いたことがありますが、いまだにJavaにおけるファイルのI/Oに関しては悩ましいところが多いです。恥ずかしいことですが、&lt;a class="link" href="https://ja.wikipedia.org/wiki/%E3%83%8B%E3%83%A5%E3%83%BC%E3%82%B9%E3%83%AB%E3%83%BC%E3%83%A0" target="_blank" rel="noopener"
+&gt;Newsroom&lt;/a&gt;のセリフでもあるように、「問題を解決する第一歩はそこに問題があるということを認識すること(First step in solving any problem is recognizing there is one)」ですね。なので、今までの自分が書いたコードを振り返り、どのように書いた方が良いかを反省することにしました。&lt;/p&gt;
+&lt;p&gt;なので今回は、今までなんとなく使ってきたコードたちを振り返り、なるべくどのような方法をとった方が良いかを考えてみようと思います。ただ、考えられる全てのケースを網羅するのは難しいと思うので、この度はあくまで&lt;code&gt;Javaのコードでファイルをコピーする&lt;/code&gt;場合に限ります。なので、考えてみたいこと(検証対象)は以下の通りになります。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;InputStreamとOutputStreamはどう作った方がいいか
+&lt;ol&gt;
+&lt;li&gt;FileInputStreamとFileOutputStreamを使うか&lt;/li&gt;
+&lt;li&gt;Filesのメソッドを使うか&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;ファイルコピーはどのような方法を使った方がいいか
+&lt;ol&gt;
+&lt;li&gt;InputSteamからOutpuStreamへ書くか
+&lt;ol&gt;
+&lt;li&gt;readAllBytes()&lt;/li&gt;
+&lt;li&gt;transferTo()&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;Filesのメソッドを使うか&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;今回はこれらの疑問について、よく使われているファイルコピーのコードを一つ一つ見ていきながら、考えてみたいと思います。&lt;/p&gt;
+&lt;h2 id="inputstreamとoutputstreamはどう作るべきか"&gt;InputStreamとOutputStreamはどう作るべきか
+&lt;/h2&gt;&lt;p&gt;まずはInputStreamとOutputStreamです。今も多くの場合、メモリー問題を考えて、ファイルはなるべくStreamとして扱っているのではないかと思います。特に今のJavaがよく使われている分野はWebアプリケーションですが、そのWebアプリケーションを作るための代表的なフレームワークであるSpringでもファイルのアップロードやダウンロードはStreamの形式となっていますし、ローカルのものかネットワーク越しのものかを問わずファイルのデータを取り扱えるという意味ではFileやPathというオブジェクトを使う場合に比べ汎用性という面でも良さそうな気がします。&lt;/p&gt;
+&lt;p&gt;ただ、ローカルでファイルをコピーするために、InputStreamやOutputStreamを生成する方法は、Java 1.7以降だと二つの方法があります。一つはFileオブジェクトから&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOutputStream&lt;/code&gt;を生成する方式であり、もう一つはPathオブジェクトとFilesクラスを利用して生成する方法ですね。&lt;/p&gt;
+&lt;p&gt;なるべくこれからのコードはNIOを使って書きたいと思っていますが、本当にそれだけで十分か、既存のコード(FileInputStreamとFileOutputStreamを利用する)までもNIOのものに変える必要があるかをまず確認してみたいです。&lt;/p&gt;
+&lt;h3 id="コピーの方式"&gt;コピーの方式
+&lt;/h3&gt;&lt;p&gt;まずは、JavaでInputStreamとOutputStreamを利用して、ファイルをコピーするコードから見ていきましょう。&lt;/p&gt;
+&lt;p&gt;私を含め、初めてJavaに触れた多くの方々接することとなるファイルコピーのコードは、おそらく以下のようなものではないかと思います。いわば、最も一般的で、オーソドックスな形とも言えるでしょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// byte[]を利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(File source, File dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; FileInputStream(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; FileOutputStream(dest);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[]&lt;/span&gt; buffer &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;8192&lt;span style="color:#f92672"&gt;]&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;(buffer)) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(buffer, 0, length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// BufferedStreamを利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(File source, File dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; buff &lt;span style="color:#f92672"&gt;=&lt;/span&gt; 8192;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedInputStream(&lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; FileInputStream(source), buff);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedOutputStream(&lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; FileOutputStream(dest), buff);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;()) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここでまず、&lt;code&gt;FileInputStream&lt;/code&gt;は&lt;code&gt;Files.newInputStream&lt;/code&gt;、&lt;code&gt;FileOutputStream&lt;/code&gt;は&lt;code&gt;Files.newOutputStream&lt;/code&gt;に代替できます。まず目立つ違いとしては、&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOutputStream&lt;/code&gt;は引数として&lt;code&gt;File&lt;/code&gt;を取り、&lt;code&gt;Files.newInputStream&lt;/code&gt;・&lt;code&gt;Files.newOutputStream&lt;/code&gt;は引数として&lt;code&gt;Path&lt;/code&gt;を取るという点がありますね。ただ、この違いは、&lt;code&gt;File&lt;/code&gt;と&lt;code&gt;Path&lt;/code&gt;の変換が自由なので、あまり決定的な違いとは言えません。つまり、どちらの方法にも簡単に切り替えができるということですね。&lt;/p&gt;
+&lt;p&gt;一見、&lt;code&gt;Files&lt;/code&gt;クラスからInputStreamとOutputStreamのインスタンスを生成した方が、より最新のAPIを使っているので性能の面で良さそうな気はします。しかし、JavaのNIOは、必ず性能面で既存のIOと比べ優位にあるわけではないですね。実際、ファイルのI/Oに関しては、NIOを使ってもBlockingモードとしてしか動かないので、あまり性能は変わらないという話もあります。&lt;/p&gt;
+&lt;p&gt;そういう場合は、特に問題を起こしてないのに、あえて既存のコードをNIOに切り替える必要は無くなりそうな気もします。しかし、本当にそれで大丈夫でしょうか。&lt;/p&gt;
+&lt;h3 id="fileinputstreamとfileoutputstreamの問題"&gt;FileInputStreamとFileOutputStreamの問題
+&lt;/h3&gt;&lt;p&gt;実際は、そうでもないようです。&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOuputStream&lt;/code&gt;には性能とは別の問題があります。GCによりアプリケーション全体が長くポーズの状態になる可能性があるということです。&lt;/p&gt;
+&lt;h4 id="finalizeのオーバライド問題"&gt;finalize()のオーバライド問題
+&lt;/h4&gt;&lt;p&gt;GCによりアプリケーション全体がポーズされるということは、つまり、メモリがフルになるということです。ファイルI/Oで、InputStreamとOutputStreamを使ってメモリがフルになるということは、ちゃんと&lt;code&gt;close()&lt;/code&gt;されてないことですね。なので、&lt;code&gt;単純にclose()すれば良いだけなのでは？&lt;/code&gt;と思われます。&lt;/p&gt;
+&lt;p&gt;しかし、本当の問題は&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOuputStream&lt;/code&gt;のソースコードにあります。この二つのクラスは、&lt;code&gt;finalize()&lt;/code&gt;メソッドをオーバーロードしていて、ちゃんと&lt;code&gt;close()&lt;/code&gt;してもメモリー上にデータが残ってしまう可能性があるのです。この問題は、&lt;a class="link" href="https://dzone.com/articles/fileinputstream-fileoutputstream-considered-harmful" target="_blank" rel="noopener"
+&gt;こちらの記事&lt;/a&gt;に説明されてある通り、Jenkinsでも&lt;a class="link" href="https://issues.jenkins.io/browse/JENKINS-42934" target="_blank" rel="noopener"
+&gt;問題視されたことがあり&lt;/a&gt;、OpenJDKでも&lt;a class="link" href="https://bugs.openjdk.java.net/browse/JDK-8212050" target="_blank" rel="noopener"
+&gt;finalize()を消す必要がある&lt;/a&gt;と指摘されたことがあります。&lt;/p&gt;
+&lt;p&gt;JDKの対応としては、&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOuputStream&lt;/code&gt;の&lt;code&gt;finalize()&lt;/code&gt;はJava 9から&lt;code&gt;Deprecated&lt;/code&gt;となり、Java 10からは別の実装を加えることで問題を解決していますが、Java 1.7や1.8を使う場合は依然として問題が起こり得るということになりますね。&lt;/p&gt;
+&lt;p&gt;なので、これからはなるべく&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOutptStream&lt;/code&gt;の利用は避けるようにする必要があると思います。習慣は怖いですので。&lt;/p&gt;
+&lt;h2 id="ファイルコピーはどのような方法を使った方がいいか"&gt;ファイルコピーはどのような方法を使った方がいいか
+&lt;/h2&gt;&lt;p&gt;今までの結論で、InputStream及びOuputStreamのインスタンスはNIOを使うことにします。したがって前述のコードは以下のように直すことができますね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// byte[]を利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source); &lt;span style="color:#75715e"&gt;// FileInputStreamを使わない&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(dest); &lt;span style="color:#75715e"&gt;// FileOutputStreamを使わない&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[]&lt;/span&gt; buffer &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;8192&lt;span style="color:#f92672"&gt;]&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;(buffer)) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(buffer, 0, length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// BufferedStreamを利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; buff &lt;span style="color:#f92672"&gt;=&lt;/span&gt; 8192;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedInputStream(Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source), buff); &lt;span style="color:#75715e"&gt;// FileInputStreamを使わない&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedOutputStream(Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(dest), buff); &lt;span style="color:#75715e"&gt;// FileOutputStreamを使わない&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;()) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;close&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="try-with-resource"&gt;try-with-resource
+&lt;/h3&gt;&lt;p&gt;InputStreamやOutputStreamは最後に&lt;code&gt;close()&lt;/code&gt;しないと、すでに使ったものでもメモリ上にデータが残ってしまいますね。なのでfinallyブロックでクローズするのが一般的かなと思いますが、こうした場合、finallyブロックでも追加の例外処理が必要になるケースもありますし、毎回&lt;code&gt;close()&lt;/code&gt;するのは忘れられる可能性もあるので危険です。&lt;/p&gt;
+&lt;p&gt;なのでJava 1.7からは&lt;code&gt;AutoCloseable&lt;/code&gt;と&lt;code&gt;try-with-resource&lt;/code&gt;が導入され、以下のようにより簡潔かつ安全なコードを書くことができるようになりました。例えば上記のコードは、&lt;code&gt;try-with-resource&lt;/code&gt;を使うと以下のようなコードに代替できますね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// byte[]を利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(dest)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[]&lt;/span&gt; buffer &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;8192&lt;span style="color:#f92672"&gt;]&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;(buffer)) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(buffer, 0, length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// BufferedStreamを利用した例&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; buff &lt;span style="color:#f92672"&gt;=&lt;/span&gt; 8192;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedInputStream(Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source), buff);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedOutputStream(Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(dest), buff)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; length;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((length &lt;span style="color:#f92672"&gt;=&lt;/span&gt; is.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;()) &lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; os.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(length);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;try-with-resourceでは、既存の方式と比べメリットしかないので、これは必ず使うことにします。&lt;/p&gt;
+&lt;h3 id="readallbytes"&gt;readAllBytes()
+&lt;/h3&gt;&lt;p&gt;次に考えられるのは、ファイルコピーでのBufferです。以上の例では、&lt;code&gt;byte[]&lt;/code&gt;を使うか、&lt;code&gt;BufferedInputStream&lt;/code&gt;・&lt;code&gt;BufferedOutputStream&lt;/code&gt;を使っていますが、これは性能のためのものであるということは皆さんもご存知のはずなので、Bufferについては割愛します。&lt;/p&gt;
+&lt;p&gt;我々が知る限り、Bufferのサイズが大きければ大きいほど、性能はよくなります。なら、メモリが許容する限り、できるだけ大きいサイズのBufferを指定したら自然に性能はマシンが出せる最大限となるはずです。&lt;/p&gt;
+&lt;p&gt;そして、Java 9からは、InputStreamを一気に全部読み込み、&lt;code&gt;byte[]&lt;/code&gt;として返す&lt;code&gt;readAllBytes()&lt;/code&gt;というメソッドができました。このメソッドを使うと、&lt;code&gt;Integer.MAX_VALUE&lt;/code&gt;サイズの&lt;code&gt;byte[]&lt;/code&gt;を生成してInputStreamを全部読み込むことができます。理論的にはこれを使ったらファイルコピーもあっという間にできそうですね。&lt;/p&gt;
+&lt;p&gt;しかし、考えなくてはならないのが、そうやって読み込んだデータはメモリ上に残ってしまうということです。例えば複数のユーザが使っているWebアプリケーションで、数GBに達するファイルをアップロードする場合が予想されるのに、&lt;code&gt;readAllBytes()&lt;/code&gt;を使ったらメモリはすぐ足りなくなるでしょう。いくらファイルコピーが早くなるとしても、同時に複数のユーザがファイルをアップロードする場合があれば、一周でのもメモリ上に大量のファイルデータが詰まってしまう可能性があるので、あまり良くない選択になります。なので、なるべく&lt;code&gt;readAllBytes()&lt;/code&gt;の仕様は控えるべきでしょう。&lt;/p&gt;
+&lt;h3 id="transferto"&gt;transferTo()
+&lt;/h3&gt;&lt;p&gt;Java 9からは追加されたメソッドのうちには、InputStreamにはより簡単にOutputStreamにデータを転送することのできる&lt;code&gt;transferTo()&lt;/code&gt;というメソッドもあります。&lt;code&gt;try-with-resource&lt;/code&gt;に加え、&lt;code&gt;transferTo()&lt;/code&gt;を使うとさらに簡潔なコードでファイルのコピーができるようになります。例えば以下のようなものですね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path dest) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(dest)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; is.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(os);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ソースコードを見るとわかることですが、&lt;code&gt;transferTo()&lt;/code&gt;ではデフォルトのBufferサイズで作ったbyte[]を使ってコピーをしているので、デフォルト値のBuffer(&lt;code&gt;8192&lt;/code&gt;バイト)を使う場合は、Bufferの指定もいらなくなるのが魅力的です。以下はソースコードです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(OutputStream out) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Objects.&lt;span style="color:#a6e22e"&gt;requireNonNull&lt;/span&gt;(out, &lt;span style="color:#e6db74"&gt;&amp;#34;out&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; transferred &lt;span style="color:#f92672"&gt;=&lt;/span&gt; 0;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[]&lt;/span&gt; buffer &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;DEFAULT_BUFFER_SIZE&lt;span style="color:#f92672"&gt;]&lt;/span&gt;; &lt;span style="color:#75715e"&gt;// 8192&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;int&lt;/span&gt; read;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;while&lt;/span&gt; ((read &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;read&lt;/span&gt;(buffer, 0, DEFAULT_BUFFER_SIZE)) &lt;span style="color:#f92672"&gt;&amp;gt;=&lt;/span&gt; 0) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; out.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(buffer, 0, read);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; transferred &lt;span style="color:#f92672"&gt;+=&lt;/span&gt; read;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; transferred;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ただ気になるのは、&lt;code&gt;transerTo()&lt;/code&gt;を使う場合は本当にBufferedが要らないかという点です。例えばInputStreamを&lt;code&gt;BufferedInputStream&lt;/code&gt;でラップすると、せめてファイルを読み込む速度は上がるのではないかという疑問が湧いてきます。とにかく、もしものことなので、簡単なベンチマークも実施してみました(実はやってみたかっただけですが)。10GBほどのファイルを生成し、以下のケースでテストしてみました。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;InputStream → OutputStream&lt;/li&gt;
+&lt;li&gt;BufferedInputStream → OutputStream&lt;/li&gt;
+&lt;li&gt;InputStream → BufferedIOutputStream&lt;/li&gt;
+&lt;li&gt;BufferedInputStream → BufferedIOutputStream&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;そしてコードは以下の通りです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@State&lt;/span&gt;(Scope.&lt;span style="color:#a6e22e"&gt;Benchmark&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@BenchmarkMode&lt;/span&gt;(Mode.&lt;span style="color:#a6e22e"&gt;AverageTime&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;StreamBufferTest&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; Path source;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; Path output &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Path.&lt;span style="color:#a6e22e"&gt;of&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/Users/retheviper/temp/benchmarkOutput&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// テスト用のファイルを作成する&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Setup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;init&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; String path &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;/Users/retheviper/temp/benchmarkSource&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; RandomAccessFile file &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; RandomAccessFile(path, &lt;span style="color:#e6db74"&gt;&amp;#34;rw&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; size &lt;span style="color:#f92672"&gt;=&lt;/span&gt; (1024 &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 1024 &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 1024) &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 10L; &lt;span style="color:#75715e"&gt;// 10GB&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; file.&lt;span style="color:#a6e22e"&gt;setLength&lt;/span&gt;(size);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;source&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Path.&lt;span style="color:#a6e22e"&gt;of&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;noBuffer&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(output, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;TRUNCATE_EXISTING&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;withInputBuffer&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedInputStream(Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(output, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;TRUNCATE_EXISTING&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;withOutputBuffer&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedOutputStream(Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(output, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;TRUNCATE_EXISTING&lt;/span&gt;))) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;withBothBuffer&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedInputStream(Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source));
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; BufferedOutputStream(Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(output, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;TRUNCATE_EXISTING&lt;/span&gt;))) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そしてベンチマーク結果は、以下の通りです。&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-dos" data-lang="dos"&gt;Benchmark Mode Cnt Score Error Units
 StreamBufferTest.noBuffer avgt 25 13.055 ± 0.583 s/op
 StreamBufferTest.withInputBuffer avgt 25 13.302 ± 0.460 s/op
 StreamBufferTest.withOutputBuffer avgt 25 13.663 ± 0.535 s/op
 StreamBufferTest.withBothBuffer avgt 25 12.668 ± 0.355 s/op
-&lt;/code>&lt;/pre>&lt;p>予想通り、&lt;code>transferTo()&lt;/code>でのコピーの場合、BufferedInputStreamやBufferedOutputStreamを使わなくても性能はあまり変わりありませんでした。単純なファイルコピーではなかったり、InputStreamからOutputStreamというデータの転送ではない場合はまた必要となりそうな気はしますが、このメソッドが使える場合はあまり意識しなくても良さそうですね。&lt;/p>
-&lt;h3 id="filescopyがいい">Files.copy()がいい？
-&lt;/h3>&lt;p>Java 1.7では、&lt;code>Files.copy()&lt;/code>を通じて以下のファイルコピーができるようになっています。&lt;/p>
-&lt;ul>
-&lt;li>InputStream → Path&lt;/li>
-&lt;li>Path → OutputStream&lt;/li>
-&lt;li>Path → Path&lt;/li>
-&lt;/ul>
-&lt;p>そして一部では、JavaのNIOはネイティブコードで書かれてあるので、InputStreamからOutputStreamへの書き込みよりはFiles.copy()の方が性能がいいと言われる場合もありました。この話が本当さとすると少なくともローカルのファイルを扱う場合、InputStreamからOutputStreamへの書き込みよりはPathを使ったコピーが良さそうな気がします。&lt;/p>
-&lt;h4 id="ソースで確認する">ソースで確認する
-&lt;/h4>&lt;p>コードが違うと言われたからには、直接確認した方がいいですね。早速、以上であげた三つのメソッドのソースコードを確認することにします。まずは、&lt;code>InputStream → Path&lt;/code>と&lt;code>Path → OutputStream&lt;/code>です。こちらはシンプルに、&lt;code>Path&lt;/code>からOuputStreamもしくはInputStreamを生成し、&lt;code>transferTo()&lt;/code>を使ってコピーすることとなっています。(ただ、これはJava 11基準のソースコードなので、Java 9以前の場合は違うコードの可能性があります)&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// InputStream → Path&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">long&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(InputStream in, Path target, CopyOption... options) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// コピー以外の処理は省略&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream ostream;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ostream &lt;span style="color:#f92672">=&lt;/span> newOutputStream(target, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE_NEW&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> StandardOpenOption.&lt;span style="color:#a6e22e">WRITE&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">catch&lt;/span> (FileAlreadyExistsException x) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (se &lt;span style="color:#f92672">!=&lt;/span> &lt;span style="color:#66d9ef">null&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">throw&lt;/span> se;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// someone else won the race and created the file&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">throw&lt;/span> x;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// do the copy&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (OutputStream out &lt;span style="color:#f92672">=&lt;/span> ostream) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Path → OutputStream&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> &lt;span style="color:#66d9ef">long&lt;/span> &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, OutputStream out) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// ensure not null before opening file&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Objects.&lt;span style="color:#a6e22e">requireNonNull&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> newInputStream(source)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ただ、やはり&lt;code>Path → Path&lt;/code>の場合は全く違うコードになっています。コピー元とコピー先が同じファイルシステムの場合は&lt;a class="link" href="https://docs.oracle.com/javase/7/docs/api/java/nio/file/spi/FileSystemProvider.html" target="_blank" rel="noopener"
->FileSystemProvider&lt;/a>を使い、そうではない場合はCopyMoveHelperを使うことになっていますね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Path → Path&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">static&lt;/span> Path &lt;span style="color:#a6e22e">copy&lt;/span>(Path source, Path target, CopyOption... options) &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FileSystemProvider provider &lt;span style="color:#f92672">=&lt;/span> provider(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> (provider(target) &lt;span style="color:#f92672">==&lt;/span> provider) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// same provider&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> provider.&lt;span style="color:#a6e22e">copy&lt;/span>(source, target, options);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> } &lt;span style="color:#66d9ef">else&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// different providers&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> CopyMoveHelper.&lt;span style="color:#a6e22e">copyToForeignTarget&lt;/span>(source, target, options);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">return&lt;/span> target;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>ここで&lt;code>CopyMoveHelper.copyToForeignTarget()&lt;/code>の場合は、結果的に&lt;code>Files.copy(InputStream, Path)&lt;/code>を呼ぶことになるのですが、前者の場合は全く違う方式になるのでやはり性能の差が発生する可能性もありそうですね。整理すると、&lt;code>同じシステム内で、Path → Pathでコピーする場合だけ性能がよくなる可能性がある&lt;/code>ということですね。&lt;/p>
-&lt;p>ここはまた検証が必要なところなので、またベンチマークを実施してみました。もちろんファイルシステムの違いにより結果は変わる可能性があるので、これが絶対的だとは言えませんが、何らかの違いがあるかもしれません。他の&lt;code>Files.copy()&lt;/code>メソッドは実質的に&lt;code>transferTo()&lt;/code>と同じものなので、今回の比較は&lt;code>InputStream → OutputStream&lt;/code>と&lt;code>Path → Path&lt;/code>だけになります。また、比較のためのテストケースが少ないので、今回は&lt;code>transferTo()&lt;/code>のベンチマークよりもファイルサイズを大きくしてみました。以下は、そのテストコードです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@State&lt;/span>(Scope.&lt;span style="color:#a6e22e">Benchmark&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#a6e22e">@BenchmarkMode&lt;/span>(Mode.&lt;span style="color:#a6e22e">AverageTime&lt;/span>)
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">class&lt;/span> &lt;span style="color:#a6e22e">StreamCopyTest&lt;/span> {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> Path source;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">private&lt;/span> Path output &lt;span style="color:#f92672">=&lt;/span> Path.&lt;span style="color:#a6e22e">of&lt;/span>(&lt;span style="color:#e6db74">&amp;#34;/Users/youngbinkim/Downloads/benchmarkOutput&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#75715e">// テスト用のファイルを作成する&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Setup&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">init&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> String path &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/Users/youngbinkim/Downloads/benchmarkSource&amp;#34;&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">final&lt;/span> RandomAccessFile file &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> RandomAccessFile(path, &lt;span style="color:#e6db74">&amp;#34;rw&amp;#34;&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">long&lt;/span> size &lt;span style="color:#f92672">=&lt;/span> (1024 &lt;span style="color:#f92672">*&lt;/span> 1024 &lt;span style="color:#f92672">*&lt;/span> 1024) &lt;span style="color:#f92672">*&lt;/span> 10L; &lt;span style="color:#75715e">// 10GB&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> file.&lt;span style="color:#a6e22e">setLength&lt;/span>(size);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">this&lt;/span>.&lt;span style="color:#a6e22e">source&lt;/span> &lt;span style="color:#f92672">=&lt;/span> Path.&lt;span style="color:#a6e22e">of&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">streamToStream&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">try&lt;/span> (InputStream in &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(source);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> OutputStream out &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(output, StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>, StandardOpenOption.&lt;span style="color:#a6e22e">TRUNCATE_EXISTING&lt;/span>)) {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> in.&lt;span style="color:#a6e22e">transferTo&lt;/span>(out);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#a6e22e">@Benchmark&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">public&lt;/span> &lt;span style="color:#66d9ef">void&lt;/span> &lt;span style="color:#a6e22e">pathToPath&lt;/span>() &lt;span style="color:#66d9ef">throws&lt;/span> IOException {
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Files.&lt;span style="color:#a6e22e">copy&lt;/span>(source, output, StandardCopyOption.&lt;span style="color:#a6e22e">REPLACE_EXISTING&lt;/span>);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>そして、ベンチマークの結果は以下の通りです。&lt;/p>
-&lt;pre tabindex="0">&lt;code class="language-dos" data-lang="dos">Benchmark Mode Cnt Score Error Units
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;予想通り、&lt;code&gt;transferTo()&lt;/code&gt;でのコピーの場合、BufferedInputStreamやBufferedOutputStreamを使わなくても性能はあまり変わりありませんでした。単純なファイルコピーではなかったり、InputStreamからOutputStreamというデータの転送ではない場合はまた必要となりそうな気はしますが、このメソッドが使える場合はあまり意識しなくても良さそうですね。&lt;/p&gt;
+&lt;h3 id="filescopyがいい"&gt;Files.copy()がいい？
+&lt;/h3&gt;&lt;p&gt;Java 1.7では、&lt;code&gt;Files.copy()&lt;/code&gt;を通じて以下のファイルコピーができるようになっています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;InputStream → Path&lt;/li&gt;
+&lt;li&gt;Path → OutputStream&lt;/li&gt;
+&lt;li&gt;Path → Path&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;そして一部では、JavaのNIOはネイティブコードで書かれてあるので、InputStreamからOutputStreamへの書き込みよりはFiles.copy()の方が性能がいいと言われる場合もありました。この話が本当さとすると少なくともローカルのファイルを扱う場合、InputStreamからOutputStreamへの書き込みよりはPathを使ったコピーが良さそうな気がします。&lt;/p&gt;
+&lt;h4 id="ソースで確認する"&gt;ソースで確認する
+&lt;/h4&gt;&lt;p&gt;コードが違うと言われたからには、直接確認した方がいいですね。早速、以上であげた三つのメソッドのソースコードを確認することにします。まずは、&lt;code&gt;InputStream → Path&lt;/code&gt;と&lt;code&gt;Path → OutputStream&lt;/code&gt;です。こちらはシンプルに、&lt;code&gt;Path&lt;/code&gt;からOuputStreamもしくはInputStreamを生成し、&lt;code&gt;transferTo()&lt;/code&gt;を使ってコピーすることとなっています。(ただ、これはJava 11基準のソースコードなので、Java 9以前の場合は違うコードの可能性があります)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// InputStream → Path&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(InputStream in, Path target, CopyOption... options) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// コピー以外の処理は省略&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream ostream;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ostream &lt;span style="color:#f92672"&gt;=&lt;/span&gt; newOutputStream(target, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE_NEW&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; StandardOpenOption.&lt;span style="color:#a6e22e"&gt;WRITE&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;catch&lt;/span&gt; (FileAlreadyExistsException x) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (se &lt;span style="color:#f92672"&gt;!=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; se;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// someone else won the race and created the file&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; x;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// do the copy&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; ostream) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Path → OutputStream&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, OutputStream out) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ensure not null before opening file&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Objects.&lt;span style="color:#a6e22e"&gt;requireNonNull&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; newInputStream(source)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ただ、やはり&lt;code&gt;Path → Path&lt;/code&gt;の場合は全く違うコードになっています。コピー元とコピー先が同じファイルシステムの場合は&lt;a class="link" href="https://docs.oracle.com/javase/7/docs/api/java/nio/file/spi/FileSystemProvider.html" target="_blank" rel="noopener"
+&gt;FileSystemProvider&lt;/a&gt;を使い、そうではない場合はCopyMoveHelperを使うことになっていますね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Path → Path&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; Path &lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(Path source, Path target, CopyOption... options) &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; FileSystemProvider provider &lt;span style="color:#f92672"&gt;=&lt;/span&gt; provider(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (provider(target) &lt;span style="color:#f92672"&gt;==&lt;/span&gt; provider) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// same provider&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; provider.&lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(source, target, options);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// different providers&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; CopyMoveHelper.&lt;span style="color:#a6e22e"&gt;copyToForeignTarget&lt;/span&gt;(source, target, options);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; target;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで&lt;code&gt;CopyMoveHelper.copyToForeignTarget()&lt;/code&gt;の場合は、結果的に&lt;code&gt;Files.copy(InputStream, Path)&lt;/code&gt;を呼ぶことになるのですが、前者の場合は全く違う方式になるのでやはり性能の差が発生する可能性もありそうですね。整理すると、&lt;code&gt;同じシステム内で、Path → Pathでコピーする場合だけ性能がよくなる可能性がある&lt;/code&gt;ということですね。&lt;/p&gt;
+&lt;p&gt;ここはまた検証が必要なところなので、またベンチマークを実施してみました。もちろんファイルシステムの違いにより結果は変わる可能性があるので、これが絶対的だとは言えませんが、何らかの違いがあるかもしれません。他の&lt;code&gt;Files.copy()&lt;/code&gt;メソッドは実質的に&lt;code&gt;transferTo()&lt;/code&gt;と同じものなので、今回の比較は&lt;code&gt;InputStream → OutputStream&lt;/code&gt;と&lt;code&gt;Path → Path&lt;/code&gt;だけになります。また、比較のためのテストケースが少ないので、今回は&lt;code&gt;transferTo()&lt;/code&gt;のベンチマークよりもファイルサイズを大きくしてみました。以下は、そのテストコードです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@State&lt;/span&gt;(Scope.&lt;span style="color:#a6e22e"&gt;Benchmark&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@BenchmarkMode&lt;/span&gt;(Mode.&lt;span style="color:#a6e22e"&gt;AverageTime&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;StreamCopyTest&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; Path source;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; Path output &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Path.&lt;span style="color:#a6e22e"&gt;of&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/Users/youngbinkim/Downloads/benchmarkOutput&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// テスト用のファイルを作成する&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Setup&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;init&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; String path &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;/Users/youngbinkim/Downloads/benchmarkSource&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; RandomAccessFile file &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; RandomAccessFile(path, &lt;span style="color:#e6db74"&gt;&amp;#34;rw&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;long&lt;/span&gt; size &lt;span style="color:#f92672"&gt;=&lt;/span&gt; (1024 &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 1024 &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 1024) &lt;span style="color:#f92672"&gt;*&lt;/span&gt; 10L; &lt;span style="color:#75715e"&gt;// 10GB&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; file.&lt;span style="color:#a6e22e"&gt;setLength&lt;/span&gt;(size);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;source&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Path.&lt;span style="color:#a6e22e"&gt;of&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;streamToStream&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; (InputStream in &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(source);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; OutputStream out &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(output, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;, StandardOpenOption.&lt;span style="color:#a6e22e"&gt;TRUNCATE_EXISTING&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; in.&lt;span style="color:#a6e22e"&gt;transferTo&lt;/span&gt;(out);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Benchmark&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;void&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;pathToPath&lt;/span&gt;() &lt;span style="color:#66d9ef"&gt;throws&lt;/span&gt; IOException {
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Files.&lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(source, output, StandardCopyOption.&lt;span style="color:#a6e22e"&gt;REPLACE_EXISTING&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そして、ベンチマークの結果は以下の通りです。&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-dos" data-lang="dos"&gt;Benchmark Mode Cnt Score Error Units
 StreamCopyTest.streamToStream avgt 25 12.128 ± 0.331 s/op
 StreamCopyTest.pathToPath avgt 25 12.257 ± 0.342 s/op
-&lt;/code>&lt;/pre>&lt;p>10GBのファイルでは誤差範囲以内の結果となったので、ファイルサイズだけを100GBに変えて同じくベンチマークを実施してみました。その結果は以下です。&lt;/p>
-&lt;pre tabindex="0">&lt;code class="language-dos" data-lang="dos">Benchmark Mode Cnt Score Error Units
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;10GBのファイルでは誤差範囲以内の結果となったので、ファイルサイズだけを100GBに変えて同じくベンチマークを実施してみました。その結果は以下です。&lt;/p&gt;
+&lt;pre tabindex="0"&gt;&lt;code class="language-dos" data-lang="dos"&gt;Benchmark Mode Cnt Score Error Units
 StreamCopyTest.streamToStream avgt 25 160.046 ± 2.538 s/op
 StreamCopyTest.pathToPath avgt 25 153.505 ± 2.662 s/op
-&lt;/code>&lt;/pre>&lt;p>100GBになってからやっと差が見えてくる、ということになりますが、結論としてはやはり、&lt;code>Path → Path&lt;/code>の方が早いという結果となりました。機会があれば、複数スレッドによるI/OやOSの違いまで考慮したベンチマークを書きたいものですが、とりあえずは予想通りの結果となったということで。&lt;/p>
-&lt;h2 id="最後に">最後に
-&lt;/h2>&lt;p>以上のソースコードとベンチマークでわかったことをまとめると、Javaでのファイルコピーは、とりあえず以下のようなことで結論づけができそうです。&lt;/p>
-&lt;ul>
-&lt;li>Java 1.7以上の場合
-&lt;ul>
-&lt;li>&lt;code>FileInputStream&lt;/code>・&lt;code>FileOutputStream&lt;/code>の代わりに&lt;code>Files.newInputStream&lt;/code>・&lt;code>Files.newOutputStream&lt;/code>を使う&lt;/li>
-&lt;li>&lt;code>try-with-resource&lt;/code>を使う&lt;/li>
-&lt;li>コピー元とコピー先のどちらも同じファイルシステム上のパスであれば、両方&lt;code>Path&lt;/code>が引数の&lt;code>Files.copy()&lt;/code>を使う&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>Java 9以上の場合
-&lt;ul>
-&lt;li>Bufferサイズが&lt;code>8192&lt;/code>の場合は&lt;code>transferTo()&lt;/code>を使う
-&lt;ul>
-&lt;li>&lt;code>transferTo()&lt;/code>を使う場合、&lt;code>BufferedInputStream&lt;/code>・&lt;code>BufferedOutputStream&lt;/code>は必須ではない&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;p>多くの場合、エンタープライズアプリケーションはLTSである1.8や11を使うと思われるので、実質的には以上に並べた項目全てが当てはまると言えましょう。&lt;/p>
-&lt;p>かなり今更な感があるポストとなりましたが、個人的には自分の納得できる形で整理でき、スッキリしました。こうやって何気なく、「そう教わったから」使っていたコードを振り返ってみるのも良い勉強になりますね。次もまた、こうやってソースコードやベンチマークによる検証をやってみたいなと思います。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item><item><title>IOからNIOへ</title><link>https://retheviper.github.io/posts/java-nio/</link><pubDate>Mon, 20 Jan 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-nio/</guid><description>&lt;img src="https://retheviper.github.io/images/java.webp" alt="Featured image of post IOからNIOへ" />&lt;p>私がそうでしたが、今でも初めてJavaでのI/Oを学ぶとしたら、やはりFileオブジェクトを生成してInputStreamで読み込んだり、OutputStreamで書き込むのが一般的なのではないかと思います。ここで少し発展すると、WriterやReaderなどのクラスを使ったり、StreamをBufferで包んだり、SerializableでオブジェクトのI/Oを行ったりするレベルまで行くのでしょう。&lt;/p>
-&lt;p>昔のAPIだとしても、動作や性能に大した問題がなければあえて新しいAPIにコードを全部変える必要はないと思います。むしろ無理やり新しいAPIに書き換えたコードが問題を起こす可能性もあるし、常に優秀とは言えませんので。例えばJava 1.8で追加されたforEach()は便利で、Lambdaが好きな私は多くの場面で使っていますが、実際は今までのJVMは伝統的なforループに最適化されているのでforEach()は性能で劣るらしいです。今後、forEach()の性能がより良くなる可能性もなくはないでしょうが、最近のJavaのバージョンアップ履歴をみると関数型APIの性能改善にどれだけ時間がかかるかは少し謎です。&lt;/p>
-&lt;p>新しいAPIを使うということにはこのような問題もあり、慎重ではければならないのですが、それでもAPIが新しくなるのには何らかの理由があるためなので、新しくコードを書いたり簡単なコードに変えたりするなどの理由があれば、積極的に新しいAPIを導入してみるということもそう悪くないと思います。今回紹介したいAPIもまたそのようなものです。ファイルI/Oを扱う新しい方式、NIOです。(と言っても、Java 1.7から導入されたので今はあまり新しくもないですが…)&lt;/p>
-&lt;h2 id="nioって何">NIOって何？
-&lt;/h2>&lt;p>NIOは、Javaの新しいI/Oのことです。Newの略かと思いがちなのですが、実際はNon-blockingの略らしいですね。JavaはCやC++と比べ遅いですが、その理由の一つがI/Oだったらしいです。なのでそれを改善するために出たのがこのNIOですと。&lt;/p>
-&lt;p>BlockingかNon-blockingかによる違い、Stream基盤かChannel基盤かという違いなど様々な違いがありますが、一般的には頻繁なI/Oが要求される場合ではNIOを選択した方がより良い性能を期待できると言います。他には以下のようなメリットがあります。&lt;/p>
-&lt;ul>
-&lt;li>スレッドのブロックが発生しない&lt;/li>
-&lt;li>コードがより簡潔&lt;/li>
-&lt;li>コピー、移動、読み込みのオプション指定が簡単&lt;/li>
-&lt;li>基本的にBufferを使うので、Buffered~でのラッピングが要らなくなる&lt;/li>
-&lt;/ul>
-&lt;p>あまりJVMの構造に詳しくないので、私がここで浅い知識を持って説明するようなことはしません。ただ、自分の観点からしてコードがより簡潔になるということは確かなメリットです。なので皆さんにもぜひ使ってみていただきたいと思います。&lt;/p>
-&lt;p>それでは、実際のコードでNIOをどう使うかについて説明して行きます。&lt;/p>
-&lt;h2 id="file--path">File → Path
-&lt;/h2>&lt;p>NIOではFileオブジェクトよりPathオブジェクトを使います。PathはFileオブジェクトに比べ、ファイルパスをディレクトリとファイル名で分離して指定できるのが最大のメリットです。&lt;/p>
-&lt;p>例えばファイルパスが複数のフォルダでネストされているとしましょう。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 複数のディレクトリとファイルがそれぞれ文字列として存在(path/to/file.txt)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String rootDirectory &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;path&amp;#34;&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String toDirectory &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;to&amp;#34;&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>String fileName &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#e6db74">&amp;#34;file.txt&amp;#34;&lt;/span>;
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>この複数の文字列からインスタンスを作成するとしたら、Fileのコンストラクターは引数が一つの文字列なので以下のようになります。ディレクトリの文字列にスラッシュが含まれてないので、文字列を結合しながらスラッシュも一緒にいれる必要があります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Fileオブジェクトの生成&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>File file &lt;span style="color:#f92672">=&lt;/span> &lt;span style="color:#66d9ef">new&lt;/span> File(rootDirectory &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span> &lt;span style="color:#f92672">+&lt;/span> toDirectory &lt;span style="color:#f92672">+&lt;/span> &lt;span style="color:#e6db74">&amp;#34;/&amp;#34;&lt;/span> fileName);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>しかし、Pathの場合は指定できる文字列が複数でも構いません。ディレクトリとファイル名の文字列を順番通り指定するだけで良いです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Pathオブジェクトの生成&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Path path &lt;span style="color:#f92672">=&lt;/span> Paths.&lt;span style="color:#a6e22e">get&lt;/span>(rootDirectory, directory, fileName);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>このように、インスタンスの作成がより便利なのがPathです。また、どうしてもFileオブジェクトが必要な場合があるとしても、FileのメソッドからPathに変換できる機能があるので便利ですね。もちろん、その逆もできます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// PathからFile生成&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Path path &lt;span style="color:#f92672">=&lt;/span> file.&lt;span style="color:#a6e22e">toPath&lt;/span>();
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// FileからPath生成&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>File file &lt;span style="color:#f92672">=&lt;/span> path.&lt;span style="color:#a6e22e">toFile&lt;/span>();
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>他にもtoURI()メソッドでURIオブジェクトを生成できるなど、PathにはFileと同じ機能をするようなメソッドが多いので、どちらか便利な方を使いましょう。&lt;/p>
-&lt;h2 id="files">Files
-&lt;/h2>&lt;p>昔ながらのI/Oでファイルのコピーや削除などの操作を行うためにはInputStream、OutputStream、Writer、Readerなどのクラスを活用してきました。NIOでは主にこれらの作業をFilesクラスを持って行います。また、FilesクラスにはWriterとReader、InputStreamとOutputStreamを生成する機能もあるので使い勝手が良いクラスです。&lt;/p>
-&lt;h3 id="ファイルのコピー">ファイルのコピー
-&lt;/h3>&lt;p>Filesクラスでのファイルコピーは簡単です。以下のコードを見てください。基本的にコピー元とコピー先のファイルをPathオブジェクトとして指定するだけです。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// PathをPathにコピー&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">copy&lt;/span>(source, target);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>FilesクラスでのコピーにはENUMでコピー時のオプションを指定することもできます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// オプションを指定(ファイル属性もコピー)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>StandardCopyOption option &lt;span style="color:#f92672">=&lt;/span> StandardCopyOption.&lt;span style="color:#a6e22e">COPY_ATTRIBUTES&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">copy&lt;/span>(source, target, option);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>また、実際存在するファイルではなく、InputStreamをコピー元として指定することもできます。この場合、データをファイルに書き込むということもできますね。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// InputStreamをPathにコピー&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">copy&lt;/span>(sourceStream, target);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの削除">ファイルの削除
-&lt;/h3>&lt;p>Filesクラスでのファイル削除はコピーと同じく、Pathオブジェクトを引数として渡します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 削除&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">delete&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>戻り値がbooleanのメソッドも用意されています。ファイルが存在する場合は削除して、その結果をbooleanとして返します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 存在する場合削除&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">deleteIfExists&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの移動">ファイルの移動
-&lt;/h3>&lt;p>ファイルの移動は、コピーと削除の組み合わせみたいなものですね。また、ファイル名を変える場合にも使えます。基本がコピーだからか、コピーの時と同じオプションを使えます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 移動もしくはリネーム&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">move&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// オプションを指定(上書きする)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>StandardCopyOption option &lt;span style="color:#f92672">=&lt;/span> StandardCopyOption.&lt;span style="color:#a6e22e">REPLACE_EXISTING&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">move&lt;/span>(path, option);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの書き込み">ファイルの書き込み
-&lt;/h3>&lt;p>InputStreamをcopy()で使えるのですが、ファイル書き込みの場合のメソッドもあります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// Pathにデータを書き込む&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">write&lt;/span>(path, content);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>write()メソッドの引数として渡せるのは&lt;code>byte[]&lt;/code>、&lt;code>List&amp;lt;String&amp;gt;&lt;/code>などがあります。また、コピーの場合のようにオプションが指定できます。こちらのオプションではファイルが存在する場合上書きするか、追記するかを選べるので場合によってはcopy()と分けて使えます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// オプション指定(追記)&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>StandardOpenOption option &lt;span style="color:#f92672">=&lt;/span> StandardOpenOption.&lt;span style="color:#a6e22e">APPEND&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Files.&lt;span style="color:#a6e22e">write&lt;/span>(path, content, option);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ファイルの読み込み">ファイルの読み込み
-&lt;/h3>&lt;p>書き込みが文字列かbyte[]で分けられているように、読み込みも同じ形でファイルを取得できるメソッドがあります。文字列取得の場合、シンタックスシュガーとして結果物がStreamかListかくらいの違いがあります。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 文字列として全行を読み込む&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> lines &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">lines&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>List&lt;span style="color:#f92672">&amp;lt;&lt;/span>String&lt;span style="color:#f92672">&amp;gt;&lt;/span> liness &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">readAllLines&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// byte[]として読み込む&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">byte&lt;/span>&lt;span style="color:#f92672">[]&lt;/span> bytes &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">readAllBytes&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Fileがそうであるように、Pathもまたファイルではなくディレクトリになれるので、Filesのメソッドもそれに対応しています。list()メソッドではディレクトリないのエントリをPathとして取得してStreamを生成します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// ディレクトリ内のエントリを要素として持つStream取得&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Stream&lt;span style="color:#f92672">&amp;lt;&lt;/span>Path&lt;span style="color:#f92672">&amp;gt;&lt;/span> files &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">list&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ioとの組み合わせで使う">I/Oとの組み合わせで使う
-&lt;/h3>&lt;p>先に述べたように、Filesのメソッドの一部は昔ながらのI/Oと組み合わせて使えるものもあります。その一部を紹介します。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 読み込みの場合&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>InputStream is &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>BufferedReader br &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newBufferedReader&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// 書き込みの場合&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>OutputStream os &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newOutputStream&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>BufferedWriter bw &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newBufferedWriter&lt;/span>(path);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>もちろんOpenOptionの指定もできます。&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-java" data-lang="java">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">// ファイルがない場合は作成する&lt;/span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>StandardOpenOption option &lt;span style="color:#f92672">=&lt;/span> StandardOpenOption.&lt;span style="color:#a6e22e">CREATE&lt;/span>;
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>InputStream is &lt;span style="color:#f92672">=&lt;/span> Files.&lt;span style="color:#a6e22e">newInputStream&lt;/span>(path, option);
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="最後に">最後に
-&lt;/h2>&lt;p>どうでしたか。同じ機能をするだけならあまり使いたくなるメリットはないように見えるかもしれませんが、実際使ってみると、ENUMによるオプション指定でやりたいことが明確となって、コードの量も減らすことができる便利なクラスを提供するのがNIOだと思います。特にFileはそのまま使うとしても、Filesのメソッドは便利かつ強力なので、皆さんにぜひお勧めしたいものです。&lt;/p>
-&lt;p>他にもFilesクラスには双方通信ができるというChannelクラスを提供するメソッドや、ファイルの属性、シンボリックリンクを取得したり指定したPathがディレクトリかを確認したり、二つのPathが同じファイルかをチェックするなど便利なメソッドが多いので、ぜひ使ってみてください。&lt;/p>
-&lt;p>では、また！&lt;/p></description></item></channel></rss>
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;100GBになってからやっと差が見えてくる、ということになりますが、結論としてはやはり、&lt;code&gt;Path → Path&lt;/code&gt;の方が早いという結果となりました。機会があれば、複数スレッドによるI/OやOSの違いまで考慮したベンチマークを書きたいものですが、とりあえずは予想通りの結果となったということで。&lt;/p&gt;
+&lt;h2 id="最後に"&gt;最後に
+&lt;/h2&gt;&lt;p&gt;以上のソースコードとベンチマークでわかったことをまとめると、Javaでのファイルコピーは、とりあえず以下のようなことで結論づけができそうです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Java 1.7以上の場合
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;FileInputStream&lt;/code&gt;・&lt;code&gt;FileOutputStream&lt;/code&gt;の代わりに&lt;code&gt;Files.newInputStream&lt;/code&gt;・&lt;code&gt;Files.newOutputStream&lt;/code&gt;を使う&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;try-with-resource&lt;/code&gt;を使う&lt;/li&gt;
+&lt;li&gt;コピー元とコピー先のどちらも同じファイルシステム上のパスであれば、両方&lt;code&gt;Path&lt;/code&gt;が引数の&lt;code&gt;Files.copy()&lt;/code&gt;を使う&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Java 9以上の場合
+&lt;ul&gt;
+&lt;li&gt;Bufferサイズが&lt;code&gt;8192&lt;/code&gt;の場合は&lt;code&gt;transferTo()&lt;/code&gt;を使う
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;transferTo()&lt;/code&gt;を使う場合、&lt;code&gt;BufferedInputStream&lt;/code&gt;・&lt;code&gt;BufferedOutputStream&lt;/code&gt;は必須ではない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;多くの場合、エンタープライズアプリケーションはLTSである1.8や11を使うと思われるので、実質的には以上に並べた項目全てが当てはまると言えましょう。&lt;/p&gt;
+&lt;p&gt;かなり今更な感があるポストとなりましたが、個人的には自分の納得できる形で整理でき、スッキリしました。こうやって何気なく、「そう教わったから」使っていたコードを振り返ってみるのも良い勉強になりますね。次もまた、こうやってソースコードやベンチマークによる検証をやってみたいなと思います。&lt;/p&gt;
+&lt;p&gt;では、また！&lt;/p&gt;</description></item><item><title>IOからNIOへ</title><link>https://retheviper.github.io/posts/java-nio/</link><pubDate>Mon, 20 Jan 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/java-nio/</guid><description>&lt;img src="https://retheviper.github.io/images/java.webp" alt="Featured image of post IOからNIOへ" /&gt;&lt;p&gt;私がそうでしたが、今でも初めてJavaでのI/Oを学ぶとしたら、やはりFileオブジェクトを生成してInputStreamで読み込んだり、OutputStreamで書き込むのが一般的なのではないかと思います。ここで少し発展すると、WriterやReaderなどのクラスを使ったり、StreamをBufferで包んだり、SerializableでオブジェクトのI/Oを行ったりするレベルまで行くのでしょう。&lt;/p&gt;
+&lt;p&gt;昔のAPIだとしても、動作や性能に大した問題がなければあえて新しいAPIにコードを全部変える必要はないと思います。むしろ無理やり新しいAPIに書き換えたコードが問題を起こす可能性もあるし、常に優秀とは言えませんので。例えばJava 1.8で追加されたforEach()は便利で、Lambdaが好きな私は多くの場面で使っていますが、実際は今までのJVMは伝統的なforループに最適化されているのでforEach()は性能で劣るらしいです。今後、forEach()の性能がより良くなる可能性もなくはないでしょうが、最近のJavaのバージョンアップ履歴をみると関数型APIの性能改善にどれだけ時間がかかるかは少し謎です。&lt;/p&gt;
+&lt;p&gt;新しいAPIを使うということにはこのような問題もあり、慎重ではければならないのですが、それでもAPIが新しくなるのには何らかの理由があるためなので、新しくコードを書いたり簡単なコードに変えたりするなどの理由があれば、積極的に新しいAPIを導入してみるということもそう悪くないと思います。今回紹介したいAPIもまたそのようなものです。ファイルI/Oを扱う新しい方式、NIOです。(と言っても、Java 1.7から導入されたので今はあまり新しくもないですが…)&lt;/p&gt;
+&lt;h2 id="nioって何"&gt;NIOって何？
+&lt;/h2&gt;&lt;p&gt;NIOは、Javaの新しいI/Oのことです。Newの略かと思いがちなのですが、実際はNon-blockingの略らしいですね。JavaはCやC++と比べ遅いですが、その理由の一つがI/Oだったらしいです。なのでそれを改善するために出たのがこのNIOですと。&lt;/p&gt;
+&lt;p&gt;BlockingかNon-blockingかによる違い、Stream基盤かChannel基盤かという違いなど様々な違いがありますが、一般的には頻繁なI/Oが要求される場合ではNIOを選択した方がより良い性能を期待できると言います。他には以下のようなメリットがあります。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;スレッドのブロックが発生しない&lt;/li&gt;
+&lt;li&gt;コードがより簡潔&lt;/li&gt;
+&lt;li&gt;コピー、移動、読み込みのオプション指定が簡単&lt;/li&gt;
+&lt;li&gt;基本的にBufferを使うので、Buffered~でのラッピングが要らなくなる&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;あまりJVMの構造に詳しくないので、私がここで浅い知識を持って説明するようなことはしません。ただ、自分の観点からしてコードがより簡潔になるということは確かなメリットです。なので皆さんにもぜひ使ってみていただきたいと思います。&lt;/p&gt;
+&lt;p&gt;それでは、実際のコードでNIOをどう使うかについて説明して行きます。&lt;/p&gt;
+&lt;h2 id="file--path"&gt;File → Path
+&lt;/h2&gt;&lt;p&gt;NIOではFileオブジェクトよりPathオブジェクトを使います。PathはFileオブジェクトに比べ、ファイルパスをディレクトリとファイル名で分離して指定できるのが最大のメリットです。&lt;/p&gt;
+&lt;p&gt;例えばファイルパスが複数のフォルダでネストされているとしましょう。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 複数のディレクトリとファイルがそれぞれ文字列として存在(path/to/file.txt)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;String rootDirectory &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;path&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;String toDirectory &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;to&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;String fileName &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;file.txt&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この複数の文字列からインスタンスを作成するとしたら、Fileのコンストラクターは引数が一つの文字列なので以下のようになります。ディレクトリの文字列にスラッシュが含まれてないので、文字列を結合しながらスラッシュも一緒にいれる必要があります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Fileオブジェクトの生成&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;File file &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;new&lt;/span&gt; File(rootDirectory &lt;span style="color:#f92672"&gt;+&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;/&amp;#34;&lt;/span&gt; &lt;span style="color:#f92672"&gt;+&lt;/span&gt; toDirectory &lt;span style="color:#f92672"&gt;+&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;/&amp;#34;&lt;/span&gt; fileName);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;しかし、Pathの場合は指定できる文字列が複数でも構いません。ディレクトリとファイル名の文字列を順番通り指定するだけで良いです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Pathオブジェクトの生成&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Path path &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Paths.&lt;span style="color:#a6e22e"&gt;get&lt;/span&gt;(rootDirectory, directory, fileName);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このように、インスタンスの作成がより便利なのがPathです。また、どうしてもFileオブジェクトが必要な場合があるとしても、FileのメソッドからPathに変換できる機能があるので便利ですね。もちろん、その逆もできます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// PathからFile生成&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Path path &lt;span style="color:#f92672"&gt;=&lt;/span&gt; file.&lt;span style="color:#a6e22e"&gt;toPath&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// FileからPath生成&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;File file &lt;span style="color:#f92672"&gt;=&lt;/span&gt; path.&lt;span style="color:#a6e22e"&gt;toFile&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;他にもtoURI()メソッドでURIオブジェクトを生成できるなど、PathにはFileと同じ機能をするようなメソッドが多いので、どちらか便利な方を使いましょう。&lt;/p&gt;
+&lt;h2 id="files"&gt;Files
+&lt;/h2&gt;&lt;p&gt;昔ながらのI/Oでファイルのコピーや削除などの操作を行うためにはInputStream、OutputStream、Writer、Readerなどのクラスを活用してきました。NIOでは主にこれらの作業をFilesクラスを持って行います。また、FilesクラスにはWriterとReader、InputStreamとOutputStreamを生成する機能もあるので使い勝手が良いクラスです。&lt;/p&gt;
+&lt;h3 id="ファイルのコピー"&gt;ファイルのコピー
+&lt;/h3&gt;&lt;p&gt;Filesクラスでのファイルコピーは簡単です。以下のコードを見てください。基本的にコピー元とコピー先のファイルをPathオブジェクトとして指定するだけです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// PathをPathにコピー&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(source, target);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;FilesクラスでのコピーにはENUMでコピー時のオプションを指定することもできます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// オプションを指定(ファイル属性もコピー)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;StandardCopyOption option &lt;span style="color:#f92672"&gt;=&lt;/span&gt; StandardCopyOption.&lt;span style="color:#a6e22e"&gt;COPY_ATTRIBUTES&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(source, target, option);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、実際存在するファイルではなく、InputStreamをコピー元として指定することもできます。この場合、データをファイルに書き込むということもできますね。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// InputStreamをPathにコピー&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;copy&lt;/span&gt;(sourceStream, target);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルの削除"&gt;ファイルの削除
+&lt;/h3&gt;&lt;p&gt;Filesクラスでのファイル削除はコピーと同じく、Pathオブジェクトを引数として渡します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 削除&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;delete&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;戻り値がbooleanのメソッドも用意されています。ファイルが存在する場合は削除して、その結果をbooleanとして返します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 存在する場合削除&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;deleteIfExists&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルの移動"&gt;ファイルの移動
+&lt;/h3&gt;&lt;p&gt;ファイルの移動は、コピーと削除の組み合わせみたいなものですね。また、ファイル名を変える場合にも使えます。基本がコピーだからか、コピーの時と同じオプションを使えます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 移動もしくはリネーム&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;move&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// オプションを指定(上書きする)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;StandardCopyOption option &lt;span style="color:#f92672"&gt;=&lt;/span&gt; StandardCopyOption.&lt;span style="color:#a6e22e"&gt;REPLACE_EXISTING&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;move&lt;/span&gt;(path, option);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルの書き込み"&gt;ファイルの書き込み
+&lt;/h3&gt;&lt;p&gt;InputStreamをcopy()で使えるのですが、ファイル書き込みの場合のメソッドもあります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Pathにデータを書き込む&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(path, content);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;write()メソッドの引数として渡せるのは&lt;code&gt;byte[]&lt;/code&gt;、&lt;code&gt;List&amp;lt;String&amp;gt;&lt;/code&gt;などがあります。また、コピーの場合のようにオプションが指定できます。こちらのオプションではファイルが存在する場合上書きするか、追記するかを選べるので場合によってはcopy()と分けて使えます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// オプション指定(追記)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;StandardOpenOption option &lt;span style="color:#f92672"&gt;=&lt;/span&gt; StandardOpenOption.&lt;span style="color:#a6e22e"&gt;APPEND&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Files.&lt;span style="color:#a6e22e"&gt;write&lt;/span&gt;(path, content, option);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルの読み込み"&gt;ファイルの読み込み
+&lt;/h3&gt;&lt;p&gt;書き込みが文字列かbyte[]で分けられているように、読み込みも同じ形でファイルを取得できるメソッドがあります。文字列取得の場合、シンタックスシュガーとして結果物がStreamかListかくらいの違いがあります。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 文字列として全行を読み込む&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Stream&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; lines &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;lines&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;List&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; liness &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;readAllLines&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// byte[]として読み込む&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;byte&lt;/span&gt;&lt;span style="color:#f92672"&gt;[]&lt;/span&gt; bytes &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;readAllBytes&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Fileがそうであるように、Pathもまたファイルではなくディレクトリになれるので、Filesのメソッドもそれに対応しています。list()メソッドではディレクトリないのエントリをPathとして取得してStreamを生成します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ディレクトリ内のエントリを要素として持つStream取得&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Stream&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;Path&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; files &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;list&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ioとの組み合わせで使う"&gt;I/Oとの組み合わせで使う
+&lt;/h3&gt;&lt;p&gt;先に述べたように、Filesのメソッドの一部は昔ながらのI/Oと組み合わせて使えるものもあります。その一部を紹介します。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 読み込みの場合&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;BufferedReader br &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newBufferedReader&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 書き込みの場合&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;OutputStream os &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newOutputStream&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;BufferedWriter bw &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newBufferedWriter&lt;/span&gt;(path);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;もちろんOpenOptionの指定もできます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ファイルがない場合は作成する&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;StandardOpenOption option &lt;span style="color:#f92672"&gt;=&lt;/span&gt; StandardOpenOption.&lt;span style="color:#a6e22e"&gt;CREATE&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;InputStream is &lt;span style="color:#f92672"&gt;=&lt;/span&gt; Files.&lt;span style="color:#a6e22e"&gt;newInputStream&lt;/span&gt;(path, option);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="最後に"&gt;最後に
+&lt;/h2&gt;&lt;p&gt;どうでしたか。同じ機能をするだけならあまり使いたくなるメリットはないように見えるかもしれませんが、実際使ってみると、ENUMによるオプション指定でやりたいことが明確となって、コードの量も減らすことができる便利なクラスを提供するのがNIOだと思います。特にFileはそのまま使うとしても、Filesのメソッドは便利かつ強力なので、皆さんにぜひお勧めしたいものです。&lt;/p&gt;
+&lt;p&gt;他にもFilesクラスには双方通信ができるというChannelクラスを提供するメソッドや、ファイルの属性、シンボリックリンクを取得したり指定したPathがディレクトリかを確認したり、二つのPathが同じファイルかをチェックするなど便利なメソッドが多いので、ぜひ使ってみてください。&lt;/p&gt;
+&lt;p&gt;では、また！&lt;/p&gt;</description></item></channel></rss>
