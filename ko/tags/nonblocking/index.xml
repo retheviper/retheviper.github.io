@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Nonblocking on Korean-man in Tokyo</title><link>https://retheviper.github.io/ko/tags/nonblocking/</link><description>Recent content in Nonblocking on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>ko-kr</language><lastBuildDate>Sun, 06 Sep 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/ko/tags/nonblocking/index.xml" rel="self" type="application/rss+xml"/><item><title>Spring WebFlux 이해하기</title><link>https://retheviper.github.io/ko/posts/spring-webflux/</link><pubDate>Sun, 06 Sep 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/spring-webflux/</guid><description>&lt;img src="https://retheviper.github.io/images/spring.webp" alt="Featured image of post Spring WebFlux 이해하기" /&gt;&lt;p&gt;Spring이 처음 공개된 지 벌써 20년 가까운 시간이 흘렀습니다. 지금은 Java라고 하면 자연스럽게 Spring을 떠올릴 정도로 익숙한 조합이 됐고, Spring MVC나 Maven, &lt;code&gt;properties&lt;/code&gt;처럼 예전에는 번거로웠던 환경 구성도 Spring Boot 덕분에 많이 편해졌습니다. 저 역시 Spring Boot, Gradle, YAML을 조합해 XML 없는 애플리케이션을 자주 만들고 있는데, 확실히 예전보다 훨씬 편합니다.&lt;/p&gt;
+&lt;p&gt;이렇게 계속 발전해 온 Spring에도 몇 년 전부터 Spring MVC의 한계를 개선하고 싶다는 흐름이 있었습니다. 그리고 Spring 5.0부터 MVC와는 전혀 다른 새로운 프레임워크가 등장했는데, 그게 바로 이번에 소개할 Spring WebFlux입니다.&lt;/p&gt;
+&lt;h2 id="spring-webflux는-mvc와-무엇이-다른가"&gt;Spring WebFlux는 MVC와 무엇이 다른가
+&lt;/h2&gt;&lt;p&gt;처음부터 다시 만든 프레임워크인 만큼 근본부터 다른 부분이 많습니다. 이론적으로 보면 핵심 키워드는 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;비동기&lt;/li&gt;
+&lt;li&gt;논블로킹&lt;/li&gt;
+&lt;li&gt;반응형&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;제가 느낀 실제 코드 레벨의 차이는 아래 정도입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Mono&lt;/code&gt;와 &lt;code&gt;Flux&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Controller&lt;/code&gt;/&lt;code&gt;Service&lt;/code&gt; 대신 &lt;code&gt;Function&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Tomcat 대신 Netty&lt;/li&gt;
+&lt;li&gt;JPA/JDBC 대신 R2DBC&lt;/li&gt;
+&lt;li&gt;새로운 추상화 클래스&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;각 항목을 하나씩 살펴보겠습니다.&lt;/p&gt;
+&lt;h2 id="이론적인-이야기"&gt;이론적인 이야기
+&lt;/h2&gt;&lt;h3 id="비동기-논블로킹-반응형"&gt;비동기, 논블로킹, 반응형
+&lt;/h3&gt;&lt;p&gt;Spring WebFlux는 &lt;a class="link" href="https://github.com/reactor/reactor-core" target="_blank" rel="noopener"
+&gt;Project Reactor&lt;/a&gt;를 기반으로 만들어졌고, 그 근간은 &lt;a class="link" href="https://www.reactive-streams.org" target="_blank" rel="noopener"
+&gt;Reactive Streams&lt;/a&gt;입니다. Reactive Streams는 표준 API로, Java 9에서 &lt;code&gt;java.util.concurrent.Flow&lt;/code&gt;로 들어왔습니다.&lt;/p&gt;
+&lt;p&gt;Reactive Streams는 디자인 패턴 관점에서는 Observer와 비슷합니다. 쉽게 말하면 어떤 이벤트가 발생했을 때 &amp;ldquo;알려 달라&amp;quot;고 등록해 두고, 그에 맞춰 데이터를 받는 방식입니다. 이 &amp;ldquo;알려 달라&amp;quot;는 요청을 &lt;code&gt;Subscription&lt;/code&gt;이라고 하고, 데이터를 내보내는 쪽을 &lt;code&gt;Publisher&lt;/code&gt;, 받는 쪽을 &lt;code&gt;Subscriber&lt;/code&gt;라고 부릅니다. 이런 이벤트 기반 프로그램을 만드는 것이 반응형 프로그래밍입니다.&lt;/p&gt;
+&lt;p&gt;Reactive Streams에서는 이 &lt;code&gt;Subscription&lt;/code&gt;의 주고받음이 비동기와 논블로킹으로 이루어집니다. 즉, 코드가 실행된 뒤 완료될 때까지 멈춰 기다릴 필요가 없고, 그 사이에 다른 작업을 할 수 있습니다. 같은 수의 같은 작업을 실행할 때는 동기·블로킹과 성능 차이가 크지 않지만&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;, 스레드 수가 병목이 되는 상황이라면 비동기·논블로킹 쪽이 유리합니다.&lt;/p&gt;
+&lt;p&gt;이론은 끝없이 깊어질 수 있으니, 이제 실제 코드에서는 무엇이 달라지는지 보겠습니다.&lt;/p&gt;
+&lt;h2 id="코드-레벨의-이야기"&gt;코드 레벨의 이야기
+&lt;/h2&gt;&lt;h3 id="mono와-flux"&gt;&lt;code&gt;Mono&lt;/code&gt;와 &lt;code&gt;Flux&lt;/code&gt;
+&lt;/h3&gt;&lt;p&gt;Spring WebFlux에서는 컨트롤러 메서드의 반환값으로 &lt;code&gt;Mono&lt;/code&gt;와 &lt;code&gt;Flux&lt;/code&gt;를 사용합니다. Spring MVC라면 문자열로 JSP를 지정하거나 REST API에서 JSON 객체를 반환했겠지만, WebFlux에서는 반환 방식이 조금 다릅니다.&lt;/p&gt;
+&lt;p&gt;앞서 말했듯 WebFlux의 기반이 Reactive Streams이고, WebFlux에서는 이를 &lt;code&gt;Mono&lt;/code&gt;와 &lt;code&gt;Flux&lt;/code&gt;로 구현합니다. &lt;code&gt;Mono&lt;/code&gt;는 &lt;code&gt;0 또는 1&lt;/code&gt;, &lt;code&gt;Flux&lt;/code&gt;는 &lt;code&gt;0 또는 N&lt;/code&gt; 정도로 이해하면 됩니다. 꼭 Collection이면 &lt;code&gt;Flux&lt;/code&gt;, 아니면 &lt;code&gt;Mono&lt;/code&gt;로 고정할 필요는 없고, 상황에 따라 &lt;code&gt;Mono&lt;/code&gt;로도 충분합니다.&lt;/p&gt;
+&lt;p&gt;이름만 보면 Java 8 Stream API와도 연결이 있어 보입니다. 실제로 데이터 생성과 소비 시점은 다르지만&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;, 메서드 이름이나 람다로 조합해 가는 방식은 비슷한 느낌이 있습니다. 이미 &lt;a class="link" href="https://github.com/ReactiveX/RxJava" target="_blank" rel="noopener"
+&gt;RxJava&lt;/a&gt;나 &lt;a class="link" href="https://github.com/jOOQ/jOOL" target="_blank" rel="noopener"
+&gt;JOOL&lt;/a&gt;에 익숙하다면 적응이 어렵지 않겠지만, 그렇지 않다면 처음에는 낯설 수 있습니다.&lt;/p&gt;
+&lt;p&gt;예를 들어 GET 요청을 받으면 1초 후 응답을 돌려주는 간단한 메서드를 작성해 보겠습니다. Spring MVC의 REST API는 보통 이렇게 씁니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@GetMapping&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@ResponseStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpStatus&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;OK&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;getTest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Thread&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;sleep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;1000&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;task completed by mvc&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;catch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;InterruptedException&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;task failed by mvc&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;WebFlux에서는 &lt;code&gt;Mono&lt;/code&gt;를 만들어 반환합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@GetMapping&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@ResponseStatus&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;HttpStatus&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;OK&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;getTest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;delay&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Duration&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;ofMillis&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;1000&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;then&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;just&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;task completed by Mono&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;요즘은 Flutter나 SwiftUI처럼 선언적인 방식이 많이 늘어나고 있어서 이런 스타일이 아주 낯설지는 않습니다. 하지만 전통적인 명령형 프로그래밍에 익숙한 사람에게는 꽤 다르게 느껴질 수 있습니다. 저 역시 &lt;code&gt;Stream&lt;/code&gt;과 &lt;code&gt;Lambda&lt;/code&gt;는 좋아하지만, 명령형을 중첩하는 방식과 메서드 체인으로 길어지는 선언형 중 어느 쪽이 더 좋은지 아직은 확신이 없습니다.&lt;/p&gt;
+&lt;h3 id="controllerservice-대신-function"&gt;&lt;code&gt;Controller&lt;/code&gt;/&lt;code&gt;Service&lt;/code&gt; 대신 &lt;code&gt;Function&lt;/code&gt;
+&lt;/h3&gt;&lt;p&gt;WebFlux의 또 다른 특징은 &lt;code&gt;Controller&lt;/code&gt;와 &lt;code&gt;Service&lt;/code&gt;를 대체하는 구조를 쓸 수 있다는 점입니다. 물론 기존 방식 그대로 &lt;code&gt;Controller&lt;/code&gt;와 &lt;code&gt;Service&lt;/code&gt;를 써도 됩니다. 하지만 새 프레임워크라면 새로운 방식도 한 번 써 보고 싶어집니다.&lt;/p&gt;
+&lt;p&gt;Spring에서 &lt;code&gt;Controller&lt;/code&gt;/&lt;code&gt;Service&lt;/code&gt;를 만든다는 것은 결국 어노테이션 기반의 메타프로그래밍에 의존한다는 뜻이기도 합니다. 어노테이션은 편리하고 Spring에서는 거의 모든 걸 어노테이션으로 처리하는 느낌도 있지만, 다음 같은 문제도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;컴파일러가 검증하기 어렵다&lt;/li&gt;
+&lt;li&gt;코드의 동작을 직접 드러내지 않는다&lt;/li&gt;
+&lt;li&gt;상속과 확장 규칙이 일관되지 않다&lt;/li&gt;
+&lt;li&gt;읽기 어렵고 오해하기 쉬운 코드를 만들 수 있다&lt;/li&gt;
+&lt;li&gt;테스트가 어렵다&lt;/li&gt;
+&lt;li&gt;커스터마이징이 어렵다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이유는 결국 어노테이션이 Reflection에 의존하기 때문입니다. Reflection을 쓰면 런타임에 바이트코드를 다루게 되므로, 컴파일 타임에 확인할 수 있는 것이 많지 않습니다. Reflection은 강력하지만 성능 저하와 디버깅 난이도라는 문제도 있습니다. 그래서 Java 코드를 네이티브로 컴파일하려는 &lt;a class="link" href="https://www.graalvm.org" target="_blank" rel="noopener"
+&gt;GraalVM&lt;/a&gt;에서는 Reflection 대응이 중요한 이슈가 됩니다.&lt;/p&gt;
+&lt;p&gt;이런 문제를 줄이기 위해 WebFlux에서 도입된 것이 &lt;code&gt;Function&lt;/code&gt;입니다. 말 그대로 함수형 모델입니다. 기존 &lt;code&gt;Controller&lt;/code&gt;에 대응하는 &lt;code&gt;Router&lt;/code&gt;와 &lt;code&gt;Service&lt;/code&gt;에 대응하는 &lt;code&gt;Handler&lt;/code&gt;를 작성해, 함수형 스타일로 코드를 구성할 수 있습니다. 물론 함수형이라고 해서 어노테이션이 완전히 사라지는 것은 아닙니다. 예를 들어 아래처럼 쓸 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@Configuration&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Router&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nd"&gt;@Bean&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RouterFunction&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;ServerResponse&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;route&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;final&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Handler&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;nest&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/api/v1/web/members&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RouterFunctions&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;route&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;GET&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;listMember&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;andRoute&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;POST&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;handler&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;createMember&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nd"&gt;@Component&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Handler&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;private&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;final&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MemberRepository&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nd"&gt;@Autowired&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;Handler&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;final&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;MemberRepository&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;repository&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;ServerResponse&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;listMember&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;final&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ServerRequest&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ok&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;contentType&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MediaType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;APPLICATION_JSON&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;body&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Flux&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;fromIterable&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;findAll&lt;/span&gt;&lt;span class="p"&gt;()),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Member&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;ServerResponse&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;createMember&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kd"&gt;final&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ServerRequest&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ok&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;contentType&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;MediaType&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;APPLICATION_JSON&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;body&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;request&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;bodyToMono&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Member&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;flatMap&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;member&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;fromCallable&lt;/span&gt;&lt;span class="p"&gt;(()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;repository&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;save&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;member&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;then&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;Mono&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;just&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;member&lt;/span&gt;&lt;span class="p"&gt;))),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Member&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;class&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;함수형이 되어 읽기 쉬워졌는지, 아니면 오히려 더 복잡해졌는지는 사람마다 다를 것 같습니다.&lt;/p&gt;
+&lt;h3 id="tomcat-대신-netty"&gt;Tomcat 대신 Netty
+&lt;/h3&gt;&lt;p&gt;Spring WebFlux의 기본 서버는 Netty입니다. 이유는 단순합니다. &lt;a class="link" href="https://netty.io" target="_blank" rel="noopener"
+&gt;Netty&lt;/a&gt;는 처음부터 논블로킹을 전제로 설계되었기 때문입니다. 반면 Tomcat은 동기·블로킹 방식이므로, 둘은 구조가 꽤 다릅니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Tomcat: 요청과 스레드가 1:1&lt;/li&gt;
+&lt;li&gt;Netty: 요청과 스레드가 N:1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;물론 Spring MVC처럼 Netty 대신 Tomcat을 쓸 수도 있습니다. Gradle에서는 대략 이렇게 설정합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;dependencies&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;implementation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;org.springframework.boot:spring-boot-starter-webflux:2.3.3.RELEASE&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;exclude&lt;/span&gt; &lt;span class="nl"&gt;group:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;org.springframework.boot&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nl"&gt;module:&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;spring-boot-starter-reactor-netty&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;implementation&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;org.springframework.boot:spring-boot-starter-tomcat:2.3.3.RELEASE&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="jpajdbc-대신-r2dbc"&gt;JPA/JDBC 대신 R2DBC
+&lt;/h3&gt;&lt;p&gt;이것도 애플리케이션 서버와 비슷한 이야기입니다. JPA/JDBC 같은 기존 ORM은 블로킹이므로, 논블로킹에 맞는 &lt;a class="link" href="https://r2dbc.io" target="_blank" rel="noopener"
+&gt;R2DBC&lt;/a&gt;를 써 보자는 것입니다. NIO가 그랬듯이, 블로킹 환경에서도 R2DBC를 쓰면 경우에 따라 성능 개선을 기대할 수 있습니다.&lt;/p&gt;
+&lt;h3 id="새로운-추상화-클래스"&gt;새로운 추상화 클래스
+&lt;/h3&gt;&lt;p&gt;WebFlux에서는 Spring MVC에서 쓰던 추상화 클래스도 바뀌었습니다. 이것 역시 함수형 스타일과 논블로킹에 맞추기 위한 변화입니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;종류&lt;/th&gt;
+&lt;th&gt;Spring MVC&lt;/th&gt;
+&lt;th&gt;Spring WebFlux&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;요청&lt;/td&gt;
+&lt;td&gt;HttpServletRequest&lt;/td&gt;
+&lt;td&gt;ServerHttpRequest&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;응답&lt;/td&gt;
+&lt;td&gt;HttpServletResponse&lt;/td&gt;
+&lt;td&gt;ServerHttpResponse&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;다른 API 호출&lt;/td&gt;
+&lt;td&gt;RestTemplate&lt;/td&gt;
+&lt;td&gt;WebClient&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;WebClient&lt;/code&gt;가 나오면서 &lt;code&gt;RestTemplate&lt;/code&gt;은 &lt;code&gt;deprecated&lt;/code&gt;가 되었기 때문에, Spring MVC를 쓰는 경우에도 &lt;code&gt;WebClient&lt;/code&gt; 도입을 고려할 필요가 있습니다. 실제로 Spring MVC에서 쓰더라도 &lt;code&gt;RestTemplate&lt;/code&gt;보다 성능이 좋아지는 경우도 있다고 합니다.&lt;/p&gt;
+&lt;h2 id="어디에-써야-하는가"&gt;어디에 써야 하는가
+&lt;/h2&gt;&lt;p&gt;여기까지 WebFlux의 특징을 대략 살펴봤습니다. 어떠신가요. 작성 방식도 꽤 다르고, Servlet 기반 MVC와는 전혀 다른 Reactor 기반이기 때문에 WebFlux 도입은 쉬운 선택은 아닙니다. 기존 Spring MVC와 동시에 쓰기도 어렵고, Spring Security 같은 다른 라이브러리도 WebFlux용으로 다시 맞춰야 하는 경우가 많습니다. 이미 기존 시스템과 Spring MVC 기반 라이브러리가 많다면 영향 범위도 꽤 큽니다.&lt;/p&gt;
+&lt;p&gt;성능 측면에서도 논블로킹이 강한 상황은 &amp;ldquo;지정된 스레드 수를 넘어서는 요청이 들어올 때&amp;quot;입니다. 논블로킹으로 바꾼다고 해서 단일 스레드 성능이 자동으로 올라가는 것은 아닙니다&lt;sup id="fnref:3"&gt;&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref"&gt;3&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+&lt;p&gt;다만 다음과 같은 경우에는 WebFlux 도입을 검토해 볼 수 있습니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;완전히 새로운 서비스를 처음부터 만드는 경우&lt;/li&gt;
+&lt;li&gt;여러 서비스가 있고 서비스 간 호출이 많은 경우, 즉 마이크로서비스 환경&lt;/li&gt;
+&lt;li&gt;BFF&lt;sup id="fnref:4"&gt;&lt;a href="#fn:4" class="footnote-ref" role="doc-noteref"&gt;4&lt;/a&gt;&lt;/sup&gt; 구조를 쓰는 경우&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;간단히 정리하려던 내용이 예상보다 길어졌지만, 그만큼 WebFlux가 기존 Spring MVC와는 결이 꽤 다른 프레임워크라는 점은 분명해졌습니다. &lt;code&gt;RestTemplate&lt;/code&gt;이 &lt;code&gt;deprecated&lt;/code&gt;가 된 흐름까지 보면, 적어도 반응형과 논블로킹 모델을 이해해 둘 필요는 점점 커지고 있다고 생각합니다.&lt;/p&gt;
+&lt;p&gt;다만 그렇다고 해서 모든 시스템이 곧바로 WebFlux로 옮겨가야 하는 것은 아닙니다. 어떤 패러다임이 절대적으로 더 낫다기보다, 현재 시스템 구조와 병목 지점에 맞게 선택하는 것이 더 중요합니다. WebFlux도 그런 선택지 가운데 하나로 이해하는 편이 자연스럽습니다.&lt;/p&gt;
+&lt;div class="footnotes" role="doc-endnotes"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;실제로는 스레드 수가 병목이 아닌 상황에서는 함수형이 조금 느린 편이라고 합니다. 함수형 API 구현이 더 복잡하기 때문입니다. 다만 읽기 쉬움과 구현 편의성을 생각하면 충분히 트레이드오프로 볼 만한 차이입니다.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:2"&gt;
+&lt;p&gt;Stream은 동기라서 데이터 생산과 소비가 함께 일어납니다. 하지만 Reactive Stream은 데이터 생산이 곧바로 소비로 이어진다고 보기는 어렵습니다. 비동기이기 때문입니다.&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:3"&gt;
+&lt;p&gt;오히려 단일 스레드 처리에서는 WebFlux가 MVC보다 조금 느리다는 이야기도 있습니다. for 루프보다 Stream이 느린 이유와 비슷하다고 볼 수 있습니다.&amp;#160;&lt;a href="#fnref:3" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:4"&gt;
+&lt;p&gt;Back-end For Front-end의 약자입니다. 마이크로서비스의 한 형태로, 여러 엔드포인트를 묶어 프런트엔드용 응답을 따로 만들어 주는 백엔드입니다. 프런트엔드는 하나의 엔드포인트만 호출하면 됩니다.&amp;#160;&lt;a href="#fnref:4" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</description></item></channel></rss>

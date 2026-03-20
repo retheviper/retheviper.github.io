@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Linux on Korean-man in Tokyo</title><link>https://retheviper.github.io/ko/tags/linux/</link><description>Recent content in Linux on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>ko-kr</language><lastBuildDate>Sun, 01 Dec 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/ko/tags/linux/index.xml" rel="self" type="application/rss+xml"/><item><title>라우터에 SSL 인증서 넣기</title><link>https://retheviper.github.io/ko/posts/linux-implementation-ssl-in-router/</link><pubDate>Sun, 01 Dec 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/linux-implementation-ssl-in-router/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.webp" alt="Featured image of post 라우터에 SSL 인증서 넣기" /&gt;&lt;p&gt;집에서 쓰는 라우터는 Asus RT-AC58U이고, 개인적으로 쓰는 것은 RT-AC68U입니다. 두 모델은 하드웨어뿐 아니라 펌웨어 기능도 조금 다릅니다. 예를 들어 AiMesh 같은 기능은 RT-AC58U에서 지원하지 않습니다.&lt;/p&gt;
+&lt;p&gt;문제는 펌웨어를 업데이트한 뒤부터 WAN에서 관리 페이지에 접속할 때 HTTPS만 허용되기 시작했다는 점입니다. RT-AC68U는 &lt;a class="link" href="https://letsencrypt.org" target="_blank" rel="noopener"
+&gt;Let&amp;rsquo;s Encrypt&lt;/a&gt; 인증서를 자동으로 만들고 갱신하는 기능이 있어서 괜찮았지만, RT-AC58U는 그렇지 않았습니다. 그래서 브라우저로 관리 페이지에 접속할 때마다 인증서 경고가 떠서 꽤 거슬렸습니다.&lt;/p&gt;
+&lt;p&gt;리눅스 기반 장비라면 수동으로 인증서를 넣을 수 있지 않을까 싶어서 더 찾아봤고, 실제로 RT-AC58U에도 인증서를 넣는 데 성공했습니다. 이 글에서는 그 과정을 정리해 보겠습니다.&lt;/p&gt;
+&lt;h2 id="시스템-구성"&gt;시스템 구성
+&lt;/h2&gt;&lt;p&gt;구성을 그림으로 보면 다음과 같습니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization.webp"
+width="1563"
+height="423"
+srcset="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_529d73e9bd6d7cd0.webp 480w, https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_5959f16708994a7a.webp 1024w"
+loading="lazy"
+alt="구성도"
+class="gallery-image"
+data-flex-grow="369"
+data-flex-basis="886px"
+&gt;&lt;/p&gt;
+&lt;p&gt;목표는 DDNS가 등록된 라우터에 SSL 인증서를 넣어, HTTPS로 접속해도 경고가 뜨지 않게 만드는 것입니다. 나중에는 이 라우터 아래에 홈 서버도 붙일 계획이었기 때문에, 같은 방식으로 서버 쪽에도 SSL을 적용할 수 있을지 확인하고 싶었습니다.&lt;/p&gt;
+&lt;h2 id="라우터-설정-1"&gt;라우터 설정 1
+&lt;/h2&gt;&lt;p&gt;먼저 DDNS를 설정합니다. ASUS 라우터는 &lt;code&gt;http://router.asus.com&lt;/code&gt;으로 로컬 관리 페이지에 접속할 수 있습니다. 여기서 WAN 설정의 DDNS 탭으로 들어가 원하는 주소를 등록합니다. ASUS는 &lt;code&gt;asuscomm.com&lt;/code&gt; 도메인을 제공하므로 그쪽을 사용했습니다.&lt;/p&gt;
+&lt;p&gt;DDNS가 설정되면 SSH도 켭니다. 이것 역시 관리 페이지에서 설정할 수 있습니다. 가능하면 공개키 인증으로 접속하고, 포트도 기본값에서 바꿔 둡니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# SSH 포트가 2022인 경우&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ssh -p &lt;span class="m"&gt;2022&lt;/span&gt; retheviper@javaman.asuscomm.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;여기까지 하면 인증서를 준비하기 위한 라우터 측 설정은 끝입니다.&lt;/p&gt;
+&lt;h2 id="mac에서-설정-1"&gt;Mac에서 설정 1
+&lt;/h2&gt;&lt;p&gt;라우터 OS는 리눅스이지만, 필요한 도구가 부족합니다. &lt;code&gt;yum&lt;/code&gt;이나 &lt;code&gt;apt&lt;/code&gt; 같은 패키지 관리도 없고, 성능도 넉넉하지 않아서 인증서 발급은 Mac에서 진행했습니다.&lt;/p&gt;
+&lt;p&gt;인증서는 Let’s Encrypt를 사용합니다. 유효기간은 90일로 짧지만 발급과 갱신이 무료라서 이런 용도에는 적당합니다.&lt;/p&gt;
+&lt;p&gt;먼저 &lt;code&gt;certbot&lt;/code&gt;을 설치합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;brew install letsencrypt
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;설치 후 다음처럼 인증서를 발급합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo certbot certonly --manual
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;도메인을 입력하고 나면, certbot이 인증용 문자열과 접속 URL을 보여 줍니다. 화면은 대략 이런 식입니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Saving debug log to /var/log/letsencrypt/letsencrypt.log
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Plugins selected: Authenticator manual, Installer None
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Please enter in your domain name&lt;span class="o"&gt;(&lt;/span&gt;s&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;comma and/or space separated&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="o"&gt;(&lt;/span&gt;Enter &lt;span class="s1"&gt;&amp;#39;c&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;to cancel&lt;span class="o"&gt;)&lt;/span&gt;: &lt;span class="o"&gt;[&lt;/span&gt;도메인&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;다음 단계에서는 IP 공개 여부를 묻습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Obtaining a new certificate
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Performing the following challenges:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;http-01 challenge &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt;도메인&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;(&lt;/span&gt;Y&lt;span class="o"&gt;)&lt;/span&gt;es/&lt;span class="o"&gt;(&lt;/span&gt;N&lt;span class="o"&gt;)&lt;/span&gt;o: Y
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;그 다음에는 인증용 파일을 특정 URL에서 서빙하라는 안내가 나옵니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Create a file containing just this data:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;코드&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;And make it available on your web server at this URL:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;http 주소&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Press Enter to Continue
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;여기서 잠시 멈추고, 출력된 코드와 URL을 복사해 둡니다.&lt;/p&gt;
+&lt;h2 id="pc에서-설정"&gt;PC에서 설정
+&lt;/h2&gt;&lt;p&gt;certbot이 요구한 것은 간단합니다. 해당 URL로 요청했을 때 방금 보여 준 코드를 돌려주면 됩니다. 그래서 임시 웹 서버를 하나 띄우기로 했습니다.&lt;/p&gt;
+&lt;p&gt;라우터에 직접 두기엔 번거로워서, 라우터에 연결된 PC에서 서버를 띄웠습니다. 집의 PC는 Windows라서 Node.js와 Express로 간단하게 처리했습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt; mkdir node
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt; cd node
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt; npm install express
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;그리고 다음처럼 &lt;code&gt;app.js&lt;/code&gt;를 작성합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-javascript" data-lang="javascript"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;var&lt;/span&gt; &lt;span class="nx"&gt;express&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;express&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;require&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;app&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;express&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;server&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;createServer&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;app&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/[복사해 둔 http 주소]&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;req&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;res&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;send&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;[복사해 둔 코드]&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kd"&gt;function&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;console&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Express server listening on port &amp;#39;&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="nx"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;address&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nx"&gt;port&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;서버를 실행해 브라우저에서 URL을 열었을 때 코드가 그대로 보이면 준비가 끝난 것입니다.&lt;/p&gt;
+&lt;h2 id="mac에서-설정-2"&gt;Mac에서 설정 2
+&lt;/h2&gt;&lt;p&gt;다시 Mac으로 돌아와 certbot 화면에서 Enter를 누르면 검증이 진행됩니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Waiting &lt;span class="k"&gt;for&lt;/span&gt; verification...
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Cleaning up challenges
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;IMPORTANT NOTES:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; - Congratulations! Your certificate and chain have been saved at:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; /etc/letsencrypt/live/javaman.asuscomm.com/fullchain.pem
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; Your key file has been saved at:
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; /etc/letsencrypt/live/javaman.asuscomm.com/privkey.pem
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;인증서 발급이 끝났으면, 출력된 경로에서 다음 파일을 복사해 둡니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;cert.pem&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key.pem&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="라우터-설정-2"&gt;라우터 설정 2
+&lt;/h2&gt;&lt;p&gt;SSH로 라우터에 접속한 뒤 다음 경로로 이동합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; /tmp/etc
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;여기에 방금 복사한 인증서 파일을 덮어씌웁니다. 그리고 실행 중인 HTTPD 프로세스를 다시 시작합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;ps
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# PID가 562인 경우&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;kill&lt;/span&gt; &lt;span class="m"&gt;562&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 프로세스 재실행&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ /usr/sbin/httpds -s -i br0 -p &lt;span class="m"&gt;8443&lt;/span&gt; &lt;span class="p"&gt;&amp;amp;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;&amp;amp;&lt;/code&gt;를 붙이지 않으면 터미널이 계속 점유되므로 주의해야 합니다. 재실행 후 브라우저에서 관리 페이지를 열어 인증서 경고가 사라졌는지 확인하면 됩니다.&lt;/p&gt;
+&lt;p&gt;주의할 점은 재부팅입니다. 라우터를 재시작하면 넣어 둔 인증서가 초기화되는 경우가 있어서, 재부팅 후에는 다시 적용해야 할 수 있습니다.&lt;/p&gt;
+&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;이 과정을 거치면 WAN에서 라우터 관리 페이지에 접속해도 인증서 경고가 뜨지 않습니다. 그 자체만으로도 꽤 만족스러운 결과였습니다.&lt;/p&gt;
+&lt;p&gt;다만 아직 남은 과제도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;인증서 갱신을 어떻게 자동화할지&lt;/li&gt;
+&lt;li&gt;라우터 재부팅 후 어떻게 다시 적용할지&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let’s Encrypt 인증서는 90일마다 갱신해야 하므로, 갱신 후 라우터에 다시 올리는 절차를 자동화하는 방법을 더 고민해야 합니다. &lt;code&gt;crontab&lt;/code&gt;을 쓰는 방법도 떠올랐지만, 라우터 쪽에서 사용할 수 있는 명령이 제한적이라 아직은 완전히 정리하지 못했습니다.&lt;/p&gt;
+&lt;p&gt;그래도 리눅스 기반 장비라면 이런 식의 우회가 가능하다는 걸 확인한 것만으로도 의미가 있었습니다. 완전한 자동화까지는 남았지만, 최소한 수동 적용 경로를 확보했다는 점에서는 꽤 쓸 만한 경험이었습니다.&lt;/p&gt;</description></item><item><title>Linux 시스템 서비스 만들기</title><link>https://retheviper.github.io/ko/posts/linux-systemctl-service/</link><pubDate>Thu, 11 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/linux-systemctl-service/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.webp" alt="Featured image of post Linux 시스템 서비스 만들기" /&gt;&lt;p&gt;서버에서 실행되는 프로그램은 일반적인 사용자용 프로그램과 동작 방식이 다릅니다. 어떤 데이터를 다루고 어떤 처리를 하는지도 중요하지만, 이번에는 간단히 &amp;ldquo;실행&amp;rdquo; 관점에서 이야기해 보겠습니다. 쉽게 말하면, 누가 멈출 때까지 계속 실행되는 프로그램을 Linux에서 어떻게 서비스로 만들 수 있는지에 대한 내용입니다.&lt;/p&gt;
+&lt;p&gt;CentOS와 RHEL에는 &lt;code&gt;service&lt;/code&gt;라는 명령이 있습니다. &lt;code&gt;yum&lt;/code&gt; 같은 패키지 관리 도구로 여러 프로그램을 설치하다 보면, 한 번 실행하고 끝나는 것이 아니라 메모리에 계속 상주해야 하는 프로그램도 있습니다. 예전에 이 블로그에서 소개했던 &lt;code&gt;Jenkins&lt;/code&gt;도 그런 프로그램 가운데 하나입니다.&lt;/p&gt;
+&lt;p&gt;그런 프로그램은 한 번 설치해 두면 &lt;code&gt;service&lt;/code&gt; 명령으로 시작하거나 멈출 수 있습니다. Linux라면 뭐든 할 수 있을 것 같지만, 실제로 서비스로 등록하고 관리하는 방법을 한 번은 정리해 둘 필요가 있습니다.&lt;/p&gt;
+&lt;p&gt;저는 업무에서 Java 애플리케이션을 서비스로 등록하고 관리해야 했습니다. Jenkins 작업을 관리하면서, Git에 커밋이 들어오면 Pull -&amp;gt; 빌드 -&amp;gt; 실행 중인 Java 애플리케이션 중지 -&amp;gt; 새로 빌드한 애플리케이션 실행까지 이어지는 작업이 필요했습니다. 실제로는 서비스 자체를 직접 다루기보다는, 빌드 후에 서비스를 멈추거나 다시 시작하는 셸 커맨드를 실행하는 형태로 구성했지만, 이것이 어떻게 동작하는지 궁금해서 조사해 봤습니다.&lt;/p&gt;
+&lt;h2 id="servicedaemon-만들기"&gt;Service(Daemon) 만들기
+&lt;/h2&gt;&lt;p&gt;서비스가 되는 프로그램은 &lt;code&gt;Daemon&lt;/code&gt;이라고도 부릅니다. 조사해 보면 &amp;ldquo;시스템에 상주하면서 특정 상태가 되면 자동으로 동작하는 프로그램&amp;rdquo;, &amp;ldquo;주기적인 서비스 요청을 처리하기 위해 계속 실행되는 프로그램&amp;rdquo;, &amp;ldquo;백그라운드에서 동작하는 프로그램&amp;rdquo; 같은 정의가 있습니다. 이 정도면 어떤 성격의 프로그램을 말하는지 알 수 있습니다. &lt;code&gt;Spring&lt;/code&gt;이나 &lt;code&gt;Node.js&lt;/code&gt;로 만든 웹 서버 프로그램도 이런 정의에 들어갑니다.&lt;/p&gt;
+&lt;p&gt;그렇다면 이런 서비스, 혹은 데몬을 어떻게 만들면 될까요? 준비할 것은 크게 서비스로 등록할 프로그램, 그 프로그램을 어떤 서비스로 취급할지 적는 설정 파일, 그리고 명령으로 서비스를 등록하고 실행하는 절차입니다. 업무에서는 &lt;code&gt;Spring Boot&lt;/code&gt; 프로그램을 서비스로 쓰고 있었지만, 이 경우에는 실행용 셸 스크립트 설정이나 외부 파일 참조도 필요해서, 비교적 단순한 &lt;code&gt;Node.js&lt;/code&gt; 프로그램을 예시로 쓰겠습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Node.js&lt;/code&gt;는 &lt;code&gt;$ node /node/index.js&lt;/code&gt; 같은 간단한 명령으로 실행할 수 있습니다. 이를 서비스로 등록하면 다음과 같습니다.&lt;/p&gt;
+&lt;h2 id="service-파일-만들기"&gt;service 파일 만들기
+&lt;/h2&gt;&lt;p&gt;먼저 서비스가 어떤 방식으로 동작해야 하는지, 어떤 이름으로 등록할지 등을 적는 파일을 만듭니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;vi /etc/systemd/system/NodeServer.service
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;아래처럼 내용을 작성합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 서비스 설정&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;Unit&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;Description&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; NodeServer &lt;span class="c1"&gt;# 이 이름으로 서비스가 등록된다&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;After&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; syslog.target network.target &lt;span class="c1"&gt;# 시스템 시작 시 실행 우선순위(syslog와 network 뒤에 실행)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 실행할 프로그램 설정&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;Service&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;Type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; simple &lt;span class="c1"&gt;# 동작 방식을 정한다. 기본값은 simple&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;ExecStart&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; /usr/bin/node /node/index.js &lt;span class="c1"&gt;# node /node/index.js와 같지만 심볼릭 링크 없이 명시&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;Restart&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; on-failure &lt;span class="c1"&gt;# 시작에 실패하면 다시 실행&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;User&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; nodeservice &lt;span class="c1"&gt;# 실행할 사용자. 권한에 주의&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 심볼릭 링크나 별칭 관련 설정&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="o"&gt;[&lt;/span&gt;Install&lt;span class="o"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;WantedBy&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; multi-user.target &lt;span class="c1"&gt;# 어느 위치에 심볼릭 링크를 만들지 지정. 보통 이 값을 쓴다&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;다른 옵션도 많지만, 기본적인 내용은 이 정도면 충분합니다. 테스트용으로 만든 Node.js 웹 서버는 이렇게 해서 잘 동작했습니다. 물론 &lt;code&gt;Hello Node.js!&lt;/code&gt;만 출력하는 단순한 서버지만요.&lt;/p&gt;
+&lt;p&gt;실제로 업무에서 다루던 Java 애플리케이션에는 PID&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;를 관리하는 스크립트 지정이나, 종료 시 실행할 셸 스크립트 지정도 있었습니다. 예를 들어 &lt;code&gt;ExecStop&lt;/code&gt;은 서비스를 멈출 때 실행할 명령을, &lt;code&gt;ExecReload&lt;/code&gt;는 다시 불러올 때 실행할 명령을 적는 식으로 쓸 수 있습니다. 셸 스크립트에서 실행하거나 상태 변경 시 추가 조치가 필요한 경우에 유용한 옵션입니다.&lt;/p&gt;
+&lt;p&gt;이렇게 &lt;code&gt;service&lt;/code&gt; 파일을 만들었다면, 다음은 프로세스를 시스템 서비스로 등록하고 실행하면 됩니다.&lt;/p&gt;
+&lt;h2 id="enable--start-service"&gt;Enable &amp;amp; Start Service
+&lt;/h2&gt;&lt;p&gt;앞서 &lt;code&gt;service&lt;/code&gt; 명령을 언급했지만, CentOS 7부터는 &lt;code&gt;systemctl&lt;/code&gt;을 쓰는 편이 일반적입니다.&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt; 실제로 CentOS 7에서는 &lt;code&gt;service&lt;/code&gt;만으로 시스템 서비스 등록이 되지 않으므로 &lt;code&gt;systemctl&lt;/code&gt;을 사용하게 됩니다. 이 명령으로는 서비스 등록과 해제, 시작과 중지, 재시작 등을 할 수 있습니다. 먼저 서비스를 시스템 서비스로 등록하면 시스템 시작 시 자동으로 실행됩니다.&lt;/p&gt;
+&lt;p&gt;Windows에 비유하면, 프로그램을 시작 프로그램에 등록하거나 해제하는 것과 태스크 매니저로 프로세스를 다루는 기능이 같이 있는 느낌입니다.&lt;/p&gt;
+&lt;p&gt;명령 자체는 간단합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 시스템 서비스로 등록&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl start NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 실행 중인 서비스 목록에서 찾기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl list-units &lt;span class="p"&gt;|&lt;/span&gt; grep NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# service 파일을 수정했으면 다시 읽어 들인다&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 중지와 재시작&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl stop NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl restart NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 서비스 상태 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl status NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 시스템 서비스에서 해제&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ systemctl disable NodeServer
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 실행에 문제가 있으면 서비스 로그 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ journalctl -xe
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;service&lt;/code&gt; 명령으로도 제어는 가능하지만, 앞으로는 없어질 수도 있는 명령이니 가능하면 &lt;code&gt;systemctl&lt;/code&gt;에 익숙해지는 편이 좋습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# service로 할 수 있는 것&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ service NodeServer start
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ service NodeServer status
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ service NodeServer stop
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ service NodeServer restart
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이제 간단한 Node.js 웹 서버도 시스템 서비스로 등록해 계속 실행되도록 만들 수 있습니다. 한 번 익혀 두면 웹 서버뿐 아니라 각종 배치 프로그램이나 자동화 도구를 등록할 때도 그대로 활용할 수 있습니다.&lt;/p&gt;
+&lt;div class="footnotes" role="doc-endnotes"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;&lt;code&gt;Process ID&lt;/code&gt;의 약자로, 실행 중인 프로세스에 부여되는 ID입니다. &lt;code&gt;ps&lt;/code&gt; 명령으로 확인할 수 있고, PID로 프로세스 이름을 찾거나 반대로 프로세스 이름으로 PID를 찾을 수도 있습니다.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:2"&gt;
+&lt;p&gt;CentOS 7에서도 &lt;code&gt;service&lt;/code&gt;는 남아 있지만 &lt;code&gt;systemctl&lt;/code&gt;로 리다이렉트되는 것 같습니다. CentOS 6까지는 &lt;code&gt;/etc/rc.d/init.d&lt;/code&gt;에서 서비스를 관리했고, 7부터는 서비스 유닛이라는 이름을 쓰게 된 것으로 보입니다.&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</description></item><item><title>Ansible로 서버 구축 자동화하기</title><link>https://retheviper.github.io/ko/posts/ansible-server-automation/</link><pubDate>Fri, 05 Jul 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/ansible-server-automation/</guid><description>&lt;img src="https://retheviper.github.io/images/ansible.webp" alt="Featured image of post Ansible로 서버 구축 자동화하기" /&gt;&lt;p&gt;이번에는 &lt;a class="link" href="https://www.ansible.com/" target="_blank" rel="noopener"
+&gt;Ansible&lt;/a&gt;을 잠깐 사용할 기회가 있었습니다. Ansible은 미리 정의한 작업을 여러 환경에 같은 방식으로 적용할 수 있다는 점에서 Jenkins와 비슷한 자동화 도구입니다. 다만 Jenkins가 배포나 테스트 자동화에 더 가깝다면, Ansible은 서버 초기 구축과 설정 자동화에 더 초점이 맞춰져 있습니다.&lt;/p&gt;
+&lt;p&gt;즉, 서버를 매번 손으로 맞추는 대신 같은 설정을 여러 환경에 반복 적용할 수 있습니다. 제가 다루던 환경은 &lt;code&gt;개발&lt;/code&gt;에서 &lt;code&gt;내부 검증&lt;/code&gt;, &lt;code&gt;외부 검증&lt;/code&gt;으로 이어지는 구조였는데, 환경이 바뀔 때마다 서버를 다시 손으로 세팅하는 일은 비효율적이었습니다. 설정 항목이 늘수록 실수도 쉽게 생기기 때문에, 이 작업을 Ansible로 자동화해 보자는 것이 이번 이야기입니다.&lt;/p&gt;
+&lt;p&gt;Ansible은 &lt;code&gt;Playbook&lt;/code&gt;이라는 YAML 파일 &lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;로 서버를 설정합니다. 구조를 조금만 익히면 호스트 정보와 설정 값을 조합해 여러 서버에 같은 작업을 쉽게 보낼 수 있습니다. 폴더 생성, 사용자 생성, &lt;code&gt;yum&lt;/code&gt; 패키지 설치, 쉘 명령 실행, 파일 복사 같은 작업을 한 흐름으로 묶을 수 있어서, 반복 작업을 줄이는 데 꽤 유용합니다.&lt;/p&gt;
+&lt;p&gt;여기서는 Amazon Linux를 기준으로 파일 구성을 하나씩 살펴보겠습니다.&lt;/p&gt;
+&lt;h2 id="ansible-설치"&gt;Ansible 설치
+&lt;/h2&gt;&lt;p&gt;Ansible은 &lt;code&gt;yum&lt;/code&gt;, &lt;code&gt;brew&lt;/code&gt;, &lt;code&gt;pip&lt;/code&gt;, &lt;code&gt;apt-get&lt;/code&gt;으로 설치할 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;yum install ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ brew install ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ pip install ansible
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ sudo apt-get install ansible
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;사용 중인 환경에 맞는 방법으로 설치하면 됩니다.&lt;/p&gt;
+&lt;h2 id="batchserveryml"&gt;batchserver.yml
+&lt;/h2&gt;&lt;p&gt;먼저 서버별 YAML 파일을 만듭니다. Ansible 실행 시 이 파일이 사용되며, 어떤 호스트 그룹에 어떤 작업을 적용할지 적습니다. 서버별로 실행할 작업이 다르면 공통용, 배치 서버용, 웹 서버용 YAML을 따로 둡니다.&lt;/p&gt;
+&lt;p&gt;다음은 배치 서버를 가정한 예시입니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;- &lt;span class="nt"&gt;hosts&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;batchserver&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;become&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;roles&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;common&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;batch&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;hosts&lt;/code&gt;는 &lt;code&gt;hosts&lt;/code&gt; 파일에 정의한 호스트 그룹을 뜻합니다. 여기서 &lt;code&gt;batchserver&lt;/code&gt;라고 적으면 &lt;code&gt;hosts&lt;/code&gt; 파일에서 해당 그룹에 속한 서버에 같은 작업을 수행합니다. 모든 그룹에 적용하려면 &lt;code&gt;all&lt;/code&gt;을 쓰면 됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;become: true&lt;/code&gt;는 연결된 서버에서 명령을 sudo 권한으로 실행한다는 뜻입니다. &lt;code&gt;roles&lt;/code&gt;에는 실제 작업 내용이 들어 있는 역할 폴더를 적습니다. 여기서는 공통 작업인 &lt;code&gt;common&lt;/code&gt;과 배치 서버 전용 작업인 &lt;code&gt;batch&lt;/code&gt;를 함께 지정했습니다.&lt;/p&gt;
+&lt;h2 id="hosts"&gt;hosts
+&lt;/h2&gt;&lt;p&gt;이 파일에는 Ansible이 접속할 대상 서버를 적습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;[batchserver]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;192.168.0.1 ansible_ssh_user=batchuser1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;192.168.0.2 ansible_ssh_user=batchuser2
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;[webapserver]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;192.168.10.1 ansible_ssh_user=webapuser1
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;192.168.10.2 ansible_ssh_user=webapuser2
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;기본적으로는 그룹 이름 아래에 호스트 정보를 적으면 자동으로 분류됩니다. 앞의 &lt;code&gt;batchserver.yml&lt;/code&gt;에서는 &lt;code&gt;batchserver&lt;/code&gt;만 지정했으므로 &lt;code&gt;webapserver&lt;/code&gt; 그룹은 실행 대상에서 제외됩니다. &lt;code&gt;ansible_ssh_user&lt;/code&gt;는 SSH 접속 시 사용할 계정입니다. 필요하면 실행 시점에 사용자 이름과 비밀번호를 직접 넣을 수도 있습니다.&lt;/p&gt;
+&lt;h2 id="rolesbatchtasksmainyml"&gt;roles/batch/tasks/main.yml
+&lt;/h2&gt;&lt;p&gt;여기에는 &lt;code&gt;batchserver.yml&lt;/code&gt;에서 지정한 &lt;code&gt;batch&lt;/code&gt; 역할의 작업이 들어갑니다. 역할 폴더 아래에 둔 파일만 실행되므로 경로를 맞춰 두는 것이 중요합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create user groups&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.group_name }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;gid&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.group_id }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;with_items&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- {&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group_name: &amp;#39;group01&amp;#39;, group_id&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;101&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;}&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- {&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group_name: &amp;#39;group02&amp;#39;, group_id&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;201&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;}&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create users&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;user&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.user_name }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;password&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.user_passwd }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;uid&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.user_id }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.user_group }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;/bin/bash&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;with_items&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- {&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;user_name: &amp;#39;user01&amp;#39;, user_group: &amp;#39;group01&amp;#39;, user_id: &amp;#39;101&amp;#39;, user_passwd&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;user01&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;}&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- {&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;user_name: &amp;#39;user02&amp;#39;, user_group: &amp;#39;group02&amp;#39;, user_id: &amp;#39;201&amp;#39;, user_passwd&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;user02&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;}&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Create folders&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;file&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;owner&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;user01&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;user01&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;mode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0755&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;state&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;directory&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;with_items&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;/user01&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Package install by yum&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;yum&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ packages }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;vars&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;packages&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;python2-pip&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;postgresql&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;postgresql-devel&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Upgrade pip by shell command&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bash -lc &amp;#34;pip install --upgrade pip&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Install python modules&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;pip&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;executable&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;pip&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;with_items&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;cx_Oracle&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;psycopg2&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;boto3&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="l"&gt;paramiko&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Copy files&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;copy&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;src&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.source }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;dest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;{{ item.dest }}&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;owner&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;root&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;group&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;root&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;mode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0755&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;with_items&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- {&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;source: etc/somefile.zip, dest&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;/etc/somefile.zip }&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위 순서대로 사용자 그룹 생성, 사용자 생성, 폴더 생성, 패키지 설치, 쉘 명령 실행, 파일 복사가 진행됩니다. 결국 SSH로 접속해 필요한 작업을 순서대로 실행하는 셈이지만, YAML로 정리해 두면 반복 작업을 훨씬 편하게 다룰 수 있습니다.&lt;/p&gt;
+&lt;p&gt;다만 Ansible은 위에서 아래로 순서대로 실행하므로 작업 순서에는 주의해야 합니다. 예를 들어, 사용자 그룹을 만들기 전에 그 그룹에 사용자를 넣을 수는 없습니다.&lt;/p&gt;
+&lt;h2 id="rolesbatchfiles"&gt;roles/batch/files
+&lt;/h2&gt;&lt;p&gt;이 폴더에는 파일 전송에 사용할 파일을 둡니다. 예를 들어 위의 &lt;code&gt;main.yml&lt;/code&gt;에서 &lt;code&gt;etc/somefile.zip&lt;/code&gt;을 복사하려면 같은 경로 구조로 파일을 넣어 두면 됩니다. 여러 파일을 전송해야 한다면 이 폴더 아래에 적절히 나눠 두면 됩니다.&lt;/p&gt;
+&lt;h2 id="rolescommontasksmainyml"&gt;roles/common/tasks/main.yml
+&lt;/h2&gt;&lt;p&gt;이 파일에는 모든 서버에서 공통으로 실행할 작업을 넣습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Upgrade all packages by yum&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;yum&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;name=* state=latest&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Install openjdk 11&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;bash -lc &amp;#34;amazon-linux-extras install java-openjdk11&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Correct java version selected&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;alternatives&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;java&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;path&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;/usr/lib/jvm/java-11-openjdk-11.0.2.7-0.amzn2.x86_64/bin/java&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;여기서는 &lt;code&gt;yum&lt;/code&gt;으로 전체 패키지를 업데이트하고, OpenJDK 11을 설치한 뒤, &lt;code&gt;alternatives&lt;/code&gt;로 기본 &lt;code&gt;java&lt;/code&gt; 버전을 맞춥니다. Java만 설치한다고 기본 실행 버전이 자동으로 바뀌지는 않기 때문에, 이런 식으로 명시적으로 지정해 주는 편이 안전합니다.&lt;/p&gt;
+&lt;p&gt;여기까지 하면 Ansible의 기본 설정은 끝입니다. 생각보다 어렵지 않습니다.&lt;/p&gt;
+&lt;h2 id="실행하기"&gt;실행하기
+&lt;/h2&gt;&lt;p&gt;Playbook이 준비되면 다음처럼 실행할 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 일반 실행&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ansible-playbook server.yml -i hosts
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Dry run&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ansible-playbook server.yml -i hosts -C
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# SSH 사용자명을 직접 지정할 때&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ansible-playbook server.yml -i hosts -u hostuser
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;실행 중 SSH 비밀번호를 물어보게 할 수도 있지만, SSH 공개 키를 미리 등록해 두면 그런 과정을 줄일 수 있습니다. &lt;code&gt;sudo&lt;/code&gt;도 &lt;code&gt;visudo&lt;/code&gt;에서 &lt;code&gt;NOPASSWD&lt;/code&gt;를 설정해 두면 편합니다.&lt;/p&gt;
+&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;지금은 무엇이든 자동화하는 쪽으로 많이 바뀌고 있습니다. Jenkins와 Ansible을 함께 쓰면 서버 구축부터 배포까지 꽤 많은 부분을 자동화할 수 있어서 생산성이 크게 올라갑니다.&lt;/p&gt;
+&lt;p&gt;아직 수동으로 서버를 세팅하고 있다면, 반복 작업을 YAML로 정리해 두는 것만으로도 운영 부담이 많이 줄어듭니다. 그런 점에서 Ansible은 한 번쯤 익혀 둘 만한 도구라고 생각합니다.&lt;/p&gt;
+&lt;div class="footnotes" role="doc-endnotes"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;구조는 JSON과 비슷하지만 사람이 읽기에는 마크업 언어에 더 가까운 느낌입니다. 버릇은 있지만 직관적으로 표현하기 좋습니다.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</description></item><item><title>Tera Term 매크로로 SSH 접속 자동화하기</title><link>https://retheviper.github.io/ko/posts/linux-teraterm-macro/</link><pubDate>Mon, 24 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/linux-teraterm-macro/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.webp" alt="Featured image of post Tera Term 매크로로 SSH 접속 자동화하기" /&gt;&lt;p&gt;PuTTY나 macOS 터미널은 써 봤지만, &lt;a class="link" href="https://ttssh2.osdn.jp/" target="_blank" rel="noopener"
+&gt;Tera Term&lt;/a&gt;은 그때까지 사용해 본 적이 없었습니다. 그런데 회사에서는 AWS에 Linux 서버를 세워 놓고 접속해야 했기 때문에 SSH 연결 도구가 필요했습니다. 그래서 처음 해 본 일이 Tera Term 매크로를 만들어 SSH 접속을 자동화하는 것이었습니다.&lt;/p&gt;
+&lt;p&gt;문서 작업만 하다가 처음으로 이런 식의 스크립트를 만들어 보니 꽤 재미있었습니다. 게다가 매크로로 간단하게 쉘 명령을 보낼 수 있고, 화면 설정도 쉽게 바꿀 수 있어서 생각보다 편리했습니다. 이제 실제로 어떻게 만들었는지 정리해 보겠습니다.&lt;/p&gt;
+&lt;h2 id="매크로-디자인"&gt;매크로 디자인
+&lt;/h2&gt;&lt;p&gt;이번 프로젝트에서는 먼저 발판 서버를 거친 뒤 EC2 서버에 접속하는 구조를 사용했습니다. 처음에는 왜 이렇게 복잡하게 접속해야 하는지 이해가 잘 안 됐지만, 외부에서 직접 접근할 수 없는 서버가 섞여 있다 보니 이런 단계가 필요한 구조였습니다.&lt;/p&gt;
+&lt;p&gt;그래서 매크로는 다음 순서로 동작하게 만들었습니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;목록에서 접속할 서버를 고른다.&lt;/li&gt;
+&lt;li&gt;먼저 발판 서버에 접속한 뒤, 거기서 다시 대상 서버로 SSH 접속한다.&lt;/li&gt;
+&lt;li&gt;대상 서버에 맞는 INI 파일을 불러온다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;배치 서버, WebAP 서버, CI 서버별로 터미널 설정이 조금씩 달라서 INI 파일도 각각 따로 준비했습니다. 특히 CI 서버는 Jenkins 접속용 포트 포워딩까지 필요했기 때문에, 서버마다 다른 INI 파일을 읽게 했습니다.&lt;/p&gt;
+&lt;h2 id="매크로-코드"&gt;매크로 코드
+&lt;/h2&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 발판 사용자 ID / 비밀번호
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;USERNAME = &amp;#39;발판 사용자 ID&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;PASSWORD = &amp;#39;발판 사용자 비밀번호&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 발판 서버 IP 주소
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;HOSTIP = &amp;#39;여기에 IP&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 접속 대상별 작업용 사용자 ID
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strdim WORKUSERLIST 3
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKUSERLIST[0] = &amp;#39;배치 서버 사용자 ID&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKUSERLIST[1] = &amp;#39;WebAP 서버 사용자 ID&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKUSERLIST[2] = &amp;#39;CI 서버 사용자 ID&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 접속 대상별 작업용 사용자 비밀번호
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strdim WORKPWLIST 3
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKPWLIST[0] = &amp;#39;배치 서버 비밀번호&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKPWLIST[1] = &amp;#39;WebAP 서버 비밀번호&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;WORKPWLIST[2] = &amp;#39;CI 서버 비밀번호&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 서버 IP
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strdim SERVERipLIST 3
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERipLIST[0] = &amp;#39;배치 서버 IP&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERipLIST[1] = &amp;#39;WebAP 서버 IP&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERipLIST[2] = &amp;#39;CI 서버 IP&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 목록에 표시될 서버 이름
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strdim SERVERnameLIST 3
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERnameLIST[0] = &amp;#39;배치 서버&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERnameLIST[1] = &amp;#39;WebAP 서버&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SERVERnameLIST[2] = &amp;#39;CI 서버&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 서버별 INI 파일
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strdim INILIST 3
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;INILIST[0] = &amp;#39;/BatchServer.INI&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;INILIST[1] = &amp;#39;/WebAPServer.INI&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;INILIST[2] = &amp;#39;/CIServer.INI&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 접속 대상 선택 화면
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;listbox &amp;#39;서버를 선택해 주세요&amp;#39; &amp;#39;결정&amp;#39; SERVERnameLIST
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;if result &amp;gt;= 0 then
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; SERVERIP = SERVERipLIST[result]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; WORKUSER = WORKUSERLIST[result]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; WORKPASSWORD = WORKPWLIST[result]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; INIFILE = INILIST[result]
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;else
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; end
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;endif
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; INI 파일 경로 읽기
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;getdir INIPATH
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat INIPATH INIFILE
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 발판 서버 접속 명령 조립 및 실행
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;PROXY = &amp;#39;-proxy=http://proxy.server.com:6000&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;COMMAND = PROXY
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND &amp;#39; &amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND HOSTIP
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND &amp;#39;:22 /ssh /auth=password /user=&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND USERNAME
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND &amp;#39; /passwd=&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat COMMAND PASSWORD
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;connect COMMAND
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wait &amp;#39;$&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 대상 서버 SSH 접속
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;SSHCOMMAND = &amp;#39;ssh &amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat SSHCOMMAND WORKUSER
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat SSHCOMMAND &amp;#39;@&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;strconcat SSHCOMMAND SERVERIP
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sendln SSHCOMMAND
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 첫 SSH 로그인 처리
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wait &amp;#39;Are you sure you want to continue connecting (yes/no)?&amp;#39; &amp;#34;&amp;#39;s password: &amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;if result = 1 then
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; sendln &amp;#39;yes&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; wait &amp;#34;&amp;#39;s password: &amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;elseif result = 2 then
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; goto INPUTPWD
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;endif
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;:INPUTPWD
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sendln WORKPASSWORD
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wait &amp;#39;$&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sendln &amp;#39;sudo su -&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wait &amp;#39;sudo&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sendln WORKPASSWORD
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;wait &amp;#39;#&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;restoresetup INIPATH
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;; 매크로 종료
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;;==============================================
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;end
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="코드-설명"&gt;코드 설명
+&lt;/h2&gt;&lt;p&gt;처음에는 발판 서버의 사용자 ID, 비밀번호, IP를 조합해 접속 명령을 만듭니다. 프록시가 필요한 환경이라면 접속 문자열에 프록시 설정을 붙이면 됩니다. 그 다음은 목록에서 서버를 하나 고르게 하고, 선택한 값에 따라 사용자명, 비밀번호, IP, INI 파일 경로를 꺼냅니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;listbox&lt;/code&gt;에서 선택한 값은 &lt;code&gt;result&lt;/code&gt;에 숫자로 들어오므로, 그 값을 배열 인덱스로 사용합니다. 서버별 INI 파일도 같은 인덱스로 찾아서 &lt;code&gt;restoresetup&lt;/code&gt;에 넘깁니다. 매크로 파일과 INI 파일은 같은 폴더에 있다고 가정하면 됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;wait&lt;/code&gt;는 터미널의 반응을 기다리는 역할입니다. 쉘의 &lt;code&gt;expect&lt;/code&gt;처럼, 다음 명령을 보내기 전에 서버가 어떤 상태인지 확인하는 데 사용합니다. 그래서 첫 접속 시 호스트 키 확인 메시지가 나오더라도 자연스럽게 대응할 수 있습니다.&lt;/p&gt;
+&lt;p&gt;매크로를 &lt;code&gt;.ttl&lt;/code&gt; 확장자로 저장한 뒤 Tera Term에서 불러오거나, 설치 시 매크로 실행 옵션을 사용해 바로 실행할 수 있습니다.&lt;/p&gt;
+&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;wait&lt;/code&gt;와 &lt;code&gt;sendln&lt;/code&gt;만 잘 조합해도 꽤 많은 작업을 자동화할 수 있습니다. 이 매크로도 결국 쉘 작업을 좀 더 편하게 쓰기 위한 도구였습니다. 여기서는 발판 서버를 거쳐 각 서버에 접속한 뒤 root 권한까지 올리는 흐름을 만들었지만, 필요한 경우 작업 경로나 추가 명령도 얼마든지 넣을 수 있습니다.&lt;/p&gt;
+&lt;p&gt;Windows 환경에서 SSH 접속을 자주 반복해야 한다면, Tera Term 매크로도 생각보다 꽤 실용적인 선택입니다.&lt;/p&gt;</description></item><item><title>macOS에서 단축 명령 쓰기</title><link>https://retheviper.github.io/ko/posts/linux-mac-shortcut/</link><pubDate>Tue, 11 Jun 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/linux-mac-shortcut/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.webp" alt="Featured image of post macOS에서 단축 명령 쓰기" /&gt;&lt;h2 id="공지"&gt;공지
+&lt;/h2&gt;&lt;p&gt;macOS가 Catalina(10.15)로 올라가면서 기본 셸이 bash에서 &lt;a class="link" href="https://ja.wikipedia.org/wiki/Z_Shell" target="_blank" rel="noopener"
+&gt;zsh&lt;/a&gt;로 바뀌었습니다. 그래서 이 글을 그대로 적용하면 추가한 명령이 바로 먹지 않을 수도 있습니다.&lt;/p&gt;
+&lt;p&gt;이미 Bash에 명령을 추가한 경우에는 아래 명령으로 옮길 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;새로 추가할 경우에는 아래 &amp;ldquo;프로필 만들기&amp;rdquo; 절의 명령 대신 다음을 입력하면 됩니다. 그 뒤에는 같은 순서로 진행하면 됩니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;vi ~/.zprofile
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이하 내용은 예전 글입니다.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;예전에는 MS-DOS와 Windows만 써 보던 제가 Mac을 사용한 지도 벌써 1년이 넘었습니다. Mac 하면 일단 비싸고, Windows와는 완전히 다른 환경이라 쓰기 불편하지 않을까 생각했습니다. 영상이나 음악 편집에는 최적이라는 이야기도 있었지만, 그건 저와는 별 상관없는 세계라고 여겼습니다.&lt;/p&gt;
+&lt;p&gt;제가 Mac을 쓰게 된 이유는 여러 가지가 있지만, 개발 일을 하게 된 지금은 무엇보다 Unix 계열 OS라는 점이 가장 큰 장점입니다. 업무에서는 Linux를 자주 만지는데, Mac의 터미널도 그와 비슷한 작업을 거의 그대로 할 수 있기 때문입니다.&lt;/p&gt;
+&lt;p&gt;다만 같은 Bash를 쓴다고 해도 Mac과 Linux가 완전히 같은 것은 아닙니다. 예를 들어 단축 명령이 그렇습니다. Linux에서 편하게 쓰는 단축 명령이 Mac에는 없는 경우가 있습니다. 그런데 찾아보니 역시 방법은 있었습니다.&lt;/p&gt;
+&lt;p&gt;이번 글은 그런 Linux용 단축 명령을 Mac에서 쓰기 위한 설정 이야기입니다. 제가 직접 연구한 것은 아니고 인터넷에서 찾은 정보에 가깝지만, 이런 설정만 봐도 여러 명령과 별칭을 배울 수 있어서 꽤 귀중한 자료라고 생각했습니다. 만든 분께 감사할 따름입니다.&lt;/p&gt;
+&lt;h2 id="프로필-만들기"&gt;프로필 만들기
+&lt;/h2&gt;&lt;p&gt;먼저 Bash 프로필을 만듭니다. 터미널에서 아래처럼 입력합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;vi ~/.bash_profile
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;bash_profile&lt;/code&gt;과 &lt;code&gt;bashrc&lt;/code&gt;의 차이는, 전자는 터미널을 열 때 바로 적용되는 설정이고, 후자는 터미널에서 Bash를 다시 실행할 때 적용되는 설정이라고 보면 됩니다. 또한 이 프로필은 현재 사용자 홈에 만들어지므로, 사용자가 바뀌면 다시 설정해야 합니다.&lt;/p&gt;
+&lt;h2 id="프로필-내용"&gt;프로필 내용
+&lt;/h2&gt;&lt;p&gt;아래 코드를 프로필에 넣습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# .bash_profile&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="o"&gt;[&lt;/span&gt; -f ~/.bashrc &lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;then&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;. ~/.bashrc
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#============================================================&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# ALIASES AND FUNCTIONS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Arguably, some functions defined here are quite big.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# If you want to make this file smaller, these functions can&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#+ be converted into scripts and removed from here.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#============================================================&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Personal Aliases&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;rm&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;rm -i&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;cp&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cp -i&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;mv&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;mv -i&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;cl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;clear&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# -&amp;gt; Prevents accidentally clobbering files.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;mkdir&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;mkdir -p&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;h&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;history&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;j&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;jobs -l&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;which&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;type -a&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; ..&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cd ..&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Pretty-print of some PATH variables:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;path&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;echo -e ${PATH//:/\\n}&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;libpath&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;echo -e ${LD_LIBRARY_PATH//:/\\n}&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;du&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;du -kh&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Makes a more readable output.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;df&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;df -kTh&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The &amp;#39;ls&amp;#39; family (this assumes you use a recent GNU ls).&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Add colors for filetype and human-readable sizes by default on &amp;#39;ls&amp;#39;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;ls&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -h&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lx&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -lXB&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Sort by extension.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -lSr&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Sort by size, biggest last.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lt&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -ltr&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Sort by date, most recent last.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -ltcr&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Sort by/show change time, most recent last.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ls -ltur&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Sort by/show access time, most recent last.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The ubiquitous &amp;#39;ll&amp;#39;: directories first, with alphanumeric sorting:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;ll&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ls -alv&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lm&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ll |more&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Pipe through &amp;#39;more&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;lr&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ll -R&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Recursive ls.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;la&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ll -A&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Show hidden files.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;tree -Csuh&amp;#39;&lt;/span&gt; &lt;span class="c1"&gt;# Nice alternative to &amp;#39;recursive ls&amp;#39; ...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Tailoring &amp;#39;less&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;more&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;less&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;PAGER&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;less
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESSCHARSET&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;latin1&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESSOPEN&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;|/usr/bin/lesspipe.sh %s 2&amp;gt;&amp;amp;-&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# Use this if lesspipe.sh exists.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-i -N -w -z-4 -g -e -M -X -F -R -P%t?f%f \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s1"&gt;:stdin .?pb%pb\%:?lbLine %lb:?bbByte %bb:-...&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# LESS man page colors (makes Man pages more readable).&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_mb&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[01;31m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_md&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[01;31m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_me&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_se&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_so&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[01;44;33m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_ue&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[0m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;export&lt;/span&gt; &lt;span class="nv"&gt;LESS_TERMCAP_us&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;$&amp;#39;\E[01;32m&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Spelling typos - highly personal and keyboard-dependent :-)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;xs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cd&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;vf&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cd&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;moer&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;more&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;moew&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;more&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;kk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ll&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Using in MAC&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;#-------------------------------------------------------------&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;desk&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cd ~/Desktop&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;alias&lt;/span&gt; &lt;span class="nv"&gt;cl&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;clear&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;그다음 &lt;code&gt;source ~/.bash_profile&lt;/code&gt;를 실행하면 현재 사용자에게 적용됩니다. 프로필은 사용자별로 저장되므로, 여러 계정을 쓴다면 root를 포함해 각각 같은 작업을 해 줘야 합니다.&lt;/p&gt;
+&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;ll&lt;/code&gt;을 Mac에서도 쓸 수 없을까 하는 가벼운 생각으로 찾아본 정보였는데, &lt;code&gt;ll | more&lt;/code&gt; 같은 별칭까지 지정할 수 있다는 걸 처음 알았습니다. 또 &lt;code&gt;cd&lt;/code&gt;를 &lt;code&gt;xs&lt;/code&gt;로 잘못 치는 경우가 많은데, 그걸 아예 명령으로 등록해 버리는 발상도 꽤 재미있었습니다. 사소한 설정 같아 보여도, 자주 쓰는 명령을 손에 맞게 바꾸는 것만으로 작업 흐름이 꽤 편해집니다.&lt;/p&gt;
+&lt;p&gt;일부는 Linux에서도 그대로 쓰기 좋은 별칭이니, 비슷한 환경을 쓰고 있다면 한 번쯤 적용해 볼 만합니다.&lt;/p&gt;</description></item><item><title>알아 두면 편리한 Linux 팁</title><link>https://retheviper.github.io/ko/posts/linux-command-tips/</link><pubDate>Sun, 19 May 2019 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/linux-command-tips/</guid><description>&lt;img src="https://retheviper.github.io/images/linux_terminal.webp" alt="Featured image of post 알아 두면 편리한 Linux 팁" /&gt;&lt;p&gt;초등학교 때 처음 MS-DOS를 만지고, 그 뒤로는 계속 Windows PC만 써 왔기 때문에 저는 Linux를 아주 잘 아는 편은 아닙니다. &lt;code&gt;CLI&lt;/code&gt;&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;는 &lt;code&gt;GUI&lt;/code&gt;와는 다른 감각이 있다고 생각했을 정도였습니다. 처음 CentOS를 가상 머신에 설치해 봤을 때도 &amp;ldquo;아, DOS와 비슷하네&amp;rdquo; 정도의 인상밖에 없었습니다. 그런데 일을 하면서 직접 써 보니 생각보다 훨씬 편리했습니다. 서버에서 점유율 1위를 차지하는 데는 그만한 이유가 있구나 싶었습니다.&lt;/p&gt;
+&lt;p&gt;그래서 이번에는 &lt;code&gt;cd&lt;/code&gt;나 &lt;code&gt;mkdir&lt;/code&gt; 같은 정말 기본적인 명령만 알던 제가 업무를 하면서 배운 팁 몇 가지를 정리해 보려 합니다. 이런 것들은 기본이지만, 실제로 써 보지 않으면 잘 모르는 경우가 많습니다. 명령어와 단축키는 결국 얼마나 잘 쓰느냐가 중요하다고 느꼈기 때문에, 기록 차원에서도 정리해 둡니다.&lt;/p&gt;
+&lt;h2 id="tab-키로-자동-완성"&gt;&lt;code&gt;Tab&lt;/code&gt; 키로 자동 완성
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;GUI&lt;/code&gt;보다 &lt;code&gt;CLI&lt;/code&gt;가 어렵게 느껴지는 이유는 결국 명령을 직접 입력해야 하기 때문이라고 생각합니다. 파일을 다른 폴더로 옮기는 간단한 작업도 GUI에서는 마우스로 드래그하면 끝나지만, CLI에서는 일일이 명령을 입력해야 합니다. &lt;code&gt;mv&lt;/code&gt; 같은 명령을 모르면 시작조차 어렵고, 옵션에 따라 결과도 달라집니다. 무엇보다 경로를 하나씩 입력해야 하는 점이 번거롭습니다.&lt;/p&gt;
+&lt;p&gt;그런데 이런 불편을 느낀 건 저만이 아니었던 것 같습니다. 예전부터 있었던 기능이지만, &lt;code&gt;Tab&lt;/code&gt; 키를 누르면 자동 완성이 됩니다. 긴 경로나 공백이 들어간 이름도 훨씬 쉽게 입력할 수 있습니다. 동작 방식은 대략 이렇습니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;파일이나 폴더 이름을 입력한다.&lt;/li&gt;
+&lt;li&gt;입력 도중 &lt;code&gt;Tab&lt;/code&gt; 키를 누른다.&lt;/li&gt;
+&lt;li&gt;이름이 자동으로 완성된다.&lt;/li&gt;
+&lt;li&gt;같은 접두어를 가진 항목이 여러 개면 목록이 출력된다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;예를 들어 &lt;code&gt;/home/retheviper/task01&lt;/code&gt; 폴더로 이동한다고 해 봅시다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; h &lt;span class="c1"&gt;# 여기서 tab&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; home/ &lt;span class="c1"&gt;# 자동 완성됨&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; home/r &lt;span class="c1"&gt;# 여기서 tab&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; home/retheviper/ &lt;span class="c1"&gt;# 자동 완성됨&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; home/retheviper/t &lt;span class="c1"&gt;# 여기서 tab&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;task01 task02 task03 &lt;span class="c1"&gt;# t로 시작하는 폴더가 여러 개라 목록이 출력됨&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;꽤 편리한 단축키라서 꼭 기억해 두면 좋습니다.&lt;/p&gt;
+&lt;h2 id="폴더-이동과-목록-출력-명령"&gt;폴더 이동과 목록 출력 명령
+&lt;/h2&gt;&lt;p&gt;현재 폴더의 내용을 확인할 때는 &lt;code&gt;ls&lt;/code&gt;나 &lt;code&gt;ll&lt;/code&gt;을 많이 씁니다. 이 명령에 경로를 더하면 다른 폴더의 내용도 볼 수 있습니다. 제가 주로 쓰던 방식은 이런 식입니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 현재 폴더 내용 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# /var 폴더가 있어서 그 안을 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; var
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 처음 위치보다 위쪽 폴더를 보고 싶을 때&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; ..
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; ..
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;하지만 경로를 바꾸지 않고도 다른 폴더를 볼 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 절대 경로 사용&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll /var/lib
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 아래 폴더 보기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll ./lib
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll lib
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 위 폴더 보기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll ../
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 더 위 폴더 보기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ ll ../../
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;경로가 길어서 이전 위치로 돌아가는 데 시간이 걸릴 때는 이렇게도 할 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 긴 경로 안에 있는 상태&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;pwd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;/var/lib/jenkins/workspace/job01/git_repository/git
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 또 다른 긴 경로의 폴더로 이동&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; /home/retheviper/todo/task01/awesomeblog
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;pwd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;/home/retheviper/todo/task01/awesomeblog
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 이전 폴더로 돌아가고 싶을 때&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;cd&lt;/span&gt; -
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ &lt;span class="nb"&gt;pwd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;/var/lib/jenkins/workspace/job01/git_repository/git
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;다만 &lt;code&gt;cd -&lt;/code&gt;은 바로 직전 경로와만 오갈 수 있으니 주의해야 합니다. 두 번 연속 입력하면 두 경로를 번갈아 왕복하게 됩니다.&lt;/p&gt;
+&lt;h2 id="파일-동기화가-가능한-rsync"&gt;파일 동기화가 가능한 &lt;code&gt;rsync&lt;/code&gt;
+&lt;/h2&gt;&lt;p&gt;Linux에서 파일 복사에는 &lt;code&gt;scp&lt;/code&gt;를 많이 쓰지만, 저는 &lt;code&gt;rsync&lt;/code&gt;가 더 효율적이어서 더 추천하고 싶습니다. &lt;code&gt;rsync&lt;/code&gt;는 단순히 파일을 복사하는 것뿐 아니라 폴더와 파일을 동기화할 수 있습니다. 원격 폴더를 동기화할 때도 공개키 인증을 설정해 두면 비밀번호 없이 복사할 수 있는 점이 좋습니다.&lt;/p&gt;
+&lt;p&gt;동기화가 가능하다는 것은 차이만 찾아낼 수 있다는 뜻이기도 합니다. 이미 대상에 파일이 있으면 원본과 비교해 변경된 부분만 전송하므로 성능도 좋습니다. 원본에서 삭제된 파일을 대상에서도 지울 수 있는 옵션도 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 폴더 동기화&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ rsync origin destination
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 원본에서 삭제된 파일을 대상에서도 삭제&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ rsync --delete origin destination
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;다른 명령도 마찬가지지만, &lt;code&gt;rsync&lt;/code&gt;에서 복사 대상을 지정할 때는 &lt;code&gt;/&lt;/code&gt; 유무가 꽤 중요합니다.&lt;/p&gt;
+&lt;p&gt;예를 들어 원본 폴더를 &lt;code&gt;folder&lt;/code&gt;처럼 쓰면 폴더 자체가 복사되고, &lt;code&gt;folder/&lt;/code&gt;처럼 쓰면 폴더 안의 내용만 대상이 됩니다. 또 대상 폴더에 권한이 없거나 소유자가 다르면 복사할 수 없으니 주의해야 합니다. 권한은 &lt;code&gt;chmod&lt;/code&gt;, 소유자는 &lt;code&gt;chown&lt;/code&gt;으로 바꿀 수 있습니다.&lt;/p&gt;
+&lt;p&gt;동기화할 폴더 중 제외해야 할 폴더가 있다면 &lt;code&gt;--exclude='folder'&lt;/code&gt; 옵션으로 뺄 수 있습니다. 이 옵션은 원본과 대상 양쪽에서 적용되므로 꽤 유용합니다.&lt;/p&gt;
+&lt;h2 id="시스템-사양과-상태-보기"&gt;시스템 사양과 상태 보기
+&lt;/h2&gt;&lt;p&gt;업무에서 성능 테스트를 하거나 특정 작업 중 서버 상태를 모니터링해야 하는 경우가 있었습니다. 먼저 서버 머신 사양부터 보고 싶다면 &lt;code&gt;/proc&lt;/code&gt; 아래를 보면 됩니다. 커널이 사용하는 정보가 모여 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# CPU 상세 정보 보기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ less /proc/cpuinfo
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 메모리 상세 정보 보기&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ less /proc/meminfo
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;실시간으로 CPU나 메모리 사용량을 보고 싶다면 &lt;code&gt;vmstat&lt;/code&gt;이 유용합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 현재 상태 출력&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ vmstat
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 메모리 사용량 출력&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ vmstat -s
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 디스크 활동 출력&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ vmstat -d
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# 1초 간격으로 갱신하며 출력&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ vmstat &lt;span class="m"&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;메모리, 디스크, CPU 사용량을 함께 볼 수 있어서 기억해 두면 좋습니다.&lt;/p&gt;
+&lt;h2 id="긴-출력을-조금씩-보기"&gt;긴 출력을 조금씩 보기
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;ls -al&lt;/code&gt;&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt; 같은 명령은 출력이 너무 많아서 한 화면에 다 안 보일 수 있습니다. 이럴 때는 &lt;code&gt;more&lt;/code&gt; 명령을 쓰면 출력이 화면을 꽉 채운 뒤 엔터를 눌러 다음 페이지를 볼 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;ls -al &lt;span class="p"&gt;|&lt;/span&gt; more
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이 밖에도 기억해 두면 편리한 명령과 단축키는 정말 많습니다. Linux는 처음에는 낯설어도, 자주 쓰는 몇 가지만 익혀도 작업 속도가 꽤 달라집니다.&lt;/p&gt;
+&lt;p&gt;저처럼 Linux가 아직 익숙하지 않은 사람에게도 바로 써먹을 수 있는 팁이 되었으면 합니다.&lt;/p&gt;
+&lt;div class="footnotes" role="doc-endnotes"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:1"&gt;
+&lt;p&gt;저는 &lt;code&gt;CUI&lt;/code&gt;라는 말에 더 익숙합니다. &lt;code&gt;Character User Interface&lt;/code&gt;의 약자인 줄 알았는데, 정확한 이름은 &lt;code&gt;Command Line Interface&lt;/code&gt;의 약자인 &lt;code&gt;CLI&lt;/code&gt;라고 하네요.&amp;#160;&lt;a href="#fnref:1" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:2"&gt;
+&lt;p&gt;&lt;code&gt;ll&lt;/code&gt;은 &lt;code&gt;ls -l&lt;/code&gt;의 단축형인 것 같습니다. 같은 글자를 두 번 입력하는 것만으로도 대략적인 내용을 보여 주니 편리합니다. 다만 &lt;code&gt;ls -al&lt;/code&gt;은 숨김 파일이나 폴더도 함께 보여 줍니다.&amp;#160;&lt;a href="#fnref:2" class="footnote-backref" role="doc-backlink"&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</description></item></channel></rss>

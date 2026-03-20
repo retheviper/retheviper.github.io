@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Scope Function on Korean-man in Tokyo</title><link>https://retheviper.github.io/ko/tags/scope-function/</link><description>Recent content in Scope Function on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>ko-kr</language><lastBuildDate>Wed, 04 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/ko/tags/scope-function/index.xml" rel="self" type="application/rss+xml"/><item><title>Scope Function 활용하기</title><link>https://retheviper.github.io/ko/posts/kotlin-scope-function/</link><pubDate>Wed, 04 Nov 2020 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/ko/posts/kotlin-scope-function/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.webp" alt="Featured image of post Scope Function 활용하기" /&gt;&lt;p&gt;Kotlin을 Java와 구분 짓는 요소는 여럿 있지만, 그중에서도 자주 눈에 띄는 것이 &lt;code&gt;Scope Function&lt;/code&gt;입니다. 이런 내장 함수들은 잘 쓰면 Java보다 코드를 더 간결하게 만들 수 있고, 작성 의도도 조금 더 분명하게 드러낼 수 있습니다. 다만 다른 언어에서 바로 익숙해지는 개념은 아니다 보니, 막상 실무나 개인 코드에서 언제 어떤 함수를 써야 하는지는 꽤 헷갈립니다.
+검색해 보면 Scope Function을 소개하는 글은 많지만, 대부분은 각 함수의 문법만 설명하고 끝나는 경우가 많습니다. 그래서 &amp;ldquo;이 함수들이 애초에 왜 필요한가&amp;rdquo;, &amp;ldquo;서로 어떻게 구분해야 하는가&amp;rdquo;, &amp;ldquo;실제로는 어느 장면에서 쓰는 것이 자연스러운가&amp;quot;를 한 번 정리해 보고 싶었습니다. 이번 글은 공식 문서와 몇몇 참고 자료를 바탕으로 그 기준을 정리한 메모입니다.&lt;/p&gt;
+&lt;h2 id="scope-function이란"&gt;Scope Function이란
+&lt;/h2&gt;&lt;p&gt;먼저 Scope Function이 정확히 무엇인지부터 보겠습니다. 이름 그대로, 어떤 객체를 기준으로 임시 스코프를 만들고 그 안에서 코드를 실행하는 함수들입니다. &lt;a class="link" href="https://kotlinlang.org/docs/reference/scope-functions.html" target="_blank" rel="noopener"
+&gt;공식 설명&lt;/a&gt;은 다음과 같습니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The Kotlin standard library contains several functions whose sole purpose is to execute a block of code within the context of an object. When you call such a function on an object with a lambda expression provided, it forms a temporary scope. In this scope. In this scope. functions are called scope functions.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;요약하면, 특정 객체를 문맥으로 삼아 람다 블록을 실행할 때 쓰는 기능입니다. 완전히 새로운 종류의 문법이라기보다, &amp;ldquo;이 블록은 이 객체를 대상으로 한다&amp;quot;는 사실을 코드에서 더 분명하게 드러내는 도구에 가깝습니다. 아래 예시는 두 코드가 같은 일을 하지만, 후자가 처리 범위를 더 명확하게 보여 줍니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// Scope Function이 없는 코드
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;john&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;John&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nc"&gt;Gender&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Male&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;john&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;doWarmingUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;john&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;startToRun&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// Scope Function의 let을 사용한 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;john&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;John&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nc"&gt;Gender&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;Male&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;doWarmingUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;startToRun&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;it&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="어떻게-다른가"&gt;어떻게 다른가
+&lt;/h2&gt;&lt;p&gt;스코프를 나눈다는 점만 보면 좋아 보이지만, 실제로는 어느 함수를 골라야 하는지가 다음 문제입니다. Kotlin에는 &lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/with.html" target="_blank" rel="noopener"
+&gt;with&lt;/a&gt;, &lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/let.html" target="_blank" rel="noopener"
+&gt;let&lt;/a&gt;, &lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html" target="_blank" rel="noopener"
+&gt;apply&lt;/a&gt;, &lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/run.html" target="_blank" rel="noopener"
+&gt;run&lt;/a&gt;, &lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/also.html" target="_blank" rel="noopener"
+&gt;also&lt;/a&gt; 다섯 가지 Scope Function이 있고, 상황에 따라 선택 기준이 달라집니다.
+이 함수들의 차이는 결국 두 가지입니다. 람다 안에서 리시버에 어떻게 접근하느냐, 그리고 함수 호출 결과로 무엇을 반환하느냐입니다. Scope Function은 대상 객체(리시버)를 기준으로 람다를 실행하고 값을 돌려주는데, 이 두 축이 함수마다 조금씩 다릅니다. 표로 정리하면 다음과 같습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;함수 이름&lt;/th&gt;
+&lt;th&gt;리시버 접근 방식&lt;/th&gt;
+&lt;th&gt;반환값&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;with&lt;/td&gt;
+&lt;td&gt;this&lt;/td&gt;
+&lt;td&gt;마지막 결과&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;let&lt;/td&gt;
+&lt;td&gt;it&lt;/td&gt;
+&lt;td&gt;마지막 결과&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;apply&lt;/td&gt;
+&lt;td&gt;this&lt;/td&gt;
+&lt;td&gt;T&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;run&lt;/td&gt;
+&lt;td&gt;this&lt;/td&gt;
+&lt;td&gt;마지막 결과&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;also&lt;/td&gt;
+&lt;td&gt;it&lt;/td&gt;
+&lt;td&gt;T&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;또 하나 기억해 둘 점은, &lt;code&gt;with&lt;/code&gt;를 제외한 나머지 네 함수가 &lt;a class="link" href="https://kotlinlang.org/docs/reference/extensions.html" target="_blank" rel="noopener"
+&gt;Extension Function&lt;/a&gt;이기도 하다는 점입니다. 확장 함수는 기존 클래스에 메서드를 덧붙인 것처럼 보이게 만드는 Kotlin의 기능입니다. Java에서는 상속이나 래퍼 클래스로 우회해야 했던 패턴을 Kotlin에서는 훨씬 간단히 표현할 수 있습니다.
+그래서 &lt;code&gt;let&lt;/code&gt;, &lt;code&gt;apply&lt;/code&gt;, &lt;code&gt;run&lt;/code&gt;, &lt;code&gt;also&lt;/code&gt;는 원래 그 객체가 가진 함수처럼 호출할 수 있습니다. &lt;code&gt;with&lt;/code&gt;만 조금 다르게, 객체를 인자로 받는 일반 함수 형태를 취합니다.&lt;/p&gt;
+&lt;h3 id="참고-it와-this"&gt;참고: it와 this
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;it&lt;/code&gt;은 매개변수가 하나만 있는 Lambda에서 사용됩니다. 예를 들어 Java라면, 파라미터가 하나라도 &lt;a class="link" href="https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html" target="_blank" rel="noopener"
+&gt;Method Reference&lt;/a&gt;를 사용하지 않는 한 다음과 같이 써야합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;of&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;john&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;jack&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// Predicate의 인자는 하나뿐이지만,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;Optional&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;filtered&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;stream&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="na"&gt;filter&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;john&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="na"&gt;equals&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)).&lt;/span&gt;&lt;span class="na"&gt;findFirst&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Kotlin에서는 같은 상황이라면 패터미터를 생략하고 단순히 &lt;code&gt;it&lt;/code&gt;로 표현할 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="py"&gt;names&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;List&lt;/span&gt;&lt;span class="p"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="p"&gt;&amp;gt;&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;listOf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;john&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;jack&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// it으로 생략
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;val&lt;/span&gt; &lt;span class="py"&gt;filtered&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;it&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;o&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;결국 &lt;code&gt;this&lt;/code&gt;과 같지 않습니까? 라고 생각하기 쉽지만, &lt;code&gt;it&lt;/code&gt;은 Lambda의 파라메타에 스코프가 한정되어 &lt;code&gt;this&lt;/code&gt;의 스코프는 로컬에서도 글로벌이 될 수 있다는 점이 다릅니다. 왜냐하면 &lt;code&gt;this&lt;/code&gt;은 리시버 자체를 가리키며 매개 변수가 없으면 Lambda의 범위를 가리키기 때문입니다. 즉, 매개 변수가없는 Lambda에서는 it를 사용할 수 없지만 this는 사용할 수 있습니다.&lt;/p&gt;
+&lt;h2 id="언제-쓸까"&gt;언제 쓸까
+&lt;/h2&gt;&lt;p&gt;다섯 함수의 차이를 알았다면, 이제는 실제로 어떻게 구분해 쓸지가 중요합니다. 아래 기준은 여러 자료를 참고한 뒤, 제가 가장 납득하기 쉬웠던 방식으로 정리한 것입니다.&lt;/p&gt;
+&lt;h3 id="with"&gt;with
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;with&lt;/code&gt;는 확장 함수가 아니라, 객체를 인자로 받는 일반 함수입니다. 그래서 특정 객체를 기준으로 여러 줄의 작업을 묶고 싶을 때 쓰기 좋습니다. 예를 들어 반복문 안에서 짧은 처리 블록을 메서드로 따로 뽑기엔 애매할 때, 범위를 분명하게 나누는 용도로 쓸 수 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="k"&gt;in&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;rev&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="k"&gt;this&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;reversed&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;reversedName&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;rev&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="let"&gt;let
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;let&lt;/code&gt;은 어떤 객체를 받아 그 객체로 무언가를 계산하거나 처리할 때 자연스럽습니다. 반환값이 람다의 마지막 식이기 때문에, 변환이나 후속 계산에도 잘 어울립니다. 특히 &lt;a class="link" href="https://kotlinlang.org/docs/reference/null-safety.html#safe-calls" target="_blank" rel="noopener"
+&gt;Safe Call&lt;/a&gt;과 함께 쓰기 좋아서, null이 아닐 때만 동작시키고 싶은 경우에 자주 등장합니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;?.&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;name is not null&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="apply"&gt;apply
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;apply&lt;/code&gt;는 람다 안에서 객체를 설정한 뒤, 결과로 그 객체 자신을 그대로 돌려받고 싶을 때 씁니다. 그래서 객체 초기화나 설정값 변경에 특히 잘 맞습니다. 생성 직후 프로퍼티를 채우거나, 설정 객체를 단계적으로 구성할 때 자주 쓰게 됩니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;devMode&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;SomeConfig&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;apply&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;name&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;devMode&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="실행"&gt;실행
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;run&lt;/code&gt;은 가장 애매하게 느껴질 수 있는 함수입니다. &lt;code&gt;run {}&lt;/code&gt;처럼 일반 함수처럼도 쓸 수 있고, 객체에 붙여서 Scope Function처럼도 쓸 수 있기 때문입니다. 그래서 일부 글에서는 다른 함수로 충분하면 굳이 쓰지 않아도 된다고 설명하기도 합니다.
+그래도 완전히 쓸모없는 것은 아닙니다. &lt;code&gt;this&lt;/code&gt; 문맥으로 여러 작업을 한 뒤 마지막 계산 결과를 반환하고 싶을 때는 나름 깔끔합니다. 비슷한 일을 &lt;code&gt;let&lt;/code&gt;으로도 할 수 있지만, &lt;code&gt;this&lt;/code&gt;를 쓰는 쪽이 더 읽기 쉬운 경우도 있습니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// run을 사용하는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;result1&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;8080&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/members:&lt;/span&gt;&lt;span class="si"&gt;$port&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// let을 사용하는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;result2&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;server&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;8081&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/members:&lt;/span&gt;&lt;span class="si"&gt;${it.port}&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="also"&gt;also
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;also&lt;/code&gt;는 객체 자체를 유지한 채, 부수 효과를 추가하고 싶을 때 잘 맞습니다. 예를 들어 로그를 남기거나, 디버깅 출력을 하거나, 객체를 다음 단계로 넘기기 전에 잠깐 다른 동작을 끼워 넣고 싶을 때 유용합니다. 이런 특성 때문에 조건 분기 비슷하게 활용하는 예도 종종 보입니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;String&lt;/span&gt;&lt;span class="p"&gt;?&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="k"&gt;null&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="o"&gt;?.&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;name is not null&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;?:&lt;/span&gt; &lt;span class="n"&gt;also&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;name is null&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="요약"&gt;요약
+&lt;/h3&gt;&lt;p&gt;&lt;a class="link" href="https://medium.com/@brijesh1794/kotlin-standard-library-let-run-also-apply-with-bb08473d29fd" target="_blank" rel="noopener"
+&gt;Kotlin Standard Library (let, run, also, apply, with)&lt;/a&gt;에서는 다섯 가지 Scope Function 중 무엇을 선택할지 판단하는 순서도를 제시합니다. 아래 이미지는 그 내용을 간단히 옮긴 것입니다. 어떤 함수를 써야 할지 헷갈릴 때는 이런 기준을 출발점으로 삼아도 괜찮겠습니다.
+&lt;img src="https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function.webp"
+width="3483"
+height="1203"
+srcset="https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hu_d07b3105195d8945.webp 480w, https://retheviper.github.io/posts/kotlin-scope-function/kotlin_select_scope_function_hu_e899cc03ee2e66f3.webp 1024w"
+loading="lazy"
+alt="Kotlin Select Scope Function"
+class="gallery-image"
+data-flex-grow="289"
+data-flex-basis="694px"
+&gt;&lt;/p&gt;
+&lt;h2 id="응용"&gt;응용
+&lt;/h2&gt;&lt;p&gt;Scope Function이 리턴 값으로 리시버 자체를 리턴한다는 것은 빌더 패턴으로 사용할 수 있다는 의미입니다. 그래서 적절한 조합으로, Scope Function에 의한 메소드 체인도 할 수 있습니다. 이것을 잘 활용하면 상당히 함수적인 감각으로 코드를 작성할 수 있습니다. 다음은 그 예 중 하나입니다.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// let 체인
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;three&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Int&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34; abc &amp;#34;&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;trim&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;}.&lt;/span&gt;&lt;span class="n"&gt;let&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;length&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;// also 체인
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;var&lt;/span&gt; &lt;span class="py"&gt;jack&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;Jack&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nc"&gt;Gender&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MALE&lt;/span&gt;&lt;span class="p"&gt;).&lt;/span&gt;&lt;span class="n"&gt;also&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;}.&lt;/span&gt;&lt;span class="n"&gt;also&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;it&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;doWarmingUp&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="마지막으로"&gt;마지막으로
+&lt;/h2&gt;&lt;p&gt;사실 이런 기능이 완전히 새로운 것은 아닙니다. 같은 JVM 계열 언어인 &lt;a class="link" href="http://groovy-lang.org" target="_blank" rel="noopener"
+&gt;Groovy&lt;/a&gt;에도 비슷한 발상이 이미 있었습니다. 다만 Kotlin은 이런 기능을 비교적 절제된 방식으로 제공해서, 과하게 낯설지 않으면서도 개발 경험을 꽤 쾌적하게 만들어 줍니다.
+그래서 Kotlin의 매력은 &amp;ldquo;완전히 새로운 언어&amp;quot;라기보다, 익숙한 생태계 위에서 불편한 부분을 잘 다듬어 준 언어라는 데 있다고 생각합니다. Java의 안정성과 Kotlin의 표현력을 함께 가져가고 싶다면, Scope Function도 한 번쯤 의식적으로 익혀 둘 만한 기능입니다.&lt;/p&gt;</description></item></channel></rss>
