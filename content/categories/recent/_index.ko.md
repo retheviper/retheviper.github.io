@@ -1,5 +1,5 @@
 ---
-title: "근황"
+title: "recent"
 description: "근황과 최근 관심사"
 slug: "recent"
 image: ocean-6603616_1920.jpg
