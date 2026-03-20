@@ -2,7 +2,7 @@
 title: SpringとKtor、5つの構成を比較してみた
 date: 2026-03-20
 categories:
-  - spring
+  - kotlin
 image: ../../images/kotlin.webp
 tags:
   - spring
