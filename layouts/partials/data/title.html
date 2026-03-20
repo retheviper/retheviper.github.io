@@ -24,7 +24,11 @@
     {{ $pag := .Paginate ($notHidden) }}
 
     <!-- {TAXONOMY_TYPE}: {TAXONOMY_TERM} -->
-    {{ $title = slice (title .Data.Singular) ": " $title }}
+    {{- $termTitle := lower $title -}}
+    {{- if .Data.Term -}}
+        {{- $termTitle = lower .Data.Term -}}
+    {{- end -}}
+    {{ $title = slice (title .Data.Singular) ": " $termTitle }}
 
     {{ if .Paginator.HasPrev }}
         <!-- Add page number-->
@@ -33,6 +37,12 @@
 
     {{ $title = $title | append " - " $siteTitle }}
     {{ $title = delimit $title "" }}
+{{- else if eq .Kind "taxonomy" -}}
+    {{- if eq .Data.Plural "tags" -}}
+        {{- $title = "Tags" -}}
+    {{- else if eq .Data.Plural "categories" -}}
+        {{- $title = "Categories" -}}
+    {{- end -}}
 {{- end -}}
 
 {{ return $title }}
