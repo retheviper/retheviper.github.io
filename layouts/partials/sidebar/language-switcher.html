@@ -1,5 +1,7 @@
 {{- $currentPage := . -}}
 {{- $languages := .Site.Languages -}}
+{{- $defaultLanguageCode := (index .Sites 0).Language.Lang -}}
+{{- $currentPagePath := strings.TrimPrefix .Site.Home.RelPermalink .RelPermalink -}}
 {{- if gt (len $languages) 1 -}}
     {{- $currentLanguageCode := .Language.Lang -}}
     <li id="i18n-switch">
@@ -9,8 +11,12 @@
                 {{- $targetSite := index (where $currentPage.Sites "Language.Lang" $language.Lang) 0 -}}
                 {{- $targetPage := index (where $currentPage.AllTranslations "Language.Lang" $language.Lang) 0 -}}
                 {{- $targetURL := "" -}}
-                {{- if $targetPage -}}
+                {{- if eq $language.Lang $currentLanguageCode -}}
+                    {{- $targetURL = $currentPage.RelPermalink -}}
+                {{- else if $targetPage -}}
                     {{- $targetURL = $targetPage.RelPermalink -}}
+                {{- else if and $targetSite (ne $currentLanguageCode $defaultLanguageCode) -}}
+                    {{- $targetURL = printf "%s%s" $targetSite.Home.RelPermalink $currentPagePath -}}
                 {{- else if $targetSite -}}
                     {{- $targetURL = $targetSite.Home.RelPermalink -}}
                 {{- end -}}

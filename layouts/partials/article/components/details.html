@@ -48,11 +48,20 @@
     </footer>
     {{ end }}
 
-    {{ if .IsTranslated }}
+    {{ $translations := where .AllTranslations "Language.Lang" "ne" .Language.Lang }}
+    {{ $defaultLanguageCode := (index .Sites 0).Language.Lang }}
+    {{ if and (eq (len $translations) 0) (ne .Language.Lang $defaultLanguageCode) }}
+        {{ $defaultSite := index (where .Sites "Language.Lang" $defaultLanguageCode) 0 }}
+        {{ if $defaultSite }}
+            {{ $currentPagePath := strings.TrimPrefix .Site.Home.RelPermalink .RelPermalink }}
+            {{ $translations = slice (dict "Permalink" (printf "%s%s" $defaultSite.Home.RelPermalink $currentPagePath) "Language" $defaultSite.Language) }}
+        {{ end }}
+    {{ end }}
+    {{ if gt (len $translations) 0 }}
         <footer class="article-translations">
             {{ partial "helper/icon" "language" }}
             <div>
-                {{ range .Translations }}
+                {{ range $translations }}
                     <a href="{{ .Permalink }}" class="link">{{ .Language.LanguageName }}</a>
                 {{ end }}
             </div>
