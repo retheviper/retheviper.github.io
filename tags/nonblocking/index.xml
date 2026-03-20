@@ -30,7 +30,7 @@
 &gt;RxJava&lt;/a&gt;や&lt;a class="link" href="https://github.com/jOOQ/jOOL" target="_blank" rel="noopener"
 &gt;JOOL&lt;/a&gt;などに慣れているなら、書き方的にはまあり問題なく適応できそうですが、そうでない方には適応が難しいかもしれません。&lt;/p&gt;
 &lt;p&gt;例えば、GETで、リクエストを受けたら1秒後にレスポンスを返す簡単なメソッドを実装するとしましょう。Spring MVCによるREST APIだと、以下のようになるでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@GetMapping&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@GetMapping&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@ResponseStatus&lt;/span&gt;(HttpStatus.&lt;span style="color:#a6e22e"&gt;OK&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; String &lt;span style="color:#a6e22e"&gt;getTest&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
@@ -41,7 +41,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;WebFluxでは、以下のようにMonoを作成して返します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@GetMapping&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@GetMapping&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@ResponseStatus&lt;/span&gt;(HttpStatus.&lt;span style="color:#a6e22e"&gt;OK&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; Mono&lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt;String&lt;span style="color:#f92672"&gt;&amp;gt;&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getTest&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; Mono.&lt;span style="color:#a6e22e"&gt;delay&lt;/span&gt;(Duration.&lt;span style="color:#a6e22e"&gt;ofMillis&lt;/span&gt;(1000)).&lt;span style="color:#a6e22e"&gt;then&lt;/span&gt;(Mono.&lt;span style="color:#a6e22e"&gt;just&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;task completed by Mono&amp;#34;&lt;/span&gt;));
@@ -61,7 +61,7 @@
 &lt;p&gt;なぜかというと、アノテーションを使うということは結局Reflectionに依存するということになるからです。Reflectionを使っているとランタイムでバイトコードが生成されてしまうので、コンパイルタイムにできることがあまりないですね。Reflectionは確かに強力な道具ですが、他にも問題はあります。例えばパフォーマンスは低下し、デバッグも難しいです。こういう問題があるのでJavaのコードをネイティブにコンパイルしてくれるという&lt;a class="link" href="https://www.graalvm.org" target="_blank" rel="noopener"
 &gt;GraalVM&lt;/a&gt;ではReflectionに対応していないのかもしれないですね。&lt;/p&gt;
 &lt;p&gt;とにかく、このような問題を解決するためにWebFluxで新しく導入されたのは、&lt;code&gt;Function&lt;/code&gt;です。はい、言葉通り、関数です。既存のControllerに対応する&lt;code&gt;Router&lt;/code&gt;とServiceに対応する&lt;code&gt;Handler&lt;/code&gt;を作り、関数型モデルとして(Functinalに)コードを書くことができます。もちろんFunctionalに書くとしても、アノテーションは使えます(むしろアノテーションなしではだめです…)。例えば以下のような書き方になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Configuration&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-java" data-lang="java"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Configuration&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Router&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Bean&lt;/span&gt;
@@ -107,7 +107,7 @@
 &lt;li&gt;Netty：リクエストとスレッドはN:1&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;もちろん、Spring MVCみたいにNettyの代わりにTomcatを使うこともできます。例えばGradleでは以下のような書きます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dependencies &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;dependencies &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;org.springframework.boot:spring-boot-starter-webflux:2.3.3.RELEASE&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; exclude group: &lt;span style="color:#e6db74"&gt;&amp;#39;org.springframework.boot&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; module: &lt;span style="color:#e6db74"&gt;&amp;#39;spring-boot-starter-reactor-netty&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;

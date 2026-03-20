@@ -10,7 +10,7 @@
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization.webp"
 width="1563"
 height="423"
-srcset="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_b0d8d6cfdbe7072f.webp 480w, https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_da62ad2e50f160cd.webp 1024w"
+srcset="https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_529d73e9bd6d7cd0.webp 480w, https://retheviper.github.io/posts/linux-implementation-ssl-in-router/ssl_organization_hu_5959f16708994a7a.webp 1024w"
 loading="lazy"
 alt="構成図"
 class="gallery-image"
@@ -22,23 +22,23 @@ data-flex-basis="886px"
 &lt;h2 id="ルーターの設定1"&gt;ルーターの設定(1)
 &lt;/h2&gt;&lt;p&gt;ルーターではまず、DDNS設定が必要です。ASUS社のルーターの場合、Chromeなどのブラウザーから&lt;code&gt;http://router.asus.com&lt;/code&gt;を入力するとローカルのルーターの管理ページにアクセスできます。そして「詳細設定」メニューから「WAN]を選び、さらにDDNSのタブに入って好みのアドレスとして登録します。ASUS社のルーターはasuscomm.comという無料のサーバーを提供しているのでそちらを使いましょう。DDNSの登録ができたら、「管理」メニュー配下の「システム」タブで「WANからの接続を許可」を「はい」にしておきます。私は家から接続するために事前に実家のルーターで予めDDNSの設定をしておきました。&lt;/p&gt;
 &lt;p&gt;DDNSでの管理ページ接続設定が終わったら、次はルーターへのSSH接続を設定します。こちらも同じく「管理」ページから設定することができます。SSHを接続設定が終わったらテストをして、なるべく公開鍵でアクセスできるようにして、ポート番号も変えておきましょう。SSHのポートを変えた場合は、ターミナルでは以下のコマンドでアクセスできます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# SSHのポートが2022の場合&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# SSHのポートが2022の場合&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ssh -p &lt;span style="color:#ae81ff"&gt;2022&lt;/span&gt; retheviper@javaman.asuscomm.com
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;SSH時のIDとアドレスは管理ページのIDとDDNSで登録したものとなります。ここまでできたらSSL証明書を作成するためのルーター側の準備はまず終わります。&lt;/p&gt;
 &lt;h2 id="macでの設定1"&gt;macでの設定(1)
 &lt;/h2&gt;&lt;p&gt;ルーターのOSはLinuxとなっていますが、やはり重要なコマンドがいくつか足りていないです。代表的にパッケージ管理用の&lt;code&gt;yum&lt;/code&gt;や&lt;code&gt;apt&lt;/code&gt;、&lt;code&gt;dnf&lt;/code&gt;のどちらも搭載されていなく、CPUの性能も怪しいので重要な作業はまずmacで行うことにしました。&lt;/p&gt;
 &lt;p&gt;また、SSL証明書自体はRT-AC68Uで対応しているLet&amp;rsquo;s encryptを使います。こちらは有効期間が90日にすぎないですが、発給も更新も無料となっているのでこういう簡単な作業で使うには最適です。&lt;/p&gt;
 &lt;p&gt;まず、ターミナルでLet&amp;rsquo;s encryptをインストールします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;brew install letsencrypt
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;brew install letsencrypt
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;インストールが終わったら、&lt;code&gt;certbot&lt;/code&gt;コマンドで証明書を作成できます。ただ、証明書を作成する前にDDNSを登録して置く必要があります。私はすでにルーターで提供している機能でドメインを登録してあるので、それをそのまま使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo certbot certonly --manual
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo certbot certonly --manual
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;コマンドを入力すると以下のような画面が出力されます。ただ、自分は何回か同じコマンドを実行しているので初めての実行で出力される画面は少し違う可能性はあります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Saving debug log to /var/log/letsencrypt/letsencrypt.log
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Saving debug log to /var/log/letsencrypt/letsencrypt.log
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Plugins selected: Authenticator manual, Installer None
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Please enter in your domain name&lt;span style="color:#f92672"&gt;(&lt;/span&gt;s&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;comma and/or space separated&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;Enter &lt;span style="color:#e6db74"&gt;&amp;#39;c&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;to cancel&lt;span style="color:#f92672"&gt;)&lt;/span&gt;: &lt;span style="color:#f92672"&gt;[&lt;/span&gt;ドメイン&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ルーターで使っているDDNSのドメインを入力してエンターを押下すると次の画面へ。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Obtaining a new certificate
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Obtaining a new certificate
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Performing the following challenges:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;http-01 challenge &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt;ドメイン&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -51,7 +51,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;(&lt;/span&gt;Y&lt;span style="color:#f92672"&gt;)&lt;/span&gt;es/&lt;span style="color:#f92672"&gt;(&lt;/span&gt;N&lt;span style="color:#f92672"&gt;)&lt;/span&gt;o: Y
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;IPが記録されることに同意しますかという質問が表示されます。同意するしかないので&lt;code&gt;Y&lt;/code&gt;を入力。すると以下の画面が現れます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Create a file containing just this data:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;コード&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
@@ -68,11 +68,11 @@ data-flex-basis="886px"
 &lt;p&gt;ただ単にサーバー上でアクセスできるファイルを作る方法もありますが、別の方法を試すことにしました。準備するものはルーターに繋がっているPC上でレスポンスの提供ができるサーバーを立てること。ルーターの性能が十分であればルーターでやっても良いのですが、自分のRT-AC58UはPythonをダウンロードして圧縮ファイルを解凍するだけでもしばらく死んでいました。ここではPCにNode.jsを使って簡単サーバーを作ってみます。他にPythonやRubyなどを使っても構いません。これはあくまで自分が最速でサーバーを立てられる方法がNode.jsだっただけです。&lt;/p&gt;
 &lt;p&gt;実家のPCはWindowsなので、&lt;a class="link" href="https://nodejs.org" target="_blank" rel="noopener"
 &gt;公式ホームページ&lt;/a&gt;からNode.jsをダウンロードしてインストールします。また、expressを使ってサーバーを構築することにします。インストールが終わったらコマンドラインからnpmを使えるようになリます。以下のコードでexpressのスタータープロジェクトを作ることができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; mkdir node
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; mkdir node
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; cd node
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; npm install express
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このあとはVSCodeなどのテキストエディタを使って、以下のコードを作成します。ファイル名は&lt;code&gt;app.js&lt;/code&gt;にして、先ほどexpressをインストールしたフォルダに保存します。先ほどコピーしておいたURLとコードはは忘れずに入力しておきましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-javascript" data-lang="javascript"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;express&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;require&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#39;express&amp;#39;&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-javascript" data-lang="javascript"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;express&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;require&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#39;express&amp;#39;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; , &lt;span style="color:#a6e22e"&gt;http&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;require&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#39;http&amp;#39;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; , &lt;span style="color:#a6e22e"&gt;app&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;express&lt;/span&gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; , &lt;span style="color:#a6e22e"&gt;server&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;http&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;createServer&lt;/span&gt;(&lt;span style="color:#a6e22e"&gt;app&lt;/span&gt;);
@@ -85,11 +85,11 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;console&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;log&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#39;Express server listening on port &amp;#39;&lt;/span&gt; &lt;span style="color:#f92672"&gt;+&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;server&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;address&lt;/span&gt;().&lt;span style="color:#a6e22e"&gt;port&lt;/span&gt;);
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;});
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ファイルを保存したらコマンドラインから実行して、サーバーを起動します。以下のコマンドで実行できます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; node app.js
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-cmd" data-lang="cmd"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; node app.js
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;サーバーが起動したら、ローカルからアクセスできるか確認します。ブラウザーでURLを入力してみて、ちゃんとコードが表示されるかを確認できたらPCでの設定は終わりです。&lt;/p&gt;
 &lt;h2 id="macでの設定2"&gt;macでの設定(2)
 &lt;/h2&gt;&lt;p&gt;PCでサーバーを起動している状態でmacに戻ります。エンターを押下するとサーバーとの通信が始まって、結果として以下の画面が出力されます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Waiting &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; verification...
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Waiting &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; verification...
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Cleaning up challenges
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;IMPORTANT NOTES:
@@ -114,12 +114,12 @@ data-flex-basis="886px"
 &lt;p&gt;コピーができたら、ルーターに接続します。&lt;/p&gt;
 &lt;h2 id="ルーターでの設定2"&gt;ルーターでの設定(2)
 &lt;/h2&gt;&lt;p&gt;SSHでルーターに接続して以下のパスに移動します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd /tmp/etc
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd /tmp/etc
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ディレクトリー内のファイルをみると、先ほどコピーしておいたファイルと同じものが置かれてあるのを確認できます。viでファイルをあけ、先ほどコピーしておいたもので上書きします。&lt;/p&gt;
 &lt;p&gt;cert.pemとkey.pemの上書きが終わったら、次にルーター内でのプロセス目録を確認します。すでに管理ページがhttpdsのサービスとして実行されているため、新しい証明書を適用するためには一回サービスを終了して再実行する必要があります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ps
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ps
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;以上のコマンドを入力すると、現在実行中のプロセスの目録が出力されます。そのうち、&lt;code&gt;httpds -s -i br0 -p 8443&lt;/code&gt;があればそれを終了させます。8443は管理ページで指定したデフォルトのポート番号です。プロセスの左に出力されるのがプロセスのID(PID)なので覚えておきましょう。その後は以下のコマンドを入力します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# PIDが562の場合&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# PIDが562の場合&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ kill &lt;span style="color:#ae81ff"&gt;562&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# プロセスの再実行&lt;/span&gt;
@@ -157,9 +157,9 @@ data-flex-basis="886px"
 &lt;p&gt;&lt;code&gt;Node.js&lt;/code&gt;の場合、&lt;code&gt;$ node /node/index.js&lt;/code&gt;みたいな簡単なコマンドで実行できますね。これをサービスに登録する場合は以下のようになります。&lt;/p&gt;
 &lt;h2 id="serviceファイルを作成する"&gt;serviceファイルを作成する
 &lt;/h2&gt;&lt;p&gt;まずはサービスとしてどんな動きをしてほしいか、どんな名前でサービス化するかなどを記述したファイルを作ります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/systemd/system/NodeServer.service
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/systemd/system/NodeServer.service
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;それでは以下のような形で中を書いていきます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# サービスとしての設定&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# サービスとしての設定&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;[&lt;/span&gt;Unit&lt;span style="color:#f92672"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;Description &lt;span style="color:#f92672"&gt;=&lt;/span&gt; NodeServer &lt;span style="color:#75715e"&gt;# この名称でサービスが登録される&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;After &lt;span style="color:#f92672"&gt;=&lt;/span&gt; syslog.target network.target &lt;span style="color:#75715e"&gt;# システム起動時の実行の優先順位(syslogとnetworkの後に実行する)&lt;/span&gt;
@@ -181,13 +181,13 @@ data-flex-basis="886px"
 &lt;/h2&gt;&lt;p&gt;先に&lt;code&gt;service&lt;/code&gt;というコマンドを言及しましたが、CentOS7からは&lt;code&gt;systemctl&lt;/code&gt;を使うらしいです。&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;実際、CentOS7では&lt;code&gt;service&lt;/code&gt;だけではシステムサービスの登録は不可能なので&lt;code&gt;systemctl&lt;/code&gt;を使うことになります。このコマンドでできることはサービスの登録や解除、実行と停止、再実行などがあります。まずサービスをシステムサービスに登録すると、システムが起動する時に実行されるようになります。&lt;/p&gt;
 &lt;p&gt;Windowsに例えると、「スタートアップ」にプログラムを登録したり解除することと、タスクマネージャーによってプロセスを管理するような機能が一緒になっている感じですね。&lt;/p&gt;
 &lt;p&gt;こちらはコマンドだけなので、簡単に紹介します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# システムサービスとして登録&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# システムサービスとして登録&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ systemctl enable NodeServer
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ systemctl start NodeServer
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 実行されているサービスの中で検索する&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ systemctl list-units | grep NodeServer
-&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# serviceファイルを修正した場合はリロードする&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# serviceファイルを修正した場合はリロードする&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ systemctl daemon-reload
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 停止と再起動&lt;/span&gt;
@@ -202,7 +202,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 実行に問題があった場合は以下のコマンドでサービスのログを参照できる&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ journalctl -xe
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;サービスの登録や解除はできなくても、&lt;code&gt;service&lt;/code&gt;コマンドでの制御もできます。ただいずれは消えるかもしれないコマンドなので、なるべく&lt;code&gt;systemctl&lt;/code&gt;に慣れた方が良いかもしれませんね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# serviceでできること&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# serviceでできること&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ service NodeServer start
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ service NodeServer status
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ service NodeServer stop
@@ -234,7 +234,7 @@ data-flex-basis="886px"
 &lt;/ol&gt;
 &lt;p&gt;INIファイルの設定はUIからターミナルとウィンドウ、フォント、ポートフォワードを予め設定し、それぞれの接続先に合わせ3つを用意しておきました。あとはマクロから読み込むだけです。では肝心のマクロのコードはどうなかったかというと、以下のようになります。&lt;/p&gt;
 &lt;h2 id="マクロのコード"&gt;マクロのコード
-&lt;/h2&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;;&lt;span style="color:#f92672"&gt;==============================================&lt;/span&gt;
+&lt;/h2&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;;&lt;span style="color:#f92672"&gt;==============================================&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;;; 踏み台ユーザーID／PW
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;;&lt;span style="color:#f92672"&gt;==============================================&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;USERNAME &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;踏み台ユーサーID&amp;#39;&lt;/span&gt;
@@ -365,9 +365,9 @@ data-flex-basis="886px"
 &lt;/h2&gt;&lt;p&gt;macOSがCatalina(10.15)になってから、ターミナルの基本シェルがbashから&lt;a class="link" href="https://ja.wikipedia.org/wiki/Z_Shell" target="_blank" rel="noopener"
 &gt;zsh&lt;/a&gt;に変わりました。なのでこのポストをそのまま適用すると、追加したコマンドを使えない場合があります。&lt;/p&gt;
 &lt;p&gt;すでにBashにコマンドを追加した場合は以下の手順で移行ができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cat ~/.bash_profile &amp;gt;&amp;gt; ~/.zprofile
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;新規で追加する場合は、下の「プロファイルを作る」節のコマンドの代わりに以下を入力します。そのあとは同じ手順で進めてください。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi ~/.zprofile
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi ~/.zprofile
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;以下、前のポストです。&lt;/p&gt;
 &lt;hr&gt;
 &lt;p&gt;パソコンではMS-DOSとWindowsしか使ってみたことのない私がmacを使ってかれこれ一年となります。macといえばやはり高く、Windowsとは全く違う環境なので使いづらいのではないかなと思っていました。動画や音楽の編集には最適だという話もありましたが、自分とは関係のない世界の話でした。&lt;/p&gt;
@@ -376,11 +376,11 @@ data-flex-basis="886px"
 &lt;p&gt;今回のポストはそのLinuxのショートカットをmacで使うための設定の話です。といっても、自分が研究した訳ではなく、インターネットで拾ってきた情報にすぎませんがね。でもこの設定をみるだけでも様々なコマンドやAliasを勉強できて、かなり貴重な資料ではないかと思います。誰か知りませんが、作った方には敬意を。&lt;/p&gt;
 &lt;h2 id="プロファイルを作る"&gt;プロファイルを作る
 &lt;/h2&gt;&lt;p&gt;まずはBashのプロファイルを作ります。ターミナルで以下のように入力します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi ~/.bash_profile
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi ~/.bash_profile
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;bash_profile&lt;/code&gt;と&lt;code&gt;bashrc&lt;/code&gt;の違いは、前者がターミナルを開くときすぐ適用される設定なら、後者はターミナルで改めてBashを実行した時に適用される設定という違いがあるらしいです。ただコマンドでわかりますが、現在ユーザーのホームにプロファイルを作るのでユーザーが変わる場合はまた同じことをする必要があります。&lt;/p&gt;
 &lt;h2 id="プロファイルの内容"&gt;プロファイルの内容
 &lt;/h2&gt;&lt;p&gt;以下のコードをプロファイルに入れます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#.bash_profile&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#.bash_profile&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; &lt;span style="color:#f92672"&gt;[&lt;/span&gt; -f ~/.bashrc &lt;span style="color:#f92672"&gt;]&lt;/span&gt;; &lt;span style="color:#66d9ef"&gt;then&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;. ~/.bashrc
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fi&lt;/span&gt;
@@ -490,7 +490,7 @@ data-flex-basis="886px"
 &lt;li&gt;２つ以上のファイルやフォルダがある場合はリストを出力&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;例えば &lt;code&gt;/home/retheviper/task01&lt;/code&gt;というフォルダに移動するとします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd h &lt;span style="color:#75715e"&gt;# ここでtab&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd h &lt;span style="color:#75715e"&gt;# ここでtab&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ cd home/ &lt;span style="color:#75715e"&gt;# 自動補完される&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ cd home/r &lt;span style="color:#75715e"&gt;# ここでtab&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ cd home/retheviper/ &lt;span style="color:#75715e"&gt;# 自動補完される&lt;/span&gt;
@@ -499,7 +499,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;かなり便利なショートカットなので覚えておきたいコツです。&lt;/p&gt;
 &lt;h2 id="フォルダ移動と目録の出力関連コマンド"&gt;フォルダ移動と目録の出力関連コマンド
 &lt;/h2&gt;&lt;p&gt;現在のフォルダに何が入っているかをみるコマンドは&lt;code&gt;ls&lt;/code&gt;や&lt;code&gt;ll&lt;/code&gt;などがありますね。このコマンドにもう少しコマンドを付け加えることで違うフォルダの内容も出力できます。当たり前なことですが、同じような動作をするために私が主に使っていた方式はこうです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 現在のフォルダの内容を確認&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 現在のフォルダの内容を確認&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ll
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# /varフォルダがあったため、その中を覗く&lt;/span&gt;
@@ -511,7 +511,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ cd ..
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ll
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;しかし少しの応用でフォルダを変更せずにも違うフォルダを覗くことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 絶対経路を使う&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 絶対経路を使う&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ll /var/lib
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 下のフォルダを覗く&lt;/span&gt;
@@ -524,7 +524,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# さらに上のフォルダを覗く&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ ll ../../
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;他には、パスが長くて以前の位置に戻るのに時間がかかる場合は、簡単に戻ることもできます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 長いパスのフォルダの中にいる状態&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 長いパスのフォルダの中にいる状態&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ pwd
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;/var/lib/jenkins/workspace/job01/git_repository/git
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# また長いパスで全く違う経路のフォルダに入る&lt;/span&gt;
@@ -540,7 +540,7 @@ data-flex-basis="886px"
 &lt;h2 id="ファイル同期ができるrsyncコマンド"&gt;ファイル同期ができるrsyncコマンド
 &lt;/h2&gt;&lt;p&gt;Linuxでのファイルコピーは、&lt;code&gt;scp&lt;/code&gt;がもっとも多く使われているようです。でも&lt;code&gt;rsync&lt;/code&gt;コマンドの方がより効率的であるので私はこちらをオススメしたいです。&lt;code&gt;rsync&lt;/code&gt;は単純にファイルをコピーするだけでなく、フォルダやファイルの同期ができます。リモートのフォルダーを同期したい場合も公開鍵による認証を入れておけば、パスワードなしでコピーできるというところがまたいいです。&lt;/p&gt;
 &lt;p&gt;また、同期ができるということは差分を見つけ出すことも可能ということです。すでにコピー先にファイルがあるときはコピー元のファイルを比較し、差分だけを転送するので性能がよりいいです。また、コピー元でファイルが消されている場合はオプションでコピー先のファイルも消すことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# フォルダを同期する&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# フォルダを同期する&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ rsync origin destination
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# コピー元から消されたファイルはコピー先でも消す&lt;/span&gt;
@@ -550,13 +550,13 @@ data-flex-basis="886px"
 &lt;p&gt;また、同期したいフォルダに消してはならないフォルダーがある場合は、オプションで指定することもできます。&lt;code&gt;--exclude='folder'&lt;/code&gt;というオプションを入れることで、指定したフォルダーは同期の対象から外されます。このオプションはコピー元からでもコピー先からでも適用されるので、便利ですね。&lt;/p&gt;
 &lt;h2 id="システムのスペックと状態を見る"&gt;システムのスペックと状態を見る
 &lt;/h2&gt;&lt;p&gt;仕事で性能テストがあって、特定作業でサーバーのシステム状態をモニタリングする必要がありました。まずサーバーのマシンスペックから確認したいですね。/procフォルダにカーネルで使われる情報が集まっているらしいです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# CPUの詳細情報を見る&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# CPUの詳細情報を見る&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ less /proc/cpuinfo
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# メモリーの詳細情報を見る&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ less /proc/meminfo
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;リアルタイムでCPUやメモリーの使用量をみたい場合は&lt;code&gt;vmstat&lt;/code&gt;を活用します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 現在のステータスを出力する&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 現在のステータスを出力する&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ vmstat
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# メモリーの使用量を出力する&lt;/span&gt;
@@ -570,7 +570,7 @@ data-flex-basis="886px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;メモリーとディスク、CPUの使用量をモニタリングできるため覚えておきたいコマンドですね。&lt;/p&gt;
 &lt;h2 id="長い出力を少しづつ見たい"&gt;長い出力を少しづつ見たい
 &lt;/h2&gt;&lt;p&gt;&lt;code&gt;ls -al&lt;/code&gt;&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;などのコマンドでとある内容を出力する場合、リストが多すぎて画面に全部表示されない場合があります。こういうときは&lt;code&gt;more&lt;/code&gt;コマンドで出力がターミナルを全部満たした場合、エンターキーを押すことで次のリストを表示することになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ls -al | more
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;ls -al | more
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この他にも色々と覚えておくと便利なコマンドやショートカットはたくさんありそうですね。こういうのがLinuxの魅力ではないかとも思います。使えば使うほどLinuxが好きになるかも。&lt;/p&gt;
 &lt;p&gt;それでは、今回のポストはこれにて。私のようなLinux初心者の方が実戦で応用できるような知識になればなと思います。&lt;/p&gt;
 &lt;div class="footnotes" role="doc-endnotes"&gt;

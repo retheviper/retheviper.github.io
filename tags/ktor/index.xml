@@ -1,4 +1,188 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ktor on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/ktor/</link><description>Recent content in Ktor on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 28 Jun 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/ktor/index.xml" rel="self" type="application/rss+xml"/><item><title>KtorのRequest処理を改善する</title><link>https://retheviper.github.io/posts/ktor-validation/</link><pubDate>Sat, 28 Jun 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-validation/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.webp" alt="Featured image of post KtorのRequest処理を改善する" /&gt;&lt;p&gt;KotlinはJavaとの互換性があるので、Javaで構築した既存のシステムの一部を書き換えたり、言語だけを変えて新しいシステムを構築したりするケースが多いかなと思います。しかし、同じJVM上で動作するKotlinとJavaでも、フレームワークやライブラリの違いにより改善できる箇所もあります。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Ktor on Korean-man in Tokyo</title><link>https://retheviper.github.io/tags/ktor/</link><description>Recent content in Ktor on Korean-man in Tokyo</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 20 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://retheviper.github.io/tags/ktor/index.xml" rel="self" type="application/rss+xml"/><item><title>SpringとKtor、5つの構成を比較してみた</title><link>https://retheviper.github.io/posts/spring-ktor-five-stack-benchmark/</link><pubDate>Fri, 20 Mar 2026 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/spring-ktor-five-stack-benchmark/</guid><description>&lt;img src="https://retheviper.github.io/images/kotlin.webp" alt="Featured image of post SpringとKtor、5つの構成を比較してみた" /&gt;&lt;p&gt;最近、&lt;a class="link" href="https://www.jetbrains.com/exposed/" target="_blank" rel="noopener"
+&gt;Exposed&lt;/a&gt;が1.0からR2DBCを正式に扱えるようになったので、KtorでもDBアクセスまで含めて全体をノンブロッキングで構成しやすくなりました。もともとKtorはCoroutineベースで書けるので、ここにR2DBCまで揃えば「Kotlinらしい構成のまま、かなり素直に高い同時処理性能が出るのでは」と少し期待したくなりますね。&lt;/p&gt;
+&lt;p&gt;一方でSpringも、Spring Boot 3系から仮想スレッドをかなり扱いやすくなりました。そうなると、従来のSpring MVC + JDBCのようなオーソドックスな構成と、WebFlux + R2DBCのようなリアクティブ構成をどう見比べるべきかも気になります。さらにそこへKtor + JDBC、Ktor + R2DBCまで加えると、フレームワーク、シリアライザ、ORM、ドライバの違いがだいぶ見えやすくなりそうです。&lt;/p&gt;
+&lt;p&gt;なので今回は、同じPostgreSQLと同じHTTPシナリオを使って、以下の5つの構成を同じ条件で比較してみました。&lt;/p&gt;
+&lt;h2 id="比較対象"&gt;比較対象
+&lt;/h2&gt;&lt;p&gt;今回比較したのは、以下の5構成です。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;構成&lt;/th&gt;
+&lt;th&gt;主なスタック&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Spring MVC JDBC (platform)&lt;/td&gt;
+&lt;td&gt;Tomcat, Jackson, jOOQ, JDBC, HikariCP, platform threads&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Spring MVC JDBC (virtual)&lt;/td&gt;
+&lt;td&gt;Tomcat, Jackson, jOOQ, JDBC, HikariCP, virtual threads&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Spring WebFlux R2DBC&lt;/td&gt;
+&lt;td&gt;Netty, Jackson, jOOQ SQL builder, R2DBC PostgreSQL, R2DBC pool&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ktor JDBC&lt;/td&gt;
+&lt;td&gt;Netty, kotlinx.serialization, Koin, Exposed JDBC, HikariCP&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ktor R2DBC&lt;/td&gt;
+&lt;td&gt;Netty, kotlinx.serialization, Koin, Exposed R2DBC, R2DBC PostgreSQL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;ここでSpring MVCはアプリ自体は同じで、仮想スレッドの有効・無効だけを切り替えています。Ktor側はJDBC版とR2DBC版を分けることで、「Ktorそのものの差」なのか、「R2DBC + Exposed R2DBCの差」なのかを見やすくしました。&lt;/p&gt;
+&lt;p&gt;個人的には、Ktor + kotlinx.serialization + ExposedのようなJetBrains公式ライブラリで揃った構成はかなり好きです。コード量も比較的抑えやすく、Kotlinで書いている感覚も強いですね。ただ、好き嫌いと性能はまた別の話なので、そこを一度ちゃんと数字で見ておきたいというのが今回の出発点です。&lt;/p&gt;
+&lt;h2 id="テストシナリオと測定方法"&gt;テストシナリオと測定方法
+&lt;/h2&gt;&lt;p&gt;今回は、単に「どれが速いか」を見るというより、どのレイヤで差が出ているのかを切り分けやすいように、シナリオをいくつかの種類に分けて用意しました。DBを使わない軽いレスポンス、DBの単純な読み取り、大きいペイロード、検索や集計っぽい処理、そして書き込みと競合です。&lt;/p&gt;
+&lt;p&gt;シナリオの意図はざっくり以下の通りです。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;分類&lt;/th&gt;
+&lt;th&gt;シナリオ&lt;/th&gt;
+&lt;th&gt;見たいこと&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;non-DB&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /health&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;もっとも軽いHTTP経路。ルーティングや最小限のレスポンス処理の差が出やすい&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;small payload&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books/bench/small-json&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;DBなしの小さいJSON。フレームワークとシリアライザの素の軽さを見やすい&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;large payload&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books/bench/large-json?limit=200&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;大きいJSONの組み立てとシリアライズの負荷を見る&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;point read&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books/{id}&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;主キーで1件読む典型的なCRUD read&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;list read&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books?limit=50&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;軽めの一覧取得&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;large list read&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books?limit=500&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;取得件数が多い時のマテリアライズとレスポンス生成&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;search read&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books/search?q=Book&amp;amp;limit=20&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;条件付き読み取り&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;aggregate-like read&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;GET /api/books/bench/aggregate-report?limit=50&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;集計風の読み取り経路&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;write&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;POST /api/checkouts&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;通常の在庫減算 + checkout作成&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;write contention&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;POST /api/checkouts&lt;/code&gt; (&lt;code&gt;bookId=1&lt;/code&gt; 固定)&lt;/td&gt;
+&lt;td&gt;同じ行を何度も更新した時の競合&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;distributed write&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;POST /api/checkouts&lt;/code&gt; (ランダム bookId)&lt;/td&gt;
+&lt;td&gt;競合をある程度分散した書き込み&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;特に&lt;code&gt;checkout&lt;/code&gt;系は見方に少し注意が必要です。内部では「本を読む -&amp;gt; 在庫を確認する -&amp;gt; 在庫を減らす -&amp;gt; checkoutをinsertする」という書き込みトランザクションを走らせています。なので、単純なJSONレスポンスとは違って、コネクションプール、トランザクション、ロック競合の影響がかなり強く出ます。&lt;/p&gt;
+&lt;p&gt;測定条件は以下の通りです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;PostgreSQL 17 を毎回コンテナで起動し、各実行ごとに初期化&lt;/li&gt;
+&lt;li&gt;すべて同じベンチマークランナーから同じHTTPシナリオを実行&lt;/li&gt;
+&lt;li&gt;ウォームアップ1秒、計測3秒&lt;/li&gt;
+&lt;li&gt;同時実行数は128と256の2パターン&lt;/li&gt;
+&lt;li&gt;Spring MVCはHikariCP最大32、Spring WebFluxとKtor R2DBCはR2DBC pool最大32、Ktor JDBCはHikariCP最大32&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;今回はスタック全体を比較したかったので、フレームワークだけではなく、シリアライザ、DI、ORM、ドライバも含めてそのまま測っています。つまりこれは「純粋なKtor vs Spring」の比較というより、「実際にこの組み合わせで組んだ時の全体差」の比較です。&lt;/p&gt;
+&lt;h2 id="測定結果"&gt;測定結果
+&lt;/h2&gt;&lt;p&gt;細かい数字は最後に紹介するHTMLサマリを見てもらうのが早いですが、傾向として面白かったところを先にまとめると以下のようになります。&lt;/p&gt;
+&lt;h3 id="1-小さいjsonではwebfluxが強いが大きいjsonではspring-mvcが強い"&gt;1. 小さいJSONではWebFluxが強いが、大きいJSONではSpring MVCが強い
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;smallJson&lt;/code&gt;ではSpring WebFlux R2DBCが最も高く、同時実行256で約29,220 req/sでした。ここはDBアクセスがなく、フレームワークとシリアライズ経路の軽さが出やすいところなので、Nettyベースの構成が素直に強く出たのだと思います。&lt;/p&gt;
+&lt;p&gt;しかし&lt;code&gt;largeJson&lt;/code&gt;になると話が変わります。同時実行256で見ると、Spring MVC platformが約4,011 req/s、Spring MVC virtualが約3,980 req/sに対して、Ktor JDBCは約2,741 req/s、Ktor R2DBCは約1,389 req/sでした。ここは以前から言われていた通り、&lt;code&gt;kotlinx.serialization&lt;/code&gt;が大きいJSONではまだJacksonより不利な面を残しているように見えます。小さいペイロードではかなり健闘していますが、大きくなると差が出ますね。&lt;/p&gt;
+&lt;h3 id="2-db読み取りでは思った以上にspring-mvcが強い"&gt;2. DB読み取りでは、思った以上にSpring MVCが強い
+&lt;/h3&gt;&lt;p&gt;本命だった読み取り系を見ると、&lt;code&gt;bookById&lt;/code&gt;、&lt;code&gt;bookList&lt;/code&gt;、&lt;code&gt;bookList500&lt;/code&gt;、&lt;code&gt;bookSearch&lt;/code&gt;の多くでSpring MVCの二構成が上位でした。例えば同時実行256では以下のような結果です。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;シナリオ&lt;/th&gt;
+&lt;th&gt;1位&lt;/th&gt;
+&lt;th&gt;2位&lt;/th&gt;
+&lt;th&gt;Ktor JDBC&lt;/th&gt;
+&lt;th&gt;Ktor R2DBC&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bookById&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Spring MVC virtual 14,903&lt;/td&gt;
+&lt;td&gt;Spring MVC platform 14,901&lt;/td&gt;
+&lt;td&gt;8,343&lt;/td&gt;
+&lt;td&gt;7,448&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bookList&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Spring MVC virtual 9,574&lt;/td&gt;
+&lt;td&gt;Spring MVC platform 9,553&lt;/td&gt;
+&lt;td&gt;5,773&lt;/td&gt;
+&lt;td&gt;4,300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bookList500&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Spring MVC platform 2,526&lt;/td&gt;
+&lt;td&gt;Spring MVC virtual 2,493&lt;/td&gt;
+&lt;td&gt;1,427&lt;/td&gt;
+&lt;td&gt;820&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bookSearch&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Spring MVC platform 9,677&lt;/td&gt;
+&lt;td&gt;Spring MVC virtual 9,418&lt;/td&gt;
+&lt;td&gt;6,020&lt;/td&gt;
+&lt;td&gt;5,359&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;最初の期待としては、CoroutineベースでR2DBCまで揃えたKtor R2DBCが、少なくとも読み取りでかなり強く出るかと思っていました。しかし結果はむしろ逆で、かなりオーソドックスなSpring MVC + JDBCが基準点として非常に強かったです。&lt;/p&gt;
+&lt;p&gt;仮想スレッドも面白くて、「常にplatformより速い」というわけではありませんでした。&lt;code&gt;bookById&lt;/code&gt;や&lt;code&gt;bookList&lt;/code&gt;のようなところではvirtualが少し勝つ一方、&lt;code&gt;health&lt;/code&gt;や&lt;code&gt;bookSearch&lt;/code&gt;、&lt;code&gt;checkoutCreate&lt;/code&gt;ではplatformが勝つケースもあります。仮想スレッドは確かに有力ですが、入れた瞬間に何でも速くなる魔法ではない、というのはかなり実感しやすい結果でした。&lt;/p&gt;
+&lt;h3 id="3-ktor-jdbcは悪くないがktor-r2dbcはかなり苦しい"&gt;3. Ktor JDBCは悪くないが、Ktor R2DBCはかなり苦しい
+&lt;/h3&gt;&lt;p&gt;Ktor側だけを見ると、JDBC版とR2DBC版の差がかなりはっきり出ました。例えば同時実行256で、&lt;code&gt;bookList500&lt;/code&gt;はKtor JDBCが1,427 req/s、Ktor R2DBCが820 req/s、&lt;code&gt;largeJson&lt;/code&gt;はKtor JDBCが2,741 req/s、Ktor R2DBCが1,389 req/sです。&lt;code&gt;checkoutCreate&lt;/code&gt;でもKtor JDBC 3,540 req/sに対し、Ktor R2DBCは4,044 req/sで少し戻すものの、少なくとも「R2DBCにすると全体的に有利になる」という結果ではありませんでした。&lt;/p&gt;
+&lt;p&gt;この差を見ると、Ktorにおけるボトルネックは単純に「Ktorそのもの」ではなく、かなりの部分がExposed R2DBCを含む非同期DBアクセス経路にあるように見えます。Spring WebFluxも非DBの軽いパスでは非常に強い一方、DB readではJDBCのSpring MVCを明確に上回る場面は多くありませんでした。少なくとも今回のようなCRUD中心のワークロードでは、Reactive StreamsベースのDBアクセスが期待したほど素直な優位にはつながっていない、という見方が自然だと思います。&lt;/p&gt;
+&lt;h3 id="4-hotspot系はreqsだけ見てもあまり意味がない"&gt;4. hotspot系はreq/sだけ見てもあまり意味がない
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;checkoutHotspot&lt;/code&gt;だけは少し特殊で、同じ本の在庫をひたすら減らすので、途中から失敗が大量に出ます。そのためここは純粋なreq/sより、どれだけ「有効な成功」を出せているかを慎重に見る必要があります。&lt;/p&gt;
+&lt;p&gt;数字だけ見ると同時実行256でKtor JDBCが約8,522 req/sと最も高いですが、失敗数も25,617と非常に多いです。Ktor R2DBCも6,417 req/sで失敗19,295、Spring WebFluxは2,883 req/sで失敗8,705でした。つまり、ここは「速い」の中に「速く失敗している」が大量に含まれているので、通常のシナリオとは少し別物として扱うべきですね。&lt;/p&gt;
+&lt;h3 id="5-例外的にaggregatereportではktor-jdbcが目立った"&gt;5. 例外的にaggregateReportではKtor JDBCが目立った
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;aggregateReport&lt;/code&gt;ではKtor JDBCが同時実行128で1,430 req/s、256でも1,439 req/sで最も高い結果でした。ただしこのシナリオについては、Ktor側がまだSpring側と完全に同じDBの&lt;code&gt;GROUP BY&lt;/code&gt;経路ではないという注意書きがあるので、ここはあくまで参考値として見た方がよさそうです。&lt;/p&gt;
+&lt;h2 id="そこから得たこと"&gt;そこから得たこと
+&lt;/h2&gt;&lt;p&gt;今回の結果で一番印象的だったのは、「ノンブロッキングだから高いRPSが出るはず」という期待が、そのまま素直には当たらなかったことです。もちろんノンブロッキングは重要ですし、特定のワークロードでは非常に有効でしょう。ただ、今回のように比較的オーソドックスなCRUD中心のベンチマークでは、Spring MVC + JDBCのような伝統的な構成がまだかなり強いです。&lt;/p&gt;
+&lt;p&gt;また、&lt;code&gt;kotlinx.serialization&lt;/code&gt;は小さいJSONではかなり健闘する一方、大きいJSONではJacksonとの差が出やすいように見えました。以前から言われていた傾向ですが、今回の計測でもその差はある程度確認できました。&lt;/p&gt;
+&lt;p&gt;R2DBCについても、少なくともこの条件では「JDBCを明確に置き換えるほど速い」とは言いづらい結果でした。思想としては綺麗でも、DBアクセス込みの実アプリでは別のオーバーヘッドをきちんと払っている、という印象です。&lt;/p&gt;
+&lt;h2 id="最後に"&gt;最後に
+&lt;/h2&gt;&lt;p&gt;個人的な好みで言えば、やはりKtorと&lt;code&gt;kotlinx.serialization&lt;/code&gt;、ExposedのようなKotlinネイティブな構成はかなり魅力的です。コードスタイルも揃いますし、書いていて気持ちがよいところがあります。ただ、AIの助けでコードそのものを書くコストが以前より下がってきた今は、「どれだけ少ないコードで書けるか」だけでなく、「最終的にどれだけ速く動くか」を以前より重視した方がよさそうだ、とも思いました。&lt;/p&gt;
+&lt;p&gt;その意味では、性能重視であれば今でもSpring MVCのようなオーソドックスな構成はかなり有力です。一方で、コード量や読みやすさ、Kotlinらしさを優先するならKtorを選ぶのも十分ありだと思います。実際、Ktor JDBCは全体として悲観するほど悪い結果ではありませんでしたし、アプリケーションの性質次第では十分実用的でしょう。&lt;/p&gt;
+&lt;p&gt;測定結果の詳細については、Benchmarkリポジトリの&lt;a class="link" href="https://github.com/retheviper/Benchmark/blob/main/README.md" target="_blank" rel="noopener"
+&gt;README&lt;/a&gt;と、そこで公開している&lt;a class="link" href="https://github.com/retheviper/Benchmark/blob/main/docs/reports/five-stack-summary.html" target="_blank" rel="noopener"
+&gt;five-stack-summary.html&lt;/a&gt;を見てもらうのが早いと思います。概要、目的、比較対象のスタック、測定方法はREADMEにまとまっているので、個別の数字やシナリオごとの傾向を追いたい場合はそちらを参照してください。&lt;/p&gt;</description></item><item><title>KtorのRequest処理を改善する</title><link>https://retheviper.github.io/posts/ktor-validation/</link><pubDate>Sat, 28 Jun 2025 00:00:00 +0000</pubDate><guid>https://retheviper.github.io/posts/ktor-validation/</guid><description>&lt;img src="https://retheviper.github.io/images/ktor.webp" alt="Featured image of post KtorのRequest処理を改善する" /&gt;&lt;p&gt;KotlinはJavaとの互換性があるので、Javaで構築した既存のシステムの一部を書き換えたり、言語だけを変えて新しいシステムを構築したりするケースが多いかなと思います。しかし、同じJVM上で動作するKotlinとJavaでも、フレームワークやライブラリの違いにより改善できる箇所もあります。&lt;/p&gt;
 &lt;p&gt;Javaの歴史が長いこともあり、Javaのフレームワークやライブラリは非常に多くの機能を提供していますが、Kotlinではより簡潔で直感的なコードを書くことができる場合があります。また、その中ではKotlinの特性を活かした設計が可能だったり、性能の向上が期待できたりします。&lt;/p&gt;
 &lt;p&gt;今回はそのような改善の一例として、Ktorでのリクエストバリデーションの実装方法について紹介します。&lt;/p&gt;
 &lt;h2 id="既存"&gt;既存
@@ -7,8 +191,8 @@
 &gt;Exposed&lt;/a&gt;といったKotlin用のフレームワークを採用しています。ただ一部ではJavaのライブラリに依存していて、直列化ではJackson、リクエストのバリデーションではjakarta.validationを使用していました。&lt;/p&gt;
 &lt;p&gt;JavaやKotlinでよく使われるSpring Bootの場合、これらのライブラリを使うのがとても簡単ですね。例えば、リクエストのバリデーションは&lt;code&gt;@Valid&lt;/code&gt;や&lt;code&gt;@Validated&lt;/code&gt;アノテーションで自動的に行うことができます。&lt;/p&gt;
 &lt;p&gt;しかし、Ktorではそうでもいきません。なので、Ktorのリクエストバリデーションは、手動で行う必要がありました。例えば、以下のようにしていました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// リクエストのバリデーションを行う
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AnnotationValidator&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// リクエストのバリデーションを行う
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AnnotationValidator&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; validator: Validator = &lt;span style="color:#a6e22e"&gt;Validation&lt;/span&gt;.buildDefaultValidatorFactory().validator
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getViolationMessages&lt;/span&gt;(model: Any?): List&amp;lt;String&amp;gt; {
@@ -19,12 +203,12 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// バリデーションを行うインターフェース
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Validatable&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Validatable&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;validate&lt;/span&gt;(): List&amp;lt;String&amp;gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// リクエストボディ
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;CreateLogRequest&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;CreateLogRequest&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@field&lt;/span&gt;:NotNull
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@field&lt;/span&gt;:NotBlank
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@field&lt;/span&gt;:Size(max = &lt;span style="color:#ae81ff"&gt;36&lt;/span&gt;)
@@ -50,7 +234,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// コントローラー
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; logUseCase: sLogUseCase &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; inject()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;createLog&lt;/span&gt;(request: CreateLogRequest): CreateLogResponse {
@@ -82,11 +266,11 @@
 &lt;p&gt;それぞれ分けると以下のような内容になります。&lt;/p&gt;
 &lt;h3 id="ktorのrequest-validationを使用する"&gt;KtorのRequest Validationを使用する
 &lt;/h3&gt;&lt;p&gt;まずはValidatableControllerというインターフェースを作成して、それぞれのコントローラーで実装します。このインターフェースは、KtorのRequest Validationを使用してリクエストのバリデーションを行うためのもので、Ktorのプラグインに登録するためのメソッドを持っています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ValidatableController&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ValidatableController&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;configureValidation&lt;/span&gt;(validationConfig: RequestValidationConfig)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そして、data classを修正します。jakarta.validationのアノテーションは削除し、Validatableというインターフェースも削除します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;CreateLogRequest&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;CreateLogRequest&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@JsonProperty&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userId: String?,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -97,7 +281,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userAgent: String?
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、コントローラーを修正します。ValidatableControllerを継承させ、バリデーションのロジックを&lt;code&gt;configureValidation&lt;/code&gt;メソッドに移動し、KtorのRequest Validationを使用してリクエストのバリデーションを行います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent, ValidatableController {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent, ValidatableController {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; logUseCase: LogUseCase &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; inject()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;configureValidation&lt;/span&gt;(validationConfig: RequestValidationConfig) {
@@ -131,19 +315,19 @@
 &lt;/h3&gt;&lt;p&gt;次は、ValidationControllerをKtorのモジュールとして設定します。インターフェースとして&lt;code&gt;ValidatableController&lt;/code&gt;を定義した理由は、DIで使用している&lt;a class="link" href="https://insert-koin.io/" target="_blank" rel="noopener"
 &gt;Koin&lt;/a&gt;を使用して、すべてのコントローラーを取得し、KtorのRequest Validationに登録するためです。&lt;/p&gt;
 &lt;p&gt;まずKoinではinterfaceに対して実装クラスをバインディングするいくつかの方法があります。代表的には、以下のような方法があるでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; koinModule = module {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; koinModule = module {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; single&amp;lt;ValidatableController&amp;gt; { AccessLogController() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この方法では、&lt;code&gt;ValidatableController&lt;/code&gt;インターフェースを実装したクラスを単一のインスタンスとして登録します。しかし、これでは複数の&lt;code&gt;ValidatableController&lt;/code&gt;を登録することができません。&lt;/p&gt;
 &lt;p&gt;この場合、&lt;code&gt;get()&lt;/code&gt;を使用して、1つの&lt;code&gt;ValidatableController&lt;/code&gt;のみを取得することはできます。しかしここでやりたいことは、複数の&lt;code&gt;ValidatableController&lt;/code&gt;を取得して、リクエストのバリデーションを共通化することなのでこの方法は適していません。&lt;/p&gt;
 &lt;p&gt;またの方法が、&lt;a class="link" href="https://insert-koin.io/docs/reference/koin-core/definitions/#additional-type-binding" target="_blank" rel="noopener"
 &gt;bind&lt;/a&gt;を使用する方法です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; koinModule = module {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; koinModule = module {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; single { LogController() } bind ValidatableController&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;single&lt;/span&gt; { AnotherController() } bind ValidatableController&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先ほどのコードとは違って、&lt;code&gt;bind&lt;/code&gt;を使用することで、Koinはそのインターフェースを実装したすべてのクラスを取得できるようになります。なので、以下のようなコードで全てのコントローラーを取得することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureRequestValidation() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureRequestValidation() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; validatableControllers: List&amp;lt;ValidatableController&amp;gt; = getKoin().getAll()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(RequestValidation) {
@@ -157,7 +341,7 @@
 &lt;/h3&gt;&lt;p&gt;最後に、Kotlinx Serializationを使用して直列化を行います。これにより、アノテーションの使用を減らし、パフォーマンスを向上させることができます。&lt;/p&gt;
 &lt;p&gt;Kotlinx Serializationは、KSP（Kotlin Symbol Processing）を使用して、コンパイル時に直列化のコードを生成します。これにより、リフレクションを使用せずに直列化を行うことができ、パフォーマンスの向上が期待できまし、リクエストのバリデーションでも型安全なコードを書くことができるため、コードの可読性も向上します。&lt;/p&gt;
 &lt;p&gt;まず、Kotlinx Serializationを使用するために、既存のJacksonからKotlinx Serializationに移行します。以下のように、ContentNegotiationプラグインを使用してシリアライザを設定します。プロパティの命名規則をスネークケースに変更するために、&lt;code&gt;JsonNamingStrategy.SnakeCase&lt;/code&gt;を使用することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureContentNegotiation() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureContentNegotiation() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(ContentNegotiation) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; json(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Json {
@@ -167,14 +351,14 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、リクエストボディのデータクラスに&lt;code&gt;@Serializable&lt;/code&gt;アノテーションを追加します。Kotlinx Serializationでは@Serializableだけでスネークケースへの変換も可能となり、プロパティ名にアノテーションが不要になります。また、プロパティはそのまま型を指定するだけです。型を指定することでNullチェックも自動になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Serializable&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Serializable&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;CreateLogRequest&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userId: UUID,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; referral: String,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userAgent: String
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、コントローラのバリデーションを修正します。userIdの型が&lt;code&gt;String&lt;/code&gt;から&lt;code&gt;UUID&lt;/code&gt;に変更されたので、正規表現のチェックは不要になりました。かなりスッキリしましたね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent, ValidatableController {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LogController&lt;/span&gt; : KoinComponent, ValidatableController {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; logUseCase: LogUseCase &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; inject()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;configureValidation&lt;/span&gt;(validationConfig: RequestValidationConfig) {
@@ -206,8 +390,8 @@
 &lt;ul&gt;
 &lt;li&gt;LocalDateTimeやLocalDateなどのKotlinx Serializationでサポートされていない型を使用する場合、独自のシリアライザを実装する必要がある&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// LocalDateTimeのシリアライザの例
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LocalDateTimeSerializer&lt;/span&gt; : KSerializer&amp;lt;LocalDateTime&amp;gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// LocalDateTimeのシリアライザの例
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LocalDateTimeSerializer&lt;/span&gt; : KSerializer&amp;lt;LocalDateTime&amp;gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; descriptor: SerialDescriptor = PrimitiveSerialDescriptor(&lt;span style="color:#e6db74"&gt;&amp;#34;java.time.LocalDateTime&amp;#34;&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;PrimitiveKind&lt;/span&gt;.STRING)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;serialize&lt;/span&gt;(encoder: Encoder, &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;: LocalDateTime) {
@@ -224,7 +408,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; json(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Json {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// LocalDateTimeのシリアライザを登録
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; serializersModule = SerializersModule {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; serializersModule = SerializersModule {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; contextual(LocalDateTimeSerializer)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -235,7 +419,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Serializable&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ExampleRequest&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// LocalDateTimeのフィールドでは、独自のシリアライザを使用する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;@Contextual&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@Contextual&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; timestamp: LocalDateTime
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
@@ -307,7 +491,7 @@
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/home-server/home-network-infrastructure.png"
 width="4360"
 height="1278"
-srcset="https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_8fec89c200e984f7.png 480w, https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_3f2035a5e1df40ce.png 1024w"
+srcset="https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_900b2237fd166e54.png 480w, https://retheviper.github.io/posts/home-server/home-network-infrastructure_hu_888b72da4ce05a7.png 1024w"
 loading="lazy"
 alt="インフラ構成"
 class="gallery-image"
@@ -323,7 +507,7 @@ data-flex-basis="818px"
 &lt;/h3&gt;&lt;p&gt;サーバは、上述したMac miniを使っています。中ではDockerコンテナとしてビルドしたNginxとKtorのアプリケーションが動いています。Nginxはリバースプロキシとして動いており、Ktorのアプリケーションにリクエストを転送しています。Ktorアプリケーションでは静的ファイルの配信ができるので、Compose Web(WASM)で作成したWebアプリケーションを配信しています。&lt;/p&gt;
 &lt;p&gt;DockerでNginxとKtorは同じネットワークとして構成しているので、NginxからKtorにアクセスする際は、コンテナ名でアクセスできます。Nginxが80番ポートと443番ポートからのリクエストを受けて、Ktorのアプリケーションに転送しています。そしてCertbotを使ってSSL証明書を取得しているので、HTTPSでアクセスできるようになっています。80番のリクエストは301リダイレクトで443番にリダイレクトです。&lt;/p&gt;
 &lt;p&gt;これらの構成は、以下のようにDocker Composeで定義しています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;services&lt;/span&gt;:
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;services&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;nginx&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;build&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;context&lt;/span&gt;: &lt;span style="color:#ae81ff"&gt;.&lt;/span&gt;
@@ -368,43 +552,43 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;certs&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;certs-data&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、不正アクセスを防ぐためにNginxは以下のようなDockerfileでビルドしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-Dockerfile" data-lang="Dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# ベースイメージとして最新の Nginx を使用&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;nginx:latest&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-Dockerfile" data-lang="Dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# ベースイメージとして最新の Nginx を使用&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;nginx:latest&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# 必要なパッケージをインストール（git, wget, dnsutils）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; apt-get update &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install -y &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; git &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; dnsutils &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; wget &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; rm -rf /var/lib/apt/lists/*&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 必要なパッケージをインストール（git, wget, dnsutils）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; apt-get update &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; apt-get install -y &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; git &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dnsutils &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; wget &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; rm -rf /var/lib/apt/lists/*&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# Nginx Ultimate Bad Bot Blocker のリポジトリをクローン&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; git clone https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker.git /opt/nginx-ultimate-bad-bot-blocker&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Nginx Ultimate Bad Bot Blocker のリポジトリをクローン&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; git clone https://github.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker.git /opt/nginx-ultimate-bad-bot-blocker&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# 必要なディレクトリを作成し、bot 設定ファイルをコピー&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; mkdir -p /etc/nginx/bots.d /usr/local/sbin &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; cp /opt/nginx-ultimate-bad-bot-blocker/bots.d/* /etc/nginx/bots.d/ &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; cp /opt/nginx-ultimate-bad-bot-blocker/conf.d/globalblacklist.conf /etc/nginx/conf.d/&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 必要なディレクトリを作成し、bot 設定ファイルをコピー&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; mkdir -p /etc/nginx/bots.d /usr/local/sbin &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; cp /opt/nginx-ultimate-bad-bot-blocker/bots.d/* /etc/nginx/bots.d/ &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; cp /opt/nginx-ultimate-bad-bot-blocker/conf.d/globalblacklist.conf /etc/nginx/conf.d/&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# install-ngxblocker スクリプトのダウンロードと実行&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/install-ngxblocker -O /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; chmod +x /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; /usr/local/sbin/install-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# install-ngxblocker スクリプトのダウンロードと実行&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/install-ngxblocker -O /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; chmod +x /usr/local/sbin/install-ngxblocker &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; /usr/local/sbin/install-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# setup-ngxblocker スクリプトのダウンロードと実行&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/setup-ngxblocker -O /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; chmod +x /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff"&gt;\
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; /usr/local/sbin/setup-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# setup-ngxblocker スクリプトのダウンロードと実行&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; wget https://raw.githubusercontent.com/mitchellkrogza/nginx-ultimate-bad-bot-blocker/master/setup-ngxblocker -O /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; chmod +x /usr/local/sbin/setup-ngxblocker &lt;span style="color:#ae81ff"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; /usr/local/sbin/setup-ngxblocker -x&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# Nginx のカスタム設定ファイルを追加（nginx.conf や default.conf を追加する）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./nginx/nginx.conf /etc/nginx/nginx.conf&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./nginx/default.conf /etc/nginx/conf.d/default.conf&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Nginx のカスタム設定ファイルを追加（nginx.conf や default.conf を追加する）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./nginx/nginx.conf /etc/nginx/nginx.conf&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./nginx/default.conf /etc/nginx/conf.d/default.conf&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# 証明書のためのボリューム（Let&amp;#39;s Encrypt を使用する場合）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;VOLUME&lt;/span&gt; [&lt;span style="color:#e6db74"&gt;&amp;#34;/etc/letsencrypt&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;/var/www/certbot&amp;#34;&lt;/span&gt;]&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# 証明書のためのボリューム（Let&amp;#39;s Encrypt を使用する場合）&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;VOLUME&lt;/span&gt; [&lt;span style="color:#e6db74"&gt;&amp;#34;/etc/letsencrypt&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;/var/www/certbot&amp;#34;&lt;/span&gt;]&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# Nginx 設定をテストして起動&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;CMD&lt;/span&gt; [&lt;span style="color:#e6db74"&gt;&amp;#34;nginx&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;-g&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;daemon off;&amp;#34;&lt;/span&gt;]&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# Nginx 設定をテストして起動&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;CMD&lt;/span&gt; [&lt;span style="color:#e6db74"&gt;&amp;#34;nginx&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;-g&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;daemon off;&amp;#34;&lt;/span&gt;]&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="課題"&gt;課題
 &lt;/h2&gt;&lt;p&gt;概ねインフラの構成には問題がないですが、アプリケーションの部分にはいくつか課題を感じました。主にFrontendで使っているCompose Web(Wasm)のことです。&lt;/p&gt;
 &lt;h3 id="routing未対応"&gt;Routing未対応
@@ -450,7 +634,7 @@ data-flex-basis="818px"
 &gt;FormatDetector&lt;/a&gt;というクラスを提供しています。&lt;/p&gt;
 &lt;p&gt;使い方は簡単で、以下のように読み込んだ画像のデータをByteの配列で渡すだけです。API上では想定してないフォーマットが来た場合はエラーを返すようにしていて、ここで返す&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/format/Format.java" target="_blank" rel="noopener"
 &gt;Format&lt;/a&gt;はPNG, GIF, JPEG, WEBPでありScrimageのものをそのまま使っています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;detectImageFormat&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt;: ByteArray): Format {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;detectImageFormat&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt;: ByteArray): Format {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FormatDetector&lt;/span&gt;.detect(&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt;).orElseThrow { IllegalArgumentException(&lt;span style="color:#e6db74"&gt;&amp;#34;Unsupported format&amp;#34;&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="png-jpegの処理"&gt;PNG, JPEGの処理
@@ -459,23 +643,23 @@ data-flex-basis="818px"
 &lt;p&gt;ここで画像のデータをImmutableImageに変換するには&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/ImageReader.java" target="_blank" rel="noopener"
 &gt;ImageReader&lt;/a&gt;のインタフェースを実装したクラスを使います。&lt;a class="link" href="https://sksamuel.github.io/scrimage/" target="_blank" rel="noopener"
 &gt;公式サイト&lt;/a&gt;では&lt;code&gt;ImmutableImage.loader()&lt;/code&gt;で形式に関係なく画像を読み込むことができると書いてありますが、実際にAPIをビルドする際はAWT関連のエラーが出るので、形式に応じて読み込むクラスを変える必要があります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImmutableImage&lt;/span&gt;(rawData: ByteArray): ImmutableImage {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImmutableImage&lt;/span&gt;(rawData: ByteArray): ImmutableImage {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; ImageIOReader().read(rawData)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ImmutableImageに変換したら、リサイズ処理を行います。Scrimageではリサイズのためのメソッドが用意されているので、それを使ってリサイズを行います。&lt;/p&gt;
 &lt;p&gt;ここで注意すべきは、&lt;code&gt;resize()&lt;/code&gt;や&lt;code&gt;resizeTo()&lt;/code&gt;のようなメソッドがあるのですが、前者の場合はパーセントでのリサイズ、後者の場合は指定したサイズにリサイズするという違いがあります。これらの場合、元の画像のアスペクト比が保持されないため、&lt;code&gt;scaleTo()&lt;/code&gt;や&lt;code&gt;scaleToWidth()&lt;/code&gt;などのメソッドを使う必要があります。&lt;/p&gt;
 &lt;p&gt;今回はwidthのみを指定してアスペクト比を保持したままリサイズするため、&lt;code&gt;scaleToWidth()&lt;/code&gt;を使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeImmutableImage&lt;/span&gt;(image: ImmutableImage, width: Int): ImmutableImage {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeImmutableImage&lt;/span&gt;(image: ImmutableImage, width: Int): ImmutableImage {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; image.scaleToWidth(width)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最後に、リサイズした結果をByteArrayとして返すためのメソッドを用意します。どの形式に変換するかによって&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/ImageWriter.java" target="_blank" rel="noopener"
 &gt;ImageWriter&lt;/a&gt;を実装するクラスを選ぶ必要があります。今回はWEBPにしたいので、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-webp/src/main/java/com/sksamuel/scrimage/webp/WebpWriter.java" target="_blank" rel="noopener"
 &gt;WebpWriter&lt;/a&gt;を使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeImage&lt;/span&gt;(image: ImmutableImage): ByteArray {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeImage&lt;/span&gt;(image: ImmutableImage): ByteArray {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; image.bytes(&lt;span style="color:#a6e22e"&gt;WebpWriter&lt;/span&gt;.DEFAULT)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最後にRouterでは、Content-Typeを指定してByteArrayを返すようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;call.respondBytes(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;call.respondBytes(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; bytes = resizedImage,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; contentType = ContentType(&lt;span style="color:#e6db74"&gt;&amp;#34;image&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;webp&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
@@ -484,7 +668,7 @@ data-flex-basis="818px"
 &lt;p&gt;ただ、形式がWEBPの場合には&lt;a class="link" href="https://github.com/sksamuel/scrimage/tree/master/scrimage-webp" target="_blank" rel="noopener"
 &gt;scrimage-webp&lt;/a&gt;が提供している&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-webp/src/main/java/com/sksamuel/scrimage/webp/WebpImageReader.java" target="_blank" rel="noopener"
 &gt;WebpImageReader&lt;/a&gt;を使う必要があります。なので、形式に応じて読み込むクラスを変える必要があります。先ほどの&lt;code&gt;asImmutableImage&lt;/code&gt;の引数に形式を追加して、形式に応じて読み込むクラスを変えるようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImmutableImage&lt;/span&gt;(rawData: ByteArray, format: Format): ImmutableImage {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImmutableImage&lt;/span&gt;(rawData: ByteArray, format: Format): ImmutableImage {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (format) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.WEBP &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; WebpImageReader().read(rawData)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.GIF, &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.PNG, &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.JPEG &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; ImageIOReader().read(rawData)
@@ -494,11 +678,11 @@ data-flex-basis="818px"
 &lt;h3 id="gifの場合"&gt;GIFの場合
 &lt;/h3&gt;&lt;p&gt;GIFの場合は、&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-core/src/main/java/com/sksamuel/scrimage/nio/AnimatedGif.java" target="_blank" rel="noopener"
 &gt;AnimatedGif&lt;/a&gt;というクラスを使ってリサイズを行います。ImmutableImageと同じようにリサイズメソッドが用意されているので、それを使ってリサイズを行います。処理で使われるクラスが違うので、GIFの場合は別途メソッドを用意します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asAnimatedGif&lt;/span&gt;(rawData: ByteArray): AnimatedGif {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asAnimatedGif&lt;/span&gt;(rawData: ByteArray): AnimatedGif {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AnimatedGifReader&lt;/span&gt;.read(&lt;span style="color:#a6e22e"&gt;ImageSource&lt;/span&gt;.of(rawData))
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、AnimatedGifの場合はframesというプロパティで各フレームのデータを保持していて、これらはImmutableImageとして扱うことができます。そのため、リサイズ処理は各フレームに対して行い、それをAnimatedGifに戻すという処理を行います。若干複雑ですが、以下のように書くことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeAnimatedGif&lt;/span&gt;(gif: AnimatedGif, width: Int): AnimatedGif {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeAnimatedGif&lt;/span&gt;(gif: AnimatedGif, width: Int): AnimatedGif {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; resizedData = ByteArrayOutputStream().use {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; StreamingGifWriter().prepareStream(&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;BufferedImage&lt;/span&gt;.TYPE_INT_ARGB).use { stream &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; gif.frames.mapIndexed { index, image &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
@@ -510,14 +694,14 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最後に、リサイズした結果をByteArrayとして返すためのメソッドを用意します。基本的にはImmutableImageと同じですが、GIFをWEBPに変換する場合は&lt;a class="link" href="https://github.com/sksamuel/scrimage/blob/master/scrimage-webp/src/main/java/com/sksamuel/scrimage/webp/Gif2WebpWriter.java" target="_blank" rel="noopener"
 &gt;Gif2WebpWriter&lt;/a&gt;を使います。これでWEBPに変換後も、GIFのアニメーションが保持されたままリサイズすることができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeGif&lt;/span&gt;(gif: AnimatedGif): ByteArray {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeGif&lt;/span&gt;(gif: AnimatedGif): ByteArray {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; gif.bytes(Gif2WebpWriter.DEFAULT)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="処理を共通化する"&gt;処理を共通化する
 &lt;/h2&gt;&lt;p&gt;ここまででPNG, JPEG, WEBP, GIFの4つの形式に対してリサイズ処理を行うことができました。ただ、それぞれの形式に対して処理を書いていると、処理が重複してしまうため、共通化する必要があります。特にImmutableImageとAnimatedGifの処理は似ているため、それらを共通化することにします。&lt;/p&gt;
 &lt;h3 id="共通interfaceを作る"&gt;共通Interfaceを作る
 &lt;/h3&gt;&lt;p&gt;ScrimageではImmutableImageとAnimatedGifは別のクラスであるだけでなく、共通のInterfaceを持っていないため、まずはそれを作成する必要があります。ここでは、ImageというInterfaceを作成し、それを実装するクラスを作成します。それぞれのクラスはWrapperとして作成し、それぞれのクラスのプロパティをInterfaceのプロパティとして持つようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;sealed&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Image&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;sealed&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Image&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; width: Int
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -536,7 +720,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="画像取得の共通化"&gt;画像取得の共通化
 &lt;/h3&gt;&lt;p&gt;あとは外部に公開するAPIとして、&lt;code&gt;asImage&lt;/code&gt;というメソッドを作成し、それぞれの形式に応じてWrapperを返すようにします。ここで、形式の判定は先ほど作成した&lt;code&gt;detectImageFormat&lt;/code&gt;を使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImage&lt;/span&gt;(rawData: ByteArray): Image {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;asImage&lt;/span&gt;(rawData: ByteArray): Image {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; format = detectImageFormat(rawData)) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.GIF &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; asAnimatedGifWrapper(rawData)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.WEBP, &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.PNG, &lt;span style="color:#a6e22e"&gt;Format&lt;/span&gt;.JPEG &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; asImmutableImageWrapper(rawData, format)
@@ -558,7 +742,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="リサイズ処理の共通化"&gt;リサイズ処理の共通化
 &lt;/h3&gt;&lt;p&gt;同じく、リサイズ処理も共通化します。ここでは、&lt;code&gt;resizeImage&lt;/code&gt;というメソッドを作成し、それぞれの形式に応じてリサイズ処理を行うようにします。ここで、リサイズ処理は先ほど作成した&lt;code&gt;resizeImmutableImage&lt;/code&gt;と&lt;code&gt;resizeAnimatedGif&lt;/code&gt;を使います。AnimatedGifのリサイズ処理はまた別途&lt;code&gt;writeAnimatedGif&lt;/code&gt;というメソッドを作成して分けています。&lt;/p&gt;
 &lt;p&gt;ここでImageはsealed interfaceとして作成しているため、分岐処理はwhen式を使って網羅することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeImage&lt;/span&gt;(image: Image, width: Int): Image {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;resizeImage&lt;/span&gt;(image: Image, width: Int): Image {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (image) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AnimatedGifWrapper &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; resizeAnimatedGif(image, width)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; ImmutableImageWrapper &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; resizeImmutableImage(image, width)
@@ -591,7 +775,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="画像のエンコード処理の共通化"&gt;画像のエンコード処理の共通化
 &lt;/h3&gt;&lt;p&gt;最後に、画像のエンコード処理も共通化します。ここでは、&lt;code&gt;encodeImage&lt;/code&gt;というメソッドを作成し、それぞれの形式に応じてエンコード処理を行うようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeImage&lt;/span&gt;(image: Image): ByteArray {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;encodeImage&lt;/span&gt;(image: Image): ByteArray {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (image) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AnimatedGifWrapper &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; image.animatedGif.bytes(Gif2WebpWriter.DEFAULT)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; ImmutableImageWrapper &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; image.immutableImage.bytes(&lt;span style="color:#a6e22e"&gt;WebpWriter&lt;/span&gt;.DEFAULT)
@@ -607,32 +791,32 @@ data-flex-basis="818px"
 &lt;h2 id="inline-classとは"&gt;Inline Classとは
 &lt;/h2&gt;&lt;p&gt;Kotlin 1.6から&lt;a class="link" href="https://kotlinlang.org/docs/inline-classes.html" target="_blank" rel="noopener"
 &gt;Inline Class&lt;/a&gt;という機能が追加されました。Inline Classは、型のラッパーとして使うことができる機能です。例えば、以下のようなコードがあるとします。プレイヤーがいて、そのプレイヤーごとの成績を表現したものです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤー
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Player&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerRecordId: Int)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤー
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Player&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerRecordId: Int)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーの成績
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Int)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Int)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そして以下のようなメソッドがあるとします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーの成績を記録する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;createPlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerId: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Int) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーの成績を記録する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;createPlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerId: Int, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Int) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このメソッドを呼び出すときに、プレイヤーのIDとスコアを渡す必要があります。しかし、このコードでは、プレイヤーのIDとスコアの両方ともがInt型になっているため、プレイヤーのIDをスコアとして渡してしまうというようなミスが起こりうるのです。そこで、以下のように、プレイヤーのIDとスコアをラップした型を定義して、それを使うようにすると、より安全にコードを書くことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーのID
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーのID
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PlayerId&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// スコア
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Score&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;二つのInline Classを定義することで、先ほどの関数は以下のように修正できます。こうなると、パラメータを間違えて指定したらコンパイラーがエラーを吐いてくれるので、より安全にコードを書くことができますね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーの成績を記録する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;createPlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerId: PlayerId, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Score) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーの成績を記録する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;createPlayerRecord&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; playerId: PlayerId, &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; score: Score) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここだけみると、Inline ClassがJavaのラッパークラスや普通のdata classと何が違うんだ？という疑問が湧いてくるかもしれません。また、typealiasのような既存の機能もありますね。ただ、Inline Classはコンパイル時にprimitive型の扱いでありながら、実行時にはラッパークラスのように振る舞うという特徴があります。そのため、Inline Classだと型安全を担保できつつパフォーマンスへの影響も少ないというメリットがあります。&lt;/p&gt;
 &lt;h2 id="ktorでpath-parameterを扱う"&gt;KtorでPath Parameterを扱う
 &lt;/h2&gt;&lt;p&gt;Ktorでは、Path Parameterを受け取るためには、以下のように書く必要があります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/{id}&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = call.parameters[&lt;span style="color:#e6db74"&gt;&amp;#34;id&amp;#34;&lt;/span&gt;]&lt;span style="color:#f92672"&gt;?.&lt;/span&gt;toInt()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -643,14 +827,14 @@ data-flex-basis="818px"
 &lt;h2 id="path-parameterを受け取る処理を改善する"&gt;Path Parameterを受け取る処理を改善する
 &lt;/h2&gt;&lt;p&gt;&lt;code&gt;call.parameters&lt;/code&gt;を利用したサンプルは一瞬見てシンプルなコードなのであまり改善の余地はないかなと思うかもしれませんが、実はこのコードにはいくつか問題があります。例えば、Int変換時のエラーを考慮する必要がありますね。&lt;code&gt;toInt()&lt;/code&gt;でIntに変換するときに、&lt;code&gt;null&lt;/code&gt;や&lt;code&gt;&amp;quot;abc&amp;quot;&lt;/code&gt;といった文字列が渡された場合には、&lt;code&gt;NumberFormatException&lt;/code&gt;が発生してしまいます。また、&lt;code&gt;toInt()&lt;/code&gt;でIntに変換するときに、&lt;code&gt;Int.MAX_VALUE&lt;/code&gt;を超える値が渡された場合には、&lt;code&gt;NumberFormatException&lt;/code&gt;が発生してしまいます。このように、Path Parameterを受け取るときには、必ず&lt;code&gt;null&lt;/code&gt;チェックや&lt;code&gt;NumberFormatException&lt;/code&gt;のチェックを行う必要があります。&lt;/p&gt;
 &lt;p&gt;また、&lt;code&gt;ApplicationCall&lt;/code&gt;は&lt;code&gt;get()&lt;/code&gt;や&lt;code&gt;post()&lt;/code&gt;のような関数の中でしか呼び出せないです。ということは、エンドポイントごとに同じような処理（エラーハンドリングなど）を書く必要があるということです。ルータ内で何回も同じような処理があるのは望ましくないので、このコードを共通化したいですね。なので、以下のように&lt;code&gt;ApplicationCall&lt;/code&gt;に拡張関数を定義して、Path Parameterを取得する処理を共通化すると良いはずです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;.getIdFromPathParameter(name: String): Int {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;.getIdFromPathParameter(name: String): Int {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; parameter = parameters[name] &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; IllegalArgumentException(&lt;span style="color:#e6db74"&gt;&amp;#34;id is required&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = parameter.toIntOrNull() &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; IllegalArgumentException(&lt;span style="color:#e6db74"&gt;&amp;#34;id must be integer&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; idInt
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このようにすると、以下のようにエラーハンドリングを共通化できます。try-catchで例外を処理していますが、ここは必要に応じて&lt;a class="link" href="https://ktor.io/docs/status-pages.html" target="_blank" rel="noopener"
 &gt;Status Pages&lt;/a&gt;によるエラーハンドリングを追加すると良いでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/{id}&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = call.getIdFromPathParameter(&lt;span style="color:#e6db74"&gt;&amp;#34;id&amp;#34;&lt;/span&gt;)
@@ -661,31 +845,31 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="path-parameterをinline-classでラップする"&gt;Path ParameterをInline Classでラップする
 &lt;/h2&gt;&lt;p&gt;さて、Path ParameterからInt型で取得する処理を共通化できたので、次はPath ParameterをInline Classでラップすることで、より安全にコードを書くことを考えてみましょう。まず、もっとも簡単な方法は以下のように拡張関数が返す値をInline Classにすることです。先ほどの関数だと、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/{playerId}&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = PlayerId(call.getIdFromPathParameter(&lt;span style="color:#e6db74"&gt;&amp;#34;playerId&amp;#34;&lt;/span&gt;))
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ただ、Inline Classもとりあえずコード上ではクラスの扱いなので、ジェネリックを使うこともできます。なので、先ほどの関数をジェネリックを使ったものにする方法も考えられます。イメージ的には、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/{playerId}&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = call.getIdFromPathParameter&amp;lt;PlayerId&amp;gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;playerId&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このようにすると、&lt;code&gt;getIdFromPathParameter()&lt;/code&gt;の戻り値を&lt;code&gt;PlayerId&lt;/code&gt;に変換する処理を&lt;code&gt;getIdFromPathParameter()&lt;/code&gt;の中で行うことができます。また、ジェネリックであるため、使える型を特定のInterfaceに制限し、IDに関するInline Classがそれを実装するという形にしたらより安全なコードになるでしょう。なので、まずは以下のようにID系の共通のInterfaceを定義します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ID系の共通のInterface
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Id&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ID系の共通のInterface
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;interface&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Id&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// プレイヤーのID
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PlayerId&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int) : Id
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 監督のID
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@JvmInline&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;DirectorId&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: Int) : Id
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そして、以下のように&lt;code&gt;getIdFromPathParameter()&lt;/code&gt;をジェネリックにして、&lt;code&gt;Id&lt;/code&gt;を実装したクラスのみを受け取れるようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// IDを取得する拡張関数
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;inline&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#66d9ef"&gt;reified&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;T&lt;/span&gt;: &lt;span style="color:#a6e22e"&gt;Id&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;.getIdFromPathParameter(name: String): T {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// IDを取得する拡張関数
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;inline&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#66d9ef"&gt;reified&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;T&lt;/span&gt;: &lt;span style="color:#a6e22e"&gt;Id&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;.getIdFromPathParameter(name: String): T {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; parameter = parameters[name] &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; IllegalArgumentException(&lt;span style="color:#e6db74"&gt;&amp;#34;id is required&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; id = id.toIntOrNull() &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; IllegalArgumentException(&lt;span style="color:#e6db74"&gt;&amp;#34;id must be integer&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; T&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java.getDeclaredConstructor(Int&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;.java).apply { isAccessible = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt; }.newInstance(id)
@@ -731,10 +915,10 @@ data-flex-basis="818px"
 &lt;li&gt;Dependencies: なし&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;そしてローカルでは、Oracle JDK 17を使って起動しています。気のせいかもしれませんが、Java 11を使っていた時より起動が早いような気がしますね。とりわけ、上記通りの設定を済ましたアプリを起動してみると、以下のような結果となりました。（ローカルマシンの情報は消しています）&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; . ____ _ __ _ _
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; . ____ _ __ _ _
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; /&lt;span style="color:#ae81ff"&gt;\\&lt;/span&gt; / ___&lt;span style="color:#e6db74"&gt;&amp;#39;_ __ _ _(_)_ __ __ _ \ \ \ \
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;( ( )\___ | &amp;#39;&lt;/span&gt;_ | &lt;span style="color:#e6db74"&gt;&amp;#39;_| | &amp;#39;&lt;/span&gt;_ &lt;span style="color:#ae81ff"&gt;\/&lt;/span&gt; _&lt;span style="color:#e6db74"&gt;`&lt;/span&gt; | &lt;span style="color:#ae81ff"&gt;\ \ \ \
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#ae81ff"&gt;&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;\\&lt;/span&gt;/ ___&lt;span style="color:#f92672"&gt;)&lt;/span&gt;| |_&lt;span style="color:#f92672"&gt;)&lt;/span&gt;| | | | | &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;_| | &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#ae81ff"&gt;\\&lt;/span&gt;/ ___&lt;span style="color:#f92672"&gt;)&lt;/span&gt;| |_&lt;span style="color:#f92672"&gt;)&lt;/span&gt;| | | | | &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;_| | &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39; |____| .__|_| |_|_| |_\__, | / / / /
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; =========|_|==============|___/=/_/_/_/
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt; :: Spring Boot :: (v2.5.5)
@@ -752,7 +936,7 @@ data-flex-basis="818px"
 &lt;h4 id="quarkus-nativeの場合"&gt;Quarkus Nativeの場合
 &lt;/h4&gt;&lt;p&gt;では、Quarkusの場合を見ていきたいと思います。まずNativeコンパイルができるというので、&lt;a class="link" href="https://www.graalvm.org/" target="_blank" rel="noopener"
 &gt;GraalVM&lt;/a&gt;を利用してビルドしてみました。実際のビルドはGradleのタスクとして実行できて（固有のパラメータは必要ですが）、簡単です。そしてそれを実行してみた結果が以下です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;__ ____ __ _____ ___ __ ____ ______
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;__ ____ __ _____ ___ __ ____ ______
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; --/ __ &lt;span style="color:#ae81ff"&gt;\/&lt;/span&gt; / / / _ | / _ &lt;span style="color:#ae81ff"&gt;\/&lt;/span&gt; //_/ / / / __/
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; -/ /_/ / /_/ / __ |/ , _/ ,&amp;lt; / /_/ /&lt;span style="color:#ae81ff"&gt;\ \ &lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;--&lt;span style="color:#ae81ff"&gt;\_&lt;/span&gt;__&lt;span style="color:#ae81ff"&gt;\_\_&lt;/span&gt;___/_/ |_/_/|_/_/|_|&lt;span style="color:#ae81ff"&gt;\_&lt;/span&gt;___/___/
@@ -762,7 +946,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;0.018秒がかかっています。ビルドしたプロジェクトの構造が単純であるのもありますが、それでもこの起動速度は確かに速いですね。これなら確かにマイクロサービスだけでなく、リクエストの多いサーバレスアプリケーションでも十分使えると思います。&lt;/p&gt;
 &lt;h4 id="quarkus-jvmの場合"&gt;Quarkus JVMの場合
 &lt;/h4&gt;&lt;p&gt;Springの場合と同じく、Oracle JDK 17を利用して起動してみました。Quarkusには開発モードというものがあり、サーバを起動したまま修正ができるのですが、ここではあえてJarを作って起動しています。余談ですが、Springでは依存関係を全部含む場合はwarになりますが、Quarkusではuber-jarと言っているのが面白いです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;__ ____ __ _____ ___ __ ____ ______
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;__ ____ __ _____ ___ __ ____ ______
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; --/ __ &lt;span style="color:#ae81ff"&gt;\/&lt;/span&gt; / / / _ | / _ &lt;span style="color:#ae81ff"&gt;\/&lt;/span&gt; //_/ / / / __/
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; -/ /_/ / /_/ / __ |/ , _/ ,&amp;lt; / /_/ /&lt;span style="color:#ae81ff"&gt;\ \ &lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;--&lt;span style="color:#ae81ff"&gt;\_&lt;/span&gt;__&lt;span style="color:#ae81ff"&gt;\_\_&lt;/span&gt;___/_/ |_/_/|_/_/|_|&lt;span style="color:#ae81ff"&gt;\_&lt;/span&gt;___/___/
@@ -777,7 +961,7 @@ data-flex-basis="818px"
 &lt;p&gt;なので、新しい技術でありながらも業界でよく使われているものと似ているという点は、エンジニアの学習コストを減らせるのでかなりのメリットと言えるでしょう。では、実際のコードを観ながら、SpringのコードをQuarkusに移行するとした場合はどうなるかを見ていきたいと思います。&lt;/p&gt;
 &lt;h4 id="springの場合"&gt;Springの場合
 &lt;/h4&gt;&lt;p&gt;まず、クエリパラメータにIDを渡し、Personというレコードのデータを取得するAPIがあるとしましょう。Springなら、以下のようなコードになるかと思います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@RestController&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@RestController&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@RequestMapping&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PersonController&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; service: PersonService) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@GetMapping&lt;/span&gt;
@@ -798,24 +982,24 @@ data-flex-basis="818px"
 &lt;p&gt;Ktorもよいフレームワークではありますが、フレームワークそのものの設計思想はSpringと異なるので、既存のアプリを移行するとしたら色々と考慮すべきものが多いです。例えば、基本的にDIに対応していないのでライブラリを別途導入する必要がありますね。&lt;/p&gt;
 &lt;p&gt;以下は、上記のSpringと同じAPIを、DIライブラリとして&lt;a class="link" href="https://insert-koin.io/" target="_blank" rel="noopener"
 &gt;Koin&lt;/a&gt;を導入して実装したKtorの例です。かなり違う構造になっているのがわかります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// DIの設定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; personModule = module {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; personModule = module {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; single { PersonService(&lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;()) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; single { PersonRepository() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Koinをアプリにインストール
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; install(Koin) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(Koin) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; modules(personModule)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ルーティングをモジュール化して設定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; configureRouting()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; configureRouting()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ルータにControllerを登録
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureRouting() {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.configureRouting() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; personController()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -823,14 +1007,14 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.personController() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Serviceのインジェクション
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; service: PersonService &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; inject()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; service: PersonService &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; inject()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; service.getPerson(id).let { &lt;span style="color:#a6e22e"&gt;PresonResponse&lt;/span&gt;.from(&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Service
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PersonService&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; repository: PersonRepository) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PersonService&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; repository: PersonRepository) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getPerson&lt;/span&gt;(id: Int): PersonDto {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; repository.findById(id).let { &lt;span style="color:#a6e22e"&gt;PersonDto&lt;/span&gt;.from(&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -839,7 +1023,7 @@ data-flex-basis="818px"
 &lt;/h4&gt;&lt;p&gt;では、続いてQuarkusでAPIを作成した場合のコードを見ていきましょう。QuarkusでAPIを作成する方法は&lt;a class="link" href="https://resteasy.github.io" target="_blank" rel="noopener"
 &gt;RESTEasy&lt;/a&gt;と&lt;a class="link" href="https://quarkus.io/guides/reactive-routes" target="_blank" rel="noopener"
 &gt;Reactive Routes&lt;/a&gt;の二つのパターンがありますが、どちらを使った場合でもアプリの作成そのものに大きい違いはないので、ここではRESTEasyを使った実装を紹介したいと思います。まずは以下のコードをご覧ください。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Path&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Path&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PersonController&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; service: PersonService) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@GET&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getPerson&lt;/span&gt;(id: Int): PersonResponse {
@@ -855,7 +1039,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Springのコードど比較して、使っているアノテーションの種類が違うだけで、ほぼ同じ感覚で実装ができるのがわかります。なので、Ktorの場合のようにアーキテクチャを考え直す必要もなく、移行も簡単になるわけですね。また、RESTEasyを使う場合、ReactiveのAPIを作りやすいというメリットもあります。Reactiveだと&lt;a class="link" href="https://smallrye.io/smallrye-mutiny/" target="_blank" rel="noopener"
 &gt;Mutiny&lt;/a&gt;を使うことになりますが、Uni/Multiの概念がMono/Fluxと1:1対応していると思って良いので、Spring WebFluxや他のReactive Streamを触ったことのある方ならすぐに適応できそうです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Path&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Path&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/api/v1/person&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PersonController&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; service: PersonService) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;@GET&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getPerson&lt;/span&gt;(id: Int): Uni&amp;lt;PersonResponse&amp;gt; {
@@ -869,7 +1053,7 @@ data-flex-basis="818px"
 &lt;/h2&gt;&lt;p&gt;Quarkusを実際触ってみて、最も良いと思われたのは上記の通りですが、Nativeでアプリをビルドしながら、いくつかの懸念もあると感じました。例えば以下のようなものがあります。&lt;/p&gt;
 &lt;h3 id="nativeのビルドは遅い"&gt;Nativeのビルドは遅い
 &lt;/h3&gt;&lt;p&gt;Nativeで起動速度が早くなるのは確かに良いところですが、問題はビルド自体は遅いということです。当然ながら、Nativeとしてビルドするということは、最初から全てのコードをマシンコードとしてコンパイルするということを意味します。JVM用のバイトコードはどの環境でも同じですが、マシンコードはそうではないので、そのプラットフォームに合わせたコードを生成するのに時間がかかるのは当然のことですね。例えば、ローカルでテストに使ったプロジェクトをNativeイメージとしてビルドした場合は以下のような時間がかかりました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;./gradlew build -Dquarkus.package.type&lt;span style="color:#f92672"&gt;=&lt;/span&gt;native
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;./gradlew build -Dquarkus.package.type&lt;span style="color:#f92672"&gt;=&lt;/span&gt;native
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&amp;gt; Task :quarkusBuild
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;building quarkus jar
@@ -908,7 +1092,7 @@ data-flex-basis="818px"
 &lt;p&gt;NativeビルドとJarの実行に使ったのはどれもGraalVM CE 21.3.0(OpenJDK 11)で、処理時間の測定はKotlinの&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.system/measure-time-millis.html" target="_blank" rel="noopener"
 &gt;measureTimeMillis&lt;/a&gt;で取得した値をログに吐くという方法を使っています。&lt;/p&gt;
 &lt;p&gt;まずNativeで起動した場合の結果です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:14,061 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-6&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;89&lt;/span&gt; ms
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:14,061 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-6&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;89&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:15,630 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-1&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;52&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:17,079 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-15&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;106&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:18,174 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-5&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;49&lt;/span&gt; ms
@@ -919,7 +1103,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:24,073 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-13&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;49&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:12:25,308 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-2&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;53&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、以下がJVMで起動した場合の結果です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:10:32,240 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-8&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;163&lt;/span&gt; ms
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:10:32,240 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-8&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;163&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:10:35,057 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-6&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;33&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:10:39,418 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-11&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;40&lt;/span&gt; ms
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-10-23 17:10:42,211 INFO &lt;span style="color:#f92672"&gt;[&lt;/span&gt;com.ret.dom.ser.MemberService&lt;span style="color:#f92672"&gt;]&lt;/span&gt; &lt;span style="color:#f92672"&gt;(&lt;/span&gt;vert.x-eventloop-thread-3&lt;span style="color:#f92672"&gt;)&lt;/span&gt; measured time was &lt;span style="color:#ae81ff"&gt;25&lt;/span&gt; ms
@@ -954,62 +1138,62 @@ data-flex-basis="818px"
 &lt;p&gt;この説明だけでは理解が難しいものですが、要するに、Ktorにおいての処理の単位のことを指していると言ってもよいものです。&lt;code&gt;Pipeline&lt;/code&gt;ではAPIのコールからレスポンスまで一連の流れとしての処理を定義することができます。なので&lt;code&gt;Pipeline&lt;/code&gt;として実現されている代表的な機能は&lt;code&gt;Router&lt;/code&gt;、リクエストに対してのハンドリングを定義する機能（Springの&lt;code&gt;Controller&lt;/code&gt;に対応するもの）となります。&lt;/p&gt;
 &lt;p&gt;また、&lt;code&gt;Pipeline&lt;/code&gt;は拡張できるものなので、その形式に合わせて新しい&lt;code&gt;Pipeline&lt;/code&gt;を実装することでモジュール(公式の表現では&lt;code&gt;Plugin&lt;/code&gt;)を実現するのもできます。これらのモジュールを実装し、アプリケーションにインストールすることで、そのモジュールの機能を利用できるようになるのがKtorの特徴です。例えば、kotlin公式のJSON Mapperである&lt;a class="link" href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener"
 &gt;kotlinx.serialization&lt;/a&gt;をアプリケーションに追加するためには以下のようなコードを書きます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(ContentNegotiation) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; json()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで呼び出している&lt;code&gt;install&lt;/code&gt;関数の実装を見ると、以下のようになっています。&lt;code&gt;feature&lt;/code&gt;(モジュール)と、そのモジュールの設定となる&lt;code&gt;configure&lt;/code&gt;が引数になっているのがわかります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#a6e22e"&gt;P&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Pipeline&lt;/span&gt;&amp;lt;*, &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;&amp;gt;, &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;F&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;P&lt;/span&gt;.install(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#a6e22e"&gt;P&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Pipeline&lt;/span&gt;&amp;lt;*, &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;&amp;gt;, &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;F&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;P&lt;/span&gt;.install(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; feature: ApplicationFeature&amp;lt;P, B, F&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; configure: &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit = {}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;): F
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先ほどの&lt;code&gt;kotlinx.serialization&lt;/code&gt;をインストールするために使っていたコードでは、&lt;code&gt;feature&lt;/code&gt;として&lt;code&gt;ContentNegotiation&lt;/code&gt;を渡し、その設定として&lt;code&gt;json&lt;/code&gt;を使うという設定をしているのだなという推測ができますね。実際、&lt;code&gt;ContentNegotiation&lt;/code&gt;の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には&lt;code&gt;Configuration&lt;/code&gt;というクラスと、&lt;code&gt;ApplicationFeature&lt;/code&gt;を継承した&lt;code&gt;companion object&lt;/code&gt;を中に持っているのがわかります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentNegotiation&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;internal&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;constructor&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentNegotiation&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;internal&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;constructor&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; registrations: List&amp;lt;ConverterRegistration&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; acceptContributors: List&amp;lt;AcceptHeaderContributor&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; checkAcceptHeaderCompliance: Boolean = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * Configuration type for [ContentNegotiation] feature
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Configuration&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * Implementation of an [ApplicationFeature] for the [ContentNegotiation]
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;companion&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; Feature : ApplicationFeature&amp;lt;ApplicationCallPipeline, Configuration, ContentNegotiation&amp;gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記の実装でわかるように、&lt;code&gt;Pipeline&lt;/code&gt;として機能するためにはモジュールの設定のための&lt;code&gt;Configuration&lt;/code&gt;というクラスと、モジュールとして機能するための&lt;code&gt;ApplicationFeature&lt;/code&gt;を継承した&lt;code&gt;companion object&lt;/code&gt;が必要であることがわかります。なので、この構造を持ったクラスを定義できれば、自作のモジュールをアプリケーションに実装できるということがわかりますね。&lt;/p&gt;
 &lt;h2 id="pluginの実装"&gt;Pluginの実装
 &lt;/h2&gt;&lt;p&gt;では、実際に&lt;code&gt;Pipeline&lt;/code&gt;として、リクエストに対する認可を判定する機能を作るとしましょう。まずはロールを定義します。&lt;code&gt;enum&lt;/code&gt;が良さそうですね。ここではシンプルに管理者と一般ユーザの2種を作ってみます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: String) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: String) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ADMIN(&lt;span style="color:#e6db74"&gt;&amp;#34;ADMIN&amp;#34;&lt;/span&gt;),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; USER(&lt;span style="color:#e6db74"&gt;&amp;#34;USER&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これらのロールは、テーブルなどで管理する必要もありますが、ログイン中のユーザ情報から取得する必要もありますね。認可のためには、ログイン中のユーザにとあるロールが与えられているかどうかの確認が必要となるからです。なので、&lt;code&gt;io.ktor.auth.Principal&lt;/code&gt;を継承したユーザの情報もクラスとして作り、ログインに成功した時はこのクラスにユーザのロールを格納することにします（方法は認可とは関係ないのでここでは割愛させてください）。以下はユーザの情報を格納するための簡単な例です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;UserPrincipal&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;UserPrincipal&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; username: String,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles: Set&amp;lt;Role&amp;gt; = emptySet()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) : Principal
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、ロールでアクセスを制限する関数を作ります。&lt;code&gt;Router&lt;/code&gt;のエンドポイントに、どのロールの場合にアクセスできるかを指定するようなイメージです。例えば以下のような形で使えたらいいかと思います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 管理者のみアクセスできる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.ADMIN) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.ADMIN) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/admin&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(&lt;span style="color:#e6db74"&gt;&amp;#34;This is admin page&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 一般ユーザがアクセスできる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.USER) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.USER) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/user&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(&lt;span style="color:#e6db74"&gt;&amp;#34;This is user page&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -1019,12 +1203,12 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;Router&lt;/code&gt;の使い方でわかるように、&lt;code&gt;Pipeline&lt;/code&gt;でのコードブロック（関数）はネストが可能なのでこのように一つのレイヤーを挟むのも可能です。ここで追加した&lt;code&gt;withRole&lt;/code&gt;という関数でロールを確認し、APIにアクセスできるかどうかを判定するようにしたら良いでしょう。&lt;/p&gt;
 &lt;h3 id="authorizedrotueselectorの実装"&gt;AuthorizedRotueSelectorの実装
 &lt;/h3&gt;&lt;p&gt;まずは&lt;code&gt;RouteSelector&lt;/code&gt;を実装します。これは、&lt;code&gt;routing&lt;/code&gt;の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizedRouteSelector&lt;/span&gt;() : RouteSelector() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizedRouteSelector&lt;/span&gt;() : RouteSelector() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;evaluate&lt;/span&gt;(context: RoutingResolveContext, segmentIndex: Int) = &lt;span style="color:#a6e22e"&gt;RouteSelectorEvaluation&lt;/span&gt;.Constant
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="child-routeの実装"&gt;child routeの実装
 &lt;/h3&gt;&lt;p&gt;先に実装した&lt;code&gt;AuthorizedRouteSelector&lt;/code&gt;を利用して、実際に&lt;code&gt;child route&lt;/code&gt;として機能する関数を作ります。この&lt;code&gt;child route&lt;/code&gt;は&lt;code&gt;Router&lt;/code&gt;の下にネストすることになるので、&lt;code&gt;Route&lt;/code&gt;の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.withRole(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; role: Role, build: &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit): Route {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.withRole(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; role: Role, build: &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit): Route {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; authorizedRoute = createChild(AuthorizedRouteSelector())
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; application.feature(RoleBaseAuthorizer).interceptPipeline(&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;, role)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; build()
@@ -1034,22 +1218,22 @@ data-flex-basis="818px"
 &lt;p&gt;&lt;code&gt;Pipeline&lt;/code&gt;をインターセプトする時に呼び出している&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;は、別途クラスとして作ることにします。これを&lt;code&gt;Feature&lt;/code&gt;として作ることになります。&lt;/p&gt;
 &lt;h3 id="認可処理のモジュールの実装"&gt;認可処理のモジュールの実装
 &lt;/h3&gt;&lt;p&gt;では、本格的に認可の処理を担当するモジュール（&lt;code&gt;Feature&lt;/code&gt;）を実装することにします。先に述べた通り、&lt;code&gt;Configuration&lt;/code&gt;と&lt;code&gt;Feature&lt;/code&gt;を内部に持ったクラスを作ります。ここで&lt;code&gt;Configuration&lt;/code&gt;は、ログイン中のユーザからどうやってロールの情報を取得するかの設定ができるクラスにします。こうすることで、以下のようなことが可能になるでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// RoleBaseAuthorizerをFeatureとしてインストール
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; install(RoleBaseAuthorizer) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(RoleBaseAuthorizer) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報からロールを取得する方法をConfigurationとして指定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; getRoles { (&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; UserPrincipal).roles }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; getRoles { (&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; UserPrincipal).roles }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;Configuration&lt;/code&gt;では、ログイン中のユーザ情報となる&lt;code&gt;UserPrincipal&lt;/code&gt;から&lt;code&gt;roles&lt;/code&gt;を取得する、という関数を渡します。これを持って、&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;では&lt;code&gt;withRole&lt;/code&gt;関数で指定したロールとユーザのロールを比較するようにします。&lt;/p&gt;
 &lt;p&gt;認可のモジュールの設定方法のイメージができたので、次に&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;を実装します。例えば以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;RoleBaseAuthorizer&lt;/span&gt;(config: Configuration) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;RoleBaseAuthorizer&lt;/span&gt;(config: Configuration) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Configuration&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; userRoles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt; = { emptySet() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報からロールの取得方法をセット
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getRoles&lt;/span&gt;(roles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getRoles&lt;/span&gt;(roles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; userRoles = roles
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -1061,21 +1245,21 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; role: Role
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Pipelineの位置付け
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;ApplicationCallPipeline&lt;/span&gt;.Features, &lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;ApplicationCallPipeline&lt;/span&gt;.Features, &lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase, AuthorizationPhase)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// インターセプト時の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; pipeline.intercept(AuthorizationPhase) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.intercept(AuthorizationPhase) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報を取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; principal = call.authentication.principal&amp;lt;UserPrincipal&amp;gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; principal = call.authentication.principal&amp;lt;UserPrincipal&amp;gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; AuthorizationException(&lt;span style="color:#e6db74"&gt;&amp;#34;Missing principal&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ユーザ情報からロールを取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles = getRoles(principal)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles = getRoles(principal)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザのロールに、アクセス可能なロールが含まれてない場合の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -1100,35 +1284,35 @@ data-flex-basis="818px"
 &lt;p&gt;ここまでの実装が終わったら、一通り認可に関するモジュールの作成は終わります。ただ、&lt;code&gt;interceptPipeline&lt;/code&gt;の処理としてユーザのロールが、APIにアクセスできない場合の処理として考えられることは二つほどあります。&lt;/p&gt;
 &lt;h4 id="レスポンスを返して終了"&gt;レスポンスを返して終了
 &lt;/h4&gt;&lt;p&gt;まず考えられる方法は、適当なレスポンスを返し、そこで処理を終了させることです。この場合、以下のように実装ができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// レスポンスを返す
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; call.respond(
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; status = &lt;span style="color:#a6e22e"&gt;HttpStatusCode&lt;/span&gt;.Forbidden,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; message = &lt;span style="color:#e6db74"&gt;&amp;#34;permission not granted: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$role&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Pipelineの終了
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; finish()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; finish()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで注意すべきことは、レスポンスを返すだけで&lt;code&gt;Pipeline&lt;/code&gt;は終わらないということです。レスポンスを返し処理を止めたい場合は必ず&lt;code&gt;finish()&lt;/code&gt;を呼び出して、&lt;code&gt;Pipeline&lt;/code&gt;を終了させましょう。&lt;/p&gt;
 &lt;h4 id="exceptionを投げる"&gt;Exceptionを投げる
 &lt;/h4&gt;&lt;p&gt;もう一つの方法は、例外を投げる方法ですね。例えば以下のようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合の例外
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizationException&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; message: String) : Exception(message)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合の例外
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizationException&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; message: String) : Exception(message)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; AuthorizationException(&lt;span style="color:#e6db74"&gt;&amp;#34;permission not granted: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$role&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;例外を投げる場合は、当然&lt;code&gt;Pipeline&lt;/code&gt;の処理が止まることになりますが、アプリケーションのログでも例外になるのであまり良くないですね。幸い、KtorにもSpringの&lt;code&gt;ExceptionHandler&lt;/code&gt;のような機能があるので、それを活用したら適切な例外のハンドリングが可能になります。例えば以下のようなことができますね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合のレスポンス
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthFailedResponse&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; reason: String)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合のレスポンス
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthFailedResponse&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; reason: String)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 例外のハンドリング
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;install(StatusPages) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;install(StatusPages) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; exception&amp;lt;Throwable&amp;gt; { cause &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (cause) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 認可の場合の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AuthorizationException &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AuthorizationException &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; status = &lt;span style="color:#a6e22e"&gt;HttpStatusCode&lt;/span&gt;.Forbidden,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; message = AuthFailedResponse(
@@ -1154,14 +1338,14 @@ data-flex-basis="818px"
 &lt;h3 id="軽量"&gt;軽量
 &lt;/h3&gt;&lt;p&gt;Springも軽量とは言われているものの、起動が遅いので、実装する側としてはあまり軽量だという感覚はないです。Springで書かれたアプリケーションの起動が遅いのは、起動時にさまざまなアノテーションを読み込み、DIや設定などを完璧に終わらせているというフレームワークそのもののアーキテクチャに起因しているのではないかと思います。なのでDIされるオブジェクトをLate initにするなどで起動速度を短縮させるテクニックなどが知られていますね。&lt;/p&gt;
 &lt;p&gt;しかし、Ktorは起動がかなり早いです。同一規模のアプリをSpringとKtorの両方で作成してベンチマークした訳ではないので正確な数値に関しては割愛しますが、体験だと数倍は早いですね。例えば、In memoryタイプのH2と基本的なCRUDを実装したSpring WebFluxアプリケーションの場合、自分のPCで起動に2.7秒ほどかかりました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-07-18 15:08:25.150 INFO &lt;span style="color:#ae81ff"&gt;29047&lt;/span&gt; --- &lt;span style="color:#f92672"&gt;[&lt;/span&gt;main&lt;span style="color:#f92672"&gt;]&lt;/span&gt; c.r.s.SpringWebfluxSampleApplicationKt : Started SpringWebfluxSampleApplicationKt in 2.754 seconds &lt;span style="color:#f92672"&gt;(&lt;/span&gt;JVM running &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; 3.088&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-07-18 15:08:25.150 INFO &lt;span style="color:#ae81ff"&gt;29047&lt;/span&gt; --- &lt;span style="color:#f92672"&gt;[&lt;/span&gt;main&lt;span style="color:#f92672"&gt;]&lt;/span&gt; c.r.s.SpringWebfluxSampleApplicationKt : Started SpringWebfluxSampleApplicationKt in 2.754 seconds &lt;span style="color:#f92672"&gt;(&lt;/span&gt;JVM running &lt;span style="color:#66d9ef"&gt;for&lt;/span&gt; 3.088&lt;span style="color:#f92672"&gt;)&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;同じ構成でKtorのアプリを実装した場合、起動には1秒もかからなかったです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-07-18 15:09:29.683 &lt;span style="color:#f92672"&gt;[&lt;/span&gt;main&lt;span style="color:#f92672"&gt;]&lt;/span&gt; INFO ktor.application - Application started in 0.747 seconds.
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;2021-07-18 15:09:29.683 &lt;span style="color:#f92672"&gt;[&lt;/span&gt;main&lt;span style="color:#f92672"&gt;]&lt;/span&gt; INFO ktor.application - Application started in 0.747 seconds.
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これはおそらく基本的にDIをしなく、アノテーションをあまり使わない（Reflectionを使わない）構造やKtorそのものはREST APIを作成するための必要最低限の機能だけを揃っているのが理由かと思われます。&lt;/p&gt;
 &lt;p&gt;アプリの起動が早いというのは、テストにかかる時間を短縮させられるという面でもメリットといえますが、サーバレスなアプリにも適しているということにもなるでしょう。私もAWSのLambdaやAzureのFunctionsなどを触った経験がありますが、この場合にJavaやKotlinの使用を考慮したことはありません。サーバレスの場合、アプリが常に稼働中ではないので、リクエストが発生したたびにアプリを起動しなければならないです。なので起動の遅いSpringはそもそもの考慮対象にならなかったですね。Ktorを使う場合は起動速度が大幅に短縮できるので、JVMの起動速度が許されるというならば、サーバレスアーキテクチャで導入を検討できるレベルになっていると思います。&lt;/p&gt;
 &lt;h3 id="拡張可能"&gt;拡張可能
 &lt;/h3&gt;&lt;p&gt;Ktorが軽量であることとも繋がる話ですが、必要な機能があればプラグイン（モジュール）を追加したり、自分で実装する必要はあります。コードとしては、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;main&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; embeddedServer(Netty, port = &lt;span style="color:#ae81ff"&gt;8080&lt;/span&gt;, host = &lt;span style="color:#e6db74"&gt;&amp;#34;127.0.0.1&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(CORS)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(Compression)
@@ -1169,7 +1353,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; cookie&amp;lt;MyCookie&amp;gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;MY_COOKIE&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(ContentNegotiation) { &lt;span style="color:#75715e"&gt;// kotlinx.serialization
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; json()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; json()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }.start(wait = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
@@ -1188,7 +1372,7 @@ data-flex-basis="818px"
 &gt;post&lt;/a&gt;, &lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/put.html" target="_blank" rel="noopener"
 &gt;put&lt;/a&gt;, &lt;a class="link" href="https://api.ktor.io/ktor-server/ktor-server-core/ktor-server-core/io.ktor.routing/delete.html" target="_blank" rel="noopener"
 &gt;delete&lt;/a&gt;などのfunctionを呼び出すことになります。これはSpring WebFluxのRouter/Hanlder Functionとよく似ていますね。コードで表すと、以下のようなものです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/hello&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respondText(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -1196,7 +1380,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そしてこのHttpメソッドごとの関数のbodyを実装することになりますが、これが基本的に&lt;code&gt;suspend&lt;/code&gt;となっています。これはつまり、実装する側で特に意識しなくてもコードは非同期になるということですね。Spring WebFluxの場合も、Coroutineを使うと簡単に実装ができましたが、&lt;code&gt;suspend&lt;/code&gt;すら意識しなくて良いというところはKtorならではのメリットなのではという気がします。&lt;/p&gt;
 &lt;h3 id="テスト"&gt;テスト
 &lt;/h3&gt;&lt;p&gt;&lt;code&gt;ktor-server-test-host&lt;/code&gt;や&lt;code&gt;kotlin-test&lt;/code&gt;、JUnitなどを使ってテストが可能です。Springでもユニットテストは色々な書き方があるかと思いますが、よりKotlinらしき書き方になっているだけで、基本的にテストの仕方が大きく変わったりはしません。例えば、&lt;code&gt;Get&lt;/code&gt;をのレスポンスをテストするためには以下のようなコードを書くことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Test&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Test&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getMember&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withTestApplication(Application&lt;span style="color:#f92672"&gt;::&lt;/span&gt;module) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; handleRequest(&lt;span style="color:#a6e22e"&gt;HttpMethod&lt;/span&gt;.Get, &lt;span style="color:#e6db74"&gt;&amp;#34;api/v1/web/members/&lt;/span&gt;&lt;span style="color:#e6db74"&gt;$id&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;).apply {
@@ -1221,7 +1405,7 @@ data-flex-basis="818px"
 &lt;/h2&gt;&lt;p&gt;Ktorで使える、Kotlinで書かれたORMは代表的に&lt;a class="link" href="https://github.com/JetBrains/Exposed" target="_blank" rel="noopener"
 &gt;Exposed&lt;/a&gt;があります。Javaの&lt;a class="link" href="https://www.jooq.org" target="_blank" rel="noopener"
 &gt;jOOQ&lt;/a&gt;がそうであったように、SQL DSLを使うことでクエリをコードで書くような感覚で（実施はDSLを解釈してSQLは自動生成されますが）使えるというところが良いです。例えば、Userというテーブルからレコードを取得する場合のコードは、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userInUsa: List&amp;lt;User&amp;gt; = transaction {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userInUsa: List&amp;lt;User&amp;gt; = transaction {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;UserTable&lt;/span&gt;.select {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;UserTable&lt;/span&gt;.deleted eq &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }.map {
@@ -1235,14 +1419,14 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、ExposedでははDAOパターンも使えるので、DAOパターンでクエリを書くとしたら以下のようなことができます。JPAやR2DBCと似たような感覚で使えそうですね。(デメリットもおそらく同じかと思いますが)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userInGermany: List&amp;lt;User&amp;gt; = transaction {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userInGermany: List&amp;lt;User&amp;gt; = transaction {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;User&lt;/span&gt;.find { (&lt;span style="color:#a6e22e"&gt;UserTable&lt;/span&gt;.country eq &lt;span style="color:#a6e22e"&gt;Country&lt;/span&gt;.GERMANY) and (&lt;span style="color:#a6e22e"&gt;UserTable&lt;/span&gt;.deleted eq &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;)}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、Exposedの特徴は、テーブルをコードとして定義することでDBに反映させることができるということです。今まで&lt;a class="link" href="https://www.liquibase.org" target="_blank" rel="noopener"
 &gt;Liquibase&lt;/a&gt;や&lt;a class="link" href="https://flywaydb.org" target="_blank" rel="noopener"
 &gt;Flyway&lt;/a&gt;でDBの形状管理をやっていたことが多かったのですが、個人的に実際のDBとアプリケーションのテーブル定義に乖離があるケースを考えるとこうやってコードの中に定義した方が、データのオーナーという観点からもかなり良いのではないかと思います。特に、頻繁なテーブル定義の修正があったり、マイクロサービスが多いケースではかなり開発が便利になるのではないかと思います。&lt;/p&gt;
 &lt;p&gt;Exposedのテーブル定義は、以下のようにできます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Member&lt;/span&gt; : IntIdTable() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Member&lt;/span&gt; : IntIdTable() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userId: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; name: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;name&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; password: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;password&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;255&lt;/span&gt;)
@@ -1253,9 +1437,9 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; lastModifiedDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#e6db74"&gt;&amp;#34;last_modified_date&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そして実際発行されるSQLは以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;CREATE&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;TABLE&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;IF&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;EXISTS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;MEMBER&amp;#34;&lt;/span&gt; (ID INT AUTO_INCREMENT &lt;span style="color:#66d9ef"&gt;PRIMARY&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;KEY&lt;/span&gt;, DELETED BOOLEAN &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, CREATED_BY VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, CREATED_DATE DATETIME(&lt;span style="color:#ae81ff"&gt;9&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, LAST_MODIFIED_BY VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, LAST_MODIFIED_DATE DATETIME(&lt;span style="color:#ae81ff"&gt;9&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, USER_ID VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;NAME&amp;#34;&lt;/span&gt; VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, PASSWORD VARCHAR(&lt;span style="color:#ae81ff"&gt;255&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;CREATE&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;TABLE&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;IF&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;EXISTS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;MEMBER&amp;#34;&lt;/span&gt; (ID INT AUTO_INCREMENT &lt;span style="color:#66d9ef"&gt;PRIMARY&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;KEY&lt;/span&gt;, DELETED BOOLEAN &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, CREATED_BY VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, CREATED_DATE DATETIME(&lt;span style="color:#ae81ff"&gt;9&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, LAST_MODIFIED_BY VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, LAST_MODIFIED_DATE DATETIME(&lt;span style="color:#ae81ff"&gt;9&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, USER_ID VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;NAME&amp;#34;&lt;/span&gt; VARCHAR(&lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;, PASSWORD VARCHAR(&lt;span style="color:#ae81ff"&gt;255&lt;/span&gt;) &lt;span style="color:#66d9ef"&gt;NOT&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;NULL&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで、JPAやR2DBCの場合、Auditableクラスを定義して、エンティティがそれを継承することでカラムを共有したり、Spring Securityに連携することができましたが、Exposedでも似たようなことができました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;abstract&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Audit&lt;/span&gt; : IntIdTable() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;abstract&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Audit&lt;/span&gt; : IntIdTable() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; deleted: Column&amp;lt;Boolean&amp;gt; = bool(&lt;span style="color:#e6db74"&gt;&amp;#34;deleted&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; createdBy: Column&amp;lt;String&amp;gt; = varchar(&lt;span style="color:#e6db74"&gt;&amp;#34;created_by&amp;#34;&lt;/span&gt;, &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; createdDate: Column&amp;lt;LocalDateTime&amp;gt; = datetime(&lt;span style="color:#e6db74"&gt;&amp;#34;created_date&amp;#34;&lt;/span&gt;)
@@ -1264,7 +1448,7 @@ data-flex-basis="818px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Member&lt;/span&gt; : Audit() { &lt;span style="color:#75715e"&gt;// Auditのカラムも含めてテーブルが作成される
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userId: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; userId: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;user_id&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; name: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;name&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;16&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; password: Column&amp;lt;String&amp;gt; = varchar(name = &lt;span style="color:#e6db74"&gt;&amp;#34;password&amp;#34;&lt;/span&gt;, length = &lt;span style="color:#ae81ff"&gt;255&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}

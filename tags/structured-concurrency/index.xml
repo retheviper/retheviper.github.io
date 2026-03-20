@@ -3,14 +3,14 @@
 &lt;h2 id="structured-concurrencyを改めて整理する"&gt;Structured Concurrencyを改めて整理する
 &lt;/h2&gt;&lt;p&gt;Structured Concurrencyは「開始したCoroutineは必ずどこかの親にぶら下がり、その寿命が親より長くならない」ことを保証する設計哲学です。親子関係を明示しておくことで、キャンセルや例外伝播が読みやすくなり、リソースリークを防げます。GradleやKtorなどの公式ライブラリが徹底して守っているルールでもあります。&lt;/p&gt;
 &lt;p&gt;アンチパターンとしてよく見かけるのが、&lt;code&gt;GlobalScope.launch&lt;/code&gt;で作業を投げっぱなしにするコードです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;refreshUserData&lt;/span&gt;() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;refreshUserData&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#a6e22e"&gt;GlobalScope&lt;/span&gt;.launch {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; profile = api.fetchProfile()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; cache.store(profile)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;この書き方だと呼び出し元とCoroutineの寿命が切り離され、API呼び出しが失敗しても例外は握りつぶされますし、テストでも収束を待てません。基本戦略は、&lt;code&gt;suspend&lt;/code&gt;関数の中で&lt;code&gt;coroutineScope&lt;/code&gt;を使い、完了やキャンセルの境界を明示することです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;refreshUserData&lt;/span&gt;(): Unit = coroutineScope {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;refreshUserData&lt;/span&gt;(): Unit = coroutineScope {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; profile = async { api.fetchProfile() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; posts = async { api.fetchPosts() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; cache.store(profile.await(), posts.await())
@@ -18,7 +18,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;coroutineScope&lt;/code&gt;は内部で起動した全ての子Coroutineが完了するまで戻りません。どれか一つでも失敗すると残りはキャンセルされ、例外は呼び出し元にそのまま伝わります。これがStructured Concurrencyの基本形です。&lt;/p&gt;
 &lt;h3 id="coroutinescopeとsupervisorscopeの違い"&gt;coroutineScopeとsupervisorScopeの違い
 &lt;/h3&gt;&lt;p&gt;一方、&lt;code&gt;supervisorScope&lt;/code&gt;は子Coroutineの失敗が他の子に伝播しない点が異なります。部分的な失敗を許容したい場合に選択します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;loadDashboard&lt;/span&gt;(userId: String): Dashboard = supervisorScope {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;loadDashboard&lt;/span&gt;(userId: String): Dashboard = supervisorScope {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; profile = async { profileRepository.load(userId) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; timeline = async { timelineRepository.load(userId) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -26,7 +26,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; timeline.await()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;catch&lt;/span&gt; (e: Throwable) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; emptyList() &lt;span style="color:#75715e"&gt;// 表示は継続しつつログで可視化
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Dashboard(profile.await(), safeTimeline)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
@@ -35,7 +35,7 @@
 &lt;/h2&gt;&lt;p&gt;プロダクトでStructured Concurrencyを徹底する際に頻出するスコープ設計を三つに分けて考えます。&lt;/p&gt;
 &lt;h3 id="リクエスト単位のスコープ"&gt;リクエスト単位のスコープ
 &lt;/h3&gt;&lt;p&gt;KtorやSpring WebFluxなど非同期サーバーでは、リクエストごとに&lt;code&gt;coroutineScope&lt;/code&gt;を閉じるパターンが基本です。&lt;code&gt;withTimeout&lt;/code&gt;でSLOを守りつつ、複数のIO処理を並列化します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;fetchUserSummary&lt;/span&gt;(userId: String): UserSummary = withTimeout(&lt;span style="color:#ae81ff"&gt;1200&lt;/span&gt;) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;suspend&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;fetchUserSummary&lt;/span&gt;(userId: String): UserSummary = withTimeout(&lt;span style="color:#ae81ff"&gt;1200&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; supervisorScope {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; profileDeferred = async { profileClient.fetch(userId) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; ordersDeferred = async { orderClient.fetchRecent(userId) }
@@ -46,20 +46,20 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; profile = profileDeferred.await(),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; orders = ordersDeferred.await(),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; metrics = metrics &lt;span style="color:#75715e"&gt;// 可用性重視でフォールバック
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; )
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;awaitOrNull()&lt;/code&gt;のような拡張を用意しておくと、部分的な失敗を吸収しやすくなります。&lt;code&gt;supervisorScope&lt;/code&gt;にしているため、どれか一つの失敗で全てが巻き戻るのを防ぎつつ、外側の&lt;code&gt;withTimeout&lt;/code&gt;で上限を制御できます。&lt;/p&gt;
 &lt;h3 id="uiプレゼンテーション層のスコープ"&gt;UI／プレゼンテーション層のスコープ
 &lt;/h3&gt;&lt;p&gt;Androidでは&lt;code&gt;viewModelScope&lt;/code&gt;や&lt;code&gt;lifecycleScope&lt;/code&gt;などライブラリがスコープを提供してくれますが、Structured Concurrencyを意識しないとキャンセル漏れが発生しがちです。&lt;code&gt;repeatOnLifecycle&lt;/code&gt;でライフサイクルとCoroutineを同期させると、画面が非表示の間に余分な処理を走らせずに済みます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;DashboardViewModel&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;DashboardViewModel&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; repository: DashboardRepository,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; scope: CoroutineScope = viewModelScope
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) : ViewModel() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; uiState: StateFlow&amp;lt;DashboardUiState&amp;gt; =
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; repository.observeDashboard()
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .stateIn(scope, &lt;span style="color:#a6e22e"&gt;SharingStarted&lt;/span&gt;.WhileSubscribed(&lt;span style="color:#ae81ff"&gt;5&lt;/span&gt;_000), &lt;span style="color:#a6e22e"&gt;DashboardUiState&lt;/span&gt;.Loading)
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .stateIn(scope, &lt;span style="color:#a6e22e"&gt;SharingStarted&lt;/span&gt;.WhileSubscribed(&lt;span style="color:#ae81ff"&gt;5_000&lt;/span&gt;), &lt;span style="color:#a6e22e"&gt;DashboardUiState&lt;/span&gt;.Loading)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;refresh&lt;/span&gt;() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; scope.launch {
@@ -73,7 +73,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;stateIn&lt;/code&gt;が内部で&lt;code&gt;viewModelScope&lt;/code&gt;を使っていることを忘れず、&lt;code&gt;SharingStarted.WhileSubscribed&lt;/code&gt;で不要時に停止するよう設定するのがポイントです。&lt;/p&gt;
 &lt;h3 id="バックグラウンドワーカーと限界制御"&gt;バックグラウンドワーカーと限界制御
 &lt;/h3&gt;&lt;p&gt;長時間動く同期処理やバッチ処理では、自前で&lt;code&gt;CoroutineScope&lt;/code&gt;を用意する場面が出てきます。&lt;code&gt;SupervisorJob&lt;/code&gt;と&lt;code&gt;CoroutineName&lt;/code&gt;を足しておくと、ログ観測でも識別しやすくなります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;SyncWorker&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;SyncWorker&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; repository: SyncRepository
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; scope = CoroutineScope(
@@ -94,7 +94,7 @@
 &lt;/h2&gt;&lt;p&gt;FlowはCoroutineと同じ文脈で設計されているため、Structured Concurrencyの考え方をそのまま活かせます。ポイントは「データを流すスコープの境界をどこに置くか」を明示することです。&lt;/p&gt;
 &lt;h3 id="flowパイプラインとstructured-concurrency"&gt;FlowパイプラインとStructured Concurrency
 &lt;/h3&gt;&lt;p&gt;&lt;code&gt;flow {}&lt;/code&gt;のブロック内では暗黙に&lt;code&gt;coroutineScope&lt;/code&gt;が張られます。複数のIOを並列で行いたいときは、明示的に&lt;code&gt;coroutineScope&lt;/code&gt;を入れるとパイプライン全体の可読性が上がります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;trendingFlow&lt;/span&gt;(): Flow&amp;lt;TrendingFeeds&amp;gt; = flow {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;trendingFlow&lt;/span&gt;(): Flow&amp;lt;TrendingFeeds&amp;gt; = flow {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; feeds = coroutineScope {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; daily = async { api.fetchDaily() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; weekly = async { api.fetchWeekly() }
@@ -104,7 +104,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}.flowOn(&lt;span style="color:#a6e22e"&gt;Dispatchers&lt;/span&gt;.IO)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;flowOn&lt;/code&gt;で実行スレッドを切り替えるときは、&lt;code&gt;coroutineScope&lt;/code&gt;の内側でのみIOを行い、外でUI向けの整形をするなど責務をはっきり分けておくと後から理由付けしやすくなります。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;channelFlow&lt;/code&gt;を使うと、複数の子Coroutineからイベントを同時に送出できます。&lt;code&gt;awaitClose&lt;/code&gt;でリソース解放を忘れないようにしましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;observeDashboard&lt;/span&gt;(userId: String): Flow&amp;lt;DashboardEvent&amp;gt; = channelFlow {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;observeDashboard&lt;/span&gt;(userId: String): Flow&amp;lt;DashboardEvent&amp;gt; = channelFlow {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; job = launch {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; repository.observeProfile(userId).collect { send(&lt;span style="color:#a6e22e"&gt;DashboardEvent&lt;/span&gt;.Profile(&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;)) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -115,20 +115,20 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="cold-flowとhot-flowの使い分け"&gt;Cold FlowとHot Flowの使い分け
 &lt;/h3&gt;&lt;p&gt;Cold Flowは収集されるたびに処理が走るため、重たい処理の場合は&lt;code&gt;stateIn&lt;/code&gt;や&lt;code&gt;shareIn&lt;/code&gt;でホット化するのが定石です。&lt;code&gt;SharingStarted.WhileSubscribed&lt;/code&gt;や&lt;code&gt;Eagerly&lt;/code&gt;の使い分けで、キャッシュの寿命とリソース消費を調整します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; sharedDashboard: StateFlow&amp;lt;DashboardUiState&amp;gt; =
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; sharedDashboard: StateFlow&amp;lt;DashboardUiState&amp;gt; =
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; repository.observeDashboard()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .retryWhen { cause, attempt &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; cause &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; IOException &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; attempt &amp;lt; &lt;span style="color:#ae81ff"&gt;3&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .stateIn(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; scope = applicationScope,
-&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; started = &lt;span style="color:#a6e22e"&gt;SharingStarted&lt;/span&gt;.WhileSubscribed(stopTimeoutMillis = &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;_000),
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; started = &lt;span style="color:#a6e22e"&gt;SharingStarted&lt;/span&gt;.WhileSubscribed(stopTimeoutMillis = &lt;span style="color:#ae81ff"&gt;10_000&lt;/span&gt;),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; initialValue = &lt;span style="color:#a6e22e"&gt;DashboardUiState&lt;/span&gt;.Loading
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;WhileSubscribed&lt;/code&gt;に猶予時間を設定しておくと、画面再表示のたびに余分なリフレッシュを走らせずに済みます。&lt;/p&gt;
 &lt;h3 id="エラー処理とバックプレッシャー"&gt;エラー処理とバックプレッシャー
 &lt;/h3&gt;&lt;p&gt;Flowは例外を上流に伝播させるため、&lt;code&gt;catch&lt;/code&gt;や&lt;code&gt;retryWhen&lt;/code&gt;で明示的に扱います。さらに&lt;code&gt;buffer&lt;/code&gt;や&lt;code&gt;conflate&lt;/code&gt;で速度差を吸収すると、下流のキャンセル頻度を抑えられます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;updates&lt;/span&gt;(): Flow&amp;lt;UpdateEvent&amp;gt; =
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;updates&lt;/span&gt;(): Flow&amp;lt;UpdateEvent&amp;gt; =
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sourceFlow
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .buffer(capacity = &lt;span style="color:#a6e22e"&gt;Channel&lt;/span&gt;.BUFFERED / &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .conflate()
@@ -140,7 +140,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;retryWhen&lt;/code&gt;で指数バックオフを実装するときは、&lt;code&gt;delay&lt;/code&gt;を忘れずに入れてCPUスピンを避けます。Structured Concurrencyの範囲内でリトライしているので、外側がキャンセルされれば即座に停止します。&lt;/p&gt;
 &lt;h2 id="観測とテストで設計を固める"&gt;観測とテストで設計を固める
 &lt;/h2&gt;&lt;p&gt;Structured Concurrencyを採用するとテストしやすくなるのも利点です。&lt;code&gt;kotlinx-coroutines-test&lt;/code&gt;の&lt;code&gt;runTest&lt;/code&gt;や&lt;code&gt;TestScope&lt;/code&gt;を使えば、子Coroutineの完了を待ちながらシミュレーションできます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@OptIn&lt;/span&gt;(ExperimentalCoroutinesApi&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@OptIn&lt;/span&gt;(ExperimentalCoroutinesApi&lt;span style="color:#f92672"&gt;::&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;DashboardViewModelTest&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; testDispatcher = StandardTestDispatcher()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;

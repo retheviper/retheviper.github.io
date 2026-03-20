@@ -15,62 +15,62 @@
 &lt;p&gt;この説明だけでは理解が難しいものですが、要するに、Ktorにおいての処理の単位のことを指していると言ってもよいものです。&lt;code&gt;Pipeline&lt;/code&gt;ではAPIのコールからレスポンスまで一連の流れとしての処理を定義することができます。なので&lt;code&gt;Pipeline&lt;/code&gt;として実現されている代表的な機能は&lt;code&gt;Router&lt;/code&gt;、リクエストに対してのハンドリングを定義する機能（Springの&lt;code&gt;Controller&lt;/code&gt;に対応するもの）となります。&lt;/p&gt;
 &lt;p&gt;また、&lt;code&gt;Pipeline&lt;/code&gt;は拡張できるものなので、その形式に合わせて新しい&lt;code&gt;Pipeline&lt;/code&gt;を実装することでモジュール(公式の表現では&lt;code&gt;Plugin&lt;/code&gt;)を実現するのもできます。これらのモジュールを実装し、アプリケーションにインストールすることで、そのモジュールの機能を利用できるようになるのがKtorの特徴です。例えば、kotlin公式のJSON Mapperである&lt;a class="link" href="https://github.com/Kotlin/kotlinx.serialization" target="_blank" rel="noopener"
 &gt;kotlinx.serialization&lt;/a&gt;をアプリケーションに追加するためには以下のようなコードを書きます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(ContentNegotiation) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; json()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで呼び出している&lt;code&gt;install&lt;/code&gt;関数の実装を見ると、以下のようになっています。&lt;code&gt;feature&lt;/code&gt;(モジュール)と、そのモジュールの設定となる&lt;code&gt;configure&lt;/code&gt;が引数になっているのがわかります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#a6e22e"&gt;P&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Pipeline&lt;/span&gt;&amp;lt;*, &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;&amp;gt;, &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;F&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;P&lt;/span&gt;.install(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &amp;lt;&lt;span style="color:#a6e22e"&gt;P&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Pipeline&lt;/span&gt;&amp;lt;*, &lt;span style="color:#a6e22e"&gt;ApplicationCall&lt;/span&gt;&amp;gt;, &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;, &lt;span style="color:#a6e22e"&gt;F&lt;/span&gt; : &lt;span style="color:#a6e22e"&gt;Any&lt;/span&gt;&amp;gt; &lt;span style="color:#a6e22e"&gt;P&lt;/span&gt;.install(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; feature: ApplicationFeature&amp;lt;P, B, F&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; configure: &lt;span style="color:#a6e22e"&gt;B&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit = {}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;): F
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;先ほどの&lt;code&gt;kotlinx.serialization&lt;/code&gt;をインストールするために使っていたコードでは、&lt;code&gt;feature&lt;/code&gt;として&lt;code&gt;ContentNegotiation&lt;/code&gt;を渡し、その設定として&lt;code&gt;json&lt;/code&gt;を使うという設定をしているのだなという推測ができますね。実際、&lt;code&gt;ContentNegotiation&lt;/code&gt;の実装は、以下のような形となっています。一部のコードは省略していますが、クラスの中には&lt;code&gt;Configuration&lt;/code&gt;というクラスと、&lt;code&gt;ApplicationFeature&lt;/code&gt;を継承した&lt;code&gt;companion object&lt;/code&gt;を中に持っているのがわかります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentNegotiation&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;internal&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;constructor&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentNegotiation&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;internal&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;constructor&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; registrations: List&amp;lt;ConverterRegistration&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; acceptContributors: List&amp;lt;AcceptHeaderContributor&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; checkAcceptHeaderCompliance: Boolean = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * Configuration type for [ContentNegotiation] feature
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Configuration&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;/**
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; * Implementation of an [ApplicationFeature] for the [ContentNegotiation]
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt; */&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;public&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;companion&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;object&lt;/span&gt; Feature : ApplicationFeature&amp;lt;ApplicationCallPipeline, Configuration, ContentNegotiation&amp;gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記の実装でわかるように、&lt;code&gt;Pipeline&lt;/code&gt;として機能するためにはモジュールの設定のための&lt;code&gt;Configuration&lt;/code&gt;というクラスと、モジュールとして機能するための&lt;code&gt;ApplicationFeature&lt;/code&gt;を継承した&lt;code&gt;companion object&lt;/code&gt;が必要であることがわかります。なので、この構造を持ったクラスを定義できれば、自作のモジュールをアプリケーションに実装できるということがわかりますね。&lt;/p&gt;
 &lt;h2 id="pluginの実装"&gt;Pluginの実装
 &lt;/h2&gt;&lt;p&gt;では、実際に&lt;code&gt;Pipeline&lt;/code&gt;として、リクエストに対する認可を判定する機能を作るとしましょう。まずはロールを定義します。&lt;code&gt;enum&lt;/code&gt;が良さそうですね。ここではシンプルに管理者と一般ユーザの2種を作ってみます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: String) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; value: String) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ADMIN(&lt;span style="color:#e6db74"&gt;&amp;#34;ADMIN&amp;#34;&lt;/span&gt;),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; USER(&lt;span style="color:#e6db74"&gt;&amp;#34;USER&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これらのロールは、テーブルなどで管理する必要もありますが、ログイン中のユーザ情報から取得する必要もありますね。認可のためには、ログイン中のユーザにとあるロールが与えられているかどうかの確認が必要となるからです。なので、&lt;code&gt;io.ktor.auth.Principal&lt;/code&gt;を継承したユーザの情報もクラスとして作り、ログインに成功した時はこのクラスにユーザのロールを格納することにします（方法は認可とは関係ないのでここでは割愛させてください）。以下はユーザの情報を格納するための簡単な例です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;UserPrincipal&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;UserPrincipal&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; username: String,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles: Set&amp;lt;Role&amp;gt; = emptySet()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) : Principal
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に、ロールでアクセスを制限する関数を作ります。&lt;code&gt;Router&lt;/code&gt;のエンドポイントに、どのロールの場合にアクセスできるかを指定するようなイメージです。例えば以下のような形で使えたらいいかと思います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; routing {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 管理者のみアクセスできる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.ADMIN) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.ADMIN) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/admin&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(&lt;span style="color:#e6db74"&gt;&amp;#34;This is admin page&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 一般ユーザがアクセスできる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.USER) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withRole(&lt;span style="color:#a6e22e"&gt;Role&lt;/span&gt;.USER) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;/user&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(&lt;span style="color:#e6db74"&gt;&amp;#34;This is user page&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -80,12 +80,12 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;Router&lt;/code&gt;の使い方でわかるように、&lt;code&gt;Pipeline&lt;/code&gt;でのコードブロック（関数）はネストが可能なのでこのように一つのレイヤーを挟むのも可能です。ここで追加した&lt;code&gt;withRole&lt;/code&gt;という関数でロールを確認し、APIにアクセスできるかどうかを判定するようにしたら良いでしょう。&lt;/p&gt;
 &lt;h3 id="authorizedrotueselectorの実装"&gt;AuthorizedRotueSelectorの実装
 &lt;/h3&gt;&lt;p&gt;まずは&lt;code&gt;RouteSelector&lt;/code&gt;を実装します。これは、&lt;code&gt;routing&lt;/code&gt;の中にこれから作る認可の関数がネストできるようにするためのものです。もっともシンプルな実装は以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizedRouteSelector&lt;/span&gt;() : RouteSelector() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizedRouteSelector&lt;/span&gt;() : RouteSelector() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;evaluate&lt;/span&gt;(context: RoutingResolveContext, segmentIndex: Int) = &lt;span style="color:#a6e22e"&gt;RouteSelectorEvaluation&lt;/span&gt;.Constant
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="child-routeの実装"&gt;child routeの実装
 &lt;/h3&gt;&lt;p&gt;先に実装した&lt;code&gt;AuthorizedRouteSelector&lt;/code&gt;を利用して、実際に&lt;code&gt;child route&lt;/code&gt;として機能する関数を作ります。この&lt;code&gt;child route&lt;/code&gt;は&lt;code&gt;Router&lt;/code&gt;の下にネストすることになるので、&lt;code&gt;Route&lt;/code&gt;の拡張関数を作ることにします。引数としては判定のためのロールと、その下にネストするエンドポイントの関数を設定できるようにすれば良いでしょう。実装は以下のようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.withRole(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; role: Role, build: &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit): Route {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.withRole(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; role: Role, build: &lt;span style="color:#a6e22e"&gt;Route&lt;/span&gt;.() &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit): Route {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; authorizedRoute = createChild(AuthorizedRouteSelector())
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; application.feature(RoleBaseAuthorizer).interceptPipeline(&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;, role)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; build()
@@ -95,22 +95,22 @@
 &lt;p&gt;&lt;code&gt;Pipeline&lt;/code&gt;をインターセプトする時に呼び出している&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;は、別途クラスとして作ることにします。これを&lt;code&gt;Feature&lt;/code&gt;として作ることになります。&lt;/p&gt;
 &lt;h3 id="認可処理のモジュールの実装"&gt;認可処理のモジュールの実装
 &lt;/h3&gt;&lt;p&gt;では、本格的に認可の処理を担当するモジュール（&lt;code&gt;Feature&lt;/code&gt;）を実装することにします。先に述べた通り、&lt;code&gt;Configuration&lt;/code&gt;と&lt;code&gt;Feature&lt;/code&gt;を内部に持ったクラスを作ります。ここで&lt;code&gt;Configuration&lt;/code&gt;は、ログイン中のユーザからどうやってロールの情報を取得するかの設定ができるクラスにします。こうすることで、以下のようなことが可能になるでしょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Application&lt;/span&gt;.main() {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// RoleBaseAuthorizerをFeatureとしてインストール
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; install(RoleBaseAuthorizer) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; install(RoleBaseAuthorizer) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報からロールを取得する方法をConfigurationとして指定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; getRoles { (&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; UserPrincipal).roles }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; getRoles { (&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;as&lt;/span&gt; UserPrincipal).roles }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;Configuration&lt;/code&gt;では、ログイン中のユーザ情報となる&lt;code&gt;UserPrincipal&lt;/code&gt;から&lt;code&gt;roles&lt;/code&gt;を取得する、という関数を渡します。これを持って、&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;では&lt;code&gt;withRole&lt;/code&gt;関数で指定したロールとユーザのロールを比較するようにします。&lt;/p&gt;
 &lt;p&gt;認可のモジュールの設定方法のイメージができたので、次に&lt;code&gt;RoleBaseAuthorizer&lt;/code&gt;を実装します。例えば以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;RoleBaseAuthorizer&lt;/span&gt;(config: Configuration) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;RoleBaseAuthorizer&lt;/span&gt;(config: Configuration) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Configuration&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; userRoles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt; = { emptySet() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報からロールの取得方法をセット
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getRoles&lt;/span&gt;(roles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;getRoles&lt;/span&gt;(roles: (Principal) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Set&amp;lt;Role&amp;gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; userRoles = roles
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -122,21 +122,21 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; role: Role
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; ) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Pipelineの位置付け
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;ApplicationCallPipeline&lt;/span&gt;.Features, &lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;ApplicationCallPipeline&lt;/span&gt;.Features, &lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.insertPhaseAfter(&lt;span style="color:#a6e22e"&gt;Authentication&lt;/span&gt;.ChallengePhase, AuthorizationPhase)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// インターセプト時の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; pipeline.intercept(AuthorizationPhase) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; pipeline.intercept(AuthorizationPhase) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザの情報を取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; principal = call.authentication.principal&amp;lt;UserPrincipal&amp;gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; principal = call.authentication.principal&amp;lt;UserPrincipal&amp;gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; AuthorizationException(&lt;span style="color:#e6db74"&gt;&amp;#34;Missing principal&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ユーザ情報からロールを取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles = getRoles(principal)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; roles = getRoles(principal)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ログイン中のユーザのロールに、アクセス可能なロールが含まれてない場合の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -161,35 +161,35 @@
 &lt;p&gt;ここまでの実装が終わったら、一通り認可に関するモジュールの作成は終わります。ただ、&lt;code&gt;interceptPipeline&lt;/code&gt;の処理としてユーザのロールが、APIにアクセスできない場合の処理として考えられることは二つほどあります。&lt;/p&gt;
 &lt;h4 id="レスポンスを返して終了"&gt;レスポンスを返して終了
 &lt;/h4&gt;&lt;p&gt;まず考えられる方法は、適当なレスポンスを返し、そこで処理を終了させることです。この場合、以下のように実装ができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// レスポンスを返す
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; call.respond(
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; status = &lt;span style="color:#a6e22e"&gt;HttpStatusCode&lt;/span&gt;.Forbidden,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; message = &lt;span style="color:#e6db74"&gt;&amp;#34;permission not granted: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$role&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; )
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Pipelineの終了
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; finish()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; finish()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで注意すべきことは、レスポンスを返すだけで&lt;code&gt;Pipeline&lt;/code&gt;は終わらないということです。レスポンスを返し処理を止めたい場合は必ず&lt;code&gt;finish()&lt;/code&gt;を呼び出して、&lt;code&gt;Pipeline&lt;/code&gt;を終了させましょう。&lt;/p&gt;
 &lt;h4 id="exceptionを投げる"&gt;Exceptionを投げる
 &lt;/h4&gt;&lt;p&gt;もう一つの方法は、例外を投げる方法ですね。例えば以下のようにします。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合の例外
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizationException&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; message: String) : Exception(message)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合の例外
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthorizationException&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;override&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; message: String) : Exception(message)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (roles.none { role }) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;throw&lt;/span&gt; AuthorizationException(&lt;span style="color:#e6db74"&gt;&amp;#34;permission not granted: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$role&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;例外を投げる場合は、当然&lt;code&gt;Pipeline&lt;/code&gt;の処理が止まることになりますが、アプリケーションのログでも例外になるのであまり良くないですね。幸い、KtorにもSpringの&lt;code&gt;ExceptionHandler&lt;/code&gt;のような機能があるので、それを活用したら適切な例外のハンドリングが可能になります。例えば以下のようなことができますね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合のレスポンス
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthFailedResponse&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; reason: String)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 認可されてない場合のレスポンス
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AuthFailedResponse&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; reason: String)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 例外のハンドリング
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;install(StatusPages) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;install(StatusPages) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; exception&amp;lt;Throwable&amp;gt; { cause &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (cause) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 認可の場合の処理
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AuthorizationException &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; AuthorizationException &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; status = &lt;span style="color:#a6e22e"&gt;HttpStatusCode&lt;/span&gt;.Forbidden,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; message = AuthFailedResponse(

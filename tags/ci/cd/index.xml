@@ -16,7 +16,7 @@
 &gt;Build Cache&lt;/a&gt;と&lt;a class="link" href="https://docs.gradle.org/current/userguide/configuration_cache.html" target="_blank" rel="noopener"
 &gt;Configuration Cache&lt;/a&gt;というものがあり、これらを有効にした場合、次回のビルドからはそれぞれ前回のビルドの成果物とビルド時の設定をキャッシュとして使うことになるのでビルドの時間をかなり短縮することができます。&lt;/p&gt;
 &lt;p&gt;これらのキャッシュを有効にするには、&lt;code&gt;gradle.properties&lt;/code&gt;ファイルに以下のように設定を行います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-properties" data-lang="properties"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;//&lt;/span&gt; &lt;span style="color:#e6db74"&gt;build cache&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-properties" data-lang="properties"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;//&lt;/span&gt; &lt;span style="color:#e6db74"&gt;build cache&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;org.gradle.caching&lt;/span&gt;&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;true&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;//&lt;/span&gt; &lt;span style="color:#e6db74"&gt;configuration cache&lt;/span&gt;
@@ -24,7 +24,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="dockerイメージのキャッシュ"&gt;Dockerイメージのキャッシュ
 &lt;/h3&gt;&lt;p&gt;Gradleのキャッシュを有効にしても、CI/CDの環境で実際ビルドが走る時に利用できるキャッシュが存在しなければなりません。そのために利用したのがDockerのキャッシュです。Cloud Buildのフローが実行されるたびに前回のビルドの成果物をどこかにプッシュしておき、ビルドが走る時にそれを利用するとGradleのキャッシュを利用することができるようになります。&lt;/p&gt;
 &lt;p&gt;これを実現するためにはまず最初にCloud buildの構成ファイルは以前は以下のようになっていました。(一部抜粋)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;steps&lt;/span&gt;:
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;steps&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; - &lt;span style="color:#f92672"&gt;name&lt;/span&gt;: &lt;span style="color:#ae81ff"&gt;gcr.io/cloud-builders/docker&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;args&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; - &lt;span style="color:#ae81ff"&gt;build&lt;/span&gt;
@@ -57,7 +57,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; - &lt;span style="color:#e6db74"&gt;&amp;#39;$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:COMMIT_SHA&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記のファイルでは、最初にコミットのハッシュでDockerイメージをビルドし、それをプッシュしています。その後、Cloud Runにデプロイするために、そのイメージを利用しています。この時、イメージのタグにはコミットのハッシュを利用しています。&lt;/p&gt;
 &lt;p&gt;ここでキャッシュを挟むようにすると、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;steps&lt;/span&gt;:
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;steps&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; - &lt;span style="color:#f92672"&gt;name&lt;/span&gt;: &lt;span style="color:#ae81ff"&gt;gcr.io/cloud-builders/docker&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;args&lt;/span&gt;:
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; - &lt;span style="color:#e6db74"&gt;&amp;#39;-c&amp;#39;&lt;/span&gt;
@@ -108,50 +108,50 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記のファイルでは、まず最初に前回のビルドの成果物をプルしています。これにより、前回のビルドの成果物を利用することができます。その後、ビルドでは&lt;code&gt;--cache-from&lt;/code&gt;オプションを利用して、前回のビルドの成果物をキャッシュとして利用しています。また、イメージのタグには&lt;code&gt;latest&lt;/code&gt;とコミットのハッシュを利用しています。そして最後にContainer Registryに&lt;code&gt;latest&lt;/code&gt;とコミット8種の両方をプッシュします。こうすると、Container Registryでは一つのイメージに対して二つのタグが付与され、次回のビルドでも&lt;code&gt;latest&lt;/code&gt;を利用できるようになります。&lt;/p&gt;
 &lt;h3 id="dockerfileの修正"&gt;Dockerfileの修正
 &lt;/h3&gt;&lt;p&gt;Dockerイメージをビルドする際にDockerfileを使っていましたが、キャッシュをより効率的に利用するためにDockerfileを修正しました。修正前のDockerfileは以下のようになっていました。(一部抜粋)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;eclipse-temurin:17&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;eclipse-temurin:17&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; mkdir /api&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/api&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; mkdir /api&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/api&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記のDockerfileでは、まずGradleのビルドを行っていて、成果物はGradleの設定によりjarファイルとしてビルドされます。そしてCloud RunではリポジトリないのEntrypointを実行するように設定しているため、jarファイルを実行するようになっています。&lt;/p&gt;
 &lt;p&gt;一般的にはjarファイルだけを残すとコンテナのサイズを小さくすることができますが、今回はキャッシュを利用するためにjarファイル以外の成果物も残す必要があるので、ここは修正していません。ただ、Gradleのビルドが走る時に、毎回依存関係の解決を行うのは非常に時間がかかるので、依存関係の解決を行う部分だけをキャッシュするようにしました。結果は以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;eclipse-temurin:17&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/api&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;eclipse-temurin:17&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/api&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# dependency cache&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; build.gradle.kts settings.gradle.kts gradlew gradle.properties /api/&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; gradle /api/gradle&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; docker /api/docker&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; detekt /api/detekt&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin -x detekt &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# dependency cache&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; build.gradle.kts settings.gradle.kts gradlew gradle.properties /api/&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; gradle /api/gradle&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; docker /api/docker&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; detekt /api/detekt&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin -x detekt &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# build app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; src /api/src&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; resources /api/resources&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# build app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; src /api/src&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; resources /api/resources&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; ./gradlew build -x test -x compileTestKotlin&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;デプロイではほとんどの場合、ソースコードの変更が行われます。なので、あまり変わることのないGradle関係のファイルだけを先にコピーして、ソースコードのない状態でビルドを行います。これにより、実際のアプリはビルドされずに依存関係の解決だけが行われます。それからソースコードをコピーしてビルドを行います。&lt;/p&gt;
 &lt;p&gt;なぜこのような構造にしたかというと、Dockerイメージのビルド時にはキャッシュが存在していても、コピーしたファイルに変更があった場合にキャッシュが無効になるためです。依存関係の更新があった場合は仕方なくキャッシュは効かなくなりますが、ソースコードの変更がない場合は依存関係の解決まではキャッシュが有効になるため、ビルドの時間を短縮することができます。&lt;/p&gt;
 &lt;p&gt;ここでは主にBackendの設定を紹介しましたが、Frontendの設定もDockerfileを同じように修正することでキャッシュを利用できるようにしています。backendと多少は設定が違いますが、基本的にはyarnもGradleと仕組みとしては同じく先に依存関係の解決を行うようにするだけです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;node:18.17.1-slim&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;AS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;base&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-dockerfile" data-lang="dockerfile"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;node:18.17.1-slim&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;AS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;base&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# dependency cache&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; package.json yarn.lock ./&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; yarn --frozen-lockfile&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# dependency cache&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; package.json yarn.lock ./&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; yarn --frozen-lockfile&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./tsconfig.json ./&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./packages/app/package.json ./packages/app/package.json&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; cd ./packages/app &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; yarn &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./tsconfig.json ./&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./packages/app/package.json ./packages/app/package.json&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; cd ./packages/app &lt;span style="color:#f92672"&gt;&amp;amp;&amp;amp;&lt;/span&gt; yarn &lt;span style="color:#f92672"&gt;||&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#75715e"&gt;# build app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;base&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;AS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;builder&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./packages/app/ ./packages/app/&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; --from&lt;span style="color:#f92672"&gt;=&lt;/span&gt;base /app/packages/app ./packages/app&lt;span style="color:#960050;background-color:#1e0010"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; yarn build:app:production&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# build app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;FROM&lt;/span&gt; &lt;span style="color:#e6db74"&gt;base&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;AS&lt;/span&gt; &lt;span style="color:#e6db74"&gt;builder&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WORKDIR&lt;/span&gt; &lt;span style="color:#e6db74"&gt;/app&lt;/span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; ./packages/app/ ./packages/app/&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;COPY&lt;/span&gt; --from&lt;span style="color:#f92672"&gt;=&lt;/span&gt;base /app/packages/app ./packages/app&lt;span style="color:#960050;background-color:#1e0010"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;RUN&lt;/span&gt; yarn build:app:production&lt;span style="color:#960050;background-color:#1e0010"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;データベースマイグレーションの場合、Cloud Buildで直接DBに接続してマイグレーションを行うのが難しかったのと、Backendと同様の設定をすることでDBアクセスは簡単にできたので基本的にはBackendと同じくDockerイメージを作成し、Cloud Run上でEntrypointのスクリプトを利用しFlywayを実行するようにしていました。&lt;/p&gt;
 &lt;p&gt;ただ、ここでBackendと同じDockerfileを使って同じくアプリをビルドしたあと、実際のアプリをCloud Runで実行するようになっていましたが、ここは必要なかったので（Cloud Runでは指定したポートからコンテナが応答するようにすればいいだけなので）アプリのビルドは行わなく、依存関係の解決だけを行うようにしました。ポートからの応答に関してはnginxを起動して応答するようにしています。&lt;/p&gt;
 &lt;h2 id="最後に"&gt;最後に
@@ -181,7 +181,7 @@
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_stage_view.webp"
 width="1536"
 height="1148"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_stage_view_hu_5b5881c7254c574f.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_stage_view_hu_9065b43162b47c5a.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_stage_view_hu_6853078bae2ff7ce.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_stage_view_hu_ff8c2f00fb3a0d79.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Stage View"
 class="gallery-image"
@@ -194,7 +194,7 @@ data-flex-basis="321px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline.webp"
 width="1944"
 height="1540"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline_hu_de3a08aba6610d7a.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline_hu_4927ccf99f67579d.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline_hu_59e314cbf677a72c.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_create_pipeline_hu_a10053621dc8b135.webp 1024w"
 loading="lazy"
 alt="Jenkins Create Pipeline"
 class="gallery-image"
@@ -206,7 +206,7 @@ data-flex-basis="302px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1.webp"
 width="1950"
 height="1532"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1_hu_ddcb90d1e2faec45.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1_hu_8730e69ad59149d9.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1_hu_d2d5450d0ddaab15.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script1_hu_c68d70f90eeb949b.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Script"
 class="gallery-image"
@@ -217,7 +217,7 @@ data-flex-basis="305px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script2.webp"
 width="1924"
 height="1508"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script2_hu_75e89742017ed2ec.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script2_hu_39c883fc7a11c17a.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script2_hu_7960972899692459.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_script2_hu_d039499fe6af56b7.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Script 2"
 class="gallery-image"
@@ -229,7 +229,7 @@ data-flex-basis="306px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_snippet.webp"
 width="2626"
 height="1312"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_snippet_hu_f9423d9496246a66.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_snippet_hu_c6af6e3493c0e524.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_snippet_hu_db7d84e61926aeef.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_snippet_hu_a17561e95ade06fe.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Snippet"
 class="gallery-image"
@@ -242,7 +242,7 @@ data-flex-basis="480px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1.webp"
 width="842"
 height="922"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1_hu_6c07fa3c4838c195.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1_hu_21ed6a5168283f34.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1_hu_68f24f250de54801.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result1_hu_679891dacf6c15f4.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Result"
 class="gallery-image"
@@ -253,7 +253,7 @@ data-flex-basis="219px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result2.webp"
 width="852"
 height="922"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result2_hu_a0bf386dd7c09a54.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result2_hu_a84569debd6d6d27.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result2_hu_ecb6581a896bd743.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result2_hu_ac90a2890fd4ab01.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Result 2"
 class="gallery-image"
@@ -264,7 +264,7 @@ data-flex-basis="221px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result3.webp"
 width="1786"
 height="1082"
-srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result3_hu_d86dbfb98809145a.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result3_hu_35703b02dd1f115c.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result3_hu_11c370fc52434852.webp 480w, https://retheviper.github.io/posts/jenkins-pipeline/jenkins_pipeline_result3_hu_a5033b9cdf8d6708.webp 1024w"
 loading="lazy"
 alt="Jenkins Pipeline Result 3"
 class="gallery-image"
@@ -273,36 +273,36 @@ data-flex-basis="396px"
 &gt;&lt;/p&gt;
 &lt;h3 id="pipelineスクリプトの構造"&gt;Pipelineスクリプトの構造
 &lt;/h3&gt;&lt;p&gt;では、簡単にPipelineスクリプトがどんな構造となっているかもみていきましょう。Pipelineスクリプトはまず以下のようなコードで定義します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// この中に実行するエージェントやステージを書く
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="実行エージェントの設定"&gt;実行エージェントの設定
 &lt;/h3&gt;&lt;p&gt;pipelineブロックを書いたら、次はpipelineを実行する環境を設定します。単純にJenkinsが起動しているインスタンスの中での実行ならagent anyと書くだけですが、最近はジョブを実行するためだけのDockerコンテナを使うことも多いようです。その場合は実行環境としてDockerコンテナを指定する必要がありますね。以下のようなコードでコンテナを指定します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; agent &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; docker &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; image &lt;span style="color:#e6db74"&gt;&amp;#39;実行したいイメージ&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; args &lt;span style="color:#e6db74"&gt;&amp;#39;イメージを実行する時に渡すコマンドライン変数&amp;#39;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 省略可能
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ステージを作る"&gt;ステージを作る
 &lt;/h3&gt;&lt;p&gt;環境まで設定できたら、次は実行したいタスクを書きます。ここで大事なのはステージという概念です。Jenkinsの公式サイトではステージブロックを「Pipeline全体で実行するタスクの明確なサブセット」として定義しています。つまり、ステージ一つが一つのタスクの段階という意味でしょう。ステージの中では一つのタスク単位であるステップを定義し、ステップの中で実行するコマンドを書きます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; agent &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Docker環境
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stages &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;ステージ名1&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 実行したいコマンド
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;ステージ名2&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Pipelineそのものに対する説明は以上となります。では、次に実際のPipelineジョブを書いたらどんな形になるのかを紹介します。&lt;/p&gt;
 &lt;h3 id="pipelineスクリプト例題"&gt;Pipelineスクリプト例題
@@ -314,35 +314,35 @@ data-flex-basis="396px"
 &lt;li&gt;出来上がったwarファイルをAzure Blobにアップロード&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;これを実際のコードで表現すると以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-groovy" data-lang="groovy"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;pipeline &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; agent &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; docker &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; image &lt;span style="color:#e6db74"&gt;&amp;#39;openjdk&amp;#39;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// openjdk公式イメージを使用
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; args &lt;span style="color:#e6db74"&gt;&amp;#39;-u root&amp;#39;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// ユーザーをrootに指定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; args &lt;span style="color:#e6db74"&gt;&amp;#39;-u root&amp;#39;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// ユーザーをrootに指定
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stages &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;Checkout&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt; &lt;span style="color:#75715e"&gt;// Gitチェックアウトステージ
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; checkout&lt;span style="color:#f92672"&gt;([&lt;/span&gt;$class&lt;span style="color:#f92672"&gt;:&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;GitSCM&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; branches: &lt;span style="color:#f92672"&gt;[[&lt;/span&gt;name: &lt;span style="color:#e6db74"&gt;&amp;#39;*/ブランチ&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;]],&lt;/span&gt; doGenerateSubmoduleConfigurations: &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; extensions: &lt;span style="color:#f92672"&gt;[[&lt;/span&gt;$class&lt;span style="color:#f92672"&gt;:&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;RelativeTargetDirectory&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; relativeTargetDir: &lt;span style="color:#e6db74"&gt;&amp;#39;保存するディレクトリ&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;]],&lt;/span&gt; submoduleCfg: &lt;span style="color:#f92672"&gt;[],&lt;/span&gt; userRemoteConfigs: &lt;span style="color:#f92672"&gt;[[&lt;/span&gt;credentialsId: &lt;span style="color:#e6db74"&gt;&amp;#39;GitクレデンシャルID&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; url: &lt;span style="color:#e6db74"&gt;&amp;#39;https://Gitレポジトリ&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;]]])&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;Build&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt; &lt;span style="color:#75715e"&gt;// ビルドステージ
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dir&lt;span style="color:#f92672"&gt;(&lt;/span&gt;path: &lt;span style="color:#e6db74"&gt;&amp;#39;springbootapi&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 作業ディレクトリを指定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; sh &lt;span style="color:#e6db74"&gt;&amp;#39;./gradlew bootWar&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sh &lt;span style="color:#e6db74"&gt;&amp;#39;./gradlew bootWar&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;Upload&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt; &lt;span style="color:#75715e"&gt;// ビルドしたwarファイルをAzure Blobにアップロードするステージ
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dir&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;springbootapi/web/build/libs&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;){&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; azureUpload storageCredentialId: &lt;span style="color:#e6db74"&gt;&amp;#39;ストレージクレデンシャルID&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; storageType: &lt;span style="color:#e6db74"&gt;&amp;#39;blob&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; containerName: &lt;span style="color:#e6db74"&gt;&amp;#39;コンテナ名&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;,&lt;/span&gt; filesPath: &lt;span style="color:#e6db74"&gt;&amp;#39;**/*.war&amp;#39;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; stage&lt;span style="color:#f92672"&gt;(&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#39;Finalize&amp;#39;&lt;/span&gt;&lt;span style="color:#f92672"&gt;)&lt;/span&gt; &lt;span style="color:#f92672"&gt;{&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 作業が終わるとワークスペースを削除するステージ
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; steps &lt;span style="color:#f92672"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; cleanWs&lt;span style="color:#f92672"&gt;()&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;}&lt;/span&gt;
@@ -359,7 +359,7 @@ data-flex-basis="396px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall_hu_23f421bea89a8080.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall_hu_a448289bf1c8896.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall_hu_26c674647387d915.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactInstall_hu_f488d6c27fea225d.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Install"
 class="gallery-image"
@@ -370,7 +370,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_restart.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_restart_hu_b6fc8c6e0ac4b3a1.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_restart_hu_b79d80d8498bcf5b.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_restart_hu_11a4546ccb8837e2.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_restart_hu_db1d98aa52cb6d51.webp 1024w"
 loading="lazy"
 alt="Jenkins Restart"
 class="gallery-image"
@@ -383,7 +383,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpost.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpost_hu_73ccdfa2f3b86d5d.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpost_hu_181c21e4563a7bdb.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpost_hu_9de716c474d0f363.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpost_hu_87ffd5ead201876b.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Post"
 class="gallery-image"
@@ -394,7 +394,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck_hu_6d72f842d35dd16f.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck_hu_ecd7a30b2157ca3f.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck_hu_a79b0664e697b215.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck_hu_41e4b2582dfbe593.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Post Check"
 class="gallery-image"
@@ -405,7 +405,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck2.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck2_hu_10ab21136b7b59a8.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck2_hu_c23481ccc2502af7.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck2_hu_461ad18d989d2873.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactpostcheck2_hu_c4ca87526d0e20c4.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Post Check 2"
 class="gallery-image"
@@ -419,7 +419,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig_hu_c4d7a240927e2fd5.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig_hu_f0289653485b5f2a.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig_hu_a1fe82be90c432df.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig_hu_a7ba0845070208b1.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Config"
 class="gallery-image"
@@ -431,7 +431,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig2.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig2_hu_12ae4bee95b8f7c0.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig2_hu_1924d9003d102a47.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig2_hu_9223ef117084801d.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifactconfig2_hu_d6d591804e9bfc1b.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Config 2"
 class="gallery-image"
@@ -442,7 +442,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_60bd89bc93123159.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_fee648168861bbaa.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_ee50821c1536460a.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_168dc04fca8c8332.webp 1024w"
 loading="lazy"
 alt="Jenkins Artifact Copied"
 class="gallery-image"
@@ -456,7 +456,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_60bd89bc93123159.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_fee648168861bbaa.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_ee50821c1536460a.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_artifatccopied_hu_168dc04fca8c8332.webp 1024w"
 loading="lazy"
 alt="Jenkins Arfact Copied"
 class="gallery-image"
@@ -467,7 +467,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting1.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting1_hu_63cb7815ade146ec.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting1_hu_cd37c22de6562ea4.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting1_hu_e834fa2185f94f57.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting1_hu_e7cf9e62cd4a7132.webp 1024w"
 loading="lazy"
 alt="Jenkins Publish Over SSH Server Setting"
 class="gallery-image"
@@ -479,7 +479,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting2.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting2_hu_74b3964f1399657f.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting2_hu_76f6e41b698ea243.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting2_hu_415da8190845b9f.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_publishoversshserversetting2_hu_58516de30df2925.webp 1024w"
 loading="lazy"
 alt="Jenkins Publish Over SSH Server Setting 2"
 class="gallery-image"
@@ -493,7 +493,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1_hu_ff9765b6e0e133c8.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1_hu_4d0ef21b27f8d41b.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1_hu_1af8e0fbebb8d31e.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer1_hu_e7f58fa5b3f2f9a2.webp 1024w"
 loading="lazy"
 alt="Jenkins Transfer"
 class="gallery-image"
@@ -504,7 +504,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer2.webp"
 width="1680"
 height="988"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer2_hu_c4b0e50dda8a04da.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer2_hu_7376adce16c63b96.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer2_hu_1f5926b9a007642c.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfer2_hu_de2b162e530153ca.webp 1024w"
 loading="lazy"
 alt="Jenkins Transfer 2"
 class="gallery-image"
@@ -515,7 +515,7 @@ data-flex-basis="408px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfered.webp"
 width="1834"
 height="1164"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfered_hu_f99f751d0307a090.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfered_hu_23a60510b06105cf.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfered_hu_da2ac34ea38c274.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_transfered_hu_c14cc772fa3c03c2.webp 1024w"
 loading="lazy"
 alt="Jenkins Transferred"
 class="gallery-image"
@@ -526,7 +526,7 @@ data-flex-basis="378px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_jar.webp"
 width="1834"
 height="1154"
-srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_jar_hu_39b4967cf046f84c.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_jar_hu_80b16188904ff595.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_jar_hu_3cf837b3952801e1.webp 480w, https://retheviper.github.io/posts/jenkins-java-deploy/jenkins_jar_hu_be3bcbc1d2026587.webp 1024w"
 loading="lazy"
 alt="Jenkins JAR"
 class="gallery-image"
@@ -560,7 +560,7 @@ data-flex-basis="381px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage_hu_b472cb8b8b4c97ce.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage_hu_9c8dcae304c3b4ff.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage_hu_c826690cc35fd368.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_mainpage_hu_687a47ee46103b07.webp 1024w"
 loading="lazy"
 alt="Jenkins Mainpage"
 class="gallery-image"
@@ -571,7 +571,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_createjob.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_createjob_hu_35fc987227341c3e.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_createjob_hu_2f18519811fd1477.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_createjob_hu_48392b29d3449bff.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_createjob_hu_ed6da1e54b2407a2.webp 1024w"
 loading="lazy"
 alt="Jenkins Create Job"
 class="gallery-image"
@@ -582,7 +582,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobmain.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobmain_hu_ab4bb0931080787c.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobmain_hu_94a27cd869690be2.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobmain_hu_140990e7b3653876.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobmain_hu_53251690099e6389.webp 1024w"
 loading="lazy"
 alt="Jenkins Job Main"
 class="gallery-image"
@@ -604,7 +604,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure_hu_e40a306ff8a274f1.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure_hu_2d534d1867fb78.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure_hu_525361e62b78eceb.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitconfigure_hu_7aa7492820a3b9d9.webp 1024w"
 loading="lazy"
 alt="Jenkin Git Config"
 class="gallery-image"
@@ -616,7 +616,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitcredential.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitcredential_hu_94b861929710014c.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitcredential_hu_f720d2fa409480e3.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitcredential_hu_e2bd099d5068c1e5.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitcredential_hu_c2a898cc5d24e76b.webp 1024w"
 loading="lazy"
 alt="Jenkins Git Credential"
 class="gallery-image"
@@ -628,7 +628,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobsaved.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobsaved_hu_2aa29c0cf2a107ae.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobsaved_hu_d85c24c2a5c059c3.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobsaved_hu_56611a0228bbc8eb.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_jobsaved_hu_de972fdbaaa79ced.webp 1024w"
 loading="lazy"
 alt="Jenkins Job Saved"
 class="gallery-image"
@@ -641,7 +641,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1_hu_12947c3ddb0df519.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1_hu_f970a53afa284677.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1_hu_2e756df8a6cbe196.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob1_hu_a6a7f0d7c008214e.webp 1024w"
 loading="lazy"
 alt="Jenkins Git Job"
 class="gallery-image"
@@ -652,7 +652,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob2.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob2_hu_7b6c0905c2565e85.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob2_hu_9f57b368d5d2e3b0.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob2_hu_96555fd463ac2b83.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob2_hu_3bd014bd6f6fa83d.webp 1024w"
 loading="lazy"
 alt="Jenkins Git Job 2"
 class="gallery-image"
@@ -664,7 +664,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob3.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob3_hu_731caebebce69c81.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob3_hu_1d4372c94c3711e.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob3_hu_431c3398b4adb4a1.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gitjob3_hu_268019e407c4c6f0.webp 1024w"
 loading="lazy"
 alt="Jenkins Git Job 3"
 class="gallery-image"
@@ -678,7 +678,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1_hu_4e856be8b3a15b91.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1_hu_f5566f63f1fc9284.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1_hu_98c642a0788171e0.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure1_hu_2b4435e8af1d7509.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle Config"
 class="gallery-image"
@@ -691,7 +691,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure2.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure2_hu_61cf9a19a2f1dffd.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure2_hu_ccd263ced53fc38b.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure2_hu_38fd1642c21ae98f.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradleconfigure2_hu_606451ac9c44ba55.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle Config 2"
 class="gallery-image"
@@ -704,7 +704,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild_hu_bed3310da4af2c04.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild_hu_13980ca0e5d9f107.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild_hu_c571a689c7796e58.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuild_hu_e235dbec425ca805.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle Build"
 class="gallery-image"
@@ -715,7 +715,7 @@ data-flex-basis="412px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuildjar.webp"
 width="1440"
 height="838"
-srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuildjar_hu_be911c52bf1b75da.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuildjar_hu_cef35a447f32e336.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuildjar_hu_bf2a81404fa1127.webp 480w, https://retheviper.github.io/posts/jenkins-java-build/jenkins_gradlebuildjar_hu_96044c646e444a8f.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle Build JAR"
 class="gallery-image"
@@ -741,23 +741,23 @@ data-flex-basis="412px"
 &lt;p&gt;今回のタスクを振り返ってみましょう。JavaアプリケーションがGitにあります。それをPullし（Jenkinsが実行されているサーバにソースコードを持ってきて）、ビルド（実行可能なパッケージにする）する。これでJenkinsは最新のソースコードを確保しつつ、実行可能なアプリケーションをデプロイできる状態になります。それではまず必要な道具はJDKとGradleです。&lt;/p&gt;
 &lt;h2 id="openjdkをインストールしましょう"&gt;OpenJDKをインストールしましょう
 &lt;/h2&gt;&lt;p&gt;まずJenkinsはJava８でも実行できますが、今回のアプリケーションはなんとJava11を使っていました。OpenJDK11&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;をインストールします。&lt;code&gt;yum install java&lt;/code&gt;をするとOracleのJavaがインストールされるので、OpenJDKをインストールしたい場合はまた少しの手順が必要となります。今回はwgetではなく、curlを使ってみます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;curl -O https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;curl -OはURLからファイルをダウンロードして保存するということです。ダウンロードしたファイルは圧縮されているので解凍します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;tar zxvf openjdk-11.0.1_linux-x64_bin.tar.gz
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;tarは圧縮したり解凍するとき使うコマンド。zは.gzファイルを、xは圧縮ファイルの展開、vは処理したファイルを表示、fはこのファイルを指定するという意味らしいです。解凍が終わったらファイルを適切な場所に格納しましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;mv jdk-11.0.1 /usr/local/
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;mv jdk-11.0.1 /usr/local/
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;次に簡単なシェルスクリプトを書きます。Linuxでの環境変数を設定するためです。まずviやvimでファイルを作りましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/profile.d/jdk11.sh
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/profile.d/jdk11.sh
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;iを押して以下の内容を書きます。Javaを格納したパスを確認してください。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export JAVA_HOME&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/usr/local/jdk-11.0.1
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export JAVA_HOME&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/usr/local/jdk-11.0.1
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export PATH&lt;span style="color:#f92672"&gt;=&lt;/span&gt;$PATH:$JAVA_HOME/bin
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;esc⇨:wqで保存と終了。そしてすぐシェルスクリプトを今の状態に適用させます。sourceコマンドを使います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;source /etc/profile.d/jdk11.sh
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;source /etc/profile.d/jdk11.sh
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これでOpenJDK11は準備されました。私はCentOS7を使っているのですが、ubuntuなどの違うLinuxではまた手順も色々あるようです。とにかくインストールがちゃんと終わっているか&lt;code&gt;java -version&lt;/code&gt;で確認してみましょう。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_java8.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_java8_hu_59562312e3d382c1.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_java8_hu_436a6f8c55aaf373.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_java8_hu_4906287058af7d01.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_java8_hu_420cf7c553d4d232.webp 1024w"
 loading="lazy"
 alt="Java version is 8"
 class="gallery-image"
@@ -768,14 +768,14 @@ data-flex-basis="346px"
 &lt;h2 id="使いたいjavaのバージュヨンを切り替える"&gt;使いたいJavaのバージュヨンを切り替える
 &lt;/h2&gt;&lt;p&gt;すでに違うバージョンのJDKがインストールされた場合は、次の手順で使いたいJavaのバージョンを選択できます。
 まず新しくインストールしたJavaを選択できるよう登録します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;alternatives --install /usr/bin/java java $JAVA_HOME/bin/java &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;alternatives --install /usr/bin/java java $JAVA_HOME/bin/java &lt;span style="color:#ae81ff"&gt;2&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;登録が終わったら、以下のコマンドで現在登録されているJavaを表示します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;alternatives --config java
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;alternatives --config java
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;CentOSインストール時にすでに二つのバージョンのJavaがインストールされてましたね。Java11が3番目になったので3を入力します。これでJavaは準備オッケーです。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_alter.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_alter_hu_1db65fa0a2914a1c.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_alter_hu_b17fb077cf90aa55.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_alter_hu_4e2c87b08decad42.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_alter_hu_34c286aadf021ee6.webp 1024w"
 loading="lazy"
 alt="Jenkins Alter"
 class="gallery-image"
@@ -783,12 +783,12 @@ data-flex-grow="144"
 data-flex-basis="346px"
 &gt;&lt;/p&gt;
 &lt;p&gt;ちなみに、JenkinsもまたJavaで作られているので場合によってはJava11のJVMで起動できます。Java11のJVMをJenkinsに登録するには以下の手順になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/init.d/jenkins
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;vi /etc/init.d/jenkins
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Jenkinsの設定ファイルです。candidatesという部分に様々なバージョンのJVMの経路が機材されていますので、ここにOpenJDK11のbinフォルダのパスを追加します。esc⇨:wqで終了！&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jvm.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jvm_hu_c375a19f36f7f7fe.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jvm_hu_a14e171fb2ff7502.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jvm_hu_bc98d68ca1a5de85.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jvm_hu_c6c83f50ba16119c.webp 1024w"
 loading="lazy"
 alt="Jenkins JVM"
 class="gallery-image"
@@ -797,17 +797,17 @@ data-flex-basis="346px"
 &gt;&lt;/p&gt;
 &lt;h2 id="gradleもインストールしよう"&gt;Gradleもインストールしよう
 &lt;/h2&gt;&lt;p&gt;次にGradleをインストールします。macOSでは&lt;code&gt;brew install gradle&lt;/code&gt;で簡単にインストールできましたが、LinuxではどうもまたOpenJDKと同じ手順が必要なようです。wgetをまた使ってみます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip -P /tmp
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;-Pオプションをつけると指定したフォルダにファイルを保存します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo unzip -d /opt/gradle /tmp/gradle-5.4.1-bin.zip
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;zipファイルンなので、unzipコマンドで解凍します。-dもまたフォルダ（ディレクトリ）を指定するオプションです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo nano /etc/profile.d/gradle.sh
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo nano /etc/profile.d/gradle.sh
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;今回はnanoを使ってスクリプトを作ってみます。よりGUIに近い感じがしますね。nanoがなければ&lt;code&gt;yum install nano&lt;/code&gt;でインストールしてもいいし、viを使っても良いです。&lt;/p&gt;
 &lt;p&gt;私はどこでも使えるということ（環境によってはsudoの権限があるとしても、勝手に色々インストールできない場合もあるので)からviを使うことが多いですが、nanoはより直観的で使いやすいと思います。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/gradle_sh.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/gradle_sh_hu_9bd6d7a83c7c0aa7.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/gradle_sh_hu_c2b313ba6cc935ae.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/gradle_sh_hu_b757b8730b2b4a30.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/gradle_sh_hu_5552d274f9f30207.webp 1024w"
 loading="lazy"
 alt="Gradle SH"
 class="gallery-image"
@@ -815,19 +815,19 @@ data-flex-grow="144"
 data-flex-basis="346px"
 &gt;&lt;/p&gt;
 &lt;p&gt;添付の画像のように、以下の内容を入力します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export GRADLE_HOME&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/opt/gradle/gradle-5.4.1
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export GRADLE_HOME&lt;span style="color:#f92672"&gt;=&lt;/span&gt;/opt/gradle/gradle-5.4.1
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;export PATH&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#e6db74"&gt;${&lt;/span&gt;GRADLE_HOME&lt;span style="color:#e6db74"&gt;}&lt;/span&gt;/bin:&lt;span style="color:#e6db74"&gt;${&lt;/span&gt;PATH&lt;span style="color:#e6db74"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;nanoではctrl+xを押すと編集した内容を保存するかを聞いてきます。Yのあとエンターを押すと保存。US標準のキーボードを使う私にとっては:wqより入力が簡単で好きです。&lt;/p&gt;
 &lt;p&gt;あとは作られたスクリプトに実行の権限を与え、&lt;code&gt;source&lt;/code&gt;コマンドで環境変数として登録。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo chmod +x /etc/profile.d/gradle.sh
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo chmod +x /etc/profile.d/gradle.sh
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;$ source /etc/profile.d/gradle.sh
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;chmod 755のようなコマンドを書いたことが多いですが、+xで実行の権限だけ与える方が習慣的には良さそうですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;gradle -v
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;gradle -v
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;インストールに成功したかを確認するにはやはりバージョンの確認ですね。以下のような画面が表示されたらGradleのインストールも成功です。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/gradle_version.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/gradle_version_hu_8b899efa6aef3c50.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/gradle_version_hu_1abeb2a237855048.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/gradle_version_hu_2b1e3553805cd015.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/gradle_version_hu_9917d3038f8c23d8.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle Version"
 class="gallery-image"
@@ -842,7 +842,7 @@ data-flex-basis="346px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage_hu_582be7486c5b4c7.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage_hu_f8027b7c0c4d263c.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage_hu_52f3ef64ccd6834e.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_manage_hu_cdef5fea4d3549bf.webp 1024w"
 loading="lazy"
 alt="Jenkins Manage"
 class="gallery-image"
@@ -853,7 +853,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_globaltoolsettings.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_globaltoolsettings_hu_7f4100b151c4a03.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_globaltoolsettings_hu_90610b3a215184db.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_globaltoolsettings_hu_79a5acb3094f249c.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_globaltoolsettings_hu_ebaa5a62cef42bf7.webp 1024w"
 loading="lazy"
 alt="Jenkins Global Tool Settings"
 class="gallery-image"
@@ -864,7 +864,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jdk.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jdk_hu_bed8a5ba1a68d9a2.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jdk_hu_4eac676feff6b4ea.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jdk_hu_19a3f4c663d76314.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_jdk_hu_900526573e079c50.webp 1024w"
 loading="lazy"
 alt="Jenkins JDK"
 class="gallery-image"
@@ -875,7 +875,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_gradle.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_gradle_hu_38bc9351a7aacbb9.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_gradle_hu_52c7931b6b4b004c.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-3/jenkins_gradle_hu_27e09f734cb7bb37.webp 480w, https://retheviper.github.io/posts/jenkins-automation-3/jenkins_gradle_hu_d99fb9b9c42bfb01.webp 1024w"
 loading="lazy"
 alt="Jenkins Gradle"
 class="gallery-image"
@@ -900,12 +900,12 @@ data-flex-basis="435px"
 &lt;/h2&gt;&lt;p&gt;Jenkinsの基本ポートは&lt;code&gt;8080&lt;/code&gt;です。このままJenkinsを起動すると、Webブラウザから&lt;code&gt;Jenkinsを起動中のシステムのIPアドレス:8080&lt;/code&gt;でJenkinsに接続できます。&lt;/p&gt;
 &lt;p&gt;しかし、Webアプリケーションを開発してみた経験のある方には8080というポートはあまり良い選択肢ではないことがわかるはずです。同じポートに設定されている二つ以上のサービスが問題を起こす可能性がありますからね。&lt;sup id="fnref:1"&gt;&lt;a href="#fn:1" class="footnote-ref" role="doc-noteref"&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
 &lt;p&gt;私はのちにTomcatを使うことがあるかもしれないと思い、Jenkinのポートは&lt;code&gt;8088&lt;/code&gt;に変えました。&lt;code&gt;vi&lt;/code&gt;や&lt;code&gt;vim&lt;/code&gt;&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;でJenkinsのシステムコンフィグファイルを開けます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo vim /etc/sysconfig/jenkins
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo vim /etc/sysconfig/jenkins
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;そうすると、以下のような画面が現れます。少し下にスクロールしたら&lt;code&gt;JENKINS_PORT&lt;/code&gt;と、親切に書いてあるのが見えますね！&lt;code&gt;I&lt;/code&gt;を押してインサートモードに切り替え、好きなポートに変えましょう。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_configport.webp"
 width="974"
 height="643"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_configport_hu_d3f8ad3c0c5c6da2.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_configport_hu_b30ace423bc9970f.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_configport_hu_3098b38a2953604b.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_configport_hu_bd3b096651cc5e33.webp 1024w"
 loading="lazy"
 alt="Jenkins Config Port"
 class="gallery-image"
@@ -916,14 +916,14 @@ data-flex-basis="363px"
 &lt;h2 id="起動初期パスワードの設定"&gt;起動〜初期パスワードの設定
 &lt;/h2&gt;&lt;p&gt;Jenkinsは初起動で初期パスワードを要求します。この初期パスワードが格納されてある位置は、基本的に&lt;code&gt;/var/lib/jenkins/secrets/initialAdminPassword&lt;/code&gt;というパスに保存されるようですが、OSなどの環境によってパスが変わる場合もありますからね。&lt;sup id="fnref:3"&gt;&lt;a href="#fn:3" class="footnote-ref" role="doc-noteref"&gt;3&lt;/a&gt;&lt;/sup&gt;でも、一度Jenkinsを起動したら初期設定のページからパスを確認できるので心配いりません。&lt;/p&gt;
 &lt;p&gt;ポート設定が終わったら（8080をそのまま使いたいならそのままでもいいです）、まずJenkinsを起動します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;service jenkins start
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;service jenkins start
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;[OK]&lt;/code&gt;というメッセージが出力されるはずですが（ポート設定に問題がある場合もあるので）念の為起動状況を確認します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;service jenkins status
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;service jenkins status
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;実は、仕事で１日前は元気だったJenkins先生が、いきなり接続できなくなっていたことがったのです。やはり人は何かよくないことを経験すると、慎重になるものです。&lt;code&gt;Active: active (running)&lt;/code&gt;というメッセージを確認できたら、いよいよJenkinsのページに接続です。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_servicestatus.webp"
 width="894"
 height="619"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_servicestatus_hu_869a37a5c46ae3f8.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_servicestatus_hu_30dc410119962db7.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_servicestatus_hu_daa927e6b47a478e.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_servicestatus_hu_dbfba11a24391c0f.webp 1024w"
 loading="lazy"
 alt="Jenkins Service Status"
 class="gallery-image"
@@ -934,7 +934,7 @@ data-flex-basis="346px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initpass.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initpass_hu_d51e3cab82d0bd6d.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initpass_hu_6b3cac5c18cc33f0.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initpass_hu_4666d451732a7b70.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initpass_hu_f2adf85cb4f21d15.webp 1024w"
 loading="lazy"
 alt="Jenkins Init Pass"
 class="gallery-image"
@@ -942,13 +942,13 @@ data-flex-grow="181"
 data-flex-basis="435px"
 &gt;&lt;/p&gt;
 &lt;p&gt;やはりパスは&lt;code&gt;/var/lib/jenkins/secrets/initialAdminPassword&lt;/code&gt;でした。ポート設定と同じく、viやvimで中を覗き、そのパスワードを入力します。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo vim /var/lib/jenkins/secrets/initialAdminPassword
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo vim /var/lib/jenkins/secrets/initialAdminPassword
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="プラグインと管理者アカウントの設定"&gt;プラグインと管理者アカウントの設定
 &lt;/h2&gt;&lt;p&gt;パスワードの入力に成功するとしばらくして、プラグインの設定画面が現れます。自分でプラグインを選んでも良さそうですが、私は自信がないのでオススメのボタンを押します。当たり前なことですが、プラグインは後ででもインストールできます。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins_hu_2bdcd21a5545c6b.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins_hu_ece23031b6a547ae.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins_hu_246e57e36baf12d7.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_initplugins_hu_5a9dfef1087799f0.webp 1024w"
 loading="lazy"
 alt="Jenkins Init Plugins"
 class="gallery-image"
@@ -959,7 +959,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_installingplugins.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_installingplugins_hu_e547fdb87943177a.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_installingplugins_hu_e98fa9f429cb7dc6.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_installingplugins_hu_495a23761550ac05.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_installingplugins_hu_cc7d336aaf7ce77e.webp 1024w"
 loading="lazy"
 alt="Jenkins Installing Plugins"
 class="gallery-image"
@@ -970,7 +970,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_setupadmin.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_setupadmin_hu_e8a9ebaaea18aa35.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_setupadmin_hu_49f4d097b5da0679.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_setupadmin_hu_1bc3608e208fcc53.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_setupadmin_hu_fa643c5052b1558a.webp 1024w"
 loading="lazy"
 alt="Jenkins Setup Admin"
 class="gallery-image"
@@ -981,7 +981,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_addresssetting.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_addresssetting_hu_20e8bffdfc22c39c.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_addresssetting_hu_ec37ac53972cad12.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_addresssetting_hu_33fc5e3448e6065b.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_addresssetting_hu_96884169356d27d8.webp 1024w"
 loading="lazy"
 alt="Jenkins Address Setting"
 class="gallery-image"
@@ -992,7 +992,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_ready.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_ready_hu_2c5bda0f106fec60.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_ready_hu_c3158d1735fe529f.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_ready_hu_b8660cb8f32b1c77.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_ready_hu_334698d2bfd11915.webp 1024w"
 loading="lazy"
 alt="Jenkins Ready"
 class="gallery-image"
@@ -1003,7 +1003,7 @@ data-flex-basis="435px"
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_mainpage.webp"
 width="1280"
 height="706"
-srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_mainpage_hu_b472cb8b8b4c97ce.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_mainpage_hu_9c8dcae304c3b4ff.webp 1024w"
+srcset="https://retheviper.github.io/posts/jenkins-automation-2/jenkins_mainpage_hu_c826690cc35fd368.webp 480w, https://retheviper.github.io/posts/jenkins-automation-2/jenkins_mainpage_hu_687a47ee46103b07.webp 1024w"
 loading="lazy"
 alt="Jenkins Mainpage"
 class="gallery-image"
@@ -1039,12 +1039,12 @@ data-flex-basis="435px"
 &gt;Jenkinsのホームページ&lt;/a&gt;に接続してみると、Linuxでのインストールの手順がありました。幸い、仕事で使うLinuxはAWSなのですが、RedHat Linux&lt;sup id="fnref:2"&gt;&lt;a href="#fn:2" class="footnote-ref" role="doc-noteref"&gt;2&lt;/a&gt;&lt;/sup&gt;と同じ手順でインストールできました。&lt;/p&gt;
 &lt;h2 id="それではインストールしましょう"&gt;それではインストールしましょう
 &lt;/h2&gt;&lt;p&gt;まず、Jenkinsのリポジトリを持ってきます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここでwget -Oはフォルダを読み、ファイルとして出力するオプションらしいですね。ここでも勉強になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;rpmはパッケージをインストールする時使うコマンドなのですが、ここでは&amp;ndash;importオプションでキーを持って検証を行いますね。&lt;/p&gt;
 &lt;p&gt;ここまで終わったら、普通のパッケージと同じくyumでインストールできます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;yum install jenkins
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;yum install jenkins
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これでインストールは終わり。問題なければ、ポートの設定をやって起動するまでです。&lt;/p&gt;
 &lt;p&gt;（続きます）&lt;/p&gt;
 &lt;div class="footnotes" role="doc-endnotes"&gt;

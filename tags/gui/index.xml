@@ -32,7 +32,7 @@
 &lt;p&gt;他にもKotlinなのでCoroutineが簡単に使えたり、サーバサイドと同じリポジトリにソースコードを作成できるというところも良いところでした。特に後者の場合、GradleでKotlinのプラグインを&lt;code&gt;multiplatform&lt;/code&gt;にすることでFrontendではJavaScriptにコンパイルされ、サーバサイドではいつも通りJVMのバイトコードにコンパイルされるようにできるという点がお気に入りです。&lt;/p&gt;
 &lt;h3 id="思ったことと違った点"&gt;思ったことと違った点
 &lt;/h3&gt;&lt;p&gt;自分の考えが甘かったのですが、Desktopとはかなり違うところがありました。何かというと、言語としてはKotlinを使うとしても、HTMLやCSSを排除することはできないという点です。ここでもやはり&lt;code&gt;div&lt;/code&gt;や&lt;code&gt;form&lt;/code&gt;のようなタグを使ったり、タグにマウスオーバ時のカーソルを変えるためにタグの&lt;code&gt;attr&lt;/code&gt;を変更する必要がありました。例えば、以下はファイルアップロードのコンポーネントですが、Kotlinで書いているだけで実際はHTMLをそのまま書いているような感覚です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Composable&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Composable&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FileUploadForm&lt;/span&gt;(currentPath: String) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Div {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; Form(
@@ -72,7 +72,7 @@
 &lt;/h3&gt;&lt;p&gt;このアプリにはまずファイルをブラウズする機能があるので、クライアントで指定したパスを探索して、その中にあるコンテンツ（ファイルとフォルダ）を返す必要があります。問題は、JSONの構造をどうするかですね。ここではまず一つの方法を試してみてから判断することにしました。&lt;/p&gt;
 &lt;h4 id="全取得する"&gt;全取得する
 &lt;/h4&gt;&lt;p&gt;最初は、以下のような形で実装をしようと思いました。パスを指定したら、その配下にある全てのフォルダをたどり、親子関係をネストで表現する形です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;{
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;{&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#34;Documents&amp;#34;&lt;/span&gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#34;directory&amp;#34;&lt;/span&gt;,
@@ -92,14 +92,14 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#960050;background-color:#1e0010"&gt;}&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このようなファイルツリー返すために、サーバ側のコードは以下のようなものを使いました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ルートとなるパスを指定すると、子要素（ファイルとフォルダ）を全て取得する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; files = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.list(root)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ルートとなるパスを指定すると、子要素（ファイルとフォルダ）を全て取得する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; files = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.list(root)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .filter { !&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.isHidden() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .map { &lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.toFileTree() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .toList()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// PathをJSONオブジェクトとして加工する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.toFileTree(): FileTree {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.toFileTree(): FileTree {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; FileTree(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name = &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.fileName.toString(),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; size = &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.isDirectory()) &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.fileSize(),
@@ -121,7 +121,7 @@
 &lt;p&gt;ただ、この方法で思った通りのファイルツリーをJSONとして返すことはできましたが、問題がありました。まず、指定したパスがルートに近くなればなるほど探索にかかる時間が長くなり、レスポンスも遅く慣ればJSONのサイズも大きくなるという問題がありました。また、JSONを受け取ったところで、Frontendで描画をするにも難点がありそうな気がしました。というわけで、この案はまず廃棄して、二つ目の方法を取ることにしました。&lt;/p&gt;
 &lt;h4 id="ネストさせない"&gt;ネストさせない
 &lt;/h4&gt;&lt;p&gt;次に試した方法は、指定したパスのみに処理を制限することでした。何かというと、JSONオブジェクトのネストを無くして、指定したパスにどんなファイルとフォルダが含まれているかだけをリストとして返すということです。つまり、以下のような形になります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-json" data-lang="json"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#34;Documents&amp;#34;&lt;/span&gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#f92672"&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#34;directory&amp;#34;&lt;/span&gt;
@@ -132,13 +132,13 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;]
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;こうなると、中のフォルダを辿る必要がなくなるのでレルポンスも早く、軽くなるわけです。最初からちゃんと考えるべきだったのですが、こちらの方がFrontendとしても実装が楽であって、さらにサブパスのフォルダにアクセスしたい場合はそのパスを再度Backendに送ればいいだけですね。コードとしては再帰を使わなくなったくらいです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; files = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.list(root)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; files = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.list(root)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .filter { !&lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.isHidden() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .map { &lt;span style="color:#66d9ef"&gt;it&lt;/span&gt;.toFileTree() }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .toList()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// PathをJSONオブジェクトとして加工する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.toFileTree(): FileTree {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.toFileTree(): FileTree {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; FileTree(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; name = &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.fileName.toString(),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; size = &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.isDirectory()) &lt;span style="color:#66d9ef"&gt;null&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;this&lt;/span&gt;.fileSize(),
@@ -147,22 +147,22 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルアップロード"&gt;ファイルアップロード
 &lt;/h3&gt;&lt;p&gt;ファイルアップロードについては、Mutlipartとして送られているデータをどう扱うかですが、これはKtorらしく簡単な処理で対応できました。以下のコードが実際の実装となっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// router
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;post(ENPOINT_UPLOAD) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// router
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;post(ENPOINT_UPLOAD) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Multipartデータを受信
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; multipart = call.receiveMultipart()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; multipart = call.receiveMultipart()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ファイル保存先のパス
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; path = &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.of(ROOT_DIRECTORY)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; path = &lt;span style="color:#a6e22e"&gt;Path&lt;/span&gt;.of(ROOT_DIRECTORY)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; multipart.forEachPart { part &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;when&lt;/span&gt; (part) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ルートでないパスを指定した場合は保存先を更新
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PartData&lt;/span&gt;.FormItem &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PartData&lt;/span&gt;.FormItem &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (part.name &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;target&amp;#34;&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; path = path.resolve(part.&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ファイルデータを保存
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PartData&lt;/span&gt;.FileItem &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;is&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;PartData&lt;/span&gt;.FileItem &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; withContext(&lt;span style="color:#a6e22e"&gt;Dispatchers&lt;/span&gt;.IO) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; file = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.createFile(path.resolve(part.originalFileName&lt;span style="color:#f92672"&gt;!!&lt;/span&gt;))
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; part.streamProvider().use { input &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt;
@@ -173,24 +173,24 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// どちらでもない場合は一旦出力
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; println(&lt;span style="color:#e6db74"&gt;&amp;#34;Unknown part: &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$part&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 処理の終わったデータはdispose
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; part.dispose()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; part.dispose()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ただ、個人的にはストレージアクセスのある処理に対してはNIOを使いたいので、はじめは&lt;a class="link" href="https://docs.oracle.com/javase/jp/8/docs/api/java/nio/file/Files.html#copy-java.io.InputStream-java.nio.file.Path-java.nio.file.CopyOption...-" target="_blank" rel="noopener"
 &gt;Files.copy()&lt;/a&gt;を使おうと思ったのですが、なぜかファイルの保存処理を以下のような作成するとうまくいかなったです。Coroutineとの相性に何か問題があるのかもしれないですので、ここは注意ですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; file = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.createFile(path.resolve(part.originalFileName&lt;span style="color:#f92672"&gt;!!&lt;/span&gt;))
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; file = &lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.createFile(path.resolve(part.originalFileName&lt;span style="color:#f92672"&gt;!!&lt;/span&gt;))
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.copy(part.streamProvider(), &lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;) &lt;span style="color:#75715e"&gt;// ファイルが保存されない
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイルダウンロード"&gt;ファイルダウンロード
 &lt;/h3&gt;&lt;p&gt;ファイルダウンロードの場合も、ロジックは特にないので、ほとんどKtorのみのコードとなっています。自分の好みでPathを使っているくらいですのでコードだけを紹介します。ひとつ注意すべきところは、アップロードする時もそうですが、ファイル名を返すときにURLパスとしてエンコードすることですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(ENDPOINT_DOWNLOAD) {&lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;(ENDPOINT_DOWNLOAD) {&lt;span style="color:#66d9ef"&gt;try&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; filepath = call.request.queryParameters[&lt;span style="color:#e6db74"&gt;&amp;#34;filepath&amp;#34;&lt;/span&gt;] &lt;span style="color:#f92672"&gt;?:&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; path = &lt;span style="color:#a6e22e"&gt;FileService&lt;/span&gt;.getFullPath(filepath) &lt;span style="color:#75715e"&gt;// ルートディレクトリからのフルパスを取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.notExists(path)) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (&lt;span style="color:#a6e22e"&gt;Files&lt;/span&gt;.notExists(path)) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.respond(&lt;span style="color:#a6e22e"&gt;HttpStatusCode&lt;/span&gt;.BadRequest, &lt;span style="color:#e6db74"&gt;&amp;#34;File not found&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; } &lt;span style="color:#66d9ef"&gt;else&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; call.response.header(
@@ -205,34 +205,34 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="注意すべきところ"&gt;注意すべきところ
 &lt;/h3&gt;&lt;p&gt;まず、一つのプロジェクトにKotlin/JSとKotlin/JVMを両立する場合、&lt;code&gt;dependencies&lt;/code&gt;として記述するものに対しては&lt;code&gt;build.gradle.kts&lt;/code&gt;ファイルで以下のように指定することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;kotlin {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;kotlin {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; sourceSets {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Kotlin/JSの依存関係
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jsMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jsMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dependencies {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(compose.web.core)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(compose.runtime)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...省略
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// Kotlin/JVMの依存関係
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jvmMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jvmMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dependencies {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(&lt;span style="color:#e6db74"&gt;&amp;#34;io.ktor:ktor-server-core-jvm:&lt;/span&gt;&lt;span style="color:#e6db74"&gt;$ktor&lt;/span&gt;&lt;span style="color:#e6db74"&gt;_version&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(&lt;span style="color:#e6db74"&gt;&amp;#34;io.ktor:ktor-server-auth-jvm:&lt;/span&gt;&lt;span style="color:#e6db74"&gt;$ktor&lt;/span&gt;&lt;span style="color:#e6db74"&gt;_version&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...省略
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;しかし、Composeを使うためには&lt;code&gt;plugin&lt;/code&gt;として指定する必要があり、これがプロジェクト全体の依存関係に追加されることになっていました。なので、アプリの作りとしてはまずFrontendのComposeをビルドし、サーバを起動したらビルドしたファイルをstaticとして提供する構造になっていますが、Backendの起動にもComposeのランタイムが必要になります。このランタイムを追加してくれないと、エラーが吐き出され、Ktorが起動できなくなっています。何かKotlin/JSのみの依存関係にpluginを追加する他の方法があるかもしれませんが、とりあえずはJVMの依存関係に以下のようにランタイムを追加することで問題は解消できました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jvmMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; jvmMain &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; getting {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dependencies {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(&lt;span style="color:#e6db74"&gt;&amp;#34;io.ktor:ktor-server-core-jvm:&lt;/span&gt;&lt;span style="color:#e6db74"&gt;$ktor&lt;/span&gt;&lt;span style="color:#e6db74"&gt;_version&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(&lt;span style="color:#e6db74"&gt;&amp;#34;io.ktor:ktor-server-auth-jvm:&lt;/span&gt;&lt;span style="color:#e6db74"&gt;$ktor&lt;/span&gt;&lt;span style="color:#e6db74"&gt;_version&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ...省略
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; implementation(compose.runtime) &lt;span style="color:#75715e"&gt;// Composeランタイム
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; implementation(compose.runtime) &lt;span style="color:#75715e"&gt;// Composeランタイム
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="その他"&gt;その他
 &lt;/h2&gt;&lt;p&gt;Kotlin/JSとKotlin/JVMを一つのプロジェクトとして扱う場合に、&lt;code&gt;common&lt;/code&gt;というパッケージを設けることで、コードの共有ができるのが何より嬉しかったところです。例えば、JSONオブジェクトをdata classとして定義してcommonパッケージに置くことで、FrontendとBackendの両方で同じオブジェクトを使うことができます。他にももちろんEnumやconstを共有できたりするので、実装がかなり楽でした。&lt;/p&gt;
@@ -311,40 +311,40 @@
 &gt;remember()&lt;/a&gt;と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ja" target="_blank" rel="noopener"
 &gt;&lt;code&gt;MutableState&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/a&gt;の組み合わせで事足りることになります。画面の構成要素の最小単位をComposeではWidgetでも使い方が同じだということは、SwiftUIと比べると定義するのは簡単ですが、使い方には少し注意が必要だなという感覚でした。&lt;/p&gt;
 &lt;p&gt;まず、Composeでの状態は、以下のような三つの方法で定義することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Delegateで定義する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; isOn: Boolean &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Delegateで定義する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; isOn: Boolean &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 直接値を書き換えできる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;isOn = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;isOn = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 分解宣言で定義する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;isOff: Boolean, setIsOff: (Boolean) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;) }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;isOff: Boolean, setIsOff: (Boolean) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 参照と更新が分離される
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (isOff) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (isOff) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; setIsOff(&lt;span style="color:#f92672"&gt;!is&lt;/span&gt;Off) &lt;span style="color:#75715e"&gt;// toggle
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// MubtableState&amp;lt;T&amp;gt;として扱う
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; isNotOff: MutableState&amp;lt;Boolean&amp;gt; = remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; isNotOff: MutableState&amp;lt;Boolean&amp;gt; = remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ラッパーになっているので、値を更新するためにはvalueにアクセスする必要がある
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;isNotOff.&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = &lt;span style="color:#f92672"&gt;!is&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;NotOff&lt;/span&gt;.&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;isNotOff.&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = &lt;span style="color:#f92672"&gt;!is&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;NotOff&lt;/span&gt;.&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここでDelegateで&lt;code&gt;var&lt;/code&gt;として定義した場合は最も使いやすくなりますが、Intellij上ではコンパイルエラーになりがちです。なぜかというと、Delegateを使うためには&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#%28androidx.compose.runtime.MutableState%29.setValue%28kotlin.Any,kotlin.reflect.KProperty,kotlin.Any%29" target="_blank" rel="noopener"
 &gt;androidx.compose.runtime.setValue&lt;/a&gt;と&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-summary#%28androidx.compose.runtime.State%29.getValue%28kotlin.Any,kotlin.reflect.KProperty%29" target="_blank" rel="noopener"
 &gt;androidx.compose.runtime.getValue&lt;/a&gt;をimportする必要がありますが、これが自動で行われないからです。最初このエラーの理由がわからなかったり、忙しい場合にいちいちimport文を書いていくが面倒だったりでかなり使わなくなるケースも多いかなという気がします。ただこれは、まだIntellijでのCompose対応が完璧ではないのが原因なので、これはいずれ解消されると期待できるでしょう。&lt;/p&gt;
 &lt;p&gt;分解宣言で値の参照と更新を別々で使うのは、どこで使うか悩ましいケースもあるかなと思いますが、Composeの一部Widgetに状態を渡す場合に使われる場面があります。代表的なものが&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/material/package-summary#TextField%28kotlin.String,kotlin.Function1,androidx.compose.ui.Modifier,kotlin.Boolean,kotlin.Boolean,androidx.compose.ui.text.TextStyle,kotlin.Function0,kotlin.Function0,kotlin.Function0,kotlin.Function0,kotlin.Boolean,androidx.compose.ui.text.input.VisualTransformation,androidx.compose.foundation.text.KeyboardOptions,androidx.compose.foundation.text.KeyboardActions,kotlin.Boolean,kotlin.Int,androidx.compose.foundation.interaction.MutableInteractionSource,androidx.compose.ui.graphics.Shape,androidx.compose.material.TextFieldColors%29" target="_blank" rel="noopener"
 &gt;TextField&lt;/a&gt;で、これはコードを見るとすぐにその目的がわかります。実際のコードで、以下のように使われます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;text: String, updateText: (String) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;text: String, updateText: (String) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;TextField(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; onValueChange = setValue, &lt;span style="color:#75715e"&gt;// TextFieldに文字を入力するとその値でtextを更新する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = text &lt;span style="color:#75715e"&gt;// textの値をTextFieldに表示する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = text &lt;span style="color:#75715e"&gt;// textの値をTextFieldに表示する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;最後に&lt;code&gt;MutableState&amp;lt;T&amp;gt;&lt;/code&gt;として定義するケースですが、直接的な値の更新ができないので最も使い方としては不便なのですが、実際は最も多く使われるのではないかと思います。なぜかというと、アプリ全体で状態を共有するなど複数のWidgetをまたがって使う場合は、以下のようにclassの中にフィールドとして&lt;code&gt;MutableState&amp;lt;T&amp;gt;&lt;/code&gt;を定義することになるからです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// アプリ全体で共有するためにクラスに状態を定義する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AppState&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// アプリ全体で共有するためにクラスに状態を定義する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AppState&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; isOn: MutableState&amp;lt;Boolean&amp;gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これはもちろん別途&lt;a class="link" href="https://kotlinlang.org/docs/properties.html#getters-and-setters" target="_blank" rel="noopener"
 &gt;getter/setter&lt;/a&gt;をclassに定義しておくと、中のvalueにアクセスしなくても直接プロパティにアクセスする感覚で使えます。イメージ的には以下のようなものですね。これだと状態として管理したい項目が増えれば増えるほどコードの量が増えてしまう面倒さがあるというのが短所かなと思います。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AppState&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;AppState&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; _isOn: MutableState&amp;lt;Boolean&amp;gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; isOn: Boolean
@@ -358,30 +358,30 @@
 &gt;Macのトレイ、メニューバー、通知&lt;/a&gt;にも対応していたので基本的な機能は全て揃っているのではないかと思いましたが、実はそうでもなく、一部の機能はSwingやAWTの機能を借りて実装することになるケースもありました。実際、私の作ったテストツールでも一部SwingとAWTの機能を使っているところがあります。&lt;/p&gt;
 &lt;p&gt;例えばファイル選択機能がそうです。CSVを読み込むためにファイル選択のダイアログを表示したかったのですが、ComposeのWigdetではまだ対応できてないので、やむを得なくAWTの&lt;a class="link" href="https://docs.oracle.com/javase/jp/8/docs/api/java/awt/FileDialog.html" target="_blank" rel="noopener"
 &gt;FileDialog&lt;/a&gt;を使う必要がありました。以下がその実装の例です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 選択したファイル名を状態として保持する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; fileName &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 選択したファイル名を状態として保持する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; fileName &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// AWTのファイル選択ダイアログを使う
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;FileDialog(ComposeWindow()).apply {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;FileDialog(ComposeWindow()).apply {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 選択できるのはCSVのみにしたい
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; setFilenameFilter { _, name &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; name.endsWith(&lt;span style="color:#e6db74"&gt;&amp;#34;.csv&amp;#34;&lt;/span&gt;, ignoreCase = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;) }
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; setFilenameFilter { _, name &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; name.endsWith(&lt;span style="color:#e6db74"&gt;&amp;#34;.csv&amp;#34;&lt;/span&gt;, ignoreCase = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; isVisible = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ファイルが選択された場合は状態を更新する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (!&lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;.isNullOrBlank()) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (!&lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;.isNullOrBlank()) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; fileName = &lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;しかし、これでも十分ではない場合もありました。フォルダのみを選択できるようにしたい場合に&lt;code&gt;FileDialog&lt;/code&gt;はあまり良い選択ではなかったのです。名前からそうですが、あくまでファイルの選択を想定したものであるため、フォルダのみを選択できるようにはできなかったのです。なので、フォルダのみを選択できるようにするためには、Swingの力も借りる必要があります。その場合は、以下のように実装ができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 選択したフォルダのパスを状態として保持する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; selectedPath &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 選択したフォルダのパスを状態として保持する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; selectedPath &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Swingのファイル選択ダイアログをディレクトリのみ選択できるように設定して定義する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; fileChooser = JFileChooser().apply {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; fileChooser = JFileChooser().apply {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; dialogTitle = &lt;span style="color:#e6db74"&gt;&amp;#34;Choose Directory&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; fileSelectionMode = &lt;span style="color:#a6e22e"&gt;JFileChooser&lt;/span&gt;.DIRECTORIES_ONLY
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// ダイアログを表示する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (fileChooser.showOpenDialog(ComposeWindow()) &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;JFileChooser&lt;/span&gt;.APPROVE_OPTION) {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (fileChooser.showOpenDialog(ComposeWindow()) &lt;span style="color:#f92672"&gt;==&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;JFileChooser&lt;/span&gt;.APPROVE_OPTION) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ダイアログで選択したパスが状態として保持しているパスと違う場合、選択したディレクトリの絶対パスを状態として更新する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; path = fileChooser.selectedFile.absolutePath
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; path = fileChooser.selectedFile.absolutePath
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; (selectedPath &lt;span style="color:#f92672"&gt;!=&lt;/span&gt; path) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; selectedPath = path
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -390,14 +390,14 @@
 &lt;h3 id="ビルド"&gt;ビルド
 &lt;/h3&gt;&lt;p&gt;Composeを選んだ理由の一つのバイナリのビルドができるという点ですが、これはかなり満足度が高かったです。&lt;code&gt;gradle&lt;/code&gt;を使って、コマンドひとつで実行可能なバイナリが生成されます。Macでビルドして見ると、他のアプリと同じくパッケージが生成されます。中を見ると、実行に必要なJREと依存関係のJarが含まれていて、ネイティブではなくJVM上で起動される構造になっていました。&lt;/p&gt;
 &lt;p&gt;バイナリをビルドするときのオプションには色々なものがあり、OSの種類(Windows, Mac, Linux)によって違うアイコンを使ったり、基本的には含まれないモジュールを含むように指定したりすることができました。以下が実際のビルド時のオプションのサンプルです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;compose.desktop {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;compose.desktop {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; application {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; mainClass = &lt;span style="color:#e6db74"&gt;&amp;#34;com.testtool.MainKt&amp;#34;&lt;/span&gt; &lt;span style="color:#75715e"&gt;// 実行時のメインクラスを指定
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; nativeDistributions {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; nativeDistributions {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; packageName = &lt;span style="color:#e6db74"&gt;&amp;#34;Test Tool&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; packageVersion = &lt;span style="color:#e6db74"&gt;&amp;#34;1.0.0&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; modules(&lt;span style="color:#e6db74"&gt;&amp;#34;java.sql&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;java.naming&amp;#34;&lt;/span&gt;) &lt;span style="color:#75715e"&gt;// デフォルトでは含まれないパッケージを追加
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt; macOS {
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; macOS {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; iconFile.&lt;span style="color:#66d9ef"&gt;set&lt;/span&gt;(project.&lt;span style="color:#66d9ef"&gt;file&lt;/span&gt;(&lt;span style="color:#e6db74"&gt;&amp;#34;misc/appicon/icon-mac.icns&amp;#34;&lt;/span&gt;))
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; windows {
@@ -436,7 +436,7 @@
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list.webp"
 width="860"
 height="1756"
-srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu_1c7ca1e08ae2c8c0.webp 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu_8ffacc504fdf94ab.webp 1024w"
+srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu_e62ab5dae4f68a74.webp 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_list_hu_7613bd6d95a3bc2b.webp 1024w"
 loading="lazy"
 alt="List View"
 class="gallery-image"
@@ -446,7 +446,7 @@ data-flex-basis="117px"
 &lt;p&gt;この画面では右上のボタンを押すことで、一覧に表示するアイテムをフィルタリングできる機能があります。たとえば一部の行にハートマークがついてありますが、これは「お気に入り」を意味していて、そのお気に入りとして登録したものだけをフィルタするか、アイテムのカテゴリでフィルタするかなどの機能が入っています。&lt;/p&gt;
 &lt;p&gt;そしてこの画面では、「フィルタするカテゴリ」や「お気に入りだけを表示する」を状態として扱っていますが、この状態は他の画面では知る必要がないデータとなっています。この場合に使えるのが、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/state" target="_blank" rel="noopener"
 &gt;@State&lt;/a&gt;です。コードとしては、以下のようになっています。(一部省略)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 一覧画面&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 一覧画面&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList&lt;/span&gt;: View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// お気に入りだけを表示するかどうか&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @State &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; showFavoritesOnly = &lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;
@@ -514,8 +514,8 @@ data-flex-basis="117px"
 &gt;&lt;code&gt;Binding&amp;lt;Boolean&amp;gt;&lt;/code&gt;&lt;/a&gt;という形でプロパティを渡すことになります。こうしてラッパーを渡すことで、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/toggle/" target="_blank" rel="noopener"
 &gt;Toggle&lt;/a&gt;の中でも親の状態を変更できるようになります。&lt;code&gt;Toggle&lt;/code&gt;は確かに一覧の画面とは別のViewになりますが、押下するたびに親の状態である&lt;code&gt;showFavoritesOnly&lt;/code&gt;の値が変わるということです。&lt;/p&gt;
 &lt;p&gt;後でまた関連したポストを書きたいと思いますが、Jetpack Composeでも何となく似たような形で状態の管理ができる方法があります。例えば、&lt;code&gt;@State&lt;/code&gt;のように簡単な状態を管理するためには以下のような書き方ができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// true/falseの状態
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; toggle: Boolean &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// true/falseの状態
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; toggle: Boolean &lt;span style="color:#66d9ef"&gt;by&lt;/span&gt; remember { mutableStateOf(&lt;span style="color:#66d9ef"&gt;false&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;if&lt;/span&gt; toggle {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; println(&lt;span style="color:#e6db74"&gt;&amp;#34;On!&amp;#34;&lt;/span&gt;)
@@ -528,18 +528,18 @@ data-flex-basis="117px"
 &gt;Delegation&lt;/a&gt;によるもので、&lt;code&gt;mutableStateOf&amp;lt;T&amp;gt;&lt;/code&gt;が返すのは&lt;a class="link" href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState" target="_blank" rel="noopener"
 &gt;&lt;code&gt;MutableState&amp;lt;T&amp;gt;&lt;/code&gt;&lt;/a&gt;ですが、&lt;code&gt;by&lt;/code&gt;を使うことで実際は&lt;code&gt;Boolean&lt;/code&gt;そのものを扱うようになります。&lt;/p&gt;
 &lt;p&gt;そして&lt;code&gt;MutableState&amp;lt;T&amp;gt;&lt;/code&gt;を分解し、以下のように状態と、状態を変化させる処理の処理を指定することもできます。これもまた、先ほどの&lt;code&gt;Binding&lt;/code&gt;のような役割をするようなものですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// テキストの状態と値の変更
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;content: String, onValueChange: (String) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// テキストの状態と値の変更
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; &lt;span style="color:#960050;background-color:#1e0010"&gt;(&lt;/span&gt;content: String, onValueChange: (String) &lt;span style="color:#f92672"&gt;-&amp;gt;&lt;/span&gt; Unit) = remember { mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;) }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// テキストフィールドに状態を表示し、変化があった場合は状態を変更させる
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;TextField(&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = content, onValueChange = onValueChange)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;TextField(&lt;span style="color:#66d9ef"&gt;value&lt;/span&gt; = content, onValueChange = onValueChange)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;こうやって他の要素に状態の変更を可能にするためには、基本的にその状態をラップしているオブジェクトを利用するという考えは、SwiftUIでもJetpack Composeでも一緒のようです。ただ、&lt;code&gt;$&lt;/code&gt;というキーワードを使ってラッパーにアクセスできるSwiftと、状態のオブジェクトをどうやって宣言するかを考える必要のあるKotlinの違いがまた面白いポイントです。&lt;/p&gt;
 &lt;h3 id="アプリ全体で共有する状態"&gt;アプリ全体で共有する状態
 &lt;/h3&gt;&lt;p&gt;さて、次はもっと大きい単位としての状態について述べたいと思います。アプリの画面は色々とあり、仲には親子の関係ではない場合もあります。Appleのチュートリアルのアプリをまたの例としてあげますと、以下のように、タブが分かれている場合が代表的なものと言えるかもしれません。&lt;/p&gt;
 &lt;p&gt;&lt;img src="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu.webp"
 width="732"
 height="1466"
-srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu_ad810ee18d225a12.webp 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu_bf40d4aa3c0c0ae2.webp 1024w"
+srcset="https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu_f0d73796b249864d.webp 480w, https://retheviper.github.io/posts/swift-ui-first-impression-2/view_menu_hu_46dc02b7a183bc9a.webp 1024w"
 loading="lazy"
 alt="Menu View"
 class="gallery-image"
@@ -547,7 +547,7 @@ data-flex-grow="49"
 data-flex-basis="119px"
 &gt;&lt;/p&gt;
 &lt;p&gt;ここで、下にある「Featured」や「List」をタッチすることにより表示される画面が変わるわけですが、この二つの画面は親子といえる関係ではありません。以下のコードをご覧ください。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentView&lt;/span&gt;: View {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ContentView&lt;/span&gt;: View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @State &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; selection: Tab = .featured
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Tab&lt;/span&gt; {
@@ -577,7 +577,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;要件によっては、この対等な関係にある画面間でも状態を共有する必要はあります。たとえば、ショッピングのアプリを作るとしたら、自分のアカウントの画面を開いている場合でもカートに入れている商品の情報は維持される必要がありますね。このように、現在表示している画面とは関係なく、アプリ全体で共有する状態が必要な場面があります。&lt;/p&gt;
 &lt;p&gt;この場合は、どうしたらいいでしょうか？もちろん、起点となるViewがあるので、そこに&lt;code&gt;@State&lt;/code&gt;を定義しておくというのも一つの方法かもしれません。ただ、状態として管理したい項目が増えれば増えるほど複雑になりがちですね。起点のViewには複数の&lt;code&gt;@State&lt;/code&gt;が必要となり、画面ごとにそれらを渡す必要があります。だとすると、やはり一つのオブジェクトに状態をまとめて置いて使いまわしたいものです。&lt;/p&gt;
 &lt;p&gt;Appleのチュートリアルでもそれを提示していて、画面間で共有するデータとしてLandmarkのデータと、ユーザのプロフィールをまとめて共有できるオブジェクトとして提供する方法があります。まずは、以下がその状態のオブジェクトのコードとなります。（一部省略）&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ModelData&lt;/span&gt;: ObservableObject {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;final&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ModelData&lt;/span&gt;: ObservableObject {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @Published &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; landmarks: [Landmark] = load(&lt;span style="color:#e6db74"&gt;&amp;#34;landmarkData.json&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @Published &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; profile = Profile.&lt;span style="color:#66d9ef"&gt;default&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
@@ -585,7 +585,7 @@ data-flex-basis="119px"
 &gt;ObservableObject&lt;/a&gt;というプロトコールが使われているのが見えますね。&lt;code&gt;ObservableObject&lt;/code&gt;を使うことで、このModelDataというクラスは変更される状態を保持し、値の変更があった場合はそれを参照する画面に通知する&lt;code&gt;Publisher&lt;/code&gt;として機能することになります。そしてそれぞれの状態となるプロパティについては、&lt;a class="link" href="https://developer.apple.com/documentation/combine/published" target="_blank" rel="noopener"
 &gt;@Published&lt;/a&gt;をつけることで状態として指定することになります。&lt;/p&gt;
 &lt;p&gt;こうして状態を保持するためのオブジェクトを定義したら、次はアプリ内でどうやって使用するかですね。チュートリアルでは、以下のようにアプリのメインとなるstructに以下のように定義しています。（一部省略）&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;@main
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;@main
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarksApp&lt;/span&gt;: App {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ModelDataを状態のオブジェクトとして宣言&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @StateObject &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; modelData = ModelData()
@@ -599,7 +599,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;コードでわかるように、アプリでは定義しておいた状態オブジェクトを&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/stateobject" target="_blank" rel="noopener"
 &gt;@StateObject&lt;/a&gt;をつけて、メイン画面に渡すことで使うようになります。ちなみにこうやって&lt;code&gt;View&lt;/code&gt;として定義された画面にならどんなものでも&lt;code&gt;environmentObject()&lt;/code&gt;に状態オブジェクトを渡すことができるので、画面の一部だけをプレビューとして表示する場合でも、プレビューに表示する画面に状態オブジェクトを渡すことで動作を試すこともできます。例えば、先ほどのLandmarkの一覧画面のプレビューだと、以下のようになっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList_Previews&lt;/span&gt;: PreviewProvider {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList_Previews&lt;/span&gt;: PreviewProvider {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;static&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; previews: some View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; LandmarkList()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; .environmentObject(ModelData()) &lt;span style="color:#75715e"&gt;// 状態オブジェクトを渡す&lt;/span&gt;
@@ -607,7 +607,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;こうして状態オブジェクトを画面に渡したら、中では使うだけです。&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/environmentobject" target="_blank" rel="noopener"
 &gt;@EnvironmentObject&lt;/a&gt;というアノテーションを使って、状態を持つオブジェクトを宣言するだけで自動的にオブジェクトはDIされ、その画面で使えるようになります。また一覧の画面の話となりますが、以下のコードを見てください。&lt;code&gt;landmarks&lt;/code&gt;のデータを使って一覧を表示しているのがわかります。（一部省略）&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList&lt;/span&gt;: View {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList&lt;/span&gt;: View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// 状態オブジェクト&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @EnvironmentObject &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; modelData: ModelData
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -619,14 +619,14 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ちなみに、Jetpack Composeの場合はこのような方法ではなく、オブジェクトそのものを&lt;code&gt;remember&lt;/code&gt;するように使うようです。例えば以下のような形になります。そもそも要素を作成するアプローチが違うのが理由の一つなのかもしれませんね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// アプリ全体で共有する状態
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ApplicationState&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// アプリ全体で共有する状態
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;ApplicationState&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; environment: MutableState&amp;lt;Environment&amp;gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; hash: MutableState&amp;lt;String&amp;gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 状態の初期化
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;@Composable&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;@Composable&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;rememberApplicationState&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; environment: MutableState&amp;lt;Environment&amp;gt; = mutableStateOf(&lt;span style="color:#a6e22e"&gt;Environment&lt;/span&gt;.PRODUCTION),
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; hash: MutableState&amp;lt;String&amp;gt; = mutableStateOf(&lt;span style="color:#e6db74"&gt;&amp;#34;&amp;#34;&lt;/span&gt;)
@@ -637,13 +637,13 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 状態の定義
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; appState = rememberApplicationState()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; appState = rememberApplicationState()
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="永続化できる状態"&gt;永続化できる状態
 &lt;/h3&gt;&lt;p&gt;今までの状態は、アプリが実行中のみ有効なものでした。それだけでも十分な場合もありますが、場合によっては状態を永続化したい場合もあるでしょう。例えば、学習用のアプリだとしたらどこまで進行したかなどを保存しておきたいかなと思います。このような種のデータは、アプリを再起動しても変わらないことを期待しますね。&lt;/p&gt;
 &lt;p&gt;もちろん、この場合のためにDBがあり、ネットワーク機能のあるアプリならサーバ側にデータを保存したりするでしょう。ただ、この場合は「状態」とは言えないものですね。なぜなら、状態は画面の更新を伴うものだからです。画面をタッチした回数を、画面に表示しながら同時に保存しておきたい場合は毎回DBの更新と参照で実装したくない場合もあるかなと思います。そこで使えるのが、&lt;a class="link" href="https://developer.apple.com/documentation/swiftui/appstorage" target="_blank" rel="noopener"
 &gt;@AppStorage&lt;/a&gt;です。これを使うことで、画面の更新と永続化を同時に行うことができます。&lt;/p&gt;
 &lt;p&gt;また、チュートリアルによると、いくつかデフォルトとして保存されているデータに関してもこのアノテーションでアクセスできるようにになっています。一覧画面に表示される「お気に入り」ボタンの例ですが、ボタンのアイコンを&lt;code&gt;@AppStorage&lt;/code&gt;から参照するようになっています。コードは以下です。（一部省略）&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FavoriteButton&lt;/span&gt;: View {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FavoriteButton&lt;/span&gt;: View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#75715e"&gt;// ボタンはハートのアイコンとして表示する&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @AppStorage(&lt;span style="color:#e6db74"&gt;&amp;#34;Favorite.iconType&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; iconType: IconType = .heart
@@ -665,7 +665,7 @@ data-flex-basis="119px"
 &lt;/h3&gt;&lt;p&gt;では、まずKotlinに似ているなと感じたところから述べていきます。似ているとしても、あくまで「肌の感触」なものなので、厳密には違う仕様になっているものも多いのですが、ここでの基準は「Kotlinでできたことをどれほど近い感覚で再現できるか」となっていますので（といっても個人的な感想ですが）、参考までに。&lt;/p&gt;
 &lt;h4 id="computed-properties"&gt;Computed properties
 &lt;/h4&gt;&lt;p&gt;まず、プロパティの話からです。Kotlinではdata classを定義するとき、プロパティを以下のような二つの方法で定義することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; age: Int
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; isAdult: Boolean
@@ -673,7 +673,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ここで&lt;code&gt;age&lt;/code&gt;はインスタンスを作成するときに固定される単純な値となりますが、&lt;code&gt;isAdult&lt;/code&gt;はgetterとして定義した処理(&lt;code&gt;age&lt;/code&gt;が18以上かどうかという)の結果を返すように定義する形ですね。このような処理を伴うプロパティは、Swiftでも同じく&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Properties.html#ID259" target="_blank" rel="noopener"
 &gt;Computed Properties&lt;/a&gt;を通じて定義することができました。同じような処理を行う場合、以下のように定義できます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; age: Int
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; isAdult: Bool {
@@ -684,12 +684,12 @@ data-flex-basis="119px"
 &lt;p&gt;ただ、やはり違う部分もありますね。data classに対して、SwiftはGoやRustのようにstructを使えるというところがそうかなと思います。もちろんSwiftにもClassはあるので、目的によってどれかを選ぶようになるらしいです。という面では、またなんとなくKotlinでdata classとclassを分けて使うという点と似ているような気もしますね。&lt;/p&gt;
 &lt;h4 id="extension"&gt;Extension
 &lt;/h4&gt;&lt;p&gt;次は、拡張です。Kotlinではオブジェクトについて、そのオブジェクトの外にメソッドやプロパティを定義することができますね。これらを拡張関数や拡張プロパティと呼び、以下のように定義することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; Student.isUnderAge: Boolean
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; Student.isUnderAge: Boolean
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt;() = age &amp;lt; &lt;span style="color:#ae81ff"&gt;18&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;以前このブログでも述べたことのある&lt;a class="link" href="https://www.amazon.co.jp/dp/B08WXCRVD2/ref=dp-kindle-redirect?_encoding=UTF8&amp;amp;btkr=1" target="_blank" rel="noopener"
 &gt;Effective Kotlin&lt;/a&gt;で提示されている活用方法ですが、ユースケースやドメインによって違う処理が必要となった場合は、class内に全てのメソッドやプロパティをを定義するよりはこのような拡張を使って、パッケージごとに定義することでアクセス制限を設ける方法があります。&lt;/p&gt;
 &lt;p&gt;同じようなことがSwiftでもできますが、書き方はやはり少し違いました。上記のようなプロパティをSwiftで同じ方法で実装する場合、以下のようになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;extension&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;extension&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; isUnderAge: Bool {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;get&lt;/span&gt; { &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; age &lt;span style="color:#f92672"&gt;&amp;lt;&lt;/span&gt; &lt;span style="color:#ae81ff"&gt;18&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -700,16 +700,16 @@ data-flex-basis="119px"
 &lt;h4 id="string-interpolation"&gt;String Interpolation
 &lt;/h4&gt;&lt;p&gt;Javaの場合でもそうで、多くの言語では文字列と、違う変数として格納してある値を一つの文字列にまとめる場合は&lt;code&gt;format()&lt;/code&gt;を使うか、文字列に変換して結合するケースが多いかなと思います。Kotlinでもそのような使い方はもちろんできますが、&lt;a class="link" href="https://kotlinlang.org/docs/basic-types.html#string-templates" target="_blank" rel="noopener"
 &gt;String template&lt;/a&gt;があるので、簡単に文字列の中で違う値を埋め込むことができます。例えば以下のようなものですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; world = &lt;span style="color:#e6db74"&gt;&amp;#34;World&amp;#34;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; world = &lt;span style="color:#e6db74"&gt;&amp;#34;World&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;println(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello, &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$world&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Swiftでも&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/StringsAndCharacters.html#ID292" target="_blank" rel="noopener"
 &gt;String Interpolation&lt;/a&gt;があるので、同じことができます。少し書き方が変わっているのですが、機能的にはほぼ一緒です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; world = &lt;span style="color:#e6db74"&gt;&amp;#34;World&amp;#34;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; world = &lt;span style="color:#e6db74"&gt;&amp;#34;World&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;print(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello, &lt;/span&gt;&lt;span style="color:#e6db74"&gt;\(&lt;/span&gt;world&lt;span style="color:#e6db74"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;!&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id="arguments"&gt;Arguments
 &lt;/h4&gt;&lt;p&gt;Kotlinでは、関数のパラメータにデフォルト値を設定することで、簡単にオーバーロードを実現でき、そのパラメータが渡されてない場合の処理にも対応できます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// timesに指定した数値分、stringを標準出力する
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// timesに指定した数値分、stringを標準出力する
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;fun&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; repeat(times) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; println(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello, &lt;/span&gt;&lt;span style="color:#e6db74"&gt;$string&lt;/span&gt;&lt;span style="color:#e6db74"&gt;&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
@@ -719,16 +719,16 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、どのパラメータに値を指定したいかを明確にするときや、関数に定義されたパラメータの順番に関係なく値を指定したい場合など色々な場面で&lt;a class="link" href="https://kotlinlang.org/docs/functions.html#named-arguments" target="_blank" rel="noopener"
 &gt;Named Arguments&lt;/a&gt;を使うことができますね。例えば&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/join-to-string.html" target="_blank" rel="noopener"
 &gt;joinToString()&lt;/a&gt;には&lt;code&gt;separator&lt;/code&gt;、&lt;code&gt;limit&lt;/code&gt;、&lt;code&gt;truncated&lt;/code&gt;など6つのパラメータがあるのですが、デフォルト値が指定されていて、Named Argumentsにより以下のような使い方が可能です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;listOf(&lt;span style="color:#e6db74"&gt;&amp;#34;A&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;B&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;C&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;D&amp;#34;&lt;/span&gt;).joinToString(prefix = &lt;span style="color:#e6db74"&gt;&amp;#34;[&amp;#34;&lt;/span&gt;, postfix = &lt;span style="color:#e6db74"&gt;&amp;#34;]&amp;#34;&lt;/span&gt;)
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;listOf(&lt;span style="color:#e6db74"&gt;&amp;#34;A&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;B&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;C&amp;#34;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#34;D&amp;#34;&lt;/span&gt;).joinToString(prefix = &lt;span style="color:#e6db74"&gt;&amp;#34;[&amp;#34;&lt;/span&gt;, postfix = &lt;span style="color:#e6db74"&gt;&amp;#34;]&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Named ArgumentはKotlinにおいてはオプションで、基本的にはJava同様、関数に定義されてあるパラメータの順番に合わせて値を渡すだけでも問題ありません。しかし、Swiftではこれが逆になっていて、sturctのインスタンスを作る場合や関数を呼び出す場合は基本的にパラメータは基本的にNamed Argumentsのような形で渡す必要があります。これを&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/Functions.html#ID166" target="_blank" rel="noopener"
 &gt;Argument Label&lt;/a&gt;と読んでいるそうです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; print(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello &lt;/span&gt;&lt;span style="color:#e6db74"&gt;\(&lt;/span&gt;string&lt;span style="color:#e6db74"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;!&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;printHello(string: &lt;span style="color:#e6db74"&gt;&amp;#34;world&amp;#34;&lt;/span&gt;) &lt;span style="color:#75715e"&gt;// Function Argument Labelでstringを指定&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;ただ、これもKotlinと同様、デフォルト値を指定することができ、その場合はパラメータを省略することができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; count = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;repeat&lt;/span&gt; { &lt;span style="color:#75715e"&gt;// Kotlinのdo-whileループ的なもの&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; print(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello &lt;/span&gt;&lt;span style="color:#e6db74"&gt;\(&lt;/span&gt;string&lt;span style="color:#e6db74"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;!&amp;#34;&lt;/span&gt;)
@@ -738,7 +738,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;printHello(string: &lt;span style="color:#e6db74"&gt;&amp;#34;world&amp;#34;&lt;/span&gt;) &lt;span style="color:#75715e"&gt;// timesを省略している&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;他にも、アンダースコアを使うことでArgument Labelを省略できるようにもなります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;_&lt;/span&gt; string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;printHello&lt;/span&gt;(&lt;span style="color:#66d9ef"&gt;_&lt;/span&gt; string: String, times: Int = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;) {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; count = &lt;span style="color:#ae81ff"&gt;1&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;repeat&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; print(&lt;span style="color:#e6db74"&gt;&amp;#34;Hello &lt;/span&gt;&lt;span style="color:#e6db74"&gt;\(&lt;/span&gt;string&lt;span style="color:#e6db74"&gt;)&lt;/span&gt;&lt;span style="color:#e6db74"&gt;!&amp;#34;&lt;/span&gt;)
@@ -752,20 +752,20 @@ data-flex-basis="119px"
 &lt;/h4&gt;&lt;p&gt;Kotlinでは&lt;a class="link" href="https://kotlinlang.org/docs/ranges.html#:~:text=values%20using%20the-,rangeTo%28%29,-function%20from%20the" target="_blank" rel="noopener"
 &gt;rangeTo()&lt;/a&gt;を使って、簡単に数値の範囲を定義することができます。この関数は&lt;a class="link" href="https://kotlinlang.org/docs/keyword-reference.html#operators-and-special-symbols" target="_blank" rel="noopener"
 &gt;operator&lt;/a&gt;として定義されているので、&lt;code&gt;..&lt;/code&gt;で簡単に使えます。こうやって定義したRangeでは、最小値と最大値の取得や、Listに変換するなど色々なことができます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Rangeの定義
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; min = &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Rangeの定義
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; min = &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; max = &lt;span style="color:#ae81ff"&gt;20&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; range = min&lt;span style="color:#f92672"&gt;..&lt;/span&gt;max
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// 最小値と最大値の取得
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;println(range.start) &lt;span style="color:#75715e"&gt;// 10
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;println(range.endInclusive) &lt;span style="color:#75715e"&gt;// 20
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;println(range.start) &lt;span style="color:#75715e"&gt;// 10
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;println(range.endInclusive) &lt;span style="color:#75715e"&gt;// 20
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// RangeをListにする
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; intList = range.toList() &lt;span style="color:#75715e"&gt;// [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; intList = range.toList() &lt;span style="color:#75715e"&gt;// [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Swiftでも&lt;a class="link" href="https://docs.swift.org/swift-book/LanguageGuide/BasicOperators.html#ID73" target="_blank" rel="noopener"
 &gt;Range Operator&lt;/a&gt;を使って範囲を定義することができます。こちらも形は似ていて、&lt;code&gt;...&lt;/code&gt;となります。ドットの数がKotlinより一つ多いという点を除くと全く同じ感覚で、最小値と最大値もまた名前が違うだけでプロパティとして取得できるという点もまた一緒です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Rangeの定義&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// Rangeの定義&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; min = &lt;span style="color:#ae81ff"&gt;10&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; max = &lt;span style="color:#ae81ff"&gt;20&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;let&lt;/span&gt; range = min...max
@@ -785,7 +785,7 @@ data-flex-basis="119px"
 &lt;h4 id="メソッドプロパティコールでの省略"&gt;メソッド・プロパティコールでの省略
 &lt;/h4&gt;&lt;p&gt;Kotlinでは、&lt;a class="link" href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html" target="_blank" rel="noopener"
 &gt;apply()&lt;/a&gt;のように自分自身を指しているのが明確な場合、&lt;code&gt;this&lt;/code&gt;を省略することができます。以下のようにですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt;(
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-kotlin" data-lang="kotlin"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;data&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Student&lt;/span&gt;(
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; name: String,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; age: Int = &lt;span style="color:#ae81ff"&gt;0&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;)
@@ -793,7 +793,7 @@ data-flex-basis="119px"
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;val&lt;/span&gt; studentA = Student(name = &lt;span style="color:#e6db74"&gt;&amp;#34;A&amp;#34;&lt;/span&gt;).apply { age = &lt;span style="color:#ae81ff"&gt;18&lt;/span&gt; } &lt;span style="color:#75715e"&gt;// Student(name=A, age=18)
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;このように、&lt;code&gt;this&lt;/code&gt;を使う場合か、明確に対象importしているなど特定のケースを除くとKotlinでは基本的に&lt;code&gt;Class.method()&lt;/code&gt;のような形でどのクラスのメンバを呼び出しているかを表記するのが原則ですね。&lt;/p&gt;
 &lt;p&gt;しかし、Swiftの場合は少し状況が違います。もっとゆるい感じで、コンパイラを基準に対象が明確であれば、&lt;code&gt;.method()&lt;/code&gt;のような形で省略できるような感覚です。以下はSwiftUIのチュートリアルで提示しているコードの一部を抜粋したものですが、&lt;code&gt;filter&lt;/code&gt;が&lt;code&gt;FilterCategory&lt;/code&gt;というenumであるため、&lt;code&gt;.all&lt;/code&gt;という形で三項演算子の中で使われていることを確認できます。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList&lt;/span&gt;: View {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;struct&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;LandmarkList&lt;/span&gt;: View {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; @State &lt;span style="color:#66d9ef"&gt;private&lt;/span&gt; &lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; filter = FilterCategory.all
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;enum&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FilterCategory&lt;/span&gt;: String, CaseIterable, Identifiable {
@@ -831,7 +831,7 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;p&gt;もちろんJavaやKotlinでも必要に応じてintefaceやannotationを使う必要はありますが、SwiftだとKotlinで気軽に使える機能がstructやclassなどを定義した時点では揃ってない可能性があるので、ここは気をつけるべきところですね。&lt;/p&gt;
 &lt;h4 id="some"&gt;some
 &lt;/h4&gt;&lt;p&gt;Swiftでは少し変わった感覚のキーワードがあるます。そのキーワードの説明するために、まずは以下のようなprotocolとstructの定義があるとしましょう。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;protocol&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Something&lt;/span&gt; {
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;protocol&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;Something&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;define&lt;/span&gt;()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -841,7 +841,7 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;}
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;上記のようなコードがある場合、変数の型宣言や関数の戻り値で少し独特なキーワードを使うことができます。&lt;code&gt;some&lt;/code&gt;というものです。実際使う時は、以下のようなコードとなります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; good: some Something = GoodThing()
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;var&lt;/span&gt; good: some Something = GoodThing()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;func&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;returnSomething&lt;/span&gt;() -&amp;gt; some Something {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;return&lt;/span&gt; GoodThing()
@@ -853,7 +853,7 @@ Jsonなどに変換するためには&lt;a class="link" href="https://developer.
 &lt;h4 id="compiler-control-statements"&gt;Compiler Control Statements
 &lt;/h4&gt;&lt;p&gt;Swiftには&lt;a class="link" href="https://docs.swift.org/swift-book/ReferenceManual/Statements.html#ID538" target="_blank" rel="noopener"
 &gt;Compiler Control Statements&lt;/a&gt;という仕様があり、コンパイル時の処理を指定できます。例えば、SwiftUIのチュートリアルでは一つのアプリを実装して、OSによって違う機能を実現するためにこれを利用しているケースがあります。以下がその例です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// watchOSで起動する場合は、通知を使う&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-swift" data-lang="swift"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;// watchOSで起動する場合は、通知を使う&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#if&lt;/span&gt; &lt;span style="color:#75715e"&gt;os&lt;/span&gt;(&lt;span style="color:#75715e"&gt;watchOS&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;WKNotificationScene(controller: NotificationController.&lt;span style="color:#66d9ef"&gt;self&lt;/span&gt;, category: &lt;span style="color:#e6db74"&gt;&amp;#34;LandmarkNear&amp;#34;&lt;/span&gt;)
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;#endif&lt;/span&gt;

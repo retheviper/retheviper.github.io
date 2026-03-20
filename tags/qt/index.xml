@@ -9,7 +9,7 @@
 &gt;WebVTT&lt;/a&gt;になるので、とりあえず&lt;code&gt;.vtt&lt;/code&gt;形式のファイルに対応する必要があると思いました。他のフォーマットまで対応するには時間がかかりそうだったので、まずはこれのみにします。&lt;/p&gt;
 &lt;p&gt;幸い、実際の字幕ファイルを落としてみたところ、フォーマットはシンプルで(&lt;a class="link" href="https://ja.wikipedia.org/wiki/SubRip" target="_blank" rel="noopener"
 &gt;SubRip&lt;/a&gt;とほぼ一緒)、翻訳は字幕が表示される時間の次の行の文字列と、その行のインデックスとともに取ればなんとか入れ替えができそうな気がしました。実際のファイルは以下のようなフォーマットで作成されています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-vtt" data-lang="vtt"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WEBVTT&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-vtt" data-lang="vtt"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;WEBVTT&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#e6db74"&gt;00:01.000&lt;/span&gt; &lt;span style="color:#f92672"&gt;--&amp;gt;&lt;/span&gt; &lt;span style="color:#e6db74"&gt;00:04.000&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;液体窒素を絶対に飲まないでください。
@@ -37,7 +37,7 @@
 &lt;/h2&gt;&lt;h3 id="ファイル読み込み"&gt;ファイル読み込み
 &lt;/h3&gt;&lt;p&gt;まずはファイルを読み込むところから始めます。&lt;code&gt;.vtt&lt;/code&gt;ファイルはヘッダーに字幕の情報（言語コードなど）が書かれていて、その次からは字幕が表示される時間と字幕の文字列が繰り返されます。&lt;/p&gt;
 &lt;p&gt;素直に全行を読み込んでも良いかもですが、翻訳のAPIを呼び出すときに一日で利用できる文字数の制限というのがあったので、極力リクエストにのせるデータは減らしたかったです。なので、後で入れ替えするためのもとのファイルのデータと、翻訳のためAPIのリクエストパラメータにのせる二つのデータにわけで読み込むようにしました。いかがそのコードです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# get original contents from vtt file&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# get original contents from vtt file&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;get_content&lt;/span&gt;(self, file_path: str):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; exported_contents: dict[int, str] &lt;span style="color:#f92672"&gt;=&lt;/span&gt; {}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;global&lt;/span&gt; source
@@ -54,7 +54,7 @@
 &lt;h3 id="翻訳apiの呼び出し"&gt;翻訳APIの呼び出し
 &lt;/h3&gt;&lt;p&gt;抽出したデータのうち、翻訳対象のデータを渡してAPIを呼び出す部分です。APIには「1秒当たり10件のリクエストを許容」するという制約があり、翻訳した文字列を一行づつ送って翻訳してもらいながら、リクエストごとに120msを待つようにしました。基本的には&lt;a class="link" href="https://docs.python-requests.org/en/latest/" target="_blank" rel="noopener"
 &gt;Requests&lt;/a&gt;を使ってPOSTしているだけですが、もしエラーが返ってきたときはalertを表示してアプリを即終了するようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# send translate request to papago and get translated message&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# send translate request to papago and get translated message&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;send_request&lt;/span&gt;(self, contents: dict[int, str]):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; translated_contents: dict[int, str] &lt;span style="color:#f92672"&gt;=&lt;/span&gt; {}
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -96,7 +96,7 @@
 &lt;/h3&gt;&lt;p&gt;ロジックとしてはここが最後です。元のファイルのある場所に翻訳された字幕ファイルを保存するために、元のファイルのパス、翻訳したものに入れ替えるための元のデータ、そしてAPIで翻訳した結果のデータを渡します。&lt;/p&gt;
 &lt;p&gt;基本的に翻訳したデータにはインデックスがkeyとして入っているので、そのキーを持って元のデータを入れ替えていきます。ここでヘッダには元の言語のコードが入っているので、翻訳した言語のコードに入れ替えます。そしてファイル名にも同じく言語のコードが入っているので、これもまた変えておきます。&lt;/p&gt;
 &lt;p&gt;全てのデータが入れ替えられ、ファイル名を決めたら保存して終了です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# write translated contents to file&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# write translated contents to file&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;write_result&lt;/span&gt;(self, file_path: str, original_contents: list[str], translated_contents: dict[int, str]):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; contents &lt;span style="color:#f92672"&gt;=&lt;/span&gt; original_contents&lt;span style="color:#f92672"&gt;.&lt;/span&gt;copy()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
@@ -116,7 +116,7 @@
 &lt;/h3&gt;&lt;p&gt;せっかくGUIを使っているので、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QListWidget.html" target="_blank" rel="noopener"
 &gt;QListWidget&lt;/a&gt;にファイルをDrag &amp;amp; Dropすると勝手にファイル名が画面に表示され、翻訳対象にもなるようにしたかったです。ここはあまり自分がQtに詳しくないので、ネットで検索したものを流用しました。&lt;/p&gt;
 &lt;p&gt;基本的にはファイルをDrag &amp;amp; Dropすると、拡張子が&lt;code&gt;.vtt&lt;/code&gt;の場合にリストに追加されます。ここでファイルのフルパスを得ることができるのですが、画面上はファイル名だけを見えるようにして、フルパスは別のグローバル変数に格納するようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# drop down file list&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# drop down file list&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;class&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;FileListView&lt;/span&gt;(QListWidget):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;__init__&lt;/span&gt;(self, parent&lt;span style="color:#f92672"&gt;=&lt;/span&gt;&lt;span style="color:#66d9ef"&gt;None&lt;/span&gt;):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; super(FileListView, self)&lt;span style="color:#f92672"&gt;.&lt;/span&gt;&lt;span style="color:#a6e22e"&gt;__init__&lt;/span&gt;(parent)
@@ -148,7 +148,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; event&lt;span style="color:#f92672"&gt;.&lt;/span&gt;ignore()
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="ファイル削除"&gt;ファイル削除
 &lt;/h3&gt;&lt;p&gt;リストにファイルを追加したら削除したい場合もあるかと思ったので、リストからファイルを選択してボタンを押すとリストから消えるようにしたかったです。これは以下のようなコードで実現しています。ボタンをクリックすると、リストで選択したものが消え、翻訳対象（フルパス）からも消えるようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# create remove button&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# create remove button&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;create_remove_button&lt;/span&gt;(self):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; button &lt;span style="color:#f92672"&gt;=&lt;/span&gt; QPushButton()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; button&lt;span style="color:#f92672"&gt;.&lt;/span&gt;setText(&lt;span style="color:#e6db74"&gt;&amp;#39;Remove file&amp;#39;&lt;/span&gt;)
@@ -166,7 +166,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="言語選択"&gt;言語選択
 &lt;/h3&gt;&lt;p&gt;元の字幕ファイルの言語はヘッダから抽出できるのですが、どの言語に翻訳したいかは自分で選べるようにしました。ここは翻訳APIの使用を参考にして、翻訳可能な言語のコードをdictionaryとしています。あえてdictionaryとしている理由は、&lt;a class="link" href="https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QComboBox.html" target="_blank" rel="noopener"
 &gt;QComboBox&lt;/a&gt;のアイテムは画面に見えるものなので実際の言語名にしたかったからです。アイテムがdictionaryのキーとなっているので、選択したアイテムに対応するvalueが翻訳したい言語となるようにしています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# languages&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# languages&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;supported_language_code: dict[str, str] &lt;span style="color:#f92672"&gt;=&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;Korean&amp;#39;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#39;ko&amp;#39;&lt;/span&gt;,
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;English&amp;#39;&lt;/span&gt;: &lt;span style="color:#e6db74"&gt;&amp;#39;en&amp;#39;&lt;/span&gt;,
@@ -198,7 +198,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; target &lt;span style="color:#f92672"&gt;=&lt;/span&gt; supported_language_code[selectd]
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="翻訳ボタン"&gt;翻訳ボタン
 &lt;/h3&gt;&lt;p&gt;最後に翻訳ボタンを追加して、実際の翻訳はボタンを押下した時に行われるようにしました。ボタンを押すと、翻訳対象のファイルのパスをループしながらデータの読み込み、元の言語と翻訳したい言語が違うと翻訳APIの呼び出し、結果の保存という作業を行うようになっています。念の為処理が行われる間はこのボタンを非活性化するという処理も追加しています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# create translate button&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-python" data-lang="python"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#75715e"&gt;# create translate button&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;def&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;create_translate_button&lt;/span&gt;(self):
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; self&lt;span style="color:#f92672"&gt;.&lt;/span&gt;translate_button &lt;span style="color:#f92672"&gt;=&lt;/span&gt; QPushButton()
 &lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt; self&lt;span style="color:#f92672"&gt;.&lt;/span&gt;translate_button&lt;span style="color:#f92672"&gt;.&lt;/span&gt;setText(&lt;span style="color:#e6db74"&gt;&amp;#39;Translate&amp;#39;&lt;/span&gt;)
