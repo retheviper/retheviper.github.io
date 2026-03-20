@@ -216,16 +216,16 @@ Header、Payload、Signature順で正しく作成したJWTは、[JWTの公式サ
 public class JWTProvider {
 
     // Signatureのエンコードに使うシークレットキー
-    private static final String TOKEN_SECRET_KEY = "This is secrect!";
+    private static final String TOKEN_SECRET_KEY = "This is secret!";
 
     // トークンの有効期間(1時間)
-    private static final long TOKEN_VAILD_DURATION = 1000L * 60L * 60L;
+    private static final long TOKEN_VALID_DURATION = 1000L * 60L * 60L;
 
     // ユーザ情報を取得するためのサービスクラス
     private final UserDetailsService service;
 
     @Autowired
-    public JWTProvider(UserDetailService service) {
+    public JWTProvider(UserDetailsService service) {
         this.service = service;
     }
 
@@ -236,7 +236,7 @@ public class JWTProvider {
         claims.put("roles", user.getRoles());
         // トークンの開始時間と満了時間を決める
         Date iat = new Date();
-        Date exp = new Date(start.getTime() + TOKEN_VAILD_DURATION);
+        Date exp = new Date(iat.getTime() + TOKEN_VALID_DURATION);
         // JWTの作成
         return Jwts.builder()
                 .setClaims(claims)
@@ -260,7 +260,7 @@ public class JWTProvider {
     // トークンの有効期間を検証する
     public boolean validateToken(final String token) {
         try {
-            final Jws<Claims> claims = Jwts.parser().setSigningKey(this.secretKey).parseClaimsJws(token);
+            final Jws<Claims> claims = Jwts.parser().setSigningKey(TOKEN_SECRET_KEY).parseClaimsJws(token);
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
@@ -268,8 +268,8 @@ public class JWTProvider {
     }
 
     // トークンからユーザ名を取得する
-    pubic String getSubject(final String token) {
-        return Jwts.parser().setSigningKey(this.secretKey).parseClaimsJws(token).getBody().getSubject();
+    public String getSubject(final String token) {
+        return Jwts.parser().setSigningKey(TOKEN_SECRET_KEY).parseClaimsJws(token).getBody().getSubject();
     }
 }
 ```

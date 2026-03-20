@@ -63,7 +63,7 @@ Frontendでは、先に述べた通りCompose for Webを使いました。やは
 private fun FileUploadForm(currentPath: String) {
     Div {
         Form(
-            action = "$API_URL$ENPOINT_UPLOAD",
+            action = "$API_URL$ENDPOINT_UPLOAD",
             attrs = {
                 method(FormMethod.Post)
                 encType(FormEncType.MultipartFormData)
@@ -197,11 +197,11 @@ fun Path.toFileTree(): FileTree {
 
 ### ファイルアップロード
 
-ファイルアップロードについては、Mutlipartとして送られているデータをどう扱うかですが、これはKtorらしく簡単な処理で対応できました。以下のコードが実際の実装となっています。
+ファイルアップロードについては、Multipartとして送られているデータをどう扱うかですが、これはKtorらしく簡単な処理で対応できました。以下のコードが実際の実装となっています。
 
 ```kotlin
 // router
-post(ENPOINT_UPLOAD) {
+post(ENDPOINT_UPLOAD) {
     // Multipartデータを受信
     val multipart = call.receiveMultipart()
     // ファイル保存先のパス
