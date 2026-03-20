@@ -1,5 +1,5 @@
 ---
-title: "프로그래밍 언어"
+title: "languages"
 description: "각종 언어에 관한 글"
 slug: "languages"
 image: tracks-6972761_1920.jpg
