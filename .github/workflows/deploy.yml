@@ -7,14 +7,16 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -32,13 +34,17 @@ jobs:
           hugo version
 
       - name: Restore Hugo resource cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             resources/_gen/images
           key: ${{ runner.os }}-hugo-images-${{ hashFiles('config.yaml', 'content/**', 'assets/**', 'layouts/**', 'themes/hugo-theme-stack/assets/**', 'themes/hugo-theme-stack/layouts/**') }}
           restore-keys: |
             ${{ runner.os }}-hugo-images-
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v5
 
       - name: Build
         env:
@@ -48,32 +54,19 @@ jobs:
           rm -rf resources/_gen/assets/scss
           hugo --gc --minify
 
-      - name: Deploy to gh-pages
-        if: github.event_name != 'pull_request'
-        env:
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
 
-          tmp_dir="$(mktemp -d)"
-          trap 'rm -rf "$tmp_dir"' EXIT
-
-          git fetch origin gh-pages
-          git worktree add --detach "$tmp_dir" origin/gh-pages
-
-          find "$tmp_dir" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp -a public/. "$tmp_dir"/
-          touch "$tmp_dir/.nojekyll"
-
-          cd "$tmp_dir"
-          git checkout -B gh-pages
-          git add --all
-
-          if git diff --cached --quiet; then
-            echo "No changes to deploy"
-            exit 0
-          fi
-
-          git commit -m "Deploy ${GITHUB_SHA}"
-          git push --force origin HEAD:gh-pages
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
