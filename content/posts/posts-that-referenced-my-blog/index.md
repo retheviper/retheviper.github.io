@@ -1,13 +1,14 @@
 ---
-title: "自分のブログを参考にしていた記事を探してみた"
-date: 2026-03-21
+title: 自分のブログを参考にしていた記事を探してみた
+date: 2026-03-20
 categories:
   - recent
+image: ../../images/magic.webp
 tags:
   - blog
   - reference
   - retrospective
-translationKey: "posts/posts-that-referenced-my-blog"
+translationKey: posts/posts-that-referenced-my-blog
 ---
 
 たまに、自分が書いた記事がどこかで実際に使われているのか気になることがあります。PVや検索流入ももちろん意味はありますが、誰かが自分の記事の参考資料として残してくれているかどうかは、また別の種類の痕跡だからです。

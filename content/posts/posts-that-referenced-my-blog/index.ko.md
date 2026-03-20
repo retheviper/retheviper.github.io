@@ -3,6 +3,7 @@ title: "내 블로그를 참고한 글들을 찾아봤다"
 date: 2026-03-21
 categories:
   - recent
+image: "../../images/magic.webp"
 tags:
   - blog
   - reference
