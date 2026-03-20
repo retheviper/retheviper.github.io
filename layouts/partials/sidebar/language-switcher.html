@@ -1,0 +1,23 @@
+{{- $currentPage := . -}}
+{{- $languages := .Site.Languages -}}
+{{- if gt (len $languages) 1 -}}
+    {{- $currentLanguageCode := .Language.Lang -}}
+    <li id="i18n-switch">
+        {{ partial "helper/icon" "language" }}
+        <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+            {{- range $language := $languages -}}
+                {{- $targetSite := index (where $currentPage.Sites "Language.Lang" $language.Lang) 0 -}}
+                {{- $targetPage := index (where $currentPage.AllTranslations "Language.Lang" $language.Lang) 0 -}}
+                {{- $targetURL := "" -}}
+                {{- if $targetPage -}}
+                    {{- $targetURL = $targetPage.RelPermalink -}}
+                {{- else if $targetSite -}}
+                    {{- $targetURL = $targetSite.Home.RelPermalink -}}
+                {{- end -}}
+                <option value="{{ $targetURL }}" {{ if eq $language.Lang $currentLanguageCode }}selected{{ end }}>
+                    {{- or $language.LanguageName ($language.Lang | upper) -}}
+                </option>
+            {{- end -}}
+        </select>
+    </li>
+{{- end -}}
