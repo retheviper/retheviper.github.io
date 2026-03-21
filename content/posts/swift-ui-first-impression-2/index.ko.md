@@ -193,13 +193,13 @@ final class ModelData: ObservableObject {
 ```swift
 @main
 struct LandmarksApp: App {
-    // ModelData를 상태 오브젝트로 선언
+    // ModelData를 상태 객체로 선언
     @StateObject private var modelData = ModelData()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(modelData) // 메인 화면에 상태 오브젝트를 넘긴다
+                .environmentObject(modelData) // 메인 화면에 상태 객체를 넘긴다
         }
     }
 }
@@ -210,7 +210,7 @@ struct LandmarksApp: App {
 struct LandmarkList_Previews: PreviewProvider {
     static var previews: some View {
         LandmarkList()
-            .environmentObject(ModelData()) // 상태 오브젝트를 넘긴다
+            .environmentObject(ModelData()) // 상태 객체를 넘긴다
     }
 }
 ```
@@ -218,10 +218,10 @@ struct LandmarkList_Previews: PreviewProvider {
 상태 객체를 화면에 넘겨 주면, 그 안에서는 그냥 꺼내 쓰기만 하면 됩니다. [@EnvironmentObject](https://developer.apple.com/documentation/swiftui/environmentobject)를 붙여 상태 객체를 선언하면 자동으로 DI되어 해당 화면에서 사용할 수 있습니다. 다시 목록 화면 예시를 보면, `landmarks` 데이터를 이용해 목록을 만드는 걸 볼 수 있습니다. (일부 생략)
 ```swift
 struct LandmarkList: View {
-    // 상태 오브젝트
+    // 상태 객체
     @EnvironmentObject var modelData: ModelData
 
-    // 상태 오브젝트에서 데이터를 꺼내 필터를 적용
+    // 상태 객체에서 데이터를 꺼내 필터를 적용
     var filteredLandmarks: [Landmark] {
         modelData.landmarks.filter { landmark in
             (!showFavoritesOnly || landmark.isFavorite)

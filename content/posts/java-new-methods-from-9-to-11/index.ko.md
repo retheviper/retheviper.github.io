@@ -1,5 +1,5 @@
 ---
-title: "Java 9~11에서 추가된 메소드 정리"
+title: "Java 9~11에서 추가된 메서드 정리"
 date: 2020-12-30
 categories: 
   - java
@@ -13,17 +13,17 @@ tags:
 translationKey: "posts/java-new-methods-from-9-to-11"
 ---
 
-업무에서는 Java 11을 쓰는 경우가 많지만, 막상 제가 작성한 코드를 돌아보면 Java 9 이후에 추가된 메소드를 적극적으로 활용하고 있다고 말하기는 어렵습니다. 새 메소드라고 해도 단순한 문법 설탕만 있는 것은 아니고, 기능적으로 더 편하거나 성능상 이점이 있는 경우도 적지 않습니다. 그래서 지금 당장 쓰지 않더라도 한 번쯤 정리해 둘 가치는 충분하다고 느꼈습니다.
+업무에서는 Java 11을 쓰는 경우가 많지만, 막상 제가 작성한 코드를 돌아보면 Java 9 이후에 추가된 메서드를 적극적으로 활용하고 있다고 말하기는 어렵습니다. 새 메서드라고 해도 단순한 문법 설탕만 있는 것은 아니고, 기능적으로 더 편하거나 성능상 이점이 있는 경우도 적지 않습니다. 그래서 지금 당장 쓰지 않더라도 한 번쯤 정리해 둘 가치는 충분하다고 느꼈습니다.
 
-게다가 당시에는 다음 LTS인 Java 17 출시도 가까워지고 있었습니다. 그래서 이번 글에서는 제 코드 습관을 되돌아보는 의미도 겸해, Java 9부터 11까지 추가된 메소드 중 실무에서 써 볼 만한 것들을 추려 간단히 정리해 보려 합니다.
+게다가 당시에는 다음 LTS인 Java 17 출시도 가까워지고 있었습니다. 그래서 이번 글에서는 제 코드 습관을 되돌아보는 의미도 겸해, Java 9부터 11까지 추가된 메서드 중 실무에서 써 볼 만한 것들을 추려 간단히 정리해 보려 합니다.
 
-대부분은 이미 Java 11 환경이라면 사용할 수 있는 메소드들이므로 아주 새로운 내용은 아닐 수 있습니다. 그래도 각 메소드 이름 옆에 어느 버전에서 들어왔는지 함께 적어 둘 테니 참고가 되면 좋겠습니다.
+대부분은 이미 Java 11 환경이라면 사용할 수 있는 메서드들이므로 아주 새로운 내용은 아닐 수 있습니다. 그래도 각 메서드 이름 옆에 어느 버전에서 들어왔는지 함께 적어 둘 테니 참고가 되면 좋겠습니다.
 ## 스트림
 
-Stream은 Java 8을 대표하는 변화 중 하나였습니다. Java 9에서는 여기에 몇 가지 메소드가 더 추가되면서, 기존보다 더 자연스럽게 쓰거나 아쉬웠던 부분을 보완할 수 있게 됐습니다.
+Stream은 Java 8을 대표하는 변화 중 하나였습니다. Java 9에서는 여기에 몇 가지 메서드가 더 추가되면서, 기존보다 더 자연스럽게 쓰거나 아쉬웠던 부분을 보완할 수 있게 됐습니다.
 ### Iterate (9)
 
-`iterate()`는 이름만 보면 바로 감이 오지 않을 수도 있지만, 전통적인 `for`문과 비슷한 형태로 Stream 요소를 만들어 낼 수 있는 메소드입니다. 즉, 초기값, 계속 조건, 다음 값을 만드는 규칙을 지정해 스트림을 구성합니다. 예를 들면 다음과 같습니다.
+`iterate()`는 이름만 보면 바로 감이 오지 않을 수도 있지만, 전통적인 `for`문과 비슷한 형태로 Stream 요소를 만들어 낼 수 있는 메서드입니다. 즉, 초기값, 계속 조건, 다음 값을 만드는 규칙을 지정해 스트림을 구성합니다. 예를 들면 다음과 같습니다.
 ```java
 // 0~9를 출력
 Stream.iterate(0, i -> i < 10, i -> i + 1).forEach(System.out::println);
@@ -48,7 +48,7 @@ Stream.iterate("A", s -> s.length() < 10, s -> s + "A").forEach(System.out::prin
 Stream.iterate("A", s -> s + "A").forEach(System.out::println);
 ```
 
-그렇다면 계속 조건을 생략하면 무한 루프가 되는 것 아닌가 싶을 수 있습니다. 실제로 그렇습니다. 대신 Java 9에는 이런 스트림을 중간에서 끊을 수 있는 메소드도 함께 추가됐습니다. 바로 다음의 `takeWhile()`입니다.
+그렇다면 계속 조건을 생략하면 무한 루프가 되는 것 아닌가 싶을 수 있습니다. 실제로 그렇습니다. 대신 Java 9에는 이런 스트림을 중간에서 끊을 수 있는 메서드도 함께 추가됐습니다. 바로 다음의 `takeWhile()`입니다.
 ### takeWhile (9)
 
 `takeWhile()`은 조건이 깨질 때까지 요소를 가져오고, 그 시점에서 스트림 처리를 멈춥니다. 기존 `limit()`이 "몇 개까지"만 지정할 수 있었다면, `takeWhile()`은 조건식으로 경계를 정할 수 있다는 점이 다릅니다.
@@ -62,7 +62,7 @@ Stream.iterate("A", s -> s + "A")
 그래서 `iterate()`에서 종료 조건을 직접 넣지 않았다면, `takeWhile()`로 어디서 멈출지 명시해 두는 편이 읽기 좋습니다.
 ### dropWhile (9)
 
-`dropWhile()`은 이름 그대로 `takeWhile()`의 반대편에 있는 메소드입니다. 조건에 맞는 요소를 앞에서부터 버리고, 그 이후 요소들만 남깁니다.
+`dropWhile()`은 이름 그대로 `takeWhile()`의 반대편에 있는 메서드입니다. 조건에 맞는 요소를 앞에서부터 버리고, 그 이후 요소들만 남깁니다.
 ```java
 // AAAAA부터 출력
 Stream.iterate("A", s -> s.length() < 10, s -> s + "A")
@@ -95,7 +95,7 @@ keyList.stream()
 `Collectors` API 쪽 변화는 주로 "기존에 길게 써야 했던 코드를 더 짧고 직접적으로 표현할 수 있게 해 준다"는 방향에 가깝습니다. Stream에서만 하던 작업을 Collector 쪽으로 옮길 수 있게 된 경우도 있습니다.
 ### filtering (9)
 
-`Stream.filter()`와 비슷한 처리를 Collector 안에서도 할 수 있게 해 주는 메소드입니다. 취향 차이도 있겠지만, Collector 자체를 조합하거나 재사용하고 싶을 때는 꽤 유용합니다.
+`Stream.filter()`와 비슷한 처리를 Collector 안에서도 할 수 있게 해 주는 메서드입니다. 취향 차이도 있겠지만, Collector 자체를 조합하거나 재사용하고 싶을 때는 꽤 유용합니다.
 ```java
 // 0~9까지의 리스트
 List<Integer> numbers = Stream.iterate(0, i -> i < 10, i -> i + 1).collect(Collectors.toList());
@@ -112,7 +112,7 @@ numbers.stream()
 
 ### flatMapping (9)
 
-이름 그대로, `Collectors` 안에서 `flatMap`에 해당하는 동작을 할 수 있게 해 주는 메소드입니다. 예를 들어 아래 같은 클래스가 있다고 해 보겠습니다.
+이름 그대로, `Collectors` 안에서 `flatMap`에 해당하는 동작을 할 수 있게 해 주는 메서드입니다. 예를 들어 아래 같은 클래스가 있다고 해 보겠습니다.
 ```java
 public class Selling {
    String clientName;
@@ -149,7 +149,7 @@ Map<String, List<Product>> result = operations.stream()
 
 ### toUnmodifiable (10)
 
-Java 10에서는 `Collectors`에 다음 세 가지 메소드가 추가되었습니다.
+Java 10에서는 `Collectors`에 다음 세 가지 메서드가 추가되었습니다.
 - `toUnmodifiableList()`
 - `toUnmodifiableSet()`
 - `toUnmodifiableMap()`
@@ -166,10 +166,10 @@ List<Integer> collectionsUnmodifiable = Stream.iterate(0, i -> i < 10, i -> i + 
 인자 구성도 기존 `toList()`, `toSet()`, `toMap()`과 거의 같아서 기존 코드에서 바꿔 쓰기 어렵지 않습니다. (`toMap()`은 원래처럼 key/value 매핑 지정이 필요합니다.)
 ## Collections
 
-Collections API에 추가된 메소드들은 전반적으로 더 현대적인 작성 방식을 가능하게 해 줍니다. 다른 언어에서 흔히 보던 편의성을 Java식으로 받아들인 결과처럼 보이는 부분도 있습니다.
+Collections API에 추가된 메서드들은 전반적으로 더 현대적인 작성 방식을 가능하게 해 줍니다. 다른 언어에서 흔히 보던 편의성을 Java식으로 받아들인 결과처럼 보이는 부분도 있습니다.
 ### Factory Method (9)
 
-Java 9에서는 [팩토리 메소드](https://ko.wikipedia.org/wiki/Factory_Method_%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3)에서 Collection을 작성할 수 있습니다. 사용법은 기존의 `Arrays.asList()`과 비슷한 느낌입니다.
+Java 9에서는 [팩토리 메서드](https://ko.wikipedia.org/wiki/Factory_Method_%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3)에서 Collection을 작성할 수 있습니다. 사용법은 기존의 `Arrays.asList()`과 비슷한 느낌입니다.
 ```java
 // List 생성
 List<String> list = List.of("A", "B", "C");
@@ -190,7 +190,7 @@ Map<String, String> map = Map.ofEntries(
   Map.entry("baz", "c"));
 ```
 
-이러한 팩토리 메소드로 작성한 Collection의 특징은, 처음부터 Unmodifiable인 오브젝트가 된다는 것입니다. 따라서 응용 프로그램을 시작할 때 필드에 상수를 Collection으로 정의하는 경우 사용할 수 있습니다. 즉, 다음과 같은 기존 코드를 대체할 수 있는 것입니다.
+이러한 팩토리 메서드로 작성한 Collection의 특징은, 처음부터 Unmodifiable인 객체가 된다는 것입니다. 따라서 응용 프로그램을 시작할 때 필드에 상수를 Collection으로 정의하는 경우 사용할 수 있습니다. 즉, 다음과 같은 기존 코드를 대체할 수 있는 것입니다.
 ```java
 // 가장 기본적인 방식
 Set<String> set = new HashSet<>();
@@ -209,14 +209,14 @@ Set<String> set = Collections.unmodifiableSet(new HashSet<String>() {
 });
 ```
 
-이 팩토리 메소드로 만든 Collection에는 아래 같은 특징이 있으니, 용도에 맞게 써야 합니다.
+이 팩토리 메서드로 만든 Collection에는 아래 같은 특징이 있으니, 용도에 맞게 써야 합니다.
 - Immutable(Unmodifiable)이 된다
 - Null 요소를 지정할 수 없음
 - 요소가 Serializable이면 Collection도 Serializable이 된다
 
 #### copyOf (10)
 
-List, Set, Map에 `copyOf()`이라는 메소드가 추가되어 있습니다. 인수에 각 Collection을 전달하면 Unmodifiable 복사할 수 있습니다.
+List, Set, Map에 `copyOf()`이라는 메서드가 추가되어 있습니다. 인수에 각 Collection을 전달하면 Unmodifiable 복사할 수 있습니다.
 ```java
 // 복사 원본 리스트
 List<String> original = ...
@@ -227,10 +227,10 @@ List<String> copy = List.copyOf(original);
 
 ## Optional
 
-Optional을 적극적으로 쓰는 편인지 묻는다면, 저는 아직 그렇지는 않습니다. Stream 결과를 받는 정도를 제외하면 직접 Optional을 만드는 일은 많지 않습니다. 제약도 있고, 단순한 null 처리에는 오히려 과하다고 느껴질 때도 있습니다. 그래도 9와 10에서 추가된 메소드 덕분에 예전보다 활용 폭은 확실히 넓어졌습니다.
+Optional을 적극적으로 쓰는 편인지 묻는다면, 저는 아직 그렇지는 않습니다. Stream 결과를 받는 정도를 제외하면 직접 Optional을 만드는 일은 많지 않습니다. 제약도 있고, 단순한 null 처리에는 오히려 과하다고 느껴질 때도 있습니다. 그래도 9와 10에서 추가된 메서드 덕분에 예전보다 활용 폭은 확실히 넓어졌습니다.
 ### or (9)
 
-`or()`는 Optional이 비어 있을 때 대체 Optional을 반환하는 메소드입니다. `orElse()`나 `orElseGet()`이 실제 값을 돌려주는 것과 달리, 이쪽은 Optional 자체를 다시 돌려준다는 점이 다릅니다.
+`or()`는 Optional이 비어 있을 때 대체 Optional을 반환하는 메서드입니다. `orElse()`나 `orElseGet()`이 실제 값을 돌려주는 것과 달리, 이쪽은 Optional 자체를 다시 돌려준다는 점이 다릅니다.
 ```java
 String string = null;
 Optional<String> optional = Optional.ofNullable(string);
@@ -239,7 +239,7 @@ System.out.println(optional.or(() -> Optional.of("default")).get()); // "default
 
 ### orElseThrow (10)
 
-Optional이 비어 있을 때 예외를 던지고 싶다면 `orElseThrow()`를 쓸 수 있습니다. 기본적으로도 비어 있는 Optional에서 값을 꺼내면 `NoSuchElementException`이 나지만, 비즈니스 로직에 맞는 예외로 바꾸고 싶을 때는 이 메소드가 더 적절합니다.
+Optional이 비어 있을 때 예외를 던지고 싶다면 `orElseThrow()`를 쓸 수 있습니다. 기본적으로도 비어 있는 Optional에서 값을 꺼내면 `NoSuchElementException`이 나지만, 비즈니스 로직에 맞는 예외로 바꾸고 싶을 때는 이 메서드가 더 적절합니다.
 ```java
 String string = null;
 Optional<String> optional = Optional.ofNullable(string);
@@ -248,7 +248,7 @@ String throwing = optional.orElseThrow(RuntimeException::new); // RuntimeExcepti
 
 ### ifPresentOrElse (9)
 
-`ifPresentOrElse()`는 Optional에 값이 있을 때와 없을 때의 동작을 한 번에 정의할 수 있는 메소드입니다. 첫 번째 인자는 값이 있을 때 실행할 `Consumer`, 두 번째 인자는 값이 없을 때 실행할 `Runnable`입니다.
+`ifPresentOrElse()`는 Optional에 값이 있을 때와 없을 때의 동작을 한 번에 정의할 수 있는 메서드입니다. 첫 번째 인자는 값이 있을 때 실행할 `Consumer`, 두 번째 인자는 값이 없을 때 실행할 `Runnable`입니다.
 ```java
 Optional<String> hasValue = Optional.of("proper value");
 hasValue.ifPresentOrElse(v -> System.out.println("the value is " + v), () -> System.out.println("there is no value")); // the value is proper value
@@ -307,7 +307,7 @@ long lines = multipleLine.lines().filter(String::isBlank).count(); // 3
 
 ## Predicate.not (11)
 
-`Predicate.not()`은 이름 그대로 Predicate 결과를 부정할 때 쓰는 메소드입니다. 기능 자체는 단순하지만, 람다나 메서드 참조와 조합했을 때 코드가 조금 더 읽기 좋아진다는 장점이 있습니다.
+`Predicate.not()`은 이름 그대로 Predicate 결과를 부정할 때 쓰는 메서드입니다. 기능 자체는 단순하지만, 람다나 메서드 참조와 조합했을 때 코드가 조금 더 읽기 좋아진다는 장점이 있습니다.
 ```java
 // 부정 조건식을 사용할 때
 list.stream()                       

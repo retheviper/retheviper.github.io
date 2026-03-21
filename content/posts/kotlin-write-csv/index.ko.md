@@ -35,7 +35,7 @@ fun writeAll(rows: List<List<Any?>>, targetFile: File, append: Boolean = false) 
 
 먼저 헤더를 만듭니다. 헤더를 만들려면 data class에서 필드를 가져오고, 그 이름만 뽑아 쓰면 됩니다. `id`라는 필드가 있다면 헤더도 그대로 `id`가 되는 식입니다. 필드명과 다른 이름을 붙이고 싶다면 어노테이션을 활용하는 방법도 있지만, 우선은 필드명을 그대로 사용하는 방법부터 보겠습니다.
 
-Kotlin의 data class에서 필드를 얻는 방법에는 세 가지가 있습니다. 우선은 [KClass.members](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/members.html)가 있습니다. 다만, 이것이라면 메소드를 포함해, 모든 멤버를 가져오게 됩니다. 다음과 같습니다.
+Kotlin의 data class에서 필드를 얻는 방법에는 세 가지가 있습니다. 우선은 [KClass.members](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/members.html)가 있습니다. 다만, 이것이라면 메서드를 포함해, 모든 멤버를 가져오게 됩니다. 다음과 같습니다.
 
 ```kotlin
 data class Data(val id: Int, val name: String)

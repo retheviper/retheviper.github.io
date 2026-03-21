@@ -272,7 +272,7 @@ while(true) {
 }
 ```
 
-`IntRange` 오브젝트가 범위를 재정의하기 위해 생성되고 `IntProgression` 오브젝트가 요소를 역순으로 정렬하기 위해 생성됩니다.
+`IntRange` 객체가 범위를 재정의하기 위해 생성되고 `IntProgression` 객체가 요소를 역순으로 정렬하기 위해 생성됩니다.
 `progression`을 만드는데 둘 이상의 함수를 사용하면 둘 이상의 객체를 만드는 것과 같은 오버헤드가 발생합니다.
 위의 규칙은 [step()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/step.html)을 사용하는 경우도 같고 `step 1`을 지정해도 상황은 변하지 않습니다.
 ```kotlin
@@ -303,7 +303,7 @@ while(var1.hasNext()) {
 }
 ```
 
-이것은 이전 샘플보다 비용이 많이 듭니다. `IntRange` 오브젝트를 생성할 뿐만 아니라 `IntIterator` 오브젝트도 생성하고 있기 때문입니다. primitive가 아니라면 더 많은 비용이 듭니다.
+이것은 이전 샘플보다 비용이 많이 듭니다. `IntRange` 객체를 생성할 뿐만 아니라 `IntIterator` 객체도 생성하고 있기 때문입니다. primitive가 아니라면 더 많은 비용이 듭니다.
 그래서 range를 사용한 루프가 필요한 경우는 `forEach()`보다 `for` 루프를 사용하여 오버 헤드를 줄이는 것이 좋습니다.
 ### collection 인덱스 루프
 

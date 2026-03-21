@@ -359,7 +359,7 @@ public List<String> filterStream(List<String> list) {
 ### 처리 능력 측면에서 생각
 
 처리 능력이라는 관점은 결국 성능과도 이어집니다. 다만 여기서 핵심은 "어떤 컬렉션 구현이 들어와도 크게 흔들리지 않는 방식이 무엇인가"입니다.
-예를 들어 `List`를 인자로 받아 루프를 도는 메소드를 만든다고 해 봅시다. 이때 어떤 루프를 고를지는, 그 `List`가 실제로 어떤 구현 클래스인지 모른다는 사실까지 함께 고려해야 합니다. `List`는 인터페이스이기 때문에, 실제로는 [ArrayList](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ArrayList.html)일 수도 있고 [LinkedList](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedList.html)일 수도 있습니다. 더 나아가 다른 구현이 들어올 가능성도 있습니다.
+예를 들어 `List`를 인자로 받아 루프를 도는 메서드를 만든다고 해 봅시다. 이때 어떤 루프를 고를지는, 그 `List`가 실제로 어떤 구현 클래스인지 모른다는 사실까지 함께 고려해야 합니다. `List`는 인터페이스이기 때문에, 실제로는 [ArrayList](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/ArrayList.html)일 수도 있고 [LinkedList](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/LinkedList.html)일 수도 있습니다. 더 나아가 다른 구현이 들어올 가능성도 있습니다.
 인터페이스를 기준으로 코드를 작성한다는 것은, 결과 자체는 구현 클래스가 달라도 유지된다는 뜻입니다. 하지만 성능까지 같다는 뜻은 아닙니다. `List` 구현이 여러 개 존재하는 이유 자체가 사용 목적에 따라 서로 다른 특성을 가지기 때문입니다. 가장 흔한 구현은 ArrayList지만, 경우에 따라서는 LinkedList 같은 다른 구현이 들어올 수도 있습니다. 그렇다면 ArrayList에서 빠른 방식이 LinkedList에서도 그대로 빠를 것이라고 가정하는 건 위험합니다.
 위에서 실시한 벤치마크만 보고 성능은 절대 이것이 유리하다고 말할 수 없는 이유가 여기에 있습니다. 왜냐하면 테스트와 같은 데이터를 `Collectors.toList()`을 사용하여 List로 작성하고 있습니다.
 ```java

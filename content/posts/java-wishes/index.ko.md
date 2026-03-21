@@ -35,7 +35,7 @@ Optional.ofNullable(object)
 
 ### C#
 
-C#은 Java보다 훨씬 간단합니다. 오브젝트가 `null`일 수 있다는 점만 먼저 선언하지 않는다는 차이가 있습니다.
+C#은 Java보다 훨씬 간단합니다. 객체가 `null`일 수 있다는 점만 먼저 선언하지 않는다는 차이가 있습니다.
 
 ```csharp
 object?.prop1?.prop2?.prop3 ?? "default";

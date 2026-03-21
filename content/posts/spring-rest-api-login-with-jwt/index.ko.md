@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserDetailsService {
         this.repository = repository;
     }
     
-    // 인증 후 사용자 정보를 가져오는 메소드
+    // 인증 후 사용자 정보를 가져오는 메서드
     @Override
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         return this.repository.findByUsername(username);

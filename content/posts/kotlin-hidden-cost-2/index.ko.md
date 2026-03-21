@@ -117,8 +117,8 @@ fun add(a: Int?, b: Int?): Int {
 
 Kotlin에는 다음 세 가지 배열이 있습니다.
 - `IntArray`, `FloatArray` 같은: primitive 타입의 배열. `int[]`, `float[]`과 같은 타입으로 컴파일된다.
-- `Array<T>`:non-null 오브젝트의 형태가 지정된 배열. primitive에 대해 @MASK_1@@이 발생할 수 있습니다.
-- `Array<T?>`:nullable 오브젝트의 형태가 지정된 배열. 명확하게 `boxing`이 일어난다.
+- `Array<T>`:non-null 객체의 형태가 지정된 배열. primitive에 대해 @MASK_1@@이 발생할 수 있습니다.
+- `Array<T?>`:nullable 객체의 형태가 지정된 배열. 명확하게 `boxing`이 일어난다.
 
 non-null primitive 배열이 필요하다면 가능하면 `Array<Int>`보다 `IntArray`를 사용하는 편이 좋습니다.
 ## Varargs

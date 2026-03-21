@@ -132,7 +132,7 @@ name?.let { println("name is not null") } ?: also { println("name is null") }
 ![Kotlin Select Scope Function](kotlin_select_scope_function.webp)
 ## 응용
 
-Scope Function이 리턴 값으로 리시버 자체를 리턴한다는 것은 빌더 패턴으로 사용할 수 있다는 의미입니다. 그래서 적절한 조합으로, Scope Function에 의한 메소드 체인도 할 수 있습니다. 이것을 잘 활용하면 상당히 함수적인 감각으로 코드를 작성할 수 있습니다. 다음은 그 예 중 하나입니다.
+Scope Function이 리턴 값으로 리시버 자체를 리턴한다는 것은 빌더 패턴으로 사용할 수 있다는 의미입니다. 그래서 적절한 조합으로, Scope Function에 의한 메서드 체인도 할 수 있습니다. 이것을 잘 활용하면 상당히 함수적인 감각으로 코드를 작성할 수 있습니다. 다음은 그 예 중 하나입니다.
 ```kotlin
 // let 체인
 var three: Int = " abc ".let { it.trim() }.let { it.length }

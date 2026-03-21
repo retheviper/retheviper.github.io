@@ -525,7 +525,7 @@ Kotlin에서는 보통 Collection에 고차 함수를 적용한 결과를 그대
 
 ### Collectors.teeing (12)
 
-Collectors에 두 개의 `Collector`을 결합하는 [teeing] lectors.html#teeing(java.util.stream.Collector,java.util.stream.Collector,java.util.function.BiFunction))이라는 메소드가 추가되었습니다. 덧붙여서 `Tee`은 2개의 수도관을 접속해 하나로 해 주는 「T자 피팅」의 의미를 가지는 것 같습니다. 인수에 2개의 `Collector`과 그것을 결합하는 처리의 `BiFunction`을 지정하는 형태로 되어 있습니다.
+Collectors에 두 개의 `Collector`을 결합하는 [teeing] lectors.html#teeing(java.util.stream.Collector,java.util.stream.Collector,java.util.function.BiFunction))이라는 메서드가 추가되었습니다. 덧붙여서 `Tee`은 2개의 수도관을 접속해 하나로 해 주는 「T자 피팅」의 의미를 가지는 것 같습니다. 인수에 2개의 `Collector`과 그것을 결합하는 처리의 `BiFunction`을 지정하는 형태로 되어 있습니다.
 
 예를 들면 다음과 같은 `Stream`이 있다고 가정해 봅시다.
 

@@ -210,7 +210,7 @@ public final class MyClass {
 ```
 
 보다 비용이 낮은 Bytecode를 생성하는 것도 가능하지만 간단하지는 않습니다.
-먼저 `const` 키워드를 사용하여 컴파일 타임 상수를 정의하여 메소드 호출을 없앨 수 있습니다. 그러나 Kotlin은 primitive 또는 String에 대해서만 가능한 방법입니다.
+먼저 `const` 키워드를 사용하여 컴파일 타임 상수를 정의하여 메서드 호출을 없앨 수 있습니다. 그러나 Kotlin은 primitive 또는 String에 대해서만 가능한 방법입니다.
 ```kotlin
 class MyClass {
 

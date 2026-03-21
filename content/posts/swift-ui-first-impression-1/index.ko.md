@@ -181,7 +181,7 @@ let array = Array(range) // [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 ### Swift만의 것
 
 지금까지는 Kotlin 사용자 입장에서 Swift를 얼마나 익숙한 감각으로 다룰 수 있는지에 초점을 맞췄습니다. 여기부터는 조금 다르다고 느낀 부분을 정리해 보겠습니다.
-#### 메소드 속성 호출에서 생략
+#### 메서드 속성 호출에서 생략
 
 Kotlin에서는 [apply()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/apply.html)처럼 대상이 분명할 때 `this`를 생략할 수 있습니다. 예시는 다음과 같습니다.
 ```kotlin
