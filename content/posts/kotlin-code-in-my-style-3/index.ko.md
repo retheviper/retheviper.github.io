@@ -82,7 +82,7 @@ println(date.toInt()) // 20210901
 ```
 
 하지만 이것만으로 끝나지는 않습니다. `LocalDate`뿐 아니라 `LocalDateTime`, `YearMonth` 등 `java.time` 패키지의 다른 타입에도 비슷한 처리가 필요할 수 있기 때문입니다.
-다행히 이 타입들은 공통적으로 [Temporal](https://docs.oracle.com/javase/jp/8/docs/api/java/time/temporal/Temporal.html) 계열로 다룰 수 있으니, `Temporal`에 확장 함수를 두는 방식도 생각해 볼 수 있습니다. 다만 각 타입이 표현하는 시간 범위가 다르므로, 여기서는 `toString()`으로 문자열을 만든 뒤 숫자만 추출하는 쪽이 더 범용적입니다.
+다행히 이 타입들은 공통적으로 [Temporal](https://docs.oracle.com/javase/8/docs/api/java/time/temporal/Temporal.html) 계열로 다룰 수 있으니, `Temporal`에 확장 함수를 두는 방식도 생각해 볼 수 있습니다. 다만 각 타입이 표현하는 시간 범위가 다르므로, 여기서는 `toString()`으로 문자열을 만든 뒤 숫자만 추출하는 쪽이 더 범용적입니다.
 ```kotlin
 fun Temporal.toDigit(): Long = toString().filter { it.isDigit() }.toLong()
 

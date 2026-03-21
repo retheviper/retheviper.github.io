@@ -79,7 +79,7 @@ Go는 배우기 쉽고 문법이 단순하다는 점도 큰 장점입니다. 제
 
 Rust는 GC 없이도 네이티브 성능을 내는 언어라서, Go보다 더 높은 성능을 기대할 수 있는 경우가 많습니다. 다만 Kotlin과 비슷하게, Rust 역시 대중적 인지도 측면에서는 아직 한계가 있다고 느낍니다. 원래부터 C/C++을 대체하는 목적이 강했던 언어라 그런지, 많은 사람에게는 여전히 임베디드나 시스템 프로그래밍 쪽 이미지가 강합니다.
 
-하지만 실제 채택 사례를 보면 [Figma](https://www.figma.com/), [1Password](https://1password.com/jp/), [Discord](https://discord.com/), [Dropbox](https://www.dropbox.com/), [Mozilla](https://www.mozilla.org/ja/), [LINE](https://line.me/ja/), [npm](https://www.npmjs.com/), [Cloudflare](https://www.cloudflare.com/ja-jp/)처럼 꽤 다양한 조직이 Rust를 활용하고 있습니다. CLI 도구나 웹 프레임워크도 꾸준히 늘고 있어 앞으로 더 기대되는 언어라는 생각은 분명 듭니다. 다만 인기가 더 높아지더라도, Rust는 웹 애플리케이션 전반보다는 시스템 프로그래밍이나 성능이 중요한 영역 쪽으로 계속 강점을 유지할 가능성이 더 커 보입니다.
+하지만 실제 채택 사례를 보면 [Figma](https://www.figma.com/), [1Password](https://1password.com/kr/), [Discord](https://discord.com/), [Dropbox](https://www.dropbox.com/), [Mozilla](https://www.mozilla.org/ko/), [LINE](https://www.line.me/ko/), [npm](https://www.npmjs.com/), [Cloudflare](https://www.cloudflare.com/ko-kr/)처럼 꽤 다양한 조직이 Rust를 활용하고 있습니다. CLI 도구나 웹 프레임워크도 꾸준히 늘고 있어 앞으로 더 기대되는 언어라는 생각은 분명 듭니다. 다만 인기가 더 높아지더라도, Rust는 웹 애플리케이션 전반보다는 시스템 프로그래밍이나 성능이 중요한 영역 쪽으로 계속 강점을 유지할 가능성이 더 커 보입니다.
 
 ### Kotlin을 네이티브로 가져가면
 

@@ -28,7 +28,7 @@ translationKey: "posts/my-roadmap-in-2021"
 
 언제가 될지는 모르겠지만, 적어도 앞으로 몇 년은 JavaScript의 영향력이 계속될 것 같습니다. 다만 지금의 JavaScript는 단순히 웹 표준 언어라는 이유만으로 설명하기 어려울 정도로 사용 범위가 넓어졌습니다. Node.js와 Electron 덕분에 브라우저 밖에서도 쓰이는 경우가 많고, 입문용 언어로 JavaScript를 배우는 사람도 많습니다. SPA 이후에는 서버보다 프런트엔드의 중요성이 더 커졌다는 느낌도 있습니다. 결국 애플리케이션은 사용자 경험을 위해 만들어지니, 화면과 더 가까운 언어가 더 큰 비중을 갖는 것은 자연스러운 흐름일지도 모릅니다.
 
-백엔드만 보더라도 최근에는 서버 역할을 줄이거나 더 잘게 나누는 방향이 강합니다. [마이크로서비스](https://www.redhat.com/ja/topics/microservices), [BFF](https://www.atmarkit.co.jp/ait/articles/1803/12/news012.html), 서버리스 같은 키워드가 대표적입니다. 물론 JavaScript 자체의 발전도 영향을 줬겠지만, 그보다 애플리케이션 구조와 설계 방식이 바뀐 영향이 더 크다고 봅니다.
+백엔드만 보더라도 최근에는 서버 역할을 줄이거나 더 잘게 나누는 방향이 강합니다. [마이크로서비스](https://www.redhat.com/ko/topics/microservices), [BFF](https://www.atmarkit.co.jp/ait/articles/1803/12/news012.html), 서버리스 같은 키워드가 대표적입니다. 물론 JavaScript 자체의 발전도 영향을 줬겠지만, 그보다 애플리케이션 구조와 설계 방식이 바뀐 영향이 더 크다고 봅니다.
 
 그래서 JavaScript는 최소한 기본기는 익혀 두어야겠다고 생각했습니다. 연수나 간단한 문법은 익힌 적이 있지만, 본격적인 앱을 만들어 본 경험은 많지 않았습니다. 적어도 [Express](https://expressjs.com)로 간단한 REST API 정도는 직접 만들어 봐야 도움이 될 것 같습니다. 프런트엔드도 조금은 다룰 수 있으면 더 좋겠고요.
 
@@ -72,7 +72,7 @@ Google이 밀고 있다는 점도 좋고, [Kotlin/Native](https://kotlinlang.org
 
 하지만 프런트엔드 생태계는 여전히 복잡합니다. 도구가 너무 많아서, 하나를 고르기 위해 조사하는 일만으로도 적지 않은 시간과 에너지가 듭니다. 그래서 몇 년 전부터 [JavaScript Fatigue](https://www.google.com/search?newwindow=1&biw=1680&bih=836&sxsrf=ALeKk03Q7zTnfCMWJbsybKG4qkODOhqViA%3A1611463509708&ei=VfsMYOPbKpvahwO8zpiwCQ&q=javascript+fatigue&oq=javascript+fatigue&gs_lcp=CgZwc3ktYWIQAzIGCAAQBxAeMgIIADIECAAQHjIECAAQHjIECAAQHjIGCAAQBRAeOgQIIxAnOggIABAIEAcQHjoICAAQBRAKEB46CAgAEAgQChAeOgYIABAIEB46BAgAEBM6CAgAEAcQHhATOgoIABAHEAUQHhATUOeYAVjBwAFgnsQBaAFwAHgAgAGyA4gB8BOSAQkwLjcuMy4xLjGYAQCgAQGqAQdnd3Mtd2l6wAEB&sclient=psy-ab&ved=0ahUKEwij2sGw4bPuAhUb7WEKHTwnBpY4ChDh1QMIDQ&uact=5)라는 표현이 자연스럽게 쓰이게 된 것 같습니다. 그만큼 지금의 JavaScript 세계는 배우는 과정 자체가 피로할 때가 많습니다.
 
-예를 들어 저처럼 JavaScript 경험이 거의 없는 사람이 프런트엔드 엔지니어가 되어 React를 하기로 마음먹는다면, 먼저 Node.js를 익혀야 하고, 패키지 매니저는 npm과 yarn 중 뭘 쓸지, 언어는 JavaScript로 할지 TypeScript로 할지부터 정해야 합니다. 이어서 [Webpack](https://webpack.js.org), [Babel](https://babeljs.io), [Redux](https://redux.js.org) 같은 도구도 알아야 합니다. 이름만 봐서는 역할이 바로 떠오르지 않는 프레임워크와 라이브러리도 많습니다. [Nuxt.js](https://ja.nuxtjs.org)는 Vue 기반이고, [Nest.js](https://nestjs.com)는 Node.js용이며, [Next.js](https://nextjs.org)는 React 기반입니다. 이 중 무엇을 먼저 배울지 고민하다 보면 오히려 더 혼란스러워집니다. JavaScript 개발자들이 피로를 느끼는 것도 충분히 이해할 수 있습니다.
+예를 들어 저처럼 JavaScript 경험이 거의 없는 사람이 프런트엔드 엔지니어가 되어 React를 하기로 마음먹는다면, 먼저 Node.js를 익혀야 하고, 패키지 매니저는 npm과 yarn 중 뭘 쓸지, 언어는 JavaScript로 할지 TypeScript로 할지부터 정해야 합니다. 이어서 [Webpack](https://webpack.js.org), [Babel](https://babeljs.io), [Redux](https://redux.js.org) 같은 도구도 알아야 합니다. 이름만 봐서는 역할이 바로 떠오르지 않는 프레임워크와 라이브러리도 많습니다. [Nuxt.js](https://nuxt.com)는 Vue 기반이고, [Nest.js](https://nestjs.com)는 Node.js용이며, [Next.js](https://nextjs.org)는 React 기반입니다. 이 중 무엇을 먼저 배울지 고민하다 보면 오히려 더 혼란스러워집니다. JavaScript 개발자들이 피로를 느끼는 것도 충분히 이해할 수 있습니다.
 
 저는 이미 서버사이드 경험이 있으니, 프런트엔드까지 익혀서 혼자서 앱 하나를 끝까지 만들 수 있으면 좋겠다고 생각합니다. 회사에서 쓰는 프런트엔드 프레임워크가 있다면 그걸 먼저 배우는 게 가장 좋겠지만, 개인적으로는 어떤 도구를 선택할지 여전히 고민스럽습니다. React가 가장 인기라면 그것을 택하는 게 맞을까요? 나쁘지 않은 선택일 수는 있습니다. 하지만 앞으로 본격적으로 프런트엔드에 오래 투자할 생각이 없다면, 너무 많은 시간을 들이는 건 아깝게 느껴집니다. 그래서 대안으로 떠올린 것이 [Svelte](https://svelte.dev)였습니다.
 

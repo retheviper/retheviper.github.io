@@ -412,4 +412,4 @@ fun routeMember() = coRouter {
 
 여기서는 Spring WebFlux의 MVC 패턴과 Functional Endpoint를 코드 작성 방식, 성능, 문서화 관점에서 비교해 보았습니다. WebFlux가 나온 지는 꽤 됐지만, 아직은 MVC 패턴보다 손이 더 가는 부분이 분명히 있습니다. 제 경우에는 논블로킹과 함수형 스타일을 적극적으로 살리고 싶다면 Functional Endpoint가 더 어울린다고 보지만, 실제 프로젝트에서는 굳이 그 정도까지 갈 필요가 없는 경우도 많습니다. 특히 엔터프라이즈 애플리케이션이라면 더 그렇습니다. 결국 먼저 따져 봐야 할 것은 "Functional Endpoint를 쓸까"보다 "애초에 WebFlux가 정말 필요한가"일 수도 있습니다.
 
-그렇다고 Functional Endpoint의 가능성이 작은 것은 아닙니다. Spring WebFlux 바깥에서도 이런 라우팅 방식은 이미 널리 쓰이고 있습니다. [Express](https://expressjs.com/ja)나 [Gin](https://github.com/gin-gonic/gin) 같은 프레임워크도 비슷한 모델을 제공하므로, 함수형 스타일에 익숙해지는 연습으로도 충분히 의미가 있습니다.
+그렇다고 Functional Endpoint의 가능성이 작은 것은 아닙니다. Spring WebFlux 바깥에서도 이런 라우팅 방식은 이미 널리 쓰이고 있습니다. [Express](https://expressjs.com/ko)나 [Gin](https://github.com/gin-gonic/gin) 같은 프레임워크도 비슷한 모델을 제공하므로, 함수형 스타일에 익숙해지는 연습으로도 충분히 의미가 있습니다.

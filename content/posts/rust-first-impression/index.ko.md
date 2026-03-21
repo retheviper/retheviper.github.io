@@ -103,7 +103,7 @@ println(subListUntil) // [1, 2]
 
 여기서 조금 아쉬운 점은 Kotlin의 `Range` 문법이 익숙하지 않으면 범위가 한눈에 들어오지 않는다는 것입니다. 다행히 IntelliJ IDEA 2021.3부터는 [범위 힌트](https://blog.jetbrains.com/idea/2021/10/intellij-idea-2021-3-eap-5/#inline_hints_for_ranges)를 보여 주기 때문에, 이전 버전을 쓰고 있다면 업데이트할 만합니다.
 
-Java에서는 [List.subList()](https://docs.oracle.com/javase/jp/8/docs/api/java/util/List.html#subList-int-int-)로 비슷하게 처리할 수 있습니다.
+Java에서는 [List.subList()](https://docs.oracle.com/javase/8/docs/api/java/util/List.html#subList-int-int-)로 비슷하게 처리할 수 있습니다.
 
 ```java
 List<Integer> list = List.of(0, 1, 2, 3, 4);

@@ -49,7 +49,7 @@ Jekyll 말고는 Node.js 기반 도구가 많은 편입니다. 예를 들어 [Me
 
 도구로 정적 사이트를 만들었다면 이제 호스팅할 차례입니다. 정적 웹 페이지를 호스팅할 수 있는 서비스로는 이 블로그에서도 쓰는 [GitHub Pages](https://pages.github.com)나 [Netlify](https://www.netlify.com) 같은 서비스가 있습니다. Git 저장소에 올리기만 하면 자동으로 빌드와 배포를 해 주는 점이 편리합니다.
 
-클라우드를 활용하는 방법도 있습니다. AWS, Azure, Google Cloud Platform 같은 서비스에는 [S3](https://aws.amazon.com/s3)나 [Blob](https://azure.microsoft.com/ja-jp/services/storage/blobs)처럼 웹에서 접근할 수 있는 스토리지 서비스가 있습니다. 여기에 정적 사이트를 올려서 호스팅할 수도 있습니다. 특히 Google 쪽은 [Google Firebase](https://firebase.google.com) 같은 앱 개발용 플랫폼도 있어서, API 연계가 필요한 경우 고려해 볼 만합니다.
+클라우드를 활용하는 방법도 있습니다. AWS, Azure, Google Cloud Platform 같은 서비스에는 [S3](https://aws.amazon.com/s3)나 [Blob](https://azure.microsoft.com/ko-kr/services/storage/blobs/)처럼 웹에서 접근할 수 있는 스토리지 서비스가 있습니다. 여기에 정적 사이트를 올려서 호스팅할 수도 있습니다. 특히 Google 쪽은 [Google Firebase](https://firebase.google.com) 같은 앱 개발용 플랫폼도 있어서, API 연계가 필요한 경우 고려해 볼 만합니다.
 
 ## 마지막으로
 
