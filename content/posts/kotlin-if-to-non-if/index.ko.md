@@ -43,7 +43,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
 
 방법 중 하나는 표준 라이브러리를 쓰는 것입니다. 꼭 라이브러리가 아니더라도 별도 함수로 분리할 수는 있지만, 이미 적절한 함수가 있다면 그쪽에 맡기는 편이 더 단순합니다.
 
-Kotlin에는 [coerceAtLeast()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/coerce-at-least.html)가 있습니다. 전달한 값을 최소값 기준으로 보정해 주는 함수입니다. 여기서는 `amount`가 1000보다 작으면 `amount`를, 그렇지 않으면 1000을 돌려주는 로직으로 단순화할 수 있습니다.
+Kotlin에는 [coerceAtMost()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.ranges/coerce-at-most.html)가 있습니다. 전달한 값을 최대값 기준으로 보정해 주는 함수입니다. 여기서는 `amount`가 1000보다 작으면 `amount`를, 그렇지 않으면 1000을 돌려주는 로직으로 단순화할 수 있습니다.
 ```kotlin
 fun getDiscountAmount(code: String, amount: Int): Int {
     return if (code == "Facebook") {
@@ -51,7 +51,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
     } else if (code == "Twitter") {
         (amount * 0.15).roundToInt()
     } else if (code == "Instagram") {
-        amount.coerceAtLeast(1000) // 임계값을 넘지 않는 값이 된다
+        amount.coerceAtMost(1000) // 임계값을 넘지 않는 값이 된다
     } else {
         0
     }
@@ -69,7 +69,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
     return when (code) { // code 값을 비교하기만 하는 분기
         "Facebook" -> (amount * 0.1).roundToInt()
         "Twitter" -> (amount * 0.15).roundToInt()
-        "Instagram" -> amount.coerceAtLeast(1000)
+        "Instagram" -> amount.coerceAtMost(1000)
         else -> 0
     }
 }
@@ -91,7 +91,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
     return when (code) {
         "Facebook" -> 10 percentOf amount // 10퍼센트 값을 반환한다
         "Twitter" -> 15 percentOf amount // 15퍼센트 값을 반환한다
-        "Instagram" -> amount.coerceAtLeast(1000)
+        "Instagram" -> amount.coerceAtMost(1000)
         else -> 0
     }
 }
@@ -116,7 +116,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
 
     // Map에 없는 code인 경우
     return when (code) {
-        "Instagram" -> amount.coerceAtLeast(1000)
+        "Instagram" -> amount.coerceAtMost(1000)
         else -> 0
     }
 }
@@ -128,7 +128,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
 val discountRules = mapOf(
     "Facebook" to { amount: Int -> 10 percentOf amount },
     "Twitter" to { amount: Int -> 15 percentOf amount },
-    "Instagram" to { amount: Int -> amount.coerceAtLeast(1000) }
+    "Instagram" to { amount: Int -> amount.coerceAtMost(1000) }
 )
 
 fun getDiscountAmount(code: String, amount: Int): Int {
@@ -143,7 +143,7 @@ fun getDiscountAmount(code: String, amount: Int): Int {
 이 수정에 처리는 일견보다 복잡한 것이 되어 간다고 느끼는 경우도 있을까 생각합니다만, 이것은 OOP에 원칙인 [SOLID](https://ko.wikipedia.org/wiki/SOLID)를 고려한 것도 있습니다. 장기적인 관점에서 보면, 이러한 방법을 취하는 것이 더 유지 보수에 적합하게 될 것입니다.
 ### 인터페이스 추출
 
-먼저 '할인 정책'을 `insterface`으로 분리합니다. 이 할인 정책를 구현하는 클래스에서 실제의 정책에 따른 할인액을 계산하는 이미지입니다.
+먼저 '할인 정책'을 `interface`로 분리합니다. 이 할인 정책을 구현하는 클래스에서 실제 정책에 따른 할인액을 계산한다고 생각하면 됩니다.
 ```kotlin
 interface DiscountPolicy {
     fun calculate(amount: Int): Int
@@ -167,7 +167,7 @@ class TwitterDiscountPolicy : DiscountPolicy {
 }
 
 class InstagramDiscountPolicy : DiscountPolicy {
-    override fun calculate(amount: Int): Int = amount.coerceAtLeast(1000)
+    override fun calculate(amount: Int): Int = amount.coerceAtMost(1000)
 }
 ```
 
@@ -203,7 +203,7 @@ object DiscountPolicyFactory {
 궁극적으로 `getDiscountAmount()`은 다음과 같이 수정할 수 있습니다. `interface`의 추출이나 `Factory`의 작성으로 코드의 양은 증가했지만, 이 함수의 책임은 보다 가벼워져, 할인 정책의 추가나 수정이 필요한 경우에서도 유연한 대응을 할 수 있게 되었습니다.
 ```kotlin
 fun getDiscountAmount(code: String, amount: Int): Int {
-    val discountPolicy = DiscountFactory.getDiscountPolicy(code)
+    val discountPolicy = DiscountPolicyFactory.getDiscountPolicy(code)
     return discountPolicy.calculate(amount)
 }
 ```
@@ -220,7 +220,7 @@ enum class DiscountPolicies(private val code: String) : DiscountPolicy {
         override fun calculate(amount: Int): Int = 15 percentOf amount
     },
     INSTAGRAM("Instagram") {
-        override fun calculate(amount: Int): Int = amount.coerceAtLeast(1000)
+        override fun calculate(amount: Int): Int = amount.coerceAtMost(1000)
     };
 
     companion object {

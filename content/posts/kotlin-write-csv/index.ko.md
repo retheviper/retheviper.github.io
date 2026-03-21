@@ -27,7 +27,7 @@ fun writeAll(rows: List<List<Any?>>, targetFile: File, append: Boolean = false) 
 }
 ```
 
-여기서 `rows`이 쓰기에 사용되는 데이터가 되지만, 타입이 `List<List<Any?>>`이므로, 열의 데이터를 하나의 행으로서 List로 정의하고, 그것을 List에 추가로 저장하는 것으로 CSV의 데이터 전체를 정의할 필요가 있습니다. 즉, data class의 리스트를 기입하기 위해서는, 필드 하나 하나를 열로서 정의해, 그것들을 List로서 정리할 필요가 있다고 하는 것입니다. 또한 CSV에는 일반적으로 헤더가 포함되어 있지만 `List<List<Any?>>`의 형태라면 첫 번째 행에 헤더만을 정의한 행은 필요하기도 합니다.
+여기서 `rows`는 쓰기에 사용하는 데이터인데, 타입이 `List<List<Any?>>`이므로 내부의 `List` 하나가 CSV의 한 행을 뜻하고, 그 행들을 다시 `List`로 모은 것이 CSV 전체가 됩니다. 즉 data class 리스트를 쓰려면 각 인스턴스의 필드 값을 한 행짜리 `List`로 바꾸고, 그것들을 행 목록으로 모아야 합니다. 또한 CSV에는 보통 헤더가 있으므로, 첫 번째 행에는 헤더만 담은 `List`도 따로 준비해야 합니다.
 
 보기에는 복잡해 보이지만 [reflection](https://kotlinlang.org/docs/reflection.html)을 이용하면 data class의 필드명과 그 값을 얻을 수 있으므로 그것을 이용하여 data class의 List를 이 메소드에 적합한 형태로 바꿀 수 있습니다. 이것을 헤더를 만드는 방법과 data class의 값을 행으로 변경하는 두 단계로 나누어 설명합니다.
 
@@ -120,7 +120,7 @@ println(headers) // [나이, 이름]
 `primaryConstructor` 기준으로 필드 순서를 맞췄다면 방법도 크게 다르지 않습니다. 생성자 파라미터를 기준으로 돌면서 이름이 일치하는 필드를 찾아 같은 방식으로 처리하면 됩니다.
 
 ```kotlin
-val fieldNames = seeds.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
+val fieldNames = datas.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
 
 val headers = fieldNames.mapNotNull { name ->
     // 파라미터와 일치하는 필드를 대상으로 처리한다
@@ -227,7 +227,5 @@ csvWriter().writeAll(
 ## 마지막으로
 
 이번에는 "Kotlin이니 Kotlin 라이브러리를 써 보자"는 가벼운 마음으로 시작했는데, 막상 원하는 형태와는 조금 달라서 꽤 헤맸습니다. 다행히 예전에 Java에서 [Apache POI](https://poi.apache.org/)로 비슷한 기능을 직접 만들어 본 경험이 있어서 그때 감각이 꽤 도움이 됐습니다. 당시에는 꽤 고생했지만, 지금 돌아보면 그런 경험이 있었기에 이번에도 대응할 수 있었던 것 같습니다.
-
-위 코드들은 간단한 라이브러리 형태로도 묶어 보았기 때문에, 기회가 되면 다른 곳에서도 다시 써 보고 싶습니다. 조금 더 다듬으면 나중에 Maven Repository 같은 곳에 공개하는 것도 가능할 것 같습니다.
 
 위 코드들은 간단한 라이브러리 형태로도 묶어 보았기 때문에, 기회가 되면 다른 곳에서도 다시 써 보고 싶습니다. 조금 더 다듬으면 나중에 Maven Repository 같은 곳에 공개하는 것도 가능할 것 같습니다.

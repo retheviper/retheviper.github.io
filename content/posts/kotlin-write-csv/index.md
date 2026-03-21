@@ -16,7 +16,7 @@ tags:
 
 ## KotlinでCSVを扱う
 
-KotlinのCSV読み込み/書き込みのライブラリとして[kotlin-csv](https://github.com/doyaaaaaken/kotlin-csv/)があり、JVMだけでなくKoltin/JSの場合でもこのライブラリを使って簡単にCSVを扱えます。更に[kotlin-grass](https://github.com/blackmo18/kotlin-grass)というライブラリもあり、`kotlin-csv`との組み合わせででCSVのデータを簡単にdata classのListとしてまとめることもできますね。読み込みの際に指定できるデータのフォーマットやカスタムマッピングオプションなどの機能も豊富にあり、かなり使いやすく良いライブラリとなっています。
+KotlinのCSV読み込み/書き込みのライブラリとして[kotlin-csv](https://github.com/doyaaaaaken/kotlin-csv/)があり、JVMだけでなくKotlin/JSの場合でもこのライブラリを使って簡単にCSVを扱えます。更に[kotlin-grass](https://github.com/blackmo18/kotlin-grass)というライブラリもあり、`kotlin-csv`との組み合わせでCSVのデータを簡単にdata classのListとしてまとめることもできますね。読み込みの際に指定できるデータのフォーマットやカスタムマッピングオプションなどの機能も豊富にあり、かなり使いやすく良いライブラリとなっています。
 
 しかし、実は`kotlin-csv`を使うときに問題が一つあります。先に述べた通りCSVにデータの出力そのものは可能なものとなっているのですが、読み込みの時にdata classへのマッピングには別のライブラリが必要であったように、data classのリストを書き込むには追加の処理が必要となります。これは、kotlin-csvの書き込み用のメソッドが以下のようになっているからです。
 
@@ -26,7 +26,7 @@ fun writeAll(rows: List<List<Any?>>, targetFile: File, append: Boolean = false) 
 }
 ```
 
-ここで`rows`が書き込みで使うデータとなりますが、型が`List<List<Any?>>`になっているので、列のデータを一つの行としてListに定義し、それをさらにListに格納することでCSVのデータ全体を定義する必要があります。これはつまり、data classのリストを書き込むためには、フィールド一つ一つを列として定義し、それらをListとしてまとめる必要があるということです。また、CSVには一般的にヘッダが含まれますが、`List<List<Any?>>`の形だと最初の行にヘッダのみを定義した行は必要となることでもありますね。
+ここで`rows`が書き込みで使うデータとなりますが、型が`List<List<Any?>>`になっているので、1つの`List`がCSVの1行を表し、その行をさらに`List`でまとめたものがCSV全体になります。つまり、data classのリストを書き込むには、各インスタンスのフィールド値を1行分の`List`に変換し、それらを行の一覧としてまとめる必要があります。また、CSVには一般的にヘッダが含まれるので、先頭にはヘッダだけを並べた1行も別途用意する必要があります。
 
 一見複雑に見えますが、[reflection](https://kotlinlang.org/docs/reflection.html)を利用すると、data classのフィールド名とその値を得ることができますので、それを利用してdata classのListをこのメソッドに適した形に変えられます。これをヘッダを作る方法と、data classの値を行に変更する二つの段階で分けて説明していきます。
 
@@ -119,7 +119,7 @@ println(headers) // [年齢, 名前]
 `primaryConstructor`のパラメータで取得した場合でも、やり方は大きく変わりません。この場合は、コンストラクタのパラメータを基準にループしながら一致するフィールドを探すという処理が追加されるだけです。例えば以下のようにです。
 
 ```kotlin
-val fieldNames = seeds.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
+val fieldNames = datas.first()::class.primaryConstructor!!.parameters.mapNotNull { it.name }
 
 val headers = fieldNames.mapNotNull { name ->
     // パラメータと一致するフィールドを対象に処理を行う
@@ -152,7 +152,7 @@ datas.map { d ->
 
 Kotlinのreflectionで取得したフィールドは、[KProperty1](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-property1/)という型になっています。ここでどうやって元の型を取得するかが問題ですね。このクラスは[KCallable](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/)というインタフェースを実装していて、ここには[returnType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/return-type.html)というプロパティがあります。これで[KType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-type/)というインタフェースが取得できるようになるので、これを持って判定をおこ泣くことになります。
 
-しかし、名前から分かるように、`KType`はKotlinの型に関するインタフェースとなっています。比較したい`LocalDate`や`LocalTime`などのクラスはJavaのものなので、直接的な比較ができないですね。幸い、JavaのクラスでもKotlinで参照できる`Ktype`として変換することはできます。以下のようにです。
+しかし、名前から分かるように、`KType`はKotlinの型に関するインタフェースとなっています。比較したい`LocalDate`や`LocalTime`などのクラスはJavaのものなので、直接的な比較ができないですね。幸い、JavaのクラスでもKotlinで参照できる`KType`として変換することはできます。以下のようにです。
 
 ```kotlin
 val localDateKType: KType = LocalDate::class.createType()
