@@ -40,8 +40,14 @@
         <ol class="menu-social">
             {{ range . }}
                 <li>
+                    {{- $url := .URL -}}
+                    {{- if eq .Identifier "rss" -}}
+                        {{- with $.Site.Home.OutputFormats.Get "RSS" -}}
+                            {{- $url = .Permalink -}}
+                        {{- end -}}
+                    {{- end -}}
                     <a
-                        href='{{ .URL }}'
+                        href='{{ $url }}'
                         {{ if eq (default true .Params.newTab) true }}target="_blank"{{ end }}
                         {{ with .Name }}title="{{ . }}"{{ end }}
                         rel="me"
