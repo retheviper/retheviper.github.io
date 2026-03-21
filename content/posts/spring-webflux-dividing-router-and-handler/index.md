@@ -227,7 +227,7 @@ class PersonService(private val repository: PersonRepository) {
 }
 ```
 
-こうすると、`Router`から直接`Repository`にアクセスこともなくなり、今まで挙げていたさまざまな問題も解消できるようになりますね。
+こうすると、`Router`から直接`Repository`にアクセスすることもなくなり、今まで挙げていたさまざまな問題も解消できるようになりますね。
 
 ## 最後に
 

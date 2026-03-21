@@ -162,14 +162,14 @@ INVOKESPECIAL be/myapplication/MyClass$Companion.getTAG ()Ljava/lang/String;
 ARETURN
 ```
 
-상수가 `public`이면 직접 액세스 할 수 있지만 여전히 `getter` 메소드를 통해 값에 액세스합니다.
-그리고 상수 값을 저장하기 위해 Kotlin 컴파일러는 `companion object`이 아닌 클래스에 `private static final` 필드를 생성합니다. 게다가 `companion object` 로부터 이 필드에 액세스 하기 위해서 또, 메소드를 생성하게 됩니다.
+상수가 `public`이면 직접 액세스할 수 있지만, 여전히 `getter` 메서드를 통해 값에 접근하게 됩니다.
+그리고 상수 값을 저장하기 위해 Kotlin 컴파일러는 `companion object`가 아니라 클래스 쪽에 `private static final` 필드를 생성합니다. 게다가 `companion object`에서 이 필드에 접근하기 위해 또 다른 메서드도 생성됩니다.
 ```text
 INVOKESTATIC be/myapplication/MyClass.access$getTAG$cp()Ljava/lang/String; 
 ARETURN
 ```
 
-이런 긴 길로, 드디어 값을 읽게 됩니다.
+이렇게 한참 우회한 뒤에야 값을 읽게 됩니다.
 ```text
 GETSTATIC be/myapplication/MyClass.TAG : Ljava/lang/String; 
 ARETURN
@@ -177,8 +177,8 @@ ARETURN
 
 요약하면 Kotlin 1.2.40 이전 버전을 사용하는 경우 다음과 같이 보입니다.
 - `companion object`에서 정적 메서드 호출
-  - `companion object`에서 instance 메소드 호출
-    - 클래스의 static 메소드 호출
+  - `companion object`에서 instance 메서드 호출
+  - 클래스의 static 메서드 호출
       - static 필드에서 값 읽기
 
 이것을 Java의 코드로 표현하면 다음과 같습니다.
@@ -245,7 +245,7 @@ class MyClass() : Parcelable {
 마지막 방법으로는 [ProGuard](https://developer.android.com/studio/build/shrink-code)나 R8과 같은 툴을 사용해 Bytecode의 최적화를 노리는 방법이 있을 것입니다.
 #### Kotlin 1.2.40 이상의 경우
 
-Kotlinn 1.2.40부터는 `companion object`에 정의된 값이 메인 클래스에 저장된다는 것에는 변함이 없지만, 메소드의 생성과 호출 없이 직접 액세스를 할 수 있게 되었습니다. 이것을 Java의 코드로 표현하면 다음과 같습니다.
+Kotlin 1.2.40부터는 `companion object`에 정의된 값이 메인 클래스에 저장된다는 점은 그대로지만, 메서드를 따로 만들고 호출하지 않아도 직접 접근할 수 있게 되었습니다. 이를 Java 코드로 표현하면 다음과 같습니다.
 ```java
 public final class MyClass {
     private static final String TAG = "TAG";
@@ -260,8 +260,8 @@ public final class MyClass {
 }
 ```
 
-또, 위와 같이 `companion object`에 메소드가 하나도 없는 경우는, ProGuard나 R8에 의한 툴과 사용하면 클래스 자체가 사라지는 것으로 최적화됩니다.
-다만, `companion object`에 정의마저 메소드의 경우는 비용이 적습니다. 필드가 메인 클래스에 저장되어 있기 때문에 `companion object`에 정의 된 private 필드에 액세스하기 위해서는 여전히 생성 된 메소드를 거쳐야합니다.
+또 위와 같이 `companion object`에 메서드가 하나도 없으면, ProGuard나 R8 같은 도구를 사용할 때 클래스 자체가 제거되면서 최적화됩니다.
+다만 `companion object`에 정의된 메서드는 여전히 약간의 비용이 듭니다. 필드가 메인 클래스 쪽에 저장되기 때문에, `companion object`에 정의된 private 필드에 접근하려면 여전히 생성된 메서드를 거쳐야 합니다.
 ## 마지막으로
 
 이번 글은 직접 실험한 결과라기보다 기존 분석 글을 따라가며 정리한 내용이지만, 그래도 꽤 배울 점이 많았습니다. 특히 IntelliJ가 언제 `inline`을 권하는지, 그리고 `companion object`가 단순한 문법 설탕만은 아니라는 점이 더 분명하게 보였습니다.

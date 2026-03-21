@@ -177,7 +177,7 @@ let array = Array(range) // [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 
 다만, 위 코드만 보면 잘 드러나지 않지만 Range 구현은 두 언어에서 조금 다릅니다. Kotlin에서는 `rangeTo()`의 반환값이 값의 타입에 맞춰 `IntRange`나 `LongRange`처럼 결정되고, 최소값과 최대값도 그 타입을 그대로 따라갑니다.
 
-반면 Swift의 [Range](https://developer.apple.com/documentation/swift/range)는 `Range<Bound>` 형태이므로, Range에서 얻는 최소값과 최대값도 [Bound](https://developer.apple.com/documentation/swift/rangeexpression/bound/) 타입입니다. `Int`나 `Long`과는 또 다른 감각이라 상황에 따라 주의가 필요할 수 있습니다.
+반면 여기서 사용한 `min...max`는 Swift에서는 [ClosedRange](https://developer.apple.com/documentation/swift/closedrange)가 됩니다. 이 예제에서는 `lowerBound`, `upperBound`도 결국 `Int`지만, Kotlin의 `IntRange`처럼 전용 타입 이름을 두기보다 Swift는 `ClosedRange<Int>` 같은 제네릭 타입으로 표현합니다.
 ### Swift만의 것
 
 지금까지는 Kotlin 사용자 입장에서 Swift를 얼마나 익숙한 감각으로 다룰 수 있는지에 초점을 맞췄습니다. 여기부터는 조금 다르다고 느낀 부분을 정리해 보겠습니다.

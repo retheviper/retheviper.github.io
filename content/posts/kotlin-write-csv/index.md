@@ -142,7 +142,7 @@ Kotlinのreflectionでフィールドの値を取得する場合はJavaと変わ
 datas.map { d ->
     fieldNames.mapNotNull { name ->
         d::class.memberProperties.find { it.name == name }?.let { field ->
-            field.call(d) ?: "" // フィールドの値を取得し、nullのばいは空白にする
+            field.call(d) ?: "" // フィールドの値を取得し、nullの場合は空白にする
             } 
         }
     }
@@ -150,7 +150,7 @@ datas.map { d ->
 
 ただ、ここで時間や日付を扱う場合、フォーマッタを利用したいケースがあるかと思います。例えば、アプリの中では`LocalTime`として扱っているが、CSVとしては`HH:mm`のような形で出力したい場合や、`LocalDate`を`yy/MM/dd`にしたい場合などですね。ここでフォーマット自体は、[DateTimeFormatter](https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html)を使うだけですが、問題は取得したフィールドがどの型であるかの判定です。
 
-Kotlinのreflectionで取得したフィールドは、[KProperty1](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-property1/)という型になっています。ここでどうやって元の型を取得するかが問題ですね。このクラスは[KCallable](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/)というインタフェースを実装していて、ここには[returnType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/return-type.html)というプロパティがあります。これで[KType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-type/)というインタフェースが取得できるようになるので、これを持って判定をおこ泣くことになります。
+Kotlinのreflectionで取得したフィールドは、[KProperty1](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-property1/)という型になっています。ここでどうやって元の型を取得するかが問題ですね。このクラスは[KCallable](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/)というインタフェースを実装していて、ここには[returnType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-callable/return-type.html)というプロパティがあります。これで[KType](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-type/)というインタフェースが取得できるようになるので、これを持って判定をおこなうことになります。
 
 しかし、名前から分かるように、`KType`はKotlinの型に関するインタフェースとなっています。比較したい`LocalDate`や`LocalTime`などのクラスはJavaのものなので、直接的な比較ができないですね。幸い、JavaのクラスでもKotlinで参照できる`KType`として変換することはできます。以下のようにです。
 
@@ -211,7 +211,7 @@ datas.map { d ->
 
 ```kotlin
 // ヘッダ
-val header = // 省略
+val headers = // 省略
 // 実際のデータ
 val rows = datas.map { /** 省略 */ }
 
@@ -225,7 +225,7 @@ csvWriter().writeAll(
 
 ## 最後に
 
-この度軽く「KotlinなんだからKotlin制のライブラリを使おう」と、軽い気持ちで採用したライブラリが想定していたものと違ったので困っていましたが、幸いJavaを使っていた時に[Apache POI](https://poi.apache.org/)を使って似たような機能をするライブラリを作ってみた経験があったのでその知識を活かせたと言えます。当時はまだ駆け出しのエンジニア(今もそうと思っていますが)だったので大変苦労した思い出でもありますが、今はその経験があってこそ対処できたようなものなので大変ありがたい経験だったなと思いました。
+今回「KotlinなんだからKotlin製のライブラリを使おう」と軽い気持ちで採用したライブラリが想定していたものと違ったので困っていましたが、幸いJavaを使っていた時に[Apache POI](https://poi.apache.org/)を使って似たような機能をするライブラリを作ってみた経験があったのでその知識を活かせたと言えます。当時はまだ駆け出しのエンジニア(今もそうと思っていますが)だったので大変苦労した思い出でもありますが、今はその経験があってこそ対処できたようなものなので大変ありがたい経験だったなと思いました。
 
 上記のコードに対してはちょっとしたライブラリを作ってみたので、またどこかで活用してみたいものですね。色々と改善して、のちにMaven Repositoryのようなところでも公開できるようになったらなと思います。
 

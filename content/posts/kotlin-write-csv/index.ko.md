@@ -29,11 +29,11 @@ fun writeAll(rows: List<List<Any?>>, targetFile: File, append: Boolean = false) 
 
 여기서 `rows`는 쓰기에 사용하는 데이터인데, 타입이 `List<List<Any?>>`이므로 내부의 `List` 하나가 CSV의 한 행을 뜻하고, 그 행들을 다시 `List`로 모은 것이 CSV 전체가 됩니다. 즉 data class 리스트를 쓰려면 각 인스턴스의 필드 값을 한 행짜리 `List`로 바꾸고, 그것들을 행 목록으로 모아야 합니다. 또한 CSV에는 보통 헤더가 있으므로, 첫 번째 행에는 헤더만 담은 `List`도 따로 준비해야 합니다.
 
-보기에는 복잡해 보이지만 [reflection](https://kotlinlang.org/docs/reflection.html)을 이용하면 data class의 필드명과 그 값을 얻을 수 있으므로 그것을 이용하여 data class의 List를 이 메소드에 적합한 형태로 바꿀 수 있습니다. 이것을 헤더를 만드는 방법과 data class의 값을 행으로 변경하는 두 단계로 나누어 설명합니다.
+보기에는 복잡해 보이지만 [reflection](https://kotlinlang.org/docs/reflection.html)을 이용하면 data class의 필드명과 그 값을 얻을 수 있으므로, data class의 List를 이 메서드에 맞는 형태로 바꿀 수 있습니다. 아래에서는 헤더를 만드는 단계와 data class 값을 행 데이터로 바꾸는 단계를 나누어 설명하겠습니다.
 
 ### 데이터 클래스에서 헤더 만들기
 
-먼저 헤더를 만듭니다. 헤더를 만들려면, data class로부터 필드를 취득해, 그 필드의 이름만을 취득하면 좋을 것입니다. `id`이라는 필드가 있다면 헤더도 그대로 `id`이 된다는 것입니다. 필드명과는 다른 이름을 붙이고 싶은 경우는 어노테이션을 활용하는 방법을 생각할 수 있습니다만, 우선은 필드명을 그대로 사용하는 방법으로부터 말하고 싶습니다.
+먼저 헤더를 만듭니다. 헤더를 만들려면 data class에서 필드를 가져오고, 그 이름만 뽑아 쓰면 됩니다. `id`라는 필드가 있다면 헤더도 그대로 `id`가 되는 식입니다. 필드명과 다른 이름을 붙이고 싶다면 어노테이션을 활용하는 방법도 있지만, 우선은 필드명을 그대로 사용하는 방법부터 보겠습니다.
 
 Kotlin의 data class에서 필드를 얻는 방법에는 세 가지가 있습니다. 우선은 [KClass.members](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.reflect/-k-class/members.html)가 있습니다. 다만, 이것이라면 메소드를 포함해, 모든 멤버를 가져오게 됩니다. 다음과 같습니다.
 
@@ -45,8 +45,7 @@ println(members)
 // [val Line_2.Data.id: kotlin.Int, val Line_2.Data.name: kotlin.String, fun Line_2.Data.component1(): kotlin.Int, fun Line_2.Data.component2(): kotlin.String, fun Line_2.Data.copy(kotlin.Int, kotlin.String): Line_2.Data, fun Line_2.Data.equals(kotlin.Any?): kotlin.Boolean, fun Line_2.Data.hashCode(): kotlin.Int, fun Line_2.Data.toString(): kotlin.String]
 ```
 
-필드명이 나타나기 때문에 이것도 사용할 수 있는 방법의 하나입니다만, 역시 data class라고 기본적으로 `equals()`, `hashCode()`, `copy()`, `toString()`, `componentN()`와 같은 메소드가
-그러므로 이것들을 필터링해야합니다. 예를 들면 다음과 같습니다.
+필드명이 나오기 때문에 이것도 쓸 수는 있지만, data class에는 기본적으로 `equals()`, `hashCode()`, `copy()`, `toString()`, `componentN()` 같은 메서드도 함께 포함됩니다. 따라서 이런 항목들은 따로 걸러 내야 합니다. 예를 들면 다음과 같습니다.
 
 ```kotlin
 val memberProperties = Data::class.members.filterNot { it.name.contains("component") || it.name == "copy" || it.name == "equals" || it.name == "hashCode" || it.name == "toString" }
@@ -212,7 +211,7 @@ datas.map { d ->
 
 ```kotlin
 // 헤더
-val header = // 생략
+val headers = // 생략
 // 실제 데이터
 val rows = datas.map { /** 생략 */ }
 

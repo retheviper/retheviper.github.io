@@ -17,7 +17,7 @@ DBを設計する時と、最終的にアプリで活用するデータの形は
 例えば以下のようなシナリオがあるとします。
 
 1. 社員はA、Bという二つの部署に配属される
-2. 社員が部署に配属される日付はそれぞれ
+2. 社員がそれぞれの部署に配属される日付は異なる
 
 この場合、データの作りには色々な観点があるかと思いますが、まず部署の配属日を基準にデータを作るとしたら、部署の種類、配属日とその日付に配属となった社員のリストを持つような形になるかと思います。Kotlinのコードとして表現するとしたら以下のような形ですね。
 
@@ -94,9 +94,9 @@ data class JoinedDates(
 
 ```kotlin
 [
-  JoinedDates(employerId=EmployerId(value=1), departmentA=2022-01-01, departmentB=2022-01-01), 
-  JoinedDates(employerId=EmployerId(value=2), departmentA=2022-01-01, departmentB=2022-02-01), 
-  JoinedDates(employerId=EmployerId(value=3), departmentA=2022-02-01, departmentB=2022-02-01)
+  JoinedDates(employerId=1, departmentA=2022-01-01, departmentB=2022-01-01), 
+  JoinedDates(employerId=2, departmentA=2022-01-01, departmentB=2022-02-01), 
+  JoinedDates(employerId=3, departmentA=2022-02-01, departmentB=2022-02-01)
 ]
 ```
 
@@ -200,7 +200,7 @@ val joinedDates = aggregator.getList { id, joinedDate ->
 
 ## 最後に
 
-サーバサイドKoltinだと、多くの場合にデータを`List`として扱うのが普通かなと思いますが、場合によっては`Map`を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した`compute()`以外でも、[getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html)、[getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html)などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は[前回のポスト](../exposed-mapping-record-to-object)でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。
+サーバサイドKotlinだと、多くの場合にデータを`List`として扱うのが普通かなと思いますが、場合によっては`Map`を使うのもロジックを書いていく中では良い選択になるかと思います。特に、今回紹介した`compute()`以外でも、[getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html)、[getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html)などの機能が便利なので色々と活用できる場面が多いかなと思います。この処理は[前回のポスト](../exposed-mapping-record-to-object)でも似たようなものを紹介したことがありますので、興味のある方はそちらも参考にしてください。
 
 プログラミング言語が提供するスタンダードライブラリは色々と見逃しやすいところがあるかなと思いますが、よくドキュメントや自動補完で一覧に登場する関数に注目すると、こういう風に必要なものがいきなり現れることもあるかと思います。まだ私もKotlinを触って1年ほどしか経ってないひよこなものなので、これからもどんどん新しい発見があると嬉しいなと思いますね。
 

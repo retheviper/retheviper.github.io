@@ -325,7 +325,7 @@ for(int var2 = ((Collection)list).size(); i < var2; ++i) {
 }
 ```
 
-`IntRange` 객체가 만들어지지 않았습니다. 그럼, 자전으로 실장해 보면 어떻게 될까요.
+`IntRange` 객체가 만들어지지 않았습니다. 그럼 직접 구현해 보면 어떻게 될까요.
 ```kotlin
 inline val SparseArray<*>.indices: IntRange
     get() = 0 until size()

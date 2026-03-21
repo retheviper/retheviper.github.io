@@ -138,7 +138,7 @@ class MyClass private constructor() {
 }
 ```
 
-上記のコードがコンパイスされると、`companion object`はSingletonクラスになります。なので、クラスのprivateフィールドに外部クラスからアクセスできるようにする必要があり、コンパイラが`getter`、`setter`を追加で生成することになるということです。生成されたメソッドは`companion object`から参照されることになります。以下を見てください。
+上記のコードがコンパイルされると、`companion object`はSingletonクラスになります。なので、クラスのprivateフィールドに外部クラスからアクセスできるようにする必要があり、コンパイラが`getter`、`setter`を追加で生成することになるということです。生成されたメソッドは`companion object`から参照されることになります。以下を見てください。
 
 ```text
 ALOAD 1
@@ -187,9 +187,9 @@ INVOKESPECIAL be/myapplication/MyClass$Companion.getTAG ()Ljava/lang/String;
 ARETURN
 ```
 
-定数が`public`になっている場合はダイレクトにアクセスできるようになりますが、依然として`getter`メソッドを通して値にアクセスことになります。
+定数が`public`になっている場合はダイレクトにアクセスできるようになりますが、依然として`getter`メソッドを通して値にアクセスすることになります。
 
-そして定数の値を格納するために、Kotlinコンパイラは`companion object`ではなく、それを持つクラスの方に`private static final`フィールドを生成します。さらに`companion object`からこのフィールドにアクセスするため、またのメソッドを生成することとなります。
+そして定数の値を格納するために、Kotlinコンパイラは`companion object`ではなく、それを持つクラスの方に`private static final`フィールドを生成します。さらに`companion object`からこのフィールドにアクセスするため、別のメソッドを生成することとなります。
 
 ```text
 INVOKESTATIC be/myapplication/MyClass.access$getTAG$cp()Ljava/lang/String; 
@@ -280,7 +280,7 @@ class MyClass() : Parcelable {
 
 #### Kotlin 1.2.40以降の場合
 
-Kotlinn 1.2.40からは、`companion object`に定義された値はメインクラスの方に格納されるということには変わりがありませんが、メソッドの生成と呼び出しなしで直接アクセスができるようになりました。これをJavaのコードとして表現すると以下の通りです。
+Kotlin 1.2.40からは、`companion object`に定義された値はメインクラスの方に格納されるということには変わりがありませんが、メソッドの生成と呼び出しなしで直接アクセスができるようになりました。これをJavaのコードとして表現すると以下の通りです。
 
 ```java
 public final class MyClass {
@@ -296,9 +296,9 @@ public final class MyClass {
 }
 ```
 
-また、上記のように`companion object`にメソッドが一つもない場合は、ProGuardやR8によるツールと使うとクラス自体が消えることで最適化されます。
+また、上記のように`companion object`にメソッドが一つもない場合は、ProGuardやR8のようなツールを使うとクラス自体が消えることで最適化されます。
 
-ただ、`companion object`に定義さえたメソッドの場合はコストが少しかかります。フィールドがメインクラスの方に格納されてあるため、`companion object`に定義されたprivateフィールドにアクセスするためには依然として生成されたメソッドを経由することになります。
+ただ、`companion object`に定義されたメソッドの場合はコストが少しかかります。フィールドがメインクラスの方に格納されてあるため、`companion object`に定義されたprivateフィールドにアクセスするためには依然として生成されたメソッドを経由することになります。
 
 ## 最後に
 

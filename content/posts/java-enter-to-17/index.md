@@ -297,7 +297,7 @@ String formattedString = String.format("this is %s", name);
 String newFormattedString = "this is %s".formatted(name);
 ```
 
-Koltinだと[String.format](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/format.html)と[String Templates](https://kotlinlang.org/docs/basic-syntax.html#string-templates)が使えます。
+Kotlinだと[String.format](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/format.html)と[String Templates](https://kotlinlang.org/docs/basic-syntax.html#string-templates)が使えます。
 
 ```kotlin
 val name = "formatted string"

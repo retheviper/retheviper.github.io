@@ -193,9 +193,9 @@ print(range.upperBound) // 20
 let array = Array(range) // [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 ```
 
-ただ、上記のコードを見ると気付きにくいところですが、Range実装については両言語での扱いが少し違うところがあります。Kotlinでは`rangeTo()`の戻り値が、元の値の型に合わせて`InteRange`や`LongRange`のようなものとなっていて、最小値と最大値をプロパティで取得する場合も`rangeTo`に渡された二つの値の型と一緒です。
+ただ、上記のコードを見ると気付きにくいところですが、Range実装については両言語での扱いが少し違うところがあります。Kotlinでは`rangeTo()`の戻り値が、元の値の型に合わせて`IntRange`や`LongRange`のようなものとなっていて、最小値と最大値をプロパティで取得する場合も`rangeTo`に渡された二つの値の型と一緒です。
 
-しかし、Swiftの[Range](https://developer.apple.com/documentation/swift/range)は`Range<Bound>`という型で、当然Rangeから取得できる最小値や最大値も[Bound](https://developer.apple.com/documentation/swift/rangeexpression/bound/)の型となっています。IntやLongとはまた別の型になるので、場合によっては注意して使う必要があるかもしれません。
+一方で、ここで使っている`min...max`はSwiftでは[ClosedRange](https://developer.apple.com/documentation/swift/closedrange)になります。`lowerBound`と`upperBound`の型自体はこの例なら`Int`ですが、Kotlinのように`IntRange`や`LongRange`のような専用型名ではなく、Swiftでは`ClosedRange<Int>`のようにジェネリクスとして表現されます。
 
 ### Swiftだけのもの
 

@@ -323,7 +323,7 @@ val br: BufferedReader = Files.newBufferedReader(path)
 
 #### extension
 
-クラスにからのcompanion objectを定義しておいて、外部から拡張関数でfactory functionを付ける形です。元のクラスをいじらなくても良くなるし、パッケージと可視性の制御など拡張関数の持つ特徴を活用できますね。
+クラスにcompanion objectを定義しておいて、外部から拡張関数でfactory functionを付ける形です。元のクラスをいじらなくても良くなるし、パッケージと可視性の制御など拡張関数の持つ特徴を活用できますね。
 
 ```kotlin
 interface Tool {
