@@ -49,7 +49,7 @@ translationKey: "posts/posts-that-referenced-my-blog"
 
 ## 5. Ktor 입문 글에서 참고된 Ktor 첫인상 글
 
-다섯 번째는 Zenn의 [Springの代わりを求めた先に~Ktor + Exposed~](https://zenn.dev/jy8752/articles/1fd789f9419adb) 입니다.
+다섯 번째는 Zenn의 [Springの代わりを求めた先に～Ktor + Exposed～](https://zenn.dev/jy8752/articles/1fd789f9419adb) 입니다.
 
 이 글은 Spring 대신 Ktor와 Exposed를 써 본 경험을 정리한 글인데, 마지막 참고 자료 목록에서 제 블로그의 [Ktor를 써 본 첫인상](/ko/posts/ktor-first-impression/) 글이 함께 링크되어 있었습니다.
 
