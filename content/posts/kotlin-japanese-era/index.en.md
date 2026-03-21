@@ -190,6 +190,6 @@ Also, you need to be careful because there are cases where `JapaneseEra.REIWA` c
 
 How was it? This is a summary of what I started researching out of curiosity, but it is also a process that is actually necessary in my day job, so I think this was a good opportunity to think about how this can be implemented as an extension function.
 
-Also, regarding the Java API, there was a good article summarizing Java-version support for era changes and new era names, so if you are interested, it is worth looking up.
+Also, regarding the Java API, there was [a good article summarizing Java-version support for era changes and new era names](https://qiita.com/yamadamn/items/56e7370bae2ceaec55d5), so if you are interested, it is worth looking up.
 
 See you soon!

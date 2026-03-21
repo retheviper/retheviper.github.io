@@ -213,7 +213,7 @@ Apps like this don't really need to be native, so I feel like native support for
 
 ## OneDrive
 
-This is a fairly rare case for a Microsoft product, but the response has been delayed. However, it seems that the Universal version is available as a Preview this month (https://techcommunity.microsoft.com/t5/microsoft-onedrive-blog/onedrive-sync-for-native-arm-devices-now-in-public-preview/ba-p/3031668), so an Apple Silicon native version may be released soon. In that case, it should be updated automatically on the App Store, so you just have to wait.
+This is a fairly rare case for a Microsoft product, but the response has been delayed. However, it seems that [the Universal version is available as a Preview this month](https://techcommunity.microsoft.com/t5/microsoft-onedrive-blog/onedrive-sync-for-native-arm-devices-now-in-public-preview/ba-p/3031668), so an Apple Silicon native version may be released soon. In that case, it should be updated automatically on the App Store, so you just have to wait.
 
 ## Flutter
 

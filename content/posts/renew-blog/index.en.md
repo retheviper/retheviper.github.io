@@ -64,7 +64,7 @@ So this year, I've set a goal of actually using some of the techniques, and I'd 
 
 It's something I've set as a New Year's goal, but I've been dabbling with it little by little since last year, and this year I'd like to actually create an Android and desktop application. Just last year, [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/) was also officially released, so I think the timing is perfect.
 
-I'm also interested in SwiftUI due to the announcement of [XCode Cloud](https://developer.apple.com/documentation/Xcode/About-Continuous-Integration-and-Delivery-with-Xcode-Cloud), the ability to publish apps via links (https://developer.apple.com/support/unlisted-app-distribution/), and the ability to build apps with [Swift Playgrounds](https://www.apple.com/swift/playgrounds/), but I think it would be better to try it after I use Kotlin at work and have a certain level of proficiency with Compose.
+I'm also interested in SwiftUI due to the announcement of [XCode Cloud](https://developer.apple.com/documentation/Xcode/About-Continuous-Integration-and-Delivery-with-Xcode-Cloud), [the ability to publish apps via links](https://developer.apple.com/support/unlisted-app-distribution/), and the ability to build apps with [Swift Playgrounds](https://www.apple.com/swift/playgrounds/), but I think it would be better to try it after I use Kotlin at work and have a certain level of proficiency with Compose.
 
 Since I'm using a Mac, I think I should try creating an app with Swift at least once.
 

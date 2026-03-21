@@ -47,6 +47,6 @@ Authentication is the most important and common feature of web applications, but
 
 Also, since the JWT payload is not encrypted (it's just a base64 string), there seems to be a problem that if the JWT is hijacked, its contents can be viewed. It seems that something called [PASETO](https://developer.okta.com/blog/2020/07/23/introducing-jpaseto) has been proposed to supplement this, but I don't know if it will be used as sub-supplied as JWT.
 
-Also, regarding the issue of authentication methods in the first place, it is said that once quantum computers are available in general, it will be possible to analyze cryptography using conventional methods, so the very concept of encryption may change. If that happens, existing apps will have to be completely rebuilt.
+Also, regarding the issue of authentication methods in the first place, it is said that once quantum computers are available in general, [it will be possible to analyze cryptography using conventional methods](https://www.nttdata.com/jp/ja/data-insight/2018/0611), so the very concept of encryption may change. If that happens, existing apps will have to be completely rebuilt.
 
 Security is difficult. In addition to encryption, I feel that various efforts are needed to appropriately select a design and strategy that is convenient for users.

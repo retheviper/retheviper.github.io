@@ -179,7 +179,7 @@ data class Request(
 }
 ```
 
-Here, a companion object is used to create the `Request` instance while mapping the data. `requireNotNull()` is used for validation, and an error message is produced if the value is null.
+Here, a companion object is used to create the `Request` instance while mapping the data. [requireNotNull()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/require-not-null.html) is used for validation, and an error message is produced if the value is null.
 
 So far so good, but the problem is the error message. It tells us which parameter was null by pulling the field name from `Data` via reflection and embedding it as a string. Even if this is intentional when an error occurs, was it really worth using reflection, which is slower?
 

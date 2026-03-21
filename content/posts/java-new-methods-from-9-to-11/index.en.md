@@ -321,7 +321,7 @@ String stripLeading = "\n  hello world  \u2005".stripLeading(); // "hello world 
 String stripTrailing = "\n  hello world  \u2005".stripTrailing(); // "\n  hello world"
 ```
 
-I think there are enough reasons to use `strip()` just from the explanation so far, but there is actually one more reason. It's performance. In terms of performance, `strip()` is said to be [5 times faster] than `trim()` (https://stackoverflow.com/questions/53640184/why-is-string-strip-5-times-faster-than-string-trim-for-blank-string-in-java), so `strip()` should be used instead of `trim()` if possible.
+I think there are enough reasons to use `strip()` just from the explanation so far, but there is actually one more reason. It's performance. In terms of performance, `strip()` is said to be [5 times faster](https://stackoverflow.com/questions/53640184/why-is-string-strip-5-times-faster-than-string-trim-for-blank-string-in-java) than `trim()`, so `strip()` should be used instead of `trim()` if possible.
 
 ## isBlank (11)
 

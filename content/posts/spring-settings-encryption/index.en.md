@@ -142,7 +142,7 @@ If you want to encrypt within your code, you can do so by calling an Encryptor r
 
 ## Command line tools
 
-If you [download] Jasypt (https://github.com/jasypt/jasypt/releases/download/jasypt-1.9.3/jasypt-1.9.3-dist.zip), you will be able to encrypt and decrypt data using command line tools. When you download the ditributable version from the link and unzip it, you will find a bat file and a sh file in the bin folder. The functions of the case file are as follows.1. encrypt.sh(bat): Password-based encryption of plaintext
+If you [download](https://github.com/jasypt/jasypt/releases/download/jasypt-1.9.3/jasypt-1.9.3-dist.zip) Jasypt, you will be able to encrypt and decrypt data using command line tools. When you download the ditributable version from the link and unzip it, you will find a bat file and a sh file in the bin folder. The functions of the case file are as follows.1. encrypt.sh(bat): Password-based encryption of plaintext
 2. decrypt.sh(bat): Decrypt ciphertext based on password
 3. digest.sh(bat): Generates a hash code that cannot be decomposed
 4. listAlgorithm.sh(bat): List the types of algorithms that can be used for encryption

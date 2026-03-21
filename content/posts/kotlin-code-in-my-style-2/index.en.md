@@ -8,7 +8,7 @@ tags:
   - kotlin
 ---
 
-Following the previous post, I wrote about a number of Kotlin patterns again this time. Kotlin provides many functions in its standard library and language features, so simply using them well can greatly improve productivity and code quality. This time as well, I want to show how Java-like patterns can be implemented more efficiently in Kotlin.
+Following [the previous post](../kotlin-code-in-my-style-1/), I wrote about a number of Kotlin patterns again this time. Kotlin provides many functions in its standard library and language features, so simply using them well can greatly improve productivity and code quality. This time as well, I want to show how Java-like patterns can be implemented more efficiently in Kotlin.
 
 Of course, in Kotlin, you can basically write code that works in Java style without any problems, but in many cases it is easier and shorter to write code that is unique to Kotlin, and you can save a lot of effort (and in most cases, the standard library implementation is higher quality than the code you wrote...), so I think it is well worth making this kind of effort.
 

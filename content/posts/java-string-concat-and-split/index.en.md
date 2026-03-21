@@ -13,6 +13,8 @@ This is already the third entry in my "late to the topic" series. That series ha
 
 Even when something is close to simple syntactic sugar, you sometimes still need to choose carefully based on the surrounding code, readability, and similar concerns. For example, the `transferTo()` method on `InputStream` that I introduced earlier falls into that category. So when using an API, it is often worth checking how it is actually implemented if you want to write good code.
 
+In Java, `String` is [Immutable](https://en.wikipedia.org/wiki/Immutable_object), so the way strings are built and transformed matters. I also referred to [this article by Baeldung](https://www.baeldung.com/java-string-performance) while looking into the performance characteristics around these operations.
+
 With that said, let us get into the main topic. First, concatenation.
 
 ## Concatenating

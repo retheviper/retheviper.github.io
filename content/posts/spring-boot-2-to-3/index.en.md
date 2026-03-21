@@ -210,7 +210,7 @@ I managed to successfully upgrade Java and Spring Boot, but as I mentioned earli
 
 However, Spring Boot 2 support will eventually end, and at that point many teams will have no choice but to move to Spring Boot 3. By then there will probably be more migration examples available.
 
-As for Java itself, I do not expect major issues when moving from 11 to 17, but migrating from 8 deserves more caution because of things like the module system introduced in Java 9.
+As for Java itself, I do not expect major issues when moving from 11 to 17, but migrating from 8 deserves more caution because of things like the [module system](https://www.oracle.com/webfolder/technetwork/jp/javamagazine/Java-JA18-LibrariesToModules.pdf) introduced in Java 9.
 
 Fortunately, although I have not yet tried a native build, I was able to confirm that startup time improved even on the JVM. On local startup, the application took 31 seconds with Java 11 and Spring Boot 2, and 23 seconds with Java 17 and Spring Boot 3. That is not a rigorous benchmark, but it suggests there may be some overall performance improvement.
 

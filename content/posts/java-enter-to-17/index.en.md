@@ -13,7 +13,7 @@ This month saw the release of a new LTS version, Java 17. I think there are stil
 
 At present, most of the famous JDKs such as [Eclipse Temurin](https://adoptium.net) (formerly AdoptOpenJDK) and [Zulu](https://www.azul.com/downloads/) have either completed the release of version 17 or are in the process of supporting it. Also, [Oracle JDK 17 is now free](https://www.oracle.com/java/technologies/downloads/#java17), so choosing this may not be a bad option.
 
-Also, in addition to making it free of charge and diversifying the JDK, the lawsuit between Google and Oracle ended with Google's victory, so now that it is possible to use Java 17 on Android, there may be more situations in which Java 17 can be used in the future. In fact, it's still a long way off, but when using Spring, it seems that Java 17 will be the baseline for Spring 6 in 2022 (https://spring.io/blog/2021/09/02/a-java-17-and-jakarta-ee-9-baseline-for-spring-framework-6). Therefore, even in the field where Java 11 has not been adopted, I think there is a possibility of switching to Java 17, taking into account the support period, etc.
+Also, in addition to making it free of charge and diversifying the JDK, the lawsuit between Google and Oracle ended with Google's victory, so now that it is possible to use Java 17 on Android, there may be more situations in which Java 17 can be used in the future. In fact, it's still a long way off, but when using Spring, it seems that [Java 17 will be the baseline for Spring 6 in 2022](https://spring.io/blog/2021/09/02/a-java-17-and-jakarta-ee-9-baseline-for-spring-framework-6). Therefore, even in the field where Java 11 has not been adopted, I think there is a possibility of switching to Java 17, taking into account the support period, etc.
 
 So, this time I will talk about what has changed in Java 17, but I would like to trace the changes from two main points of view: language specifications such as the addition of new reserved words and new writing methods, and newly added APIs. Depending on the project, there may be cases of migrating from Java 1.8 to Java 17, but this blog covers the changes and new APIs that occurred between 9 and 11, and I think there are many other sites that can be used as reference, so this time I will omit the changes from 8 to 11 and will only cover the changes between 11 and 17.
 
@@ -27,7 +27,7 @@ Therefore, on the Java side, [Project Lanai](https://openjdk.java.net/projects/l
 
 ## macOS/AArch64 Port (17)
 
-From 17 onwards, we have made it compatible with new Macs equipped with Apple Silicon, such as M1 (https://openjdk.java.net/jeps/391). In some cases, other JDKs such as [Zulu](https://www.azul.com/downloads/) supported it independently, but now that it is supported by OpenJDK (OracleJDK), I think that other JDKs that are based on this, such as [Eclipse Temurin](https://adoptium.net/) and [Microsoft Build of OpenJDK](https://www.microsoft.com/openjdk), can also be used naturally on ARM-based Macs.
+From 17 onwards, we have made it compatible with new Macs equipped with [Apple Silicon, such as M1](https://openjdk.java.net/jeps/391). In some cases, other JDKs such as [Zulu](https://www.azul.com/downloads/) supported it independently, but now that it is supported by OpenJDK (OracleJDK), I think that other JDKs that are based on this, such as [Eclipse Temurin](https://adoptium.net/) and [Microsoft Build of OpenJDK](https://www.microsoft.com/openjdk), can also be used naturally on ARM-based Macs.
 
 ## Record (17)
 
@@ -577,7 +577,7 @@ In Kotlin, there is no need to do `collect` in the first place, so it is better 
 
 ## lastly
 
-What did you think? As expected, it was difficult to organize all the changes, so I tried to highlight some of the most noticeable changes, but it's still quite a large amount. However, one thing that is certain is that Java 17 is a more modern version of the language than 11, so it seems well worth introducing if you are using Java for projects. Also, it seems that Java 15 has improved performance due to improvements in G1GC compared to Java 11 (https://www.optaplanner.org/blog/2021/01/26/HowMuchFasterIsJava15.html), so it is good in terms of performance.
+What did you think? As expected, it was difficult to organize all the changes, so I tried to highlight some of the most noticeable changes, but it's still quite a large amount. However, one thing that is certain is that Java 17 is a more modern version of the language than 11, so it seems well worth introducing if you are using Java for projects. Also, it seems that Java 15 has improved performance due to [improvements in G1GC compared to Java 11](https://www.optaplanner.org/blog/2021/01/26/HowMuchFasterIsJava15.html), so it is good in terms of performance.
 
 Even if you are using Kotlin, there may not be much benefit if you only look at the API, but as long as you are using JVM, you will be able to get benefits such as improved performance, so I think it is a good idea to consider introducing it. Also, various interesting APIs may appear one after another in the next LTS.
 

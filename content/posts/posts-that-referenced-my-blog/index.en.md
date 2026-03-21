@@ -17,7 +17,7 @@ This time, I would like to briefly introduce some examples that I found.
 
 ## 1. Qiita article based on Spring DI article
 
-The first one we were able to confirm was Qiita's article about using `@Autowired` with constructor injection in Spring.
+The first one we were able to confirm was Qiita's [article about using `@Autowired` with constructor injection in Spring](https://qiita.com/yuto-hatano/items/69d01343f710117e4243).
 
 This article explains how to use `@Autowired` with Spring, and in particular why constructor injection is preferable to field injection. The references at the end of the article included articles related to Spring DI that I previously wrote.
 
@@ -25,33 +25,33 @@ What was interesting was that the link was the URL for the old blog configuratio
 
 ## 2. Java 9-11 articles referenced in the Collectors API article
 
-The next thing I found was Qiita's article on the Java `Collectors` API.
+The next thing I found was Qiita's [article on the Java `Collectors` API](https://qiita.com/tttol777/items/367b1cf95f78b0002709).
 
-This article is a comprehensive review of Java's `Collectors` API with examples, and where `flatMapping` is explained, my blog's article on the new methods from Java 9 to 11 was linked as reference material.
+This article is a comprehensive review of Java's `Collectors` API with examples, and where `flatMapping` is explained, my blog's [article on the new methods from Java 9 to 11](../java-new-methods-from-9-to-11/#flatmapping-9) was linked as reference material.
 
 What was particularly impressive was that there was a direct link not to the top of the article, but to the anchor with the explanation of `flatMapping`. I think it was used to pinpoint the necessary context. Technical articles are often read as supplementary material for specific APIs or detailed specifications, but these links feel more like ``actual use'' than just an introduction.
 
 ## 3. File copy article referenced in the Java ZIP compression article
 
-The third one is an article from SOFTEMCOM Developers Blog about compressing files into ZIP format in Java.
+The third one is SOFTEMCOM Developers Blog's [article about compressing files into ZIP format in Java](https://techblog-softem.com/developers/blog/2023/09/22/java%E3%81%A7%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92zip%E3%81%AB%E5%9C%A7%E7%B8%AE%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%952023%E5%B9%B4%E7%89%88/).
 
-This article organizes the code to create a ZIP file in Java and also touches on file processing using `transferTo`. In that vein, my blog article about file I/O was introduced as a reference site.
+This article organizes the code to create a ZIP file in Java and also touches on file processing using `transferTo`. In that vein, my blog [article about file I/O](../java-file-copy/) was introduced as a reference site.
 
 What's interesting about this example is that it's not about the exact same topic as my article, but rather a close technical context. The theme of "file copying" was reused more broadly in discussions about stream processing and how to handle I/O, and I thought it was quite interesting to see a blog post serve as material for another explanation.
 
 ## 4. Kotlin performance article referenced in Loglass' tech stack article
 
-The fourth one is Zenn's article on Loglass's backend technology stack in 2023.
+The fourth one is Zenn's [article on Loglass's backend technology stack in 2023](https://zenn.dev/loglass/articles/open-loglass-tech-stack-2023).
 
-In this article, Loglass's backend team summarizes the technology stack as of 2023, the reasons for its adoption, and the advantages and disadvantages of each. In the process of explaining Kotlin, my blog article on Kotlin's hidden cost was linked as a reference material along with the context that "Kotlin has hidden costs."
+In this article, Loglass's backend team summarizes the technology stack as of 2023, the reasons for its adoption, and the advantages and disadvantages of each. In the process of explaining Kotlin, my blog [article on Kotlin's hidden cost](../kotlin-hidden-cost-1/) was linked as a reference material along with the context that "Kotlin has hidden costs."
 
 This left quite an impression on me personally. This is because my writing was referenced in an article that was not just an introduction to grammar, but actually talked about service development and performance. Regardless of whether I like Kotlin or not, I was a little moved that my record of thinking about where the costs are and what I should be concerned about was used again in this context.
 
 ## 5. Ktor first impressions article referenced in Ktor introductory article
 
-The fifth one is Zenn's article about choosing Ktor + Exposed instead of Spring.
+The fifth one is Zenn's [article about choosing Ktor + Exposed instead of Spring](https://zenn.dev/jy8752/articles/1fd789f9419adb).
 
-This article summarizes my experience using Ktor and Exposed instead of Spring, and included my blog's Ktor first-impressions article in the references at the end.
+This article summarizes my experience using Ktor and Exposed instead of Spring, and included my blog's [Ktor first-impressions article](../ktor-first-impression/) in the references at the end.
 
 Looking at this example, I realized that the "first impressions" type of articles I wrote a long time ago can also serve as a supplement to someone else's introductory article. The name "First Impressions" may seem a bit light, but it may be a surprisingly useful record in the sense that it records what caught the eye of first-time users and what they found interesting.
 

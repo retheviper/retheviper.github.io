@@ -48,7 +48,7 @@ There's also WSL and GitHub, but in many ways Microsoft's recent changes and inv
 
 ## Flutter for web
 
-[Flutter](https://flutter.dev) has the advantage of being able to develop apps for two platforms, iOS and Android, at the same time, and is comparable in performance to native apps compared to React Native, which has the same functionality.Recently, web applications using Flutter seem to be appearing one after another. This is not surprising since Dart (https://dart.dev), the language used to write Flutter, was developed with the goal of next-generation JavaScript, but the fact that you can develop both mobile and web applications with one language is as attractive as Blazor.
+[Flutter](https://flutter.dev) has the advantage of being able to develop apps for two platforms, iOS and Android, at the same time, and is comparable in performance to native apps compared to React Native, which has the same functionality.Recently, web applications using Flutter seem to be appearing one after another. This is not surprising since [Dart](https://dart.dev), the language used to write Flutter, was developed with the goal of next-generation JavaScript, but the fact that you can develop both mobile and web applications with one language is as attractive as Blazor.
 
 However, since it is being developed by Google, wouldn't it be better to use Kotlin instead of Dart? I feel that way. There is also the question of how long Flutter will be able to survive since Google tends to abandon its own services quickly. Since Microsoft's Xamarin is not so good, I think you might decide to use Flutter for mobile development, but if you want to develop a web application, I think Blazor, which uses C#, is more attractive.
 

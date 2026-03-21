@@ -11,7 +11,7 @@ tags:
   - rest api
 ---
 
-Previously, I wrote a post about Spring WebFlux (../spring-webflux/), where I briefly touched on the MVC pattern (`Controller`/`Service`) and `Functional Endpoint` (`Router`/`Handler`). To state the conclusion first, the introduction of Functional Endpoint can be said to be an attempt to improve the MVC pattern, which is a good pattern that has been used for a long time, but has problems such as performance and unsuitability for functional programming.
+Previously, I wrote [a post about Spring WebFlux](../spring-webflux/), where I briefly touched on the MVC pattern (`Controller`/`Service`) and `Functional Endpoint` (`Router`/`Handler`). To state the conclusion first, the introduction of Functional Endpoint can be said to be an attempt to improve the MVC pattern, which is a good pattern that has been used for a long time, but has problems such as performance and unsuitability for functional programming.
 
 Now, just from that explanation, I feel like I should use Functional Endpoint as much as possible when using Spring WebFlux. But what actually happens? For example, if you use Controller/Service like traditional Spring MVC, is the performance really lower than when you use Router/Handler? Also, are there any "problems that did not exist in the MVC pattern" that should be considered when using Functional Endpoint? You can think of something like this.
 
