@@ -11,7 +11,7 @@ tags:
 translationKey: "posts/java-se-8-gold"
 ---
 
-이번에 Java SE 8 Gold를 응시했습니다. Silver를 딴 것이 작년 9월 말이었으니 약 반년 만의 수험입니다. 이전에 Silver를 봤을 때도 [Oracle Java SE 8 Silver 후기](../java-se-8-silver)로 감상을 남겼기 때문에, 이번에도 Gold를 준비하면서 느낀 점을 정리해 보겠습니다.
+이번에 Java SE 8 Gold를 응시했습니다. Silver를 딴 것이 작년 9월 말이었으니 약 반년 만의 수험입니다. 이전에 Silver를 봤을 때도 [Oracle Java SE 8 Silver 후기](/ko/posts/java-se-8-silver/)로 감상을 남겼기 때문에, 이번에도 Gold를 준비하면서 느낀 점을 정리해 보겠습니다.
 
 ## Generics
 

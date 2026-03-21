@@ -27,7 +27,7 @@ translationKey: "posts/posts-that-referenced-my-blog"
 
 두 번째는 Qiita의 [〖Java〗CollectorsAPI 1000本ノック](https://qiita.com/tttol777/items/367b1cf95f78b0002709) 입니다.
 
-이 글은 Java의 `Collectors` API를 예제와 함께 폭넓게 정리한 글인데, `flatMapping`을 설명하는 부분에서 제 블로그의 [9からの新メソッドめぐり](https://retheviper.github.io/posts/java-new-methods-from-9-to-11/#flatmapping-9) 글을 참고 자료로 연결하고 있었습니다.
+이 글은 Java의 `Collectors` API를 예제와 함께 폭넓게 정리한 글인데, `flatMapping`을 설명하는 부분에서 제 블로그의 [9からの新メソッドめぐり](/ko/posts/java-new-methods-from-9-to-11/#flatmapping-9) 글을 참고 자료로 연결하고 있었습니다.
 
 특히 메인 글이 아니라 `flatMapping` 설명이 있는 앵커까지 직접 걸어 둔 점이 인상적이었습니다. 필요한 문맥을 정확히 짚어 연결했다는 뜻이기 때문입니다. 기술 글이 이렇게 특정 API의 세부 설명을 보완하는 용도로 쓰일 때가 있는데, 이런 링크는 단순한 소개보다 더 직접적인 쓰임새가 느껴집니다.
 
@@ -35,7 +35,7 @@ translationKey: "posts/posts-that-referenced-my-blog"
 
 세 번째는 SOFTEMCOM Developers Blog의 [JavaでファイルをZipに圧縮する方法(2023年版)](https://techblog-softem.com/developers/blog/2023/09/22/java%E3%81%A7%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%82%92zip%E3%81%AB%E5%9C%A7%E7%B8%AE%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%952023%E5%B9%B4%E7%89%88/) 입니다.
 
-이 글은 Java에서 ZIP 파일을 만드는 코드를 정리하면서, `transferTo`를 활용한 파일 처리 이야기를 덧붙입니다. 그 과정에서 제 블로그의 [다시 보는 파일 복사](https://retheviper.github.io/posts/java-file-copy/) 글이 참고 사이트로 소개되어 있었습니다.
+이 글은 Java에서 ZIP 파일을 만드는 코드를 정리하면서, `transferTo`를 활용한 파일 처리 이야기를 덧붙입니다. 그 과정에서 제 블로그의 [다시 보는 파일 복사](/ko/posts/java-file-copy/) 글이 참고 사이트로 소개되어 있었습니다.
 
 이 사례가 흥미로운 이유는 제 글의 핵심 주제와 정확히 같은 제목의 글이 아니라, 인접한 기술 맥락에서 연결되었다는 점입니다. "파일 복사"라는 주제가 더 넓게는 스트림 처리와 I/O 활용이라는 주제 속에서 다시 소비된 셈인데, 블로그 글 하나가 이런 식으로 다른 설명의 재료가 되는 것도 꽤 재미있는 일입니다.
 
@@ -43,7 +43,7 @@ translationKey: "posts/posts-that-referenced-my-blog"
 
 네 번째는 Zenn의 [ログラスのバックエンド技術スタック2023](https://zenn.dev/loglass/articles/open-loglass-tech-stack-2023) 입니다.
 
-이 글은 Loglass 백엔드 팀이 2023년 시점의 기술 스택과 선택 이유, 그리고 각 기술의 장단점을 정리한 글입니다. Kotlin을 설명하는 부분에서 "Kotlin에는 숨은 비용이 있다"는 문맥과 함께 제 블로그의 [Kotlin의 숨겨진 비용 1](https://retheviper.github.io/posts/kotlin-hidden-cost-1/) 글이 참고 자료로 링크되어 있었습니다.
+이 글은 Loglass 백엔드 팀이 2023년 시점의 기술 스택과 선택 이유, 그리고 각 기술의 장단점을 정리한 글입니다. Kotlin을 설명하는 부분에서 "Kotlin에는 숨은 비용이 있다"는 문맥과 함께 제 블로그의 [Kotlin의 숨겨진 비용 1](/ko/posts/kotlin-hidden-cost-1/) 글이 참고 자료로 링크되어 있었습니다.
 
 이건 개인적으로 특히 인상 깊었습니다. 단순한 문법 소개가 아니라, 실제 서비스 운영과 성능 감각을 이야기하는 글 속에서 제 글이 연결되었기 때문입니다. Kotlin을 좋아하는 것과 별개로, 어떤 비용이 숨어 있고 어디서 주의해야 하는지를 고민했던 기록이 이런 맥락에서 다시 참조된 것은 꽤 뜻깊게 느껴졌습니다.
 
@@ -51,7 +51,7 @@ translationKey: "posts/posts-that-referenced-my-blog"
 
 다섯 번째는 Zenn의 [Springの代わりを求めた先に~Ktor + Exposed~](https://zenn.dev/jy8752/articles/1fd789f9419adb) 입니다.
 
-이 글은 Spring 대신 Ktor와 Exposed를 써 본 경험을 정리한 글인데, 마지막 참고 자료 목록에서 제 블로그의 [Ktor를 써 본 첫인상](https://retheviper.github.io/posts/ktor-first-impression/) 글이 함께 링크되어 있었습니다.
+이 글은 Spring 대신 Ktor와 Exposed를 써 본 경험을 정리한 글인데, 마지막 참고 자료 목록에서 제 블로그의 [Ktor를 써 본 첫인상](/ko/posts/ktor-first-impression/) 글이 함께 링크되어 있었습니다.
 
 이 사례를 보면서는 예전에 어떤 기술을 처음 접했을 때 적어 둔 감상이, 나중에는 다른 사람의 입문 자료를 보강하는 역할을 할 수도 있겠다는 생각이 들었습니다. "첫인상"이라는 이름의 글은 다소 가볍게 느껴질 수도 있지만, 오히려 처음 접하는 사람이 무엇을 낯설어하고 어디에서 포인트를 잡는지를 남긴다는 점에서는 꽤 실용적인 기록이 되기도 합니다.
 

@@ -179,7 +179,7 @@ public class Item {
 
 ## 클래스처럼 쓰기
 
-Enum은 클래스이기 때문에 처리 로직도 함께 넣을 수 있습니다. 메서드를 값처럼 들고 있는 형태라고 보면 됩니다. 이 부분은 이전에 Lambda를 다룬 [함수형 인터페이스 활용하기](../java-functional-interface)를 함께 보면 이해가 더 쉽습니다.
+Enum은 클래스이기 때문에 처리 로직도 함께 넣을 수 있습니다. 메서드를 값처럼 들고 있는 형태라고 보면 됩니다. 이 부분은 이전에 Lambda를 다룬 [함수형 인터페이스 활용하기](/ko/posts/java-functional-interface/)를 함께 보면 이해가 더 쉽습니다.
 
 ```java
 @AllArgsConstructor

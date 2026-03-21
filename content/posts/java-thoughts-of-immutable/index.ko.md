@@ -37,7 +37,7 @@ Immutable Object는 간단히 말해 "한 번 인스턴스가 생성되면, 그 
 
 ## Setter를 사용하지 않는다
 
-요즘은 Lombok을 많이 사용하고, 정형적인 코드를 줄여 주기 때문에 Lombok이 생성하는 코드를 기준으로 설명하는 편이 이해하기 쉽습니다. Lombok 자체에 대한 설명은 [디자인 패턴: 빌더](../java-design-pattern-builder)를 참고해 주세요.
+요즘은 Lombok을 많이 사용하고, 정형적인 코드를 줄여 주기 때문에 Lombok이 생성하는 코드를 기준으로 설명하는 편이 이해하기 쉽습니다. Lombok 자체에 대한 설명은 [디자인 패턴: 빌더](/ko/posts/java-design-pattern-builder/)를 참고해 주세요.
 
 Lombok에서 `@Data`를 붙이면 Getter와 Setter가 자동으로 만들어집니다. 손으로 전부 작성하는 것보다 코드 양을 줄일 수 있어서 꽤 편리합니다.
 
@@ -296,13 +296,13 @@ for (Entry<String, Car> entry : carMap1.entrySet()) {
 
 ## Immutable 클래스에서 주의할 점
 
-[Reflection과 Generic 활용하기](../java-reflection)에서도 소개했듯이, Reflection을 사용하면 `private` 필드에도 직접 접근할 수 있습니다. 즉, 아무리 Immutable하게 설계한 클래스라고 해도 Reflection을 쓰면 값을 바꾸는 것이 완전히 불가능한 것은 아닙니다.
+[Reflection과 Generic 활용하기](/ko/posts/java-reflection/)에서도 소개했듯이, Reflection을 사용하면 `private` 필드에도 직접 접근할 수 있습니다. 즉, 아무리 Immutable하게 설계한 클래스라고 해도 Reflection을 쓰면 값을 바꾸는 것이 완전히 불가능한 것은 아닙니다.
 
 또 Immutable 클래스를 많이 사용한다는 것은, 결국 새로운 객체를 더 자주 만들어 낸다는 뜻이기도 합니다. 즉 메모리 사용량이 늘어날 수 있습니다. 물론 요즘 환경에서는 이 정도를 크게 걱정할 필요가 없는 경우가 많고, GC도 충분히 잘 동작합니다. 그래도 "불변 객체는 공짜가 아니다"라는 점 정도는 알고 있는 편이 좋겠습니다.
 
 ## Singleton 클래스의 필드도 조심해야 한다
 
-이전 글에서 다룬 [디자인 패턴: 싱글턴](../java-design-pattern-singleton)과도 연결되는 이야기입니다. Singleton은 애플리케이션 종료 시점까지 하나의 인스턴스를 계속 사용하기 때문에, 내부 필드가 바뀔 수 있다면 굉장히 위험해질 수 있습니다. 요청이나 실행 흐름에 따라 결과가 달라질 수 있기 때문입니다.
+이전 글에서 다룬 [디자인 패턴: 싱글턴](/ko/posts/java-design-pattern-singleton/)과도 연결되는 이야기입니다. Singleton은 애플리케이션 종료 시점까지 하나의 인스턴스를 계속 사용하기 때문에, 내부 필드가 바뀔 수 있다면 굉장히 위험해질 수 있습니다. 요청이나 실행 흐름에 따라 결과가 달라질 수 있기 때문입니다.
 
 그래서 Singleton 클래스에는 가능하면 mutable한 필드를 두지 않거나, 최소한 `final`로 막아 두는 것이 좋습니다. 값이 바뀔 가능성을 구조적으로 줄여 두는 편이 훨씬 안전합니다.
 

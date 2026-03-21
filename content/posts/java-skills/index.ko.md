@@ -78,7 +78,7 @@ public List<Product> itemListToProductList(List<Item> itemList) {
 
 ## Collection을 Immutable하게 쓰기
 
-Immutable, 즉 불변 클래스에 대해서는 [인스턴스를 Immutable하게 만들기 위한 고민](../java-thoughts-of-immutable)에서도 다뤘습니다. 이번에는 `Collection`을 이용해 클래스의 `List`와 `Map`도 불변처럼 다루는 방법을 보겠습니다. 아래 코드는 `List` 예시입니다.
+Immutable, 즉 불변 클래스에 대해서는 [인스턴스를 Immutable하게 만들기 위한 고민](/ko/posts/java-thoughts-of-immutable/)에서도 다뤘습니다. 이번에는 `Collection`을 이용해 클래스의 `List`와 `Map`도 불변처럼 다루는 방법을 보겠습니다. 아래 코드는 `List` 예시입니다.
 
 ```java
 public List<Item> returnAsUnmodifiableList(List<Item> list) {

@@ -183,6 +183,6 @@ val joinedDates = aggregator.getList { id, joinedDate ->
 범용성은 올라가지만, 호출부가 길어지고 타입 파라미터만 봐서는 의도가 바로 드러나지 않는다는 단점도 있습니다. 그래서 이런 형태로 일반화할 때는 KDoc이나 간단한 설명이 함께 있는 편이 좋습니다. 그래도 핵심은 결국 중간 `Map` 구조와 `compute()`를 이용한 갱신 패턴이므로, 그 부분만 이해해 두면 다른 상황에도 충분히 응용할 수 있습니다.
 ## 마지막으로
 
-서버 사이드 Kotlin에서는 데이터를 `List`로 다루는 경우가 많지만, 이런 재구성 작업에서는 `Map`이 훨씬 잘 맞을 때도 있습니다. 특히 이번에 쓴 `compute()` 외에도 [getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html), [getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html) 같은 함수는 비슷한 상황에서 꽤 유용합니다. 이 글과 비슷한 문제는 [Exposed에서 OneToMany를 매핑하는 방법](../exposed-mapping-record-to-object)에서도 한 번 다룬 적이 있으니, 관심이 있다면 함께 보면 좋겠습니다.
+서버 사이드 Kotlin에서는 데이터를 `List`로 다루는 경우가 많지만, 이런 재구성 작업에서는 `Map`이 훨씬 잘 맞을 때도 있습니다. 특히 이번에 쓴 `compute()` 외에도 [getOrPut()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/get-or-put.html), [getOrDefault()](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/get-or-default.html) 같은 함수는 비슷한 상황에서 꽤 유용합니다. 이 글과 비슷한 문제는 [Exposed에서 OneToMany를 매핑하는 방법](/ko/posts/exposed-mapping-record-to-object/)에서도 한 번 다룬 적이 있으니, 관심이 있다면 함께 보면 좋겠습니다.
 
 표준 라이브러리에는 평소에는 잘 눈에 띄지 않다가도, 막상 필요한 순간에 큰 도움이 되는 함수가 꽤 많습니다. 문서나 IDE 자동완성에 보이는 함수들을 그냥 지나치지 않고 한 번씩 살펴보면, 이런 식으로 문제를 푸는 실마리를 얻는 경우가 많습니다.

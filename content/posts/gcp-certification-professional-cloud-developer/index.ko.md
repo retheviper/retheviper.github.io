@@ -17,7 +17,7 @@ translationKey: "posts/gcp-certification-professional-cloud-developer"
 
 ## 시험은 어떤가
 
-이전에는 [AWS Certified Developer - Associate 취득 후기](../aws-certification-associate-developer)에 대한 글도 썼지만, 클라우드라는 플랫폼이 제공하는 서비스의 본질은 제공자가 달라도 크게 다르지 않습니다. IaaS나 PaaS의 개념, 그리고 백엔드 서비스를 클라우드에 배포하고 구성한 경험이 있다면 준비가 아주 어렵지는 않을 거라고 느꼈습니다.
+이전에는 [AWS Certified Developer - Associate 취득 후기](/ko/posts/aws-certification-associate-developer/)에 대한 글도 썼지만, 클라우드라는 플랫폼이 제공하는 서비스의 본질은 제공자가 달라도 크게 다르지 않습니다. IaaS나 PaaS의 개념, 그리고 백엔드 서비스를 클라우드에 배포하고 구성한 경험이 있다면 준비가 아주 어렵지는 않을 거라고 느꼈습니다.
 
 시험은 원격 감독과 현장 감독 중에서 선택할 수 있습니다. 전자는 집에서 치르는 방식이고, 후자는 시험 센터에서 치르는 방식입니다. 저는 평일에만 가능한 현장 감독이 불편해서 원격 감독을 선택했습니다. AWS 시험 때도 그랬지만, 원격 감독은 시험을 볼 방을 꽤 꼼꼼히 준비해야 합니다. 필요한 조건은 [KRYTERION 사이트](https://kryterion.force.com/support/s/article/Launching-your-Online-exam?language=en_US)에 나와 있으니 미리 확인하는 것이 좋습니다. 저도 조건에 맞춰 방을 정리하는 일이 꽤 번거로웠기 때문에, 오히려 현장 감독이 더 편했을 것 같습니다.
 
