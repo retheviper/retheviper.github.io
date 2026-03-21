@@ -11,7 +11,7 @@ tags:
 translationKey: "posts/spring-bean-with-yaml"
 ---
 
-일반적인 Java 프로젝트라면 외부 설정 파일(YAML)을 작성해서 그 값을 읽어들이는 것은 [이전 글](../java-yaml-for-configuration)처럼 할 수 있습니다. 그런데 이번에는 Spring 프로젝트에서 비슷한 일을 하게 되었습니다. Spring은 YAML을 읽을 때만의 방식과 규칙이 있고, 읽어들인 값은 Bean으로 만들 수 있어서 애플리케이션 안 어디서든 `@Autowired`로 꺼내 쓸 수 있다는 장점이 있습니다.
+일반적인 Java 프로젝트라면 외부 설정 파일(YAML)을 작성해서 그 값을 읽어들이는 것은 [외부 설정 파일 읽는 클래스 만들기](../java-yaml-for-configuration)처럼 할 수 있습니다. 그런데 이번에는 Spring 프로젝트에서 비슷한 일을 하게 되었습니다. Spring은 YAML을 읽을 때만의 방식과 규칙이 있고, 읽어들인 값은 Bean으로 만들 수 있어서 애플리케이션 안 어디서든 `@Autowired`로 꺼내 쓸 수 있다는 장점이 있습니다.
 
 하지만 편리한 DI에도 불편한 점은 있습니다. 예를 들어 `new`로 직접 만든 인스턴스 안에서는 `@Autowired`를 쓸 수 없습니다. 이번에도 그 부분에서 꽤 오래 막혔습니다. Builder로 객체를 만들되, 사용자가 따로 지정하지 않은 값은 YAML에서 읽어 온 Bean을 기본값으로 쓰고 싶었습니다. 그런데 Builder는 새 인스턴스를 만들어 버리니 Bean을 주입받지 못해서 막혀 있었습니다.
 

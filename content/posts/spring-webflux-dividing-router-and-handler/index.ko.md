@@ -13,7 +13,7 @@ tags:
 translationKey: "posts/spring-webflux-dividing-router-and-handler"
 ---
 
-이전에는 [WebFlux에서 Functional Endpoint를 써야 할까](../spring-webflux-router/)라는 글을 쓴 적이 있습니다. 이번에는 `Controller`/`Service`와 `Router`/`Handler`를 비교하려는 것이 아니라, `Functional Endpoint`를 쓸 때 실제로 어떤 구조로 구현하는 게 좋은지에 대해 생각한 내용을 정리해 보려 합니다.
+이전에는 [WebFlux에서 Functional Endpoint 선택하기](../spring-webflux-router/)라는 글을 쓴 적이 있습니다. 이번에는 `Controller`/`Service`와 `Router`/`Handler`를 비교하려는 것이 아니라, `Functional Endpoint`를 쓸 때 실제로 어떤 구조로 구현하는 게 좋은지에 대해 생각한 내용을 정리해 보려 합니다.
 
 실무에서 WebFlux를 직접 많이 쓰는 것은 아니기 때문에 다양한 패턴이 있을 수 있습니다. 다만 `Functional Endpoint`를 사용할 때 가장 먼저 떠오르는 고민은 `Router Function`(이하 `Router`)과 `Handler Function`(이하 `Handler`)을 어떻게 나눌 것인가 하는 점입니다. 개념적으로는 서로 다르지만, 구현상으로는 한 클래스에 합쳐도 애플리케이션이 잘 동작합니다. 그래서 이건 프레임워크의 문법보다는 아키텍처의 문제에 더 가깝습니다.
 

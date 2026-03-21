@@ -119,7 +119,7 @@ public String getStudentName(Data data) {
 
 `map()`이나 `filter()` 같은 메서드는 Collection이나 Stream과 비슷합니다. Lambda도 함께 쓰기 때문에, 이쪽에 익숙하다면 금방 적응할 수 있습니다.
 
-Optional을 잘 쓰려면 메서드 체이닝과 Lambda에 익숙해져야 합니다. 이전 글의 [함수형 인터페이스](../java-functional-interface)도 참고할 만합니다.
+Optional을 잘 쓰려면 메서드 체이닝과 Lambda에 익숙해져야 합니다. 이전 글인 [함수형 인터페이스 활용하기](../java-functional-interface)도 참고할 만합니다.
 
 ### 봐도 알 수 있음
 

@@ -12,7 +12,7 @@ tags:
 translationKey: "posts/spring-webflux-router"
 ---
 
-이전에 [Spring WebFlux에 관한 글](../spring-webflux/)에서 MVC 패턴(`Controller`/`Service`)과 `Functional Endpoint`(`Router`/`Handler`)를 잠깐 비교한 적이 있습니다. Functional Endpoint는 MVC를 완전히 대체한다기보다, 함수형 스타일에 더 잘 맞는 선택지를 제공하는 쪽에 가깝습니다.
+이전에 [Spring WebFlux 이해하기](../spring-webflux/)에서 MVC 패턴(`Controller`/`Service`)과 `Functional Endpoint`(`Router`/`Handler`)를 잠깐 비교한 적이 있습니다. Functional Endpoint는 MVC를 완전히 대체한다기보다, 함수형 스타일에 더 잘 맞는 선택지를 제공하는 쪽에 가깝습니다.
 
 그렇다면 WebFlux에서는 가능한 한 Functional Endpoint를 쓰는 편이 좋을까요? 전통적인 Spring MVC처럼 `Controller`/`Service`를 쓰는 방식이 정말 `Router`/`Handler`보다 불리한지, 그리고 Functional Endpoint만의 불편함은 없는지 한 번쯤 궁금해집니다.
 이번 글에서는 WebFlux 서버 애플리케이션을 만들 때 이 두 패턴을 어떤 기준으로 고르면 좋을지 정리해 보겠습니다.

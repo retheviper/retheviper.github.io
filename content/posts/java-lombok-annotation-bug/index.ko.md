@@ -10,7 +10,7 @@ tags:
 translationKey: "posts/java-lombok-annotation-bug"
 ---
 
-[이전 글](../java-design-pattern-builder)에서 Builder 패턴과 함께 `Lombok`을 소개했습니다. Bean은 물론 immutable 클래스[^1]나 Builder도 쉽게 만들 수 있고, 어노테이션만으로 다양한 옵션을 붙일 수 있어서 꽤 편리합니다. 그런데 이번에는 Lombok을 쓰다가 버그처럼 보이는 현상을 발견해서 기록해 둡니다.
+[디자인 패턴: 빌더](../java-design-pattern-builder)에서 Builder 패턴과 함께 `Lombok`을 소개했습니다. Bean은 물론 immutable 클래스[^1]나 Builder도 쉽게 만들 수 있고, 어노테이션만으로 다양한 옵션을 붙일 수 있어서 꽤 편리합니다. 그런데 이번에는 Lombok을 쓰다가 버그처럼 보이는 현상을 발견해서 기록해 둡니다.
 
 ## 버그가 생긴 곳
 

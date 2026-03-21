@@ -60,7 +60,7 @@ GUI 프레임워크로는 [Compose for Desktop](https://www.jetbrains.com/ko-kr/
 물론 처음 써 보는 기술인 만큼 시행착오도 있었습니다. 그래서 아래에서는 실제로 도구를 만들면서 기억해 둘 만하다고 느낀 점 몇 가지를 적어 보겠습니다.
 ### 상태 관리
 
-[SwiftUI의 포스트](../swift-ui-first-impression-2/) 때도 접한 상태 관리입니다만, Compose에서도 마찬가지로 GUI를 취급하게 되므로, 상태 관리가 중요합니다. 이번에는 앱으로서의 화면이 하나 밖에 없기 때문에, 복수의 화면에 걸쳐 상태를 관리할 필요는 없을까라고 생각했습니다만, 그래도 역시 처리를 실시하기 위해서는 앱 전체에서 공유하는 상태로서 관리가 필요한 것이 몇가지 있었습니다.
+[SwiftUI를 써 본 첫인상 2](../swift-ui-first-impression-2/)에서도 접한 상태 관리입니다만, Compose에서도 마찬가지로 GUI를 취급하게 되므로, 상태 관리가 중요합니다. 이번에는 앱으로서의 화면이 하나 밖에 없기 때문에, 복수의 화면에 걸쳐 상태를 관리할 필요는 없을까라고 생각했습니다만, 그래도 역시 처리를 실시하기 위해서는 앱 전체에서 공유하는 상태로서 관리가 필요한 것이 몇가지 있었습니다.
 다만, 상기 포스트에서도 말했듯이, SwiftUI와 Compose와는 상태 관리의 방식이 조금 다릅니다. SwiftUI에서는 상태가 어디에서 사용되는지에 따라 명확하게 사용되는 어노테이션이나 클래스 등이 바뀌었다면, Compose에서는 대체로 [remember()(https://developer.android.com/reference/kotlin/androidx/compose/runtime/package-sum mary?hl=ko#remember(kotlin.Function0))과 [`MutableState<T>`](https://developer.android.com/reference/kotlin/androidx/compose/runtime/MutableState?hl=ko)의 조합으로 충분합니다. 화면의 구성 요소의 최소 단위를 Compose에서는 Widget에서도 사용법이 같다는 것은, SwiftUI와 비교하면 정의하는 것은 간단합니다만, 사용법에는 조금 주의가 필요하다고 하는 감각이었습니다.
 첫째, Compose의 상태는 다음과 같은 세 가지 방법으로 정의할 수 있습니다.
 ```kotlin

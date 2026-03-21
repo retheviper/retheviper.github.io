@@ -11,7 +11,7 @@ tags:
 translationKey: "posts/refresh-token-and-sliding-session"
 ---
 
-지난번에는 JWT와 함께 Spring Security에서 이를 구현하는 방법에 대해 [글](../spring-rest-api-login-with-jwt)을 썼습니다. 그런데 Access Token만 발급하는 방식에는 몇 가지 취약점이 있다고 합니다. 그래서 이번에는 Access Token만 사용할 때의 특징과 문제점, 그리고 이를 보완하는 방법을 정리해 보려고 합니다.
+지난번에는 JWT와 함께 Spring Security에서 이를 구현하는 방법에 대해 [JWT로 REST API 로그인 구현하기](../spring-rest-api-login-with-jwt)를 썼습니다. 그런데 Access Token만 발급하는 방식에는 몇 가지 취약점이 있다고 합니다. 그래서 이번에는 Access Token만 사용할 때의 특징과 문제점, 그리고 이를 보완하는 방법을 정리해 보려고 합니다.
 
 JWT 기반 인증은 ISO 표준이라고는 해도, 정답이라고 할 만한 구현 방식이 정해져 있는 것은 아닙니다. 그래서 아래에서 소개하는 방식도 개념 위주로만 보시면 됩니다.
 
