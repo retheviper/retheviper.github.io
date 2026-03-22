@@ -1,6 +1,7 @@
 ---
 title: "Spring vs. Ktor: Comparing Five Backend Configurations"
 date: 2026-03-20
+translationKey: "posts/spring-ktor-five-stack-benchmark"
 categories:
   - kotlin
 image: ../../images/kotlin.webp

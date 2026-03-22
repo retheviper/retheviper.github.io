@@ -1,6 +1,7 @@
 ---
 title: "Jenkinsで何もかも楽にしたい(1)"
 date: 2019-05-13
+translationKey: "posts/jenkins-automation-1"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

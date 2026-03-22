@@ -1,6 +1,7 @@
 ---
 title: "Converting a List of Data Classes to CSV"
 date: 2022-08-27
+translationKey: "posts/kotlin-write-csv"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Send files from Rest API to Rest API"
 date: 2020-02-10
+translationKey: "posts/spring-rest-template"
 categories: 
   - spring
 image: "../../images/spring.webp"

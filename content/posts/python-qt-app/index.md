@@ -1,6 +1,7 @@
 ---
 title: "PyQtで字幕翻訳ツールを作ってみた"
 date: 2022-05-01
+translationKey: "posts/python-qt-app"
 categories: 
   - python
 image: "../../images/python.webp"

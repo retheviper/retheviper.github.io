@@ -1,6 +1,7 @@
 ---
 title: "Implementing REST API Login with JWT"
 date: 2020-06-10
+translationKey: "posts/spring-rest-api-login-with-jwt"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Javaの色々なコーディングスキル"
 date: 2019-11-17
+translationKey: "posts/java-skills"
 categories: 
   - java
 image: "../../images/java.webp"

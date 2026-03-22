@@ -1,6 +1,7 @@
 ---
 title: "KotlinConf'23を要約してみた"
 date: 2023-04-14
+translationKey: "posts/kotlin-conf-2023"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

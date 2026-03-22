@@ -1,6 +1,7 @@
 ---
 title: "色々な言語でやってみた（ソート編）"
 date: 2021-11-10
+translationKey: "posts/languages-comparsion-sorting"
 categories: 
   - languages
 image: "../../images/magic.webp"

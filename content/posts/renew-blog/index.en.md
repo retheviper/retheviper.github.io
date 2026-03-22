@@ -1,6 +1,7 @@
 ---
 title: "This year's blog story"
 date: 2022-02-06
+translationKey: "posts/renew-blog"
 categories: 
   - recent
 image: "../../images/magic.webp"

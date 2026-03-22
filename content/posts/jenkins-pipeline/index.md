@@ -1,6 +1,7 @@
 ---
 title: "Jenkins Pipelineを使う"
 date: 2020-01-26
+translationKey: "posts/jenkins-pipeline"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

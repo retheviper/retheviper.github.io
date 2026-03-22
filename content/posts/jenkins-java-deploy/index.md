@@ -1,6 +1,7 @@
 ---
 title: "JenkinsでJarファイルをデプロイする"
 date: 2019-05-30
+translationKey: "posts/jenkins-java-deploy"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

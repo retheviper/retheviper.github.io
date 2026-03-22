@@ -1,6 +1,7 @@
 ---
 title: "Select Service Impl class in YAML"
 date: 2020-02-25
+translationKey: "posts/spring-switching-service"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Cloud BuildのCI/CDを高速化してみた"
 date: 2024-01-21
+translationKey: "posts/application-build-cache"
 categories: 
   - gcp
 image: "../../images/gcp.webp"

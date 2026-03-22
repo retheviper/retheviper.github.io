@@ -1,6 +1,7 @@
 ---
 title: "A story about the module problem"
 date: 2019-09-08
+translationKey: "posts/java-conflict-of-module"
 categories: 
   - java
 image: "../../images/java.webp"

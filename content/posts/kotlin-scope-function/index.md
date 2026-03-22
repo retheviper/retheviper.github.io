@@ -1,6 +1,7 @@
 ---
 title: "Scope Functionはどう使うか"
 date: 2020-11-04
+translationKey: "posts/kotlin-scope-function"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

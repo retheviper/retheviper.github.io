@@ -1,6 +1,7 @@
 ---
 title: "Implementing Spring Security exception handling in REST API"
 date: 2020-06-17
+translationKey: "posts/spring-rest-api-security-handling"
 categories: 
   - spring
 image: "../../images/spring.webp"

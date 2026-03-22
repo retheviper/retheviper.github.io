@@ -1,6 +1,7 @@
 ---
 title: "AWS認定デベロッパー - アソシエイトについて"
 date: 2020-10-04
+translationKey: "posts/aws-certification-associate-developer"
 categories: 
   - aws
 image: "../../images/aws.webp"

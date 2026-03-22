@@ -1,6 +1,7 @@
 ---
 title: "Combine two Lists"
 date: 2020-07-26
+translationKey: "posts/java-compare-and-merge-lists"
 categories: 
   - java
 image: "../../images/java.webp"

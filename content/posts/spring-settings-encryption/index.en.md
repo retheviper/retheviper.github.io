@@ -1,6 +1,7 @@
 ---
 title: "Encrypt properties with Jasypt"
 date: 2020-03-16
+translationKey: "posts/spring-settings-encryption"
 categories: 
   - spring
 image: "../../images/spring.webp"

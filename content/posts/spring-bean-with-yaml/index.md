@@ -1,6 +1,7 @@
 ---
 title: "newしたインスタンスの中でBeanを使いたい"
 date: 2019-12-22
+translationKey: "posts/spring-bean-with-yaml"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Kotlinで書いてみた〜その三〜"
 date: 2021-09-18
+translationKey: "posts/kotlin-code-in-my-style-3"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

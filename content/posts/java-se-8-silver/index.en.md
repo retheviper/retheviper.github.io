@@ -1,6 +1,7 @@
 ---
 title: "About Oracle JavaSE 8 Silver"
 date: 2019-10-06
+translationKey: "posts/java-se-8-silver"
 categories: 
   - java
 image: "../../images/java.webp"

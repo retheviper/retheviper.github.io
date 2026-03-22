@@ -1,6 +1,7 @@
 ---
 title: "Gradleからコマンドライン引数を渡す"
 date: 2019-09-17
+translationKey: "posts/gradle-command-line"
 categories: 
   - gradle
 image: "../../images/gradle.webp"

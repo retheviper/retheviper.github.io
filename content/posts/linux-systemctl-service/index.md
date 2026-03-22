@@ -1,6 +1,7 @@
 ---
 title: "Linuxのシステムサービスを作る"
 date: 2019-07-11
+translationKey: "posts/linux-systemctl-service"
 categories: 
   - linux
 image: "../../images/linux_terminal.webp"

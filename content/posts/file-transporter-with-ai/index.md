@@ -1,6 +1,7 @@
 ---
 title: "AIでFileTransporterを整理し直した話"
 date: 2026-03-22
+translationKey: "posts/file-transporter-with-ai"
 categories:
   - recent
 image: "../../images/tools.webp"

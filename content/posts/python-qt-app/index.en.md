@@ -1,6 +1,7 @@
 ---
 title: "I created a subtitle translation tool with PyQt"
 date: 2022-05-01
+translationKey: "posts/python-qt-app"
 categories: 
   - python
 image: "../../images/python.webp"

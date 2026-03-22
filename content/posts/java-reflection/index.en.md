@@ -1,6 +1,7 @@
 ---
 title: "Using Reflection and Generics"
 date: 2019-07-30
+translationKey: "posts/java-reflection"
 categories: 
   - java
 image: "../../images/java.webp"

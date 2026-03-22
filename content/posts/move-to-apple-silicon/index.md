@@ -1,6 +1,7 @@
 ---
 title: "Apple Silicon Macに移行する"
 date: 2021-12-19
+translationKey: "posts/move-to-apple-silicon"
 categories: 
   - recent
 image: "../../images/magic.webp"

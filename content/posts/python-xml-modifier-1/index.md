@@ -1,6 +1,7 @@
 ---
 title: "Pythonでxmlファイルを操作する(1)"
 date: 2019-06-09
+translationKey: "posts/python-xml-modifier-1"
 categories: 
   - python
 image: "../../images/python.webp"

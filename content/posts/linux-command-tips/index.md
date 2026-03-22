@@ -1,6 +1,7 @@
 ---
 title: "知っていれば便利なLinuxのコツ"
 date: 2019-05-19
+translationKey: "posts/linux-command-tips"
 categories: 
   - linux
 image: "../../images/linux_terminal.webp"

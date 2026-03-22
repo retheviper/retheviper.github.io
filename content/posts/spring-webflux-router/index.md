@@ -1,6 +1,7 @@
 ---
 title: "WebFluxではFunctional Enpointを使うべきか"
 date: 2021-05-30
+translationKey: "posts/spring-webflux-router"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Streamを正しく使う"
 date: 2020-04-06
+translationKey: "posts/java-stream"
 categories: 
   - java
 image: "../../images/java.webp"

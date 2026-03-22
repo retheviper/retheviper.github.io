@@ -1,6 +1,7 @@
 ---
 title: "How to write Gradle dependencies"
 date: 2019-11-04
+translationKey: "posts/gradle-dependencies"
 categories: 
   - gradle
 image: "../../images/gradle.webp"

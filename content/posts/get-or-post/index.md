@@ -1,6 +1,7 @@
 ---
 title: "GETとPOSTの間"
 date: 2020-09-21
+translationKey: "posts/get-or-post"
 categories: 
   - recent
 image: "../../images/magic.webp"

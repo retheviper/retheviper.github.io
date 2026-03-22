@@ -1,6 +1,7 @@
 ---
 title: "Building a Home Server"
 date: 2024-09-16
+translationKey: "posts/home-server"
 categories: 
   - nginx
 image: "../../images/nginx.webp"

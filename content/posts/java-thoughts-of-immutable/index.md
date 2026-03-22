@@ -1,6 +1,7 @@
 ---
 title: "インスタンスをImmutableにするための工夫"
 date: 2019-08-25
+translationKey: "posts/java-thoughts-of-immutable"
 categories: 
   - java
 image: "../../images/java.webp"

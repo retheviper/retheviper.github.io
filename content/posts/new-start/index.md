@@ -1,6 +1,7 @@
 ---
 title: "はじめに"
 date: 2019-05-12
+translationKey: "posts/new-start"
 categories: 
   - recent
 image: "../../images/tools.webp"

@@ -1,6 +1,7 @@
 ---
 title: "What is Spring WebFlux?"
 date: 2020-09-06
+translationKey: "posts/spring-webflux"
 categories: 
   - spring
 image: "../../images/spring.webp"

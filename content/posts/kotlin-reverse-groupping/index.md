@@ -1,6 +1,7 @@
 ---
 title: "Kotlinでデータの逆転グルーピング"
 date: 2022-01-29
+translationKey: "posts/kotlin-reverse-groupping"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

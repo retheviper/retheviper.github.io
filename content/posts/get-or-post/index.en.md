@@ -1,6 +1,7 @@
 ---
 title: "Between GET and POST"
 date: 2020-09-21
+translationKey: "posts/get-or-post"
 categories: 
   - recent
 image: "../../images/magic.webp"

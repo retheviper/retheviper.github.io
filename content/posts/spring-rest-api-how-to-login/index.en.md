@@ -1,6 +1,7 @@
 ---
 title: "For login with REST API"
 date: 2020-05-30
+translationKey: "posts/spring-rest-api-how-to-login"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "9からの新メソッドめぐり"
 date: 2020-12-30
+translationKey: "posts/java-new-methods-from-9-to-11"
 categories: 
   - java
 image: "../../images/java.webp"

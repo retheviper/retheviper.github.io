@@ -1,6 +1,7 @@
 ---
 title: "ifでの分岐を考える"
 date: 2022-11-20
+translationKey: "posts/kotlin-if-to-non-if"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

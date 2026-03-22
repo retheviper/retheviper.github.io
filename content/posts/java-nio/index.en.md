@@ -1,6 +1,7 @@
 ---
 title: "IO to NIO"
 date: 2020-01-20
+translationKey: "posts/java-nio"
 categories: 
   - java
 image: "../../images/java.webp"

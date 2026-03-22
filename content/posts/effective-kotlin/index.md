@@ -1,6 +1,7 @@
 ---
 title: "Effective Kotlinを読む"
 date: 2022-02-20
+translationKey: "posts/effective-kotlin"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

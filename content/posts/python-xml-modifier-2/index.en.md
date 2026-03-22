@@ -1,6 +1,7 @@
 ---
 title: "Manipulating xml files with Python (2)"
 date: 2019-06-20
+translationKey: "posts/python-xml-modifier-2"
 categories: 
   - python
 image: "../../images/python.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Spring Boot 3を導入してみた"
 date: 2023-01-29
+translationKey: "posts/spring-boot-2-to-3"
 categories:
   - spring
 image: "../../images/spring.webp"

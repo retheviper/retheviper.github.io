@@ -1,6 +1,7 @@
 ---
 title: "Lombokのバグにあった話"
 date: 2019-08-12
+translationKey: "posts/java-lombok-annotation-bug"
 categories: 
   - java
 image: "../../images/java.webp"

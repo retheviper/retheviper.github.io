@@ -1,6 +1,7 @@
 ---
 title: "静的ウェブページに興味を持つ"
 date: 2020-08-23
+translationKey: "posts/static-web-page"
 categories: 
   - recent
 image: "../../images/tools.webp"

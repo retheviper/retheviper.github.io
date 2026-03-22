@@ -1,6 +1,7 @@
 ---
 title: "Ideas for making instances Immutable"
 date: 2019-08-25
+translationKey: "posts/java-thoughts-of-immutable"
 categories: 
   - java
 image: "../../images/java.webp"

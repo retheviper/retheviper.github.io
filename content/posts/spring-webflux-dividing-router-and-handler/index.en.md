@@ -1,6 +1,7 @@
 ---
 title: "A small study on WebFlux's Functional Enpoint"
 date: 2021-08-30
+translationKey: "posts/spring-webflux-dividing-router-and-handler"
 categories: 
   - spring
 image: "../../images/spring.webp"

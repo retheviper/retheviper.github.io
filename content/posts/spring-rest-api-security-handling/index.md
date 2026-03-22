@@ -1,6 +1,7 @@
 ---
 title: "REST APIでのSpring Securityの例外ハンドリングを実装する"
 date: 2020-06-17
+translationKey: "posts/spring-rest-api-security-handling"
 categories: 
   - spring
 image: "../../images/spring.webp"

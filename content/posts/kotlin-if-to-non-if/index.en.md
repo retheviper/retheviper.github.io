@@ -1,6 +1,7 @@
 ---
 title: "Rethinking Branching with if"
 date: 2022-11-20
+translationKey: "posts/kotlin-if-to-non-if"
 categories:
   - kotlin
 image: "../../images/kotlin.webp"

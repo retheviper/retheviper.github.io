@@ -1,6 +1,7 @@
 ---
 title: "Passing command line arguments from Gradle"
 date: 2019-09-17
+translationKey: "posts/gradle-command-line"
 categories: 
   - gradle
 image: "../../images/gradle.webp"

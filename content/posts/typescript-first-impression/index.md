@@ -1,6 +1,7 @@
 ---
 title: "JavaプログラマーがみたTypeScript"
 date: 2020-05-16
+translationKey: "posts/typescript-first-impression"
 categories: 
   - typescript
 image: "../../images/typescript.webp"

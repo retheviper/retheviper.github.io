@@ -1,6 +1,7 @@
 ---
 title: "PythonでDBの処理がしたい"
 date: 2019-06-30
+translationKey: "posts/python-blob-to-binary"
 categories: 
   - python
 image: "../../images/python.webp"

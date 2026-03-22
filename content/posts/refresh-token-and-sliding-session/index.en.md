@@ -1,6 +1,7 @@
 ---
 title: "Complementing JWT: Refresh Token and Sliding Session"
 date: 2020-08-02
+translationKey: "posts/refresh-token-and-sliding-session"
 categories: 
   - spring
 image: "../../images/spring.webp"

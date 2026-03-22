@@ -1,6 +1,7 @@
 ---
 title: "JenkinsでJavaプロジェクトをビルドする"
 date: 2019-05-26
+translationKey: "posts/jenkins-java-build"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

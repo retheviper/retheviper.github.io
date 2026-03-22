@@ -1,6 +1,7 @@
 ---
 title: "An Overdue Look at I/O"
 date: 2021-01-12
+translationKey: "posts/java-file-copy"
 categories: 
   - java
 image: "../../images/java.webp"

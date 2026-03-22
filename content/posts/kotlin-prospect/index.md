@@ -1,6 +1,7 @@
 ---
 title: "Kotlinのこれからを語る"
 date: 2022-05-22
+translationKey: "posts/kotlin-prospect"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

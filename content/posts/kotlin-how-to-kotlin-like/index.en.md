@@ -1,6 +1,7 @@
 ---
 title: "How to Write Kotlin Idiomatically"
 date: 2022-12-30
+translationKey: "posts/kotlin-how-to-kotlin-like"
 categories:
   - kotlin
 image: "../../images/kotlin.webp"

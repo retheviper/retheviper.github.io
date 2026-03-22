@@ -1,6 +1,7 @@
 ---
 title: "Speeding Up Cloud Build CI/CD"
 date: 2024-01-21
+translationKey: "posts/application-build-cache"
 categories: 
   - gcp
 image: "../../images/gcp.webp"

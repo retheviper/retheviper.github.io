@@ -1,6 +1,7 @@
 ---
 title: "今更なループの話"
 date: 2020-11-30
+translationKey: "posts/java-collection-loop"
 categories: 
   - java
 image: "../../images/java.webp"

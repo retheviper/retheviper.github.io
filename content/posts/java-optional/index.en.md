@@ -1,6 +1,7 @@
 ---
 title: "Escaping the Hell of Null Checks"
 date: 2020-01-05
+translationKey: "posts/java-optional"
 categories: 
   - java
 image: "../../images/java.webp"

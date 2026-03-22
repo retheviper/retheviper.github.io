@@ -1,6 +1,7 @@
 ---
 title: "I want to make everything easier with Jenkins (3)"
 date: 2019-05-16
+translationKey: "posts/jenkins-automation-3"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

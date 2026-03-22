@@ -1,6 +1,7 @@
 ---
 title: "Google Cloud認定Professional Cloud Developerについて"
 date: 2022-07-11
+translationKey: "posts/gcp-certification-professional-cloud-developer"
 categories: 
   - gcp
 image: "../../images/gcp.webp"

@@ -1,6 +1,7 @@
 ---
 title: "design pattern, builder"
 date: 2019-07-14
+translationKey: "posts/java-design-pattern-builder"
 categories: 
   - java
 image: "../../images/java.webp"

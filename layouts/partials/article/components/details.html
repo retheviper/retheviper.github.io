@@ -48,13 +48,26 @@
     </footer>
     {{ end }}
 
-    {{ $translations := where .AllTranslations "Language.Lang" "ne" .Language.Lang }}
+    {{ $languages := .Site.Languages }}
     {{ $defaultLanguageCode := (index .Sites 0).Language.Lang }}
-    {{ if and (eq (len $translations) 0) (ne .Language.Lang $defaultLanguageCode) }}
-        {{ $defaultSite := index (where .Sites "Language.Lang" $defaultLanguageCode) 0 }}
-        {{ if $defaultSite }}
-            {{ $currentPagePath := strings.TrimPrefix .Site.Home.RelPermalink .RelPermalink }}
-            {{ $translations = slice (dict "Permalink" (printf "%s%s" $defaultSite.Home.RelPermalink $currentPagePath) "Language" $defaultSite.Language) }}
+    {{ $currentLanguageCode := .Language.Lang }}
+    {{ $currentPagePath := strings.TrimPrefix .Site.Home.RelPermalink .RelPermalink }}
+    {{ $translations := slice }}
+    {{ range $language := $languages }}
+        {{ if ne $language.Lang $currentLanguageCode }}
+            {{ $targetSite := index (where $.Sites "Language.Lang" $language.Lang) 0 }}
+            {{ $targetPage := index (where $.AllTranslations "Language.Lang" $language.Lang) 0 }}
+            {{ $targetURL := "" }}
+            {{ if $targetPage }}
+                {{ $targetURL = $targetPage.RelPermalink }}
+            {{ else if and $targetSite (ne $currentLanguageCode $defaultLanguageCode) }}
+                {{ $targetURL = printf "%s%s" $targetSite.Home.RelPermalink $currentPagePath }}
+            {{ else if $targetSite }}
+                {{ $targetURL = $targetSite.Home.RelPermalink }}
+            {{ end }}
+            {{ if $targetURL }}
+                {{ $translations = $translations | append (dict "Permalink" $targetURL "Language" $language) }}
+            {{ end }}
         {{ end }}
     {{ end }}
     {{ if gt (len $translations) 0 }}

@@ -1,6 +1,7 @@
 ---
 title: "ExposedでOneToManyをどうマッピングするか"
 date: 2021-07-26
+translationKey: "posts/exposed-mapping-record-to-object"
 categories: 
   - exposed
 image: "../../images/exposed.webp"

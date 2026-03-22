@@ -1,6 +1,7 @@
 ---
 title: "Gradleでマルチプロジェクトを作る"
 date: 2019-10-20
+translationKey: "posts/gradle-multi-project"
 categories: 
   - gradle
 image: "../../images/gradle.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Quarkusを触ってみた"
 date: 2021-10-24
+translationKey: "posts/quarkus-first-impression"
 categories: 
   - quarkus
 image: "../../images/quarkus.webp"

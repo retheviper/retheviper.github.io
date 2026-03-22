@@ -1,6 +1,7 @@
 ---
 title: "Rust as seen by a Kotlin programmer"
 date: 2022-03-27
+translationKey: "posts/rust-first-impression"
 categories: 
   - rust
 image: "../../images/rust.webp"

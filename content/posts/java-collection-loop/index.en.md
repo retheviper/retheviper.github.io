@@ -1,6 +1,7 @@
 ---
 title: "Another Story About Loops"
 date: 2020-11-30
+translationKey: "posts/java-collection-loop"
 categories: 
   - java
 image: "../../images/java.webp"

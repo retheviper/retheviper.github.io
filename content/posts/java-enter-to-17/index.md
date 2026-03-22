@@ -1,6 +1,7 @@
 ---
 title: "Java 17は何が変わったか"
 date: 2021-09-25
+translationKey: "posts/java-enter-to-17"
 categories:
   - java
 image: "../../images/java.webp"

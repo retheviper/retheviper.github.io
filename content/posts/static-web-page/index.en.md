@@ -1,6 +1,7 @@
 ---
 title: "Interested in static web pages"
 date: 2020-08-23
+translationKey: "posts/static-web-page"
 categories: 
   - recent
 image: "../../images/tools.webp"

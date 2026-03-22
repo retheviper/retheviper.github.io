@@ -1,6 +1,7 @@
 ---
 title: "Kotlin's hidden costs - Part 1"
 date: 2021-11-14
+translationKey: "posts/kotlin-hidden-cost-1"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

@@ -1,6 +1,7 @@
 ---
 title: "今更な文字列操作の話"
 date: 2021-02-08
+translationKey: "posts/java-string-concat-and-split"
 categories: 
   - java
 image: "../../images/java.webp"

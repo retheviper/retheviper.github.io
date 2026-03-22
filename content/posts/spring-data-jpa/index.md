@@ -1,6 +1,7 @@
 ---
 title: "MyBatisよりJPAが使いたい"
 date: 2020-07-10
+translationKey: "posts/spring-data-jpa"
 categories: 
   - spring
 image: "../../images/spring.webp"

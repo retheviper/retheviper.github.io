@@ -1,6 +1,7 @@
 ---
 title: "Go as seen by a Java programmer"
 date: 2021-03-21
+translationKey: "posts/go-first-impression"
 categories: 
   - go
 image: "../../images/go.webp"

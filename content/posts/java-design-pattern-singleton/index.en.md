@@ -1,6 +1,7 @@
 ---
 title: "Design pattern, Singleton"
 date: 2019-08-19
+translationKey: "posts/java-design-pattern-singleton"
 categories: 
   - java
 image: "../../images/java.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Spring WebFlux, after a little experience"
 date: 2020-12-20
+translationKey: "posts/spring-webflux-and-nonblocking"
 categories: 
   - spring
 image: "../../images/spring.webp"

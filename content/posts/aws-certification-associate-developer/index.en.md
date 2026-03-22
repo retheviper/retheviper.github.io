@@ -1,6 +1,7 @@
 ---
 title: "AWS Certified Developer - Associate"
 date: 2020-10-04
+translationKey: "posts/aws-certification-associate-developer"
 categories: 
   - aws
 image: "../../images/aws.webp"

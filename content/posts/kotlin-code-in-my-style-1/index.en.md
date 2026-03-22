@@ -1,6 +1,7 @@
 ---
 title: "I wrote it in Kotlin ~Part 1~"
 date: 2021-03-28
+translationKey: "posts/kotlin-code-in-my-style-1"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Building a Dynamic Image Resizing API"
 date: 2024-03-30
+translationKey: "posts/image-resize-api"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

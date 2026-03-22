@@ -1,6 +1,7 @@
 ---
 title: "Sorting in Various Languages"
 date: 2021-11-10
+translationKey: "posts/languages-comparsion-sorting"
 categories: 
   - languages
 image: "../../images/magic.webp"

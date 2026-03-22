@@ -1,6 +1,7 @@
 ---
 title: "個人的な2021年のロードマップ"
 date: 2021-01-24
+translationKey: "posts/my-roadmap-in-2021"
 categories: 
   - recent
 image: "../../images/map.webp"

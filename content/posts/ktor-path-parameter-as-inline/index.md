@@ -1,6 +1,7 @@
 ---
 title: "Path ParameterをInline classで受け取る"
 date: 2023-03-26
+translationKey: "posts/ktor-path-parameter-as-inline"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

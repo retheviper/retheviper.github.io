@@ -1,6 +1,7 @@
 ---
 title: "Build a server with Ansible"
 date: 2019-07-05
+translationKey: "posts/ansible-server-automation"
 categories: 
   - ansible
 image: "../../images/ansible.webp"

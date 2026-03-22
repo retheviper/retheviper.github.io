@@ -1,6 +1,7 @@
 ---
 title: "Building a Desktop App with Kotlin"
 date: 2022-09-09
+translationKey: "posts/kotlin-compose-desktop"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

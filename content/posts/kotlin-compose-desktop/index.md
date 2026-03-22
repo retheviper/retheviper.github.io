@@ -1,6 +1,7 @@
 ---
 title: "Kotlinでデスクトップアプリを作ってみた"
 date: 2022-09-09
+translationKey: "posts/kotlin-compose-desktop"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

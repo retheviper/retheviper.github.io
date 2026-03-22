@@ -1,6 +1,7 @@
 ---
 title: "Sequenceは常にいいか"
 date: 2021-06-13
+translationKey: "posts/kotlin-collection-and-sequence"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

@@ -1,6 +1,7 @@
 ---
 title: "Use a functional interface"
 date: 2019-08-06
+translationKey: "posts/java-functional-interface"
 categories: 
   - java
 image: "../../images/java.webp"

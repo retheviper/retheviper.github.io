@@ -1,6 +1,7 @@
 ---
 title: "Pythonでログを出したい"
 date: 2019-06-15
+translationKey: "posts/python-logger"
 categories: 
   - python
 image: "../../images/python.webp"

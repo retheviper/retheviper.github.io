@@ -1,6 +1,7 @@
 ---
 title: "Oracle JavaSE 8 Goldについて"
 date: 2020-03-29
+translationKey: "posts/java-se-8-gold"
 categories: 
   - java
 image: "../../images/java.webp"

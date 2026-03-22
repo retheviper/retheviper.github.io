@@ -1,6 +1,7 @@
 ---
 title: "KotlinConf 2024 Recap"
 date: 2024-05-25
+translationKey: "posts/kotlin-conf-2024"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

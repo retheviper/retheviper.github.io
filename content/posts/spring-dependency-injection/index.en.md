@@ -1,6 +1,7 @@
 ---
 title: "Spring DI should be done in the constructor"
 date: 2019-12-09
+translationKey: "posts/spring-dependency-injection"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "JVM言語経験者がGoを触る時のハマりどころ"
 date: 2022-04-17
+translationKey: "posts/jvm-to-go"
 categories: 
   - go
 image: "../../images/go.webp"

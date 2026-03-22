@@ -1,6 +1,7 @@
 ---
 title: "Enumを使いましょう"
 date: 2019-10-27
+translationKey: "posts/java-enum"
 categories: 
   - java
 image: "../../images/java.webp"

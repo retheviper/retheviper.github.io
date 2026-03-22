@@ -1,6 +1,7 @@
 ---
 title: "A Late Look at String Operations"
 date: 2021-02-08
+translationKey: "posts/java-string-concat-and-split"
 categories: 
   - java
 image: "../../images/java.webp"

@@ -1,6 +1,7 @@
 ---
 title: "条件で動作するアノテーションを使う"
 date: 2020-04-26
+translationKey: "posts/spring-conditional"
 categories: 
   - spring
 image: "../../images/spring.webp"

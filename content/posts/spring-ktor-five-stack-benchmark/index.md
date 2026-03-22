@@ -1,6 +1,7 @@
 ---
 title: SpringとKtor、5つの構成を比較してみた
 date: 2026-03-20
+translationKey: "posts/spring-ktor-five-stack-benchmark"
 categories:
   - kotlin
 image: ../../images/kotlin.webp

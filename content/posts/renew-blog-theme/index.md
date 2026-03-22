@@ -1,6 +1,7 @@
 ---
 title:  "ブログ刷新"
 date: 2020-05-03
+translationKey: "posts/renew-blog-theme"
 categories: 
   - recent
 image: "../../images/tools.webp"

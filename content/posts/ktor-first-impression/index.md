@@ -1,6 +1,7 @@
 ---
 title: "Ktorを触ってみた"
 date: 2021-07-18
+translationKey: "posts/ktor-first-impression"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

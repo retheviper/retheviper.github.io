@@ -1,6 +1,7 @@
 ---
 title: "Kotlinで和暦を使う"
 date: 2021-12-05
+translationKey: "posts/kotlin-japanese-era"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

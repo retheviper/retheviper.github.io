@@ -1,6 +1,7 @@
 ---
 title: "年月を扱ってみる"
 date: 2021-04-27
+translationKey: "posts/kotlin-year-month"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

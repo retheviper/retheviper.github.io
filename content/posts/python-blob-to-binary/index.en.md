@@ -1,6 +1,7 @@
 ---
 title: "Processing Database Data with Python"
 date: 2019-06-30
+translationKey: "posts/python-blob-to-binary"
 categories: 
   - python
 image: "../../images/python.webp"

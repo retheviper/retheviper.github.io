@@ -1,6 +1,7 @@
 ---
 title: "Nullチェックの地獄から脱出したい"
 date: 2020-01-05
+translationKey: "posts/java-optional"
 categories: 
   - java
 image: "../../images/java.webp"

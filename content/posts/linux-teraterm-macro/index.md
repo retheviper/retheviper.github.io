@@ -1,6 +1,7 @@
 ---
 title: "Tera Termを使う"
 date: 2019-06-24
+translationKey: "posts/linux-teraterm-macro"
 categories: 
   - linux
 image: "../../images/linux_terminal.webp"

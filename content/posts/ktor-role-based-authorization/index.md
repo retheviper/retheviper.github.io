@@ -1,6 +1,7 @@
 ---
 title: "KtorでRole-based Authorizationを実装する"
 date: 2021-08-09
+translationKey: "posts/ktor-role-based-authorization"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

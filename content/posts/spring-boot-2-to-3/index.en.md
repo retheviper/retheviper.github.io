@@ -1,6 +1,7 @@
 ---
 title: "Migrating to Spring Boot 3"
 date: 2023-01-29
+translationKey: "posts/spring-boot-2-to-3"
 categories:
   - spring
 image: "../../images/spring.webp"

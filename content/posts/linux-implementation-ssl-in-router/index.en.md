@@ -1,6 +1,7 @@
 ---
 title: "Insert SSL certificate into router"
 date: 2019-12-01
+translationKey: "posts/linux-implementation-ssl-in-router"
 categories: 
   - linux
 image: "../../images/linux_terminal.webp"

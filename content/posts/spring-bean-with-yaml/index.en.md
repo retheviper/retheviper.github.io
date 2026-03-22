@@ -1,6 +1,7 @@
 ---
 title: "I want to use beans in a new instance"
 date: 2019-12-22
+translationKey: "posts/spring-bean-with-yaml"
 categories: 
   - spring
 image: "../../images/spring.webp"

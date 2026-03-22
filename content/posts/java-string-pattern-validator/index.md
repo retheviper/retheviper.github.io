@@ -1,6 +1,7 @@
 ---
 title: "パターンと一致する文字列かを判定する"
 date: 2020-11-22
+translationKey: "posts/java-string-pattern-validator"
 categories: 
   - java
 image: "../../images/java.webp"

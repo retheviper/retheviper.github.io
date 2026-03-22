@@ -1,6 +1,7 @@
 ---
 title: "SwiftUIを触ってみた〜その2〜"
 date: 2022-08-20
+translationKey: "posts/swift-ui-first-impression-2"
 categories: 
   - swift
 image: "../../images/swift.webp"

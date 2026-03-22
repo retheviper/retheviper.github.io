@@ -1,6 +1,7 @@
 ---
 title: "Beyond a Coroutine Introduction: Structured Concurrency and Flow"
 date: 2025-10-22
+translationKey: "posts/kotlin-structured-concurrency-flow"
 categories:
   - kotlin
 image: "../../images/kotlin.webp"

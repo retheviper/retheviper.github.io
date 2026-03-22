@@ -1,6 +1,7 @@
 ---
 title: "Building a File Server Using Only Kotlin"
 date: 2022-10-10
+translationKey: "posts/kotlin-compose-web"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

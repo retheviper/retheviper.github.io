@@ -1,6 +1,7 @@
 ---
 title: "Javaはこう進化して欲しい"
 date: 2020-02-03
+translationKey: "posts/java-wishes"
 categories: 
   - java
 image: "../../images/java.webp"

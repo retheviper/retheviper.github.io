@@ -1,6 +1,7 @@
 ---
 title: "Things to get hooked on when using Go for people with JVM language experience"
 date: 2022-04-17
+translationKey: "posts/jvm-to-go"
 categories: 
   - go
 image: "../../images/go.webp"

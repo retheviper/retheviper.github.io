@@ -1,6 +1,7 @@
 ---
 title: "JavaプログラマーがみたKotlin"
 date: 2020-10-25
+translationKey: "posts/kotlin-first-impression"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

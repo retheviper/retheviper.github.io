@@ -1,6 +1,7 @@
 ---
 title: "BackendでCoroutineを使う"
 date: 2022-06-05
+translationKey: "posts/server-side-coroutine"
 categories: 
   - languages
 image: "../../images/magic.webp"

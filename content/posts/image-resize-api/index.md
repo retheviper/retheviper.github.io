@@ -1,6 +1,7 @@
 ---
 title: "動的画像リサイズAPIを作る"
 date: 2024-03-30
+translationKey: "posts/image-resize-api"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

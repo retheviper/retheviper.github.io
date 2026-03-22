@@ -1,6 +1,7 @@
 ---
 title: "KotlinのString実装を覗く〜whitespace編〜"
 date: 2021-05-08
+translationKey: "posts/kotlin-whitespace"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

@@ -1,6 +1,7 @@
 ---
 title: "JWTの補完：Refresh TokenとSliding Session"
 date: 2020-08-02
+translationKey: "posts/refresh-token-and-sliding-session"
 categories: 
   - spring
 image: "../../images/spring.webp"

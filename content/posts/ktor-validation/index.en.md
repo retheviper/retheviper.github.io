@@ -1,6 +1,7 @@
 ---
 title: "Improving Request Handling in Ktor"
 date: 2025-06-28
+translationKey: "posts/ktor-validation"
 categories: 
   - ktor
 image: "../../images/ktor.webp"

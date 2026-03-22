@@ -1,6 +1,7 @@
 ---
 title: "Kotlin as seen by a Java programmer ~Part 2~"
 date: 2021-02-28
+translationKey: "posts/kotlin-basics"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

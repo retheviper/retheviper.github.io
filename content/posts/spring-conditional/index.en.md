@@ -1,6 +1,7 @@
 ---
 title: "Use annotations that operate on conditions"
 date: 2020-04-26
+translationKey: "posts/spring-conditional"
 categories: 
   - spring
 image: "../../images/spring.webp"

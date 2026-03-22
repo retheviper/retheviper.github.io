@@ -1,6 +1,7 @@
 ---
 title: "The JVM Is Still Evolving"
 date: 2025-07-08
+translationKey: "posts/jvm-evolution"
 categories: 
   - java
 image: "../../images/java.webp"

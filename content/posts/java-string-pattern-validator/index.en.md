@@ -1,6 +1,7 @@
 ---
 title: "Determine whether a string matches a pattern"
 date: 2020-11-22
+translationKey: "posts/java-string-pattern-validator"
 categories: 
   - java
 image: "../../images/java.webp"

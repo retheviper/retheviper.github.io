@@ -1,6 +1,7 @@
 ---
 title: "Rest APIからRest APIにファイルを送る"
 date: 2020-02-10
+translationKey: "posts/spring-rest-template"
 categories: 
   - spring
 image: "../../images/spring.webp"

@@ -1,6 +1,7 @@
 ---
 title: "What's New in Java 21"
 date: 2023-09-18
+translationKey: "posts/java-enter-to-21"
 categories: 
   - java
 image: "../../images/java.webp"

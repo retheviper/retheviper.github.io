@@ -1,6 +1,7 @@
 ---
 title: "Creating ZIP Files in Kotlin"
 date: 2021-04-14
+translationKey: "posts/kotlin-zip-files"
 categories: 
   - kotlin
 image: "../../images/kotlin.webp"

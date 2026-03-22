@@ -1,6 +1,7 @@
 ---
 title: "JenkinsのJobを実行する"
 date: 2019-07-20
+translationKey: "posts/jenkins-build-trigger"
 categories: 
   - jenkins
 image: "../../images/jenkins.webp"

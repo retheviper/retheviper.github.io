@@ -1,6 +1,7 @@
 ---
 title: "Things I've been paying attention to recently"
 date: 2020-06-29
+translationKey: "posts/personal-interests-in-this-time"
 categories: 
   - recent
 image: "../../images/magic.webp"

@@ -1,6 +1,7 @@
 ---
 title: "最近注目しているものたち"
 date: 2020-06-29
+translationKey: "posts/personal-interests-in-this-time"
 categories: 
   - recent
 image: "../../images/magic.webp"

@@ -1,6 +1,7 @@
 ---
 title: "I want to use JPA rather than MyBatis"
 date: 2020-07-10
+translationKey: "posts/spring-data-jpa"
 categories: 
   - spring
 image: "../../images/spring.webp"
