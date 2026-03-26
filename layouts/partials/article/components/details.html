@@ -48,25 +48,25 @@
     </footer>
     {{ end }}
 
-    {{ $languages := .Site.Languages }}
-    {{ $defaultLanguageCode := (index .Sites 0).Language.Lang }}
+    {{ $sites := hugo.Sites }}
+    {{ $defaultLanguageCode := (index $sites 0).Language.Lang }}
     {{ $currentLanguageCode := .Language.Lang }}
     {{ $currentPagePath := strings.TrimPrefix .Site.Home.RelPermalink .RelPermalink }}
     {{ $translations := slice }}
-    {{ range $language := $languages }}
-        {{ if ne $language.Lang $currentLanguageCode }}
-            {{ $targetSite := index (where $.Sites "Language.Lang" $language.Lang) 0 }}
-            {{ $targetPage := index (where $.AllTranslations "Language.Lang" $language.Lang) 0 }}
+    {{ range $site := $sites }}
+        {{ $targetLanguage := $site.Language }}
+        {{ if ne $targetLanguage.Lang $currentLanguageCode }}
+            {{ $targetPage := index (where $.AllTranslations "Language.Lang" $targetLanguage.Lang) 0 }}
             {{ $targetURL := "" }}
             {{ if $targetPage }}
                 {{ $targetURL = $targetPage.RelPermalink }}
-            {{ else if and $targetSite (ne $currentLanguageCode $defaultLanguageCode) }}
-                {{ $targetURL = printf "%s%s" $targetSite.Home.RelPermalink $currentPagePath }}
-            {{ else if $targetSite }}
-                {{ $targetURL = $targetSite.Home.RelPermalink }}
+            {{ else if ne $currentLanguageCode $defaultLanguageCode }}
+                {{ $targetURL = printf "%s%s" $site.Home.RelPermalink $currentPagePath }}
+            {{ else }}
+                {{ $targetURL = $site.Home.RelPermalink }}
             {{ end }}
             {{ if $targetURL }}
-                {{ $translations = $translations | append (dict "Permalink" $targetURL "Language" $language) }}
+                {{ $translations = $translations | append (dict "Permalink" $targetURL "Language" $targetLanguage) }}
             {{ end }}
         {{ end }}
     {{ end }}
