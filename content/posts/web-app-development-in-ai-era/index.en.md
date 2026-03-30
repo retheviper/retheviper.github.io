@@ -3,8 +3,8 @@ title: "How Web App Development Changes in the AI Era"
 date: 2026-03-30
 translationKey: "posts/web-app-development-in-ai-era"
 categories:
-  - recent
-image: "../../images/tools.webp"
+  - ai
+image: "../../images/ai.webp"
 tags:
   - ai
   - web

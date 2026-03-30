@@ -3,8 +3,8 @@ title: "AI 시대에 라이브러리에 바라는 것"
 date: 2026-03-26
 translationKey: "posts/ai-library-design"
 categories:
-  - recent
-image: "../../images/tools.webp"
+  - ai
+image: "../../images/ai.webp"
 tags:
   - ai
   - graphql

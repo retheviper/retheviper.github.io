@@ -3,8 +3,8 @@ title: "What I Want from Libraries in the AI Era"
 date: 2026-03-26
 translationKey: "posts/ai-library-design"
 categories:
-  - recent
-image: "../../images/tools.webp"
+  - ai
+image: "../../images/ai.webp"
 tags:
   - ai
   - graphql

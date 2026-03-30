@@ -3,8 +3,8 @@ title: "AI 시대의 웹 애플리케이션 개발은 어떻게 바뀔까"
 date: 2026-03-30
 translationKey: "posts/web-app-development-in-ai-era"
 categories:
-  - recent
-image: "../../images/tools.webp"
+  - ai
+image: "../../images/ai.webp"
 tags:
   - ai
   - web

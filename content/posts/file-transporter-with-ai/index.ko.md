@@ -2,8 +2,8 @@
 title: "AI로 FileTransporter를 다시 정리한 이야기"
 date: 2026-03-22
 categories:
-  - recent
-image: "../../images/tools.webp"
+  - ai
+image: "../../images/ai.webp"
 tags:
   - kotlin
   - ktor
