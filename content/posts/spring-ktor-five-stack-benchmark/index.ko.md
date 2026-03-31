@@ -75,9 +75,9 @@ translationKey: "posts/spring-ktor-five-stack-benchmark"
 
 ### 1. 작은 JSON에서는 WebFlux가 강하고, 큰 JSON에서는 Spring MVC가 강했다
 
-`smallJson`에서는 Spring WebFlux R2DBC가 가장 높았고, 동시 실행 256에서 약 29,220 req/s를 기록했습니다. 이 구간은 DB 접근이 없고 프레임워크와 직렬화 경로의 가벼움이 잘 드러나기 때문에, Netty 기반 구성이 자연스럽게 강점을 보인 것으로 보입니다.
+`smallJson`에서는 Spring WebFlux R2DBC가 가장 높았고, 동시 실행 256에서 약 29,035 req/s를 기록했습니다. 이 구간은 DB 접근이 없고 프레임워크와 직렬화 경로의 가벼움이 잘 드러나기 때문에, Netty 기반 구성이 자연스럽게 강점을 보인 것으로 보입니다.
 
-반면 `largeJson`에서는 결과가 달라집니다. 동시 실행 256 기준으로 Spring MVC platform은 약 4,011 req/s, Spring MVC virtual은 약 3,980 req/s였고, Ktor JDBC는 약 2,741 req/s, Ktor R2DBC는 약 1,389 req/s였습니다. 여기서는 예전부터 종종 이야기되던 것처럼, 큰 JSON 직렬화에서는 `kotlinx.serialization`이 아직 Jackson보다 불리한 구간이 남아 있는 것으로 보였습니다. 작은 페이로드에서는 충분히 선전하지만, 크기가 커지면 차이가 더 또렷해집니다.
+반면 `largeJson`에서는 결과가 달라집니다. 동시 실행 256 기준으로 Spring MVC virtual은 약 3,319 req/s, Spring MVC platform은 약 3,015 req/s였고, Ktor JDBC는 약 2,545 req/s, Ktor R2DBC는 약 1,093 req/s였습니다. 여기서는 예전부터 종종 이야기되던 것처럼, 큰 JSON 직렬화에서는 `kotlinx.serialization`이 아직 Jackson보다 불리한 구간이 남아 있는 것으로 보였습니다. 작은 페이로드에서는 충분히 선전하지만, 크기가 커지면 차이가 더 또렷해집니다.
 
 ### 2. DB 읽기에서는 예상보다 Spring MVC가 강했다
 
@@ -85,18 +85,18 @@ translationKey: "posts/spring-ktor-five-stack-benchmark"
 
 | 시나리오 | 1위 | 2위 | Ktor JDBC | Ktor R2DBC |
 |---|---|---|---|---|
-| `bookById` | Spring MVC virtual 14,903 | Spring MVC platform 14,901 | 8,343 | 7,448 |
-| `bookList` | Spring MVC virtual 9,574 | Spring MVC platform 9,553 | 5,773 | 4,300 |
-| `bookList500` | Spring MVC platform 2,526 | Spring MVC virtual 2,493 | 1,427 | 820 |
-| `bookSearch` | Spring MVC platform 9,677 | Spring MVC virtual 9,418 | 6,020 | 5,359 |
+| `bookById` | Spring MVC virtual 12,868 | Spring MVC platform 10,052 | 7,730 | 6,173 |
+| `bookList` | Spring MVC virtual 8,182 | Spring MVC platform 6,808 | 5,473 | 3,537 |
+| `bookList500` | Spring MVC virtual 2,340 | Spring MVC platform 1,875 | 1,410 | 728 |
+| `bookSearch` | Spring MVC virtual 8,281 | Spring MVC platform 7,237 | 5,654 | 4,763 |
 
 처음에는 코루틴 기반에 R2DBC까지 갖춘 Ktor R2DBC가, 적어도 읽기에서는 꽤 강하게 나올 수도 있겠다고 예상했습니다. 그런데 실제 결과는 오히려 반대였고, 상당히 정석적인 Spring MVC + JDBC가 기준점으로 아주 강했습니다.
 
-가상 스레드도 흥미로웠습니다. "항상 platform threads보다 빠르다"는 식의 결과는 아니었습니다. `bookById`나 `bookList`에서는 virtual이 조금 더 나았지만, `health`, `bookSearch`, `checkoutCreate`에서는 platform이 이긴 경우도 있었습니다. 가상 스레드는 분명 강력한 옵션이지만, 켠다고 해서 모든 상황에서 자동으로 빨라지는 마법은 아니라는 점이 잘 드러났습니다.
+가상 스레드도 흥미로웠습니다. DB read 구간에서 virtual이 꽤 안정적으로 앞섰지만, 그렇다고 "항상 platform threads보다 빠르다"라고까지 말하기는 어렵습니다. `aggregateReport`는 거의 비슷했고, 아주 가벼운 non-DB 경로는 여전히 WebFlux가 앞섰습니다. 가상 스레드는 분명 강력한 옵션이지만, 켠다고 해서 모든 상황에서 자동으로 빨라지는 마법은 아니라는 점은 여전합니다.
 
 ### 3. Ktor JDBC는 나쁘지 않았지만, Ktor R2DBC는 꽤 고전했다
 
-Ktor 내부 비교만 봐도 JDBC 버전과 R2DBC 버전의 차이가 꽤 분명했습니다. 동시 실행 256 기준으로 `bookList500`은 Ktor JDBC가 1,427 req/s, Ktor R2DBC가 820 req/s였고, `largeJson`은 Ktor JDBC가 2,741 req/s, Ktor R2DBC가 1,389 req/s였습니다. `checkoutCreate`에서는 Ktor JDBC 3,540 req/s에 비해 Ktor R2DBC가 4,044 req/s로 조금 만회했지만, 적어도 "R2DBC로 바꾸면 전체적으로 더 유리하다"는 결과는 아니었습니다.
+Ktor 내부 비교만 봐도 JDBC 버전과 R2DBC 버전의 차이는 이번에도 꽤 분명했습니다. 동시 실행 256 기준으로 `bookList500`은 Ktor JDBC가 1,410 req/s, Ktor R2DBC가 728 req/s였고, `largeJson`은 Ktor JDBC가 2,545 req/s, Ktor R2DBC가 1,093 req/s였습니다. `checkoutCreate`에서는 Ktor JDBC 3,302 req/s, Ktor R2DBC 3,416 req/s로 거의 비슷했지만, 적어도 "R2DBC로 바꾸면 전체적으로 더 유리하다"는 결과는 아니었습니다.
 
 이 차이를 보면 Ktor의 병목이 단순히 "Ktor 자체"에만 있다고 보기는 어렵고, Exposed R2DBC를 포함한 비동기 DB 접근 경로가 꽤 큰 영향을 주는 것처럼 보입니다. Spring WebFlux 역시 비DB 경로에서는 매우 강했지만, DB read에서는 JDBC 기반 Spring MVC를 뚜렷하게 앞서는 장면이 많지 않았습니다. 적어도 이번처럼 CRUD 중심 워크로드에서는 Reactive Streams 기반 DB 접근이 기대만큼 곧바로 성능 우위로 이어지지는 않았다고 보는 편이 자연스럽습니다.
 
@@ -104,11 +104,11 @@ Ktor 내부 비교만 봐도 JDBC 버전과 R2DBC 버전의 차이가 꽤 분명
 
 `checkoutHotspot`은 조금 특수합니다. 같은 책의 재고를 계속 깎다 보니 중간부터 실패가 대량으로 발생합니다. 그래서 이 구간은 순수 req/s보다 "실제로 성공한 요청이 얼마나 되는가"를 함께 봐야 합니다.
 
-숫자만 보면 동시 실행 256에서 Ktor JDBC가 약 8,522 req/s로 가장 높지만, 실패 수도 25,617로 매우 많습니다. Ktor R2DBC도 6,417 req/s에 실패 19,295, Spring WebFlux는 2,883 req/s에 실패 8,705였습니다. 즉, 이 시나리오는 "빠르다"는 수치 안에 "빠르게 실패한다"가 대량으로 섞여 있으므로, 일반 시나리오와는 별도로 해석해야 합니다.
+숫자만 보면 동시 실행 256에서 Ktor JDBC가 약 3,374 req/s로 가장 높지만, 실패 수도 10,182 있습니다. Spring WebFlux는 2,755 req/s에 실패 8,321, Ktor R2DBC는 1,723 req/s에 실패 5,226이었습니다. 즉, 이 시나리오는 여전히 "빠르다"는 수치 안에 "빠르게 실패한다"가 상당히 섞여 있으므로, 일반 시나리오와는 별도로 해석해야 합니다.
 
 ### 5. 예외적으로 aggregateReport에서는 Ktor JDBC가 눈에 띄었다
 
-`aggregateReport`에서는 Ktor JDBC가 동시 실행 128에서 1,430 req/s, 256에서도 1,439 req/s로 가장 높았습니다. 다만 이 시나리오는 Ktor 쪽 구현이 아직 Spring 쪽과 완전히 동일한 `GROUP BY` 경로는 아니라는 주석이 붙어 있으니, 어디까지나 참고 수치로 보는 편이 맞겠습니다.
+`aggregateReport`에서는 Ktor JDBC가 동시 실행 128에서 1,443 req/s, 256에서도 1,453 req/s로 가장 높았습니다. 다만 이 시나리오는 Ktor 쪽 구현이 아직 Spring 쪽과 완전히 동일한 `GROUP BY` 경로는 아니라는 주석이 붙어 있으니, 어디까지나 참고 수치로 보는 편이 맞겠습니다.
 
 ## 여기서 얻은 점
 
@@ -116,12 +116,12 @@ Ktor 내부 비교만 봐도 JDBC 버전과 R2DBC 버전의 차이가 꽤 분명
 
 또 `kotlinx.serialization`은 작은 JSON에서는 꽤 선전하지만, 큰 JSON에서는 Jackson과의 차이가 더 드러나는 듯했습니다. 예전부터 이야기되던 경향이 이번 측정에서도 어느 정도 확인된 셈입니다.
 
-R2DBC 역시 적어도 이번 조건에서는 "JDBC를 분명하게 대체할 만큼 빠르다"라고 말하기는 어려웠습니다. 설계 측면에서는 깔끔할 수 있어도, DB 접근이 포함된 실제 애플리케이션에서는 다른 종류의 오버헤드를 분명히 지불하고 있다는 인상을 받았습니다.
+R2DBC 역시 적어도 이번 조건에서는 "JDBC를 분명하게 대체할 만큼 빠르다"라고 말하기는 어려웠습니다. 설계 측면에서는 깔끔할 수 있어도, DB 접근이 포함된 실제 애플리케이션에서는 다른 종류의 오버헤드와 락 동작까지 같이 평가해야 한다는 인상을 받았습니다.
 
 ## 마지막으로
 
 개인적인 취향만 놓고 보면, Ktor와 `kotlinx.serialization`, Exposed처럼 Kotlin 네이티브한 조합은 여전히 꽤 매력적입니다. 코드 스타일도 통일되고, 작성하는 감각도 좋습니다. 다만 AI 도움으로 코드를 작성하는 비용이 예전보다 낮아진 지금은, "얼마나 적은 코드로 쓸 수 있느냐" 못지않게 "최종적으로 얼마나 빠르게 동작하느냐"도 더 중요하게 봐야 하지 않을까 싶습니다.
 
-그런 의미에서 성능을 우선한다면 지금도 Spring MVC 같은 전통적인 구성이 충분히 유력합니다. 반대로 코드 양, 가독성, Kotlin다운 작성 경험을 더 중시한다면 Ktor를 선택하는 것도 충분히 의미가 있습니다. 실제로 Ktor JDBC는 전체적으로 비관할 정도로 나쁜 결과가 아니었고, 애플리케이션 특성에 따라서는 충분히 실용적일 수 있습니다.
+그런 의미에서 성능을 우선한다면 지금도 Spring MVC 같은 전통적인 구성이 충분히 유력합니다. 반대로 코드 양, 가독성, Kotlin다운 작성 경험을 더 중시한다면 Ktor를 선택하는 것도 충분히 의미가 있습니다. 실제로 Ktor JDBC는 read 계열과 일부 write 계열에서 충분히 경쟁력이 있었고, 애플리케이션 특성에 따라서는 충분히 실용적일 수 있습니다.
 
 세부 측정 결과는 Benchmark 리포지토리의 [README](https://github.com/retheviper/Benchmark/blob/main/README.md)와 [five-stack-summary.html](https://github.com/retheviper/Benchmark/blob/main/docs/reports/five-stack-summary.html)을 확인하는 편이 가장 빠릅니다. 개요, 목적, 비교 대상 스택, 측정 방법은 README에 정리돼 있으니, 시나리오별 수치를 더 자세히 보고 싶다면 그쪽을 참고해 주세요.

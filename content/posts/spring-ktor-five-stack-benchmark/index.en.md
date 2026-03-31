@@ -71,13 +71,13 @@ This time, I wanted to compare the entire stack, so I measured not only the fram
 
 ## Measurement results
 
-For detailed numbers, it's best to look at the HTML summary introduced at the end, but I'll summarize the interesting trends first:
+For detailed numbers, it's best to look at the HTML summary introduced at the end. These were the main trends:
 
 ### 1. WebFlux is strong on small JSON, but Spring MVC is stronger on large JSON
 
-Spring WebFlux R2DBC had the highest performance on `smallJson`, at about 29,220 req/s with concurrency 256. There is no DB access in this path, so the lightness of the framework and serialization path shows up directly, and the Netty-based stack seems to benefit from that.
+Spring WebFlux R2DBC had the highest performance on `smallJson`, at about 29,035 req/s with concurrency 256. There is no DB access in this path, so the lightness of the framework and serialization path shows up directly, and the Netty-based stack seems to benefit from that.
 
-However, when it comes to `largeJson`, the story changes. Looking at concurrency 256, Spring MVC platform was about 4,011 req/s, Spring MVC virtual was about 3,980 req/s, Ktor JDBC was about 2,741 req/s, and Ktor R2DBC was about 1,389 req/s. As has been said before, JSON with large `kotlinx.serialization` still seems to be at a disadvantage compared to Jackson. It's doing pretty well with small payloads, but when it gets bigger, there's a difference.
+However, when it comes to `largeJson`, the story changes. Looking at concurrency 256, Spring MVC virtual was about 3,319 req/s, Spring MVC platform about 3,015 req/s, Ktor JDBC about 2,545 req/s, and Ktor R2DBC about 1,093 req/s. As has been said before, large JSON with `kotlinx.serialization` still seems to be at a disadvantage compared to Jackson. It does quite well on small payloads, but the gap becomes clearer as the payload grows.
 
 ### 2. Spring MVC was stronger than expected on DB reads
 
@@ -85,18 +85,18 @@ Looking at the main read scenarios, the two Spring MVC configurations ranked nea
 
 | Scenario | 1st place | 2nd place | Ktor JDBC | Ktor R2DBC |
 |---|---|---|---|---|
-| `bookById` | Spring MVC virtual 14,903 | Spring MVC platform 14,901 | 8,343 | 7,448 |
-| `bookList` | Spring MVC virtual 9,574 | Spring MVC platform 9,553 | 5,773 | 4,300 |
-| `bookList500` | Spring MVC platform 2,526 | Spring MVC virtual 2,493 | ​​1,427 | 820 |
-| `bookSearch` | Spring MVC platform 9,677 | Spring MVC virtual 9,418 | 6,020 | 5,359 |
+| `bookById` | Spring MVC virtual 12,868 | Spring MVC platform 10,052 | 7,730 | 6,173 |
+| `bookList` | Spring MVC virtual 8,182 | Spring MVC platform 6,808 | 5,473 | 3,537 |
+| `bookList500` | Spring MVC virtual 2,340 | Spring MVC platform 1,875 | 1,410 | 728 |
+| `bookSearch` | Spring MVC virtual 8,281 | Spring MVC platform 7,237 | 5,654 | 4,763 |
 
 At first, I thought that Ktor R2DBC, which is based on Coroutine and includes R2DBC, would be very strong at least in reading. However, the result was rather the opposite; the fairly orthodox Spring MVC + JDBC was a very strong reference point.
 
-Virtual threads were also interesting because they were not "always faster than platform threads." While virtual threads won slightly in scenarios like `bookById` and `bookList`, platform threads still won in cases such as `health`, `bookSearch`, and `checkoutCreate`. Virtual threads are clearly useful, but they are not magic that makes everything faster the moment you enable them.
+Virtual threads were also interesting. They were consistently ahead on the DB-read scenarios, but I still would not call them "always faster than platform threads." `aggregateReport` stayed roughly neck-and-neck, and WebFlux still won the very light non-DB paths. Virtual threads are clearly useful, but they are not magic that makes everything faster the moment you enable them.
 
 ### 3. Ktor JDBC was respectable, but Ktor R2DBC struggled
 
-Looking only at the Ktor side, the gap between the JDBC and R2DBC versions was quite clear. At concurrency 256, for example, `bookList500` was 1,427 req/s for Ktor JDBC and 820 req/s for Ktor R2DBC, while `largeJson` was 2,741 req/s for Ktor JDBC and 1,389 req/s for Ktor R2DBC. Even in `checkoutCreate`, Ktor JDBC reached 3,540 req/s and Ktor R2DBC 4,044 req/s, but that still does not support the broader conclusion that switching to R2DBC improves performance overall.
+Looking only at the Ktor side, the gap between the JDBC and R2DBC versions was still quite clear. At concurrency 256, for example, `bookList500` was 1,410 req/s for Ktor JDBC and 728 req/s for Ktor R2DBC, while `largeJson` was 2,545 req/s for Ktor JDBC and 1,093 req/s for Ktor R2DBC. Even in `checkoutCreate`, Ktor JDBC reached 3,302 req/s and Ktor R2DBC 3,416 req/s, which is basically a draw rather than evidence that switching to R2DBC improves performance overall.
 
 Looking at this difference, it appears that the bottleneck in Ktor is not simply "Ktor itself", but rather lies in the asynchronous DB access path including Exposed R2DBC. While Spring WebFlux is also very strong in non-DB light paths, there were not many situations where it clearly outperformed Spring MVC with JDBC in DB reads. I think it's natural to think that, at least for CRUD-centric workloads like this one, Reactive Streams-based DB access has not led to the straightforward advantage that was expected.
 
@@ -104,11 +104,11 @@ Looking at this difference, it appears that the bottleneck in Ktor is not simply
 
 `checkoutHotspot` is a little special, as they are constantly reducing the inventory of the same book, so there are a lot of failures midway through. Therefore, you need to carefully look at how much "effective success" you are producing rather than pure req/s.
 
-Looking at the numbers, Ktor JDBC has the highest concurrency of 256 and approximately 8,522 req/s, but it also has a very large number of failures at 25,617. Ktor R2DBC also had 6,417 req/s with 19,295 failures, and Spring WebFlux had 2,883 req/s with 8,705 failures. In other words, "fast" here includes a lot of "failing fast", so it should be treated as a slightly different scenario from normal scenarios.
+Looking at the numbers, Ktor JDBC is still highest at concurrency 256 with about 3,374 req/s, but it also records 10,182 failures. Spring WebFlux is at 2,755 req/s with 8,321 failures, and Ktor R2DBC is at 1,723 req/s with 5,226 failures. In other words, "fast" here still includes a lot of "failing fast", so this scenario should be treated differently from the normal ones.
 
 ### 5. Ktor JDBC stood out on `aggregateReport`
 
-In `aggregateReport`, Ktor JDBC had the highest result at 1,430 req/s at 128 concurrency, and 1,439 req/s at 256. However, regarding this scenario, there is a note that the Ktor side is not yet on the exact same DB `GROUP BY` path as the Spring side, so it seems better to view this as a reference value only.
+In `aggregateReport`, Ktor JDBC had the highest result at 1,443 req/s at concurrency 128 and 1,453 req/s at concurrency 256. However, regarding this scenario, there is a note that the Ktor side is not yet on the exact same DB `GROUP BY` path as the Spring side, so it still seems better to view this as a directional result only.
 
 ## What I Took Away from It
 
@@ -116,12 +116,12 @@ The most impressive thing about this result was that the expectation that ``sinc
 
 Also, while `kotlinx.serialization` performed quite well with small JSON, it seemed to be easily different from Jackson with large JSON. This is a trend that has been noted for some time, but this difference was confirmed to some extent in this measurement.
 
-Regarding R2DBC, at least under these conditions, it is difficult to say that it is ``fast enough to clearly replace JDBC.'' Although it is a beautiful concept, my impression is that in the actual application that includes DB access, other overhead is paid properly.
+Regarding R2DBC, at least under these conditions, it is difficult to say that it is "fast enough to clearly replace JDBC." Although it is a beautiful concept, my impression is that in real applications with DB access, you also need to evaluate the extra overhead and locking behavior that come with it.
 
 ## Finally
 
 Speaking of personal preference, Ktor, `kotlinx.serialization`, and Kotlin native configurations like Exposed are quite attractive. The code style is consistent, and it feels good to write. However, now that the cost of writing the code itself is lower than before with the help of AI, I think it would be better to focus more on "how fast it will run in the end" than just "how much code can be written with less code" than before.
 
-In that sense, orthodox configurations like Spring MVC are still quite effective if performance is important. On the other hand, if you prioritize the amount of code, readability, and Kotlin-like feel, I think Ktor is a good choice. In fact, Ktor JDBC's overall results were not bad enough to be pessimistic, and depending on the nature of your application, it may be useful.
+In that sense, orthodox configurations like Spring MVC are still quite effective if performance is important. On the other hand, if you prioritize code volume, readability, and a Kotlin-like feel, I think Ktor is still a good choice. In fact, Ktor JDBC remained reasonably competitive on reads and some write paths, so it can still be a practical option depending on the kind of application you are building.
 
 For detailed measurement results, I think it would be best to have a look at [README](https://github.com/retheviper/Benchmark/blob/main/README.md) in the Benchmark repository and [five-stack-summary.html](https://github.com/retheviper/Benchmark/blob/main/docs/reports/five-stack-summary.html) published there. The overview, purpose, stacks to be compared, and measurement methods are summarized in the README, so please refer to it if you want to follow individual numbers or trends for each scenario.
